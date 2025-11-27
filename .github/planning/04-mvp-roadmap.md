@@ -4,10 +4,10 @@
 
 ```
 Phase 1: Foundation (Week 1-2)
-    └── Project setup, basic UI shell, file operations
+    └── Project setup, basic UI shell, file operations, curve generator
 
 Phase 2: Core Features (Week 3-4)
-    └── Chart visualization, data binding, grid lines, hover tooltip
+    └── Chart visualization, motor properties, data binding, grid lines
 
 Phase 3: File Management (Week 5)
     └── Directory browser, dirty state, save prompts, Save As/Copy As
@@ -23,6 +23,9 @@ Phase 6: Units System (Future)
 
 Phase 7: Tabbed Interface (Future)
     └── Multiple files open simultaneously in tabs
+
+Phase 8: Power Curve Overlay (Future)
+    └── Calculated power curves, dual Y-axis display
 ```
 
 ---
@@ -44,9 +47,10 @@ Phase 7: Tabbed Interface (Future)
 - [ ] Add asterisk (*) to title when file is dirty
 
 ### 1.3 Data Models
-- [ ] Create MotorData model class (container for file)
+- [ ] Create MotorDefinition model class (all motor properties)
 - [ ] Create CurveSeries model class (named curve)
 - [ ] Create DataPoint model class (percent, rpm, torque)
+- [ ] Create UnitSettings model class (torque, speed, power, weight units)
 - [ ] Create MotorMetadata model class
 - [ ] Implement 1% increment data structure (101 points per series)
 - [ ] Add JSON serialization attributes
@@ -61,7 +65,25 @@ Phase 7: Tabbed Interface (Future)
 - [ ] Error handling for invalid files
 - [ ] Write service unit tests
 
-**Deliverable:** Application that can open, display JSON content, and save files.
+### 1.5 Curve Generator Service
+- [ ] Create ICurveGeneratorService interface
+- [ ] Implement curve interpolation from max parameters
+- [ ] Generate curves at 1% increments
+- [ ] Calculate corner speed (constant torque to constant power transition)
+- [ ] Power calculation from torque and speed
+- [ ] Write generator unit tests
+
+### 1.6 New Motor Definition Wizard
+- [ ] "New Motor" command in File menu
+- [ ] Dialog to enter basic motor parameters:
+  - Motor name
+  - Max RPM
+  - Max torque
+  - Max power
+- [ ] Generate initial Peak and Continuous curves
+- [ ] Create new file with generated data
+
+**Deliverable:** Application that can create new motor files, open, display JSON content, and save files.
 
 ---
 
@@ -103,20 +125,34 @@ Phase 7: Tabbed Interface (Future)
 - [ ] Add Series button
 - [ ] Delete Series button (with confirmation)
 
-### 2.6 Properties Panel
-- [ ] Create PropertiesPanel component
-- [ ] Display curve metadata (name, manufacturer)
-- [ ] Display data grid of points
+### 2.6 Motor Properties Panel
+- [ ] Create MotorPropertiesPanel component
+- [ ] Display all motor properties (editable):
+  - Motor name, manufacturer, part number
+  - Drive name, drive part number
+  - Voltage, amperage (continuous/peak)
+  - Max/rated RPM
+  - Continuous/peak torque
+  - Power, weight, rotor inertia
+  - Brake properties (hasBrake, torque, amperage)
+- [ ] Unit selector for each property type
+- [ ] Bind properties to MotorDefinition model
+- [ ] Enable editing of all fields
+
+### 2.7 Curve Data Panel
+- [ ] Create CurveDataPanel component
+- [ ] Display data grid of points for selected series
 - [ ] Bind grid to curve data
 - [ ] Enable editing in grid cells
+- [ ] RPM values displayed rounded to whole numbers
 
-### 2.7 Two-Way Binding
+### 2.8 Two-Way Binding
 - [ ] Chart updates when grid values change
 - [ ] Grid updates when chart is modified (future)
 - [ ] Implement INotifyPropertyChanged throughout
 - [ ] Handle dirty state tracking (unsaved changes)
 
-### 2.8 Basic Validation
+### 2.9 Basic Validation
 - [ ] Validate RPM values (positive, ascending)
 - [ ] Validate torque values (non-negative)
 - [ ] Show validation errors in UI
@@ -280,6 +316,28 @@ Phase 7: Tabbed Interface (Future)
 
 ---
 
+## Phase 8: Power Curve Overlay (Future)
+
+### 8.1 Power Calculation
+- [ ] Calculate power from torque and speed: P = T × ω
+- [ ] Generate power curve from each torque curve
+- [ ] Support kW and HP display units
+
+### 8.2 Dual Y-Axis Chart
+- [ ] Add secondary Y-axis for power (right side)
+- [ ] Primary Y-axis: Torque (left side)
+- [ ] Label axes appropriately
+- [ ] Power curves distinguished by color
+
+### 8.3 Power Overlay Toggle
+- [ ] Menu option to show/hide power curves
+- [ ] Toggle per-series power visibility
+- [ ] User preference to remember setting
+
+**Deliverable:** Power curves overlaid on torque chart.
+
+---
+
 ## Quick Start Commands
 
 ### Create New Project
@@ -315,10 +373,30 @@ Create `samples/example-motor.json` for testing:
 
 ```json
 {
-  "name": "Example Motor",
+  "motorName": "High Torque Servo Motor",
   "manufacturer": "Acme Motors",
-  "unit": "Nm",
+  "partNumber": "M-1234-HT",
+  "driveName": "Servo Drive Pro",
+  "drivePartNumber": "SD-5000",
+  "voltage": 48,
   "maxRpm": 5000,
+  "ratedRpm": 3000,
+  "ratedContinuousTorque": 45.0,
+  "ratedPeakTorque": 55.0,
+  "continuousAmperage": 10.5,
+  "peakAmperage": 25.0,
+  "power": 1500,
+  "weight": 8.5,
+  "hasBrake": true,
+  "brakeTorque": 12.0,
+  "brakeAmperage": 0.5,
+  "rotorInertia": 0.0025,
+  "units": {
+    "torque": "Nm",
+    "speed": "rpm",
+    "power": "W",
+    "weight": "kg"
+  },
   "series": [
     {
       "name": "Peak",
@@ -356,7 +434,7 @@ Create `samples/example-motor.json` for testing:
   "metadata": {
     "created": "2024-01-15T10:30:00Z",
     "modified": "2024-01-20T14:45:00Z",
-    "notes": "Measured at 25°C ambient temperature, 12V supply"
+    "notes": "Measured at 25°C ambient temperature"
   }
 }
 ```
@@ -369,8 +447,10 @@ The sample above shows 10% increments for brevity.
 ## Success Metrics
 
 ### MVP Complete When:
-- [ ] Can create new motor data file
+- [ ] Can create new motor definition file with wizard
+- [ ] New curve generation from max speed, torque, power parameters
 - [ ] Can open existing JSON files with multiple series
+- [ ] All motor properties editable (name, manufacturer, specs, etc.)
 - [ ] Directory browser side pane (VS Code-style)
 - [ ] Click file in directory list to load
 - [ ] Dirty state tracked for unsaved changes
@@ -397,7 +477,7 @@ The sample above shows 10% increments for brevity.
 - [ ] Can load background image
 - [ ] Background image scales independently (X/Y)
 - [ ] Axis scaling via sliders (smooth, no jitter)
-- [ ] Can save to JSON file
+- [ ] Can save to JSON file with all motor properties
 - [ ] Runs as portable executable
 - [ ] Works on Windows 11
 
@@ -410,6 +490,7 @@ The sample above shows 10% increments for brevity.
 ### Future Features:
 - [ ] Tabbed interface for multiple files
 - [ ] Units system (Nm ↔ lbf-in via Tare)
+- [ ] Power curve overlay (dual Y-axis)
 
 ---
 

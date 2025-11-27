@@ -69,11 +69,27 @@ If cross-platform is not important and you want the most stable, proven solution
 ┌─────────────────────────────────────────────────────────────────┐
 │                         Model Layer                              │
 │  ┌─────────────────┐  ┌─────────────────┐  ┌─────────────────┐  │
-│  │  MotorData      │  │  CurveSeries    │  │  DataPoint      │  │
-│  │  - Name         │  │  - Name         │  │  - Percent      │  │
-│  │  - MaxRpm       │  │  - Data[]       │  │  - RPM          │  │
-│  │  - Series[]     │  │  - Color        │  │  - Torque       │  │
-│  │  - Unit         │  │  - IsVisible    │  │                 │  │
+│  │  MotorDefinition│  │  CurveSeries    │  │  DataPoint      │  │
+│  │  - MotorName    │  │  - Name         │  │  - Percent      │  │
+│  │  - Manufacturer │  │  - Data[]       │  │  - RPM          │  │
+│  │  - PartNumber   │  │  - Color        │  │  - Torque       │  │
+│  │  - DriveName    │  │  - IsVisible    │  │                 │  │
+│  │  - DrivePN      │  │                 │  │                 │  │
+│  │  - Voltage      │  ├─────────────────┤  ├─────────────────┤  │
+│  │  - MaxRpm       │  │  UnitSettings   │  │  Metadata       │  │
+│  │  - RatedRpm     │  │  - Torque       │  │  - Created      │  │
+│  │  - ContTorque   │  │  - Speed        │  │  - Modified     │  │
+│  │  - PeakTorque   │  │  - Power        │  │  - Notes        │  │
+│  │  - ContAmps     │  │  - Weight       │  │                 │  │
+│  │  - PeakAmps     │  │                 │  │                 │  │
+│  │  - Power        │  │                 │  │                 │  │
+│  │  - Weight       │  │                 │  │                 │  │
+│  │  - HasBrake     │  │                 │  │                 │  │
+│  │  - BrakeTorque  │  │                 │  │                 │  │
+│  │  - BrakeAmps    │  │                 │  │                 │  │
+│  │  - RotorInertia │  │                 │  │                 │  │
+│  │  - Series[]     │  │                 │  │                 │  │
+│  │  - Units        │  │                 │  │                 │  │
 │  └─────────────────┘  └─────────────────┘  └─────────────────┘  │
 └─────────────────────────────────────────────────────────────────┘
                               │
@@ -81,10 +97,10 @@ If cross-platform is not important and you want the most stable, proven solution
 ┌─────────────────────────────────────────────────────────────────┐
 │                        Services Layer                            │
 │  ┌─────────────────┐  ┌─────────────────┐  ┌─────────────────┐  │
-│  │  FileService    │  │  UnitService    │  │  ValidationSvc  │  │
-│  │  - Load JSON    │  │  - Convert Nm   │  │  - Validate     │  │
-│  │  - Save JSON    │  │  - Convert lbf  │  │  - Check limits │  │
-│  │  - File dialogs │  │  - (uses Tare)  │  │                 │  │
+│  │  FileService    │  │  UnitService    │  │  CurveGenerator │  │
+│  │  - Load JSON    │  │  - Convert Nm   │  │  - Interpolate  │  │
+│  │  - Save JSON    │  │  - Convert lbf  │  │  - FromParams   │  │
+│  │  - File dialogs │  │  - (uses Tare)  │  │  - CalcPower    │  │
 │  └─────────────────┘  └─────────────────┘  └─────────────────┘  │
 └─────────────────────────────────────────────────────────────────┘
 ```
@@ -101,28 +117,33 @@ CurveEditor/
 │       ├── App.axaml.cs
 │       ├── Program.cs
 │       ├── Models/
-│       │   ├── MotorData.cs
+│       │   ├── MotorDefinition.cs
 │       │   ├── CurveSeries.cs
 │       │   ├── DataPoint.cs
+│       │   ├── UnitSettings.cs
 │       │   └── MotorMetadata.cs
 │       ├── ViewModels/
 │       │   ├── ViewModelBase.cs
 │       │   ├── MainWindowViewModel.cs
 │       │   ├── ChartViewModel.cs
 │       │   ├── SeriesViewModel.cs
+│       │   ├── MotorPropertiesViewModel.cs
 │       │   ├── DirectoryBrowserViewModel.cs
 │       │   └── PointViewModel.cs
 │       ├── Views/
 │       │   ├── MainWindow.axaml
 │       │   ├── MainWindow.axaml.cs
 │       │   ├── ChartView.axaml
+│       │   ├── MotorPropertiesPanel.axaml
 │       │   ├── DirectoryBrowserPane.axaml
-│       │   └── PropertiesPanel.axaml
+│       │   └── CurveDataPanel.axaml
 │       ├── Services/
 │       │   ├── IFileService.cs
 │       │   ├── FileService.cs
 │       │   ├── IDirectoryService.cs
 │       │   ├── DirectoryService.cs
+│       │   ├── ICurveGeneratorService.cs
+│       │   ├── CurveGeneratorService.cs
 │       │   ├── IUnitService.cs
 │       │   ├── UnitService.cs
 │       │   ├── IUserPreferencesService.cs
@@ -840,6 +861,205 @@ public class UnitService : IUnitService
         throw new NotImplementedException("Implement with Tare package");
     }
 }
+```
+
+### 14. Curve Generator Service
+
+Generate initial curves from motor parameters:
+
+```csharp
+public interface ICurveGeneratorService
+{
+    CurveSeries GenerateCurve(string name, double maxRpm, double maxTorque, double maxPower);
+    List<DataPoint> InterpolateCurve(double maxRpm, double maxTorque, double maxPower);
+    double CalculatePower(double torqueNm, double rpm);
+}
+
+public class CurveGeneratorService : ICurveGeneratorService
+{
+    /// <summary>Generate a new curve from max parameters</summary>
+    public CurveSeries GenerateCurve(string name, double maxRpm, double maxTorque, double maxPower)
+    {
+        var data = InterpolateCurve(maxRpm, maxTorque, maxPower);
+        return new CurveSeries
+        {
+            Name = name,
+            Data = data
+        };
+    }
+    
+    /// <summary>Interpolate curve data at 1% increments</summary>
+    public List<DataPoint> InterpolateCurve(double maxRpm, double maxTorque, double maxPower)
+    {
+        var points = new List<DataPoint>();
+        
+        // Calculate corner speed where power limiting begins
+        // Power = Torque × RPM × (2π / 60)
+        // At corner speed: maxPower = maxTorque × cornerRpm × (2π / 60)
+        double cornerRpm = (maxPower * 60) / (maxTorque * 2 * Math.PI);
+        
+        for (int percent = 0; percent <= 100; percent++)
+        {
+            double rpm = maxRpm * percent / 100.0;
+            double torque;
+            
+            if (rpm <= cornerRpm)
+            {
+                // Constant torque region
+                torque = maxTorque;
+            }
+            else
+            {
+                // Constant power region (torque falls off with speed)
+                // Power = Torque × ω, so Torque = Power / ω
+                double omega = rpm * 2 * Math.PI / 60;
+                torque = maxPower / omega;
+            }
+            
+            points.Add(new DataPoint
+            {
+                Percent = percent,
+                Rpm = (int)Math.Round(rpm),
+                Torque = Math.Round(torque, 2)
+            });
+        }
+        
+        return points;
+    }
+    
+    /// <summary>Calculate power from torque and speed</summary>
+    public double CalculatePower(double torqueNm, double rpm)
+    {
+        // Power (W) = Torque (Nm) × Angular velocity (rad/s)
+        // Angular velocity = RPM × 2π / 60
+        return torqueNm * rpm * 2 * Math.PI / 60;
+    }
+}
+```
+
+### 15. Motor Definition Model
+
+Complete motor definition model with all properties:
+
+```csharp
+public class MotorDefinition
+{
+    // Motor Identification
+    public string MotorName { get; set; } = string.Empty;
+    public string Manufacturer { get; set; } = string.Empty;
+    public string PartNumber { get; set; } = string.Empty;
+    
+    // Drive Information
+    public string DriveName { get; set; } = string.Empty;
+    public string DrivePartNumber { get; set; } = string.Empty;
+    
+    // Electrical
+    public double Voltage { get; set; }
+    public double ContinuousAmperage { get; set; }
+    public double PeakAmperage { get; set; }
+    public double Power { get; set; }
+    
+    // Speed
+    public double MaxRpm { get; set; }
+    public double RatedRpm { get; set; }
+    
+    // Torque
+    public double RatedContinuousTorque { get; set; }
+    public double RatedPeakTorque { get; set; }
+    
+    // Mechanical
+    public double Weight { get; set; }
+    public double RotorInertia { get; set; }
+    
+    // Brake
+    public bool HasBrake { get; set; }
+    public double BrakeTorque { get; set; }
+    public double BrakeAmperage { get; set; }
+    
+    // Units
+    public UnitSettings Units { get; set; } = new();
+    
+    // Curves
+    public List<CurveSeries> Series { get; set; } = new();
+    
+    // Metadata
+    public MotorMetadata Metadata { get; set; } = new();
+}
+
+public class UnitSettings
+{
+    public string Torque { get; set; } = "Nm";     // Nm, lbf-in, oz-in
+    public string Speed { get; set; } = "rpm";     // rpm, rev/s
+    public string Power { get; set; } = "W";       // W, kW, hp
+    public string Weight { get; set; } = "kg";     // kg, lbs, g
+}
+```
+
+### 16. Power Curve Overlay (Future)
+
+Display calculated power curve on the chart:
+
+```csharp
+public partial class ChartViewModel : ViewModelBase
+{
+    [ObservableProperty]
+    private bool _showPowerCurve = false;
+    
+    [ObservableProperty]
+    private string _powerUnit = "kW"; // kW or hp
+    
+    private readonly ICurveGeneratorService _curveGenerator;
+    
+    /// <summary>Generate power series from torque series</summary>
+    public ISeries GeneratePowerSeries(CurveSeries torqueSeries)
+    {
+        var powerPoints = torqueSeries.Data.Select(point => new ObservablePoint(
+            point.Rpm,
+            ConvertPower(_curveGenerator.CalculatePower(point.Torque, point.Rpm))
+        )).ToList();
+        
+        return new LineSeries<ObservablePoint>
+        {
+            Values = powerPoints,
+            Name = $"{torqueSeries.Name} Power",
+            Stroke = new SolidColorPaint(SKColors.Orange, 2),
+            GeometrySize = 0,
+            ScalesYAt = 1 // Use second Y axis
+        };
+    }
+    
+    private double ConvertPower(double watts)
+    {
+        return PowerUnit switch
+        {
+            "kW" => watts / 1000,
+            "hp" => watts / 745.7,
+            _ => watts
+        };
+    }
+}
+```
+
+Configure dual Y-axes for torque and power:
+
+```csharp
+// In ChartView, configure axes:
+public Axis[] YAxes { get; set; } = new Axis[]
+{
+    new Axis // Primary Y-axis: Torque
+    {
+        Name = "Torque (Nm)",
+        Position = AxisPosition.Start,
+        NamePaint = new SolidColorPaint(SKColors.Blue)
+    },
+    new Axis // Secondary Y-axis: Power (when enabled)
+    {
+        Name = "Power (kW)",
+        Position = AxisPosition.End,
+        NamePaint = new SolidColorPaint(SKColors.Orange),
+        ShowSeparatorLines = false
+    }
+};
 ```
 
 ---
