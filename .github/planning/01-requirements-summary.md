@@ -55,7 +55,25 @@ A dedicated desktop application for editing motor torque curves stored in JSON f
    - Popup positioned to not obscure cursor
    - User preference to enable/disable hover popup
 
-10. **Units System (Future)**
+10. **Data Format**
+    - Curve data saved at 1% increments (0% = 0 RPM, 100% = max RPM)
+    - Each data point stores percentage, RPM, and torque values
+    - RPM values displayed rounded to nearest whole number
+
+11. **Multiple Curve Series**
+    - Save multiple curve profiles within a single motor data file
+    - Each series distinguished by a unique name
+    - Default series: "Peak" and "Continuous"
+    - User can add, edit, and delete additional curve series
+    - Series visibility toggleable via checkboxes in series list
+
+12. **Series Colors**
+    - Each series distinguished by unique line color
+    - User can edit colors for each series
+    - Color selections per series name saved to persistent user options
+    - Colors remain consistent across different files
+
+13. **Units System (Future)**
    - Toggle between Nm (Newton-meters) and lbf-in (pound-force inches)
    - Automatic value conversion when switching units
    - Use the `Tare` NuGet package (by jordanrobot) for unit handling
@@ -76,22 +94,36 @@ A dedicated desktop application for editing motor torque curves stored in JSON f
    - C# and .NET 8 preferred
    - Open to other solutions if justified
 
-## Data Model (Assumed)
+## Data Model
 
-Based on typical motor torque curve data:
+Motor data file with multiple curve series at 1% increments:
 
 ```json
 {
   "name": "Motor Model XYZ",
   "manufacturer": "Company Name",
   "unit": "Nm",
-  "data": [
-    { "rpm": 0, "torque": 50.0 },
-    { "rpm": 1000, "torque": 48.5 },
-    { "rpm": 2000, "torque": 45.0 },
-    { "rpm": 3000, "torque": 40.0 },
-    { "rpm": 4000, "torque": 33.0 },
-    { "rpm": 5000, "torque": 25.0 }
+  "maxRpm": 5000,
+  "series": [
+    {
+      "name": "Peak",
+      "data": [
+        { "percent": 0, "rpm": 0, "torque": 55.0 },
+        { "percent": 1, "rpm": 50, "torque": 55.2 },
+        { "percent": 2, "rpm": 100, "torque": 55.4 },
+        ...
+        { "percent": 100, "rpm": 5000, "torque": 12.0 }
+      ]
+    },
+    {
+      "name": "Continuous",
+      "data": [
+        { "percent": 0, "rpm": 0, "torque": 45.0 },
+        { "percent": 1, "rpm": 50, "torque": 45.1 },
+        ...
+        { "percent": 100, "rpm": 5000, "torque": 10.0 }
+      ]
+    }
   ],
   "metadata": {
     "created": "2024-01-15",
@@ -100,26 +132,44 @@ Based on typical motor torque curve data:
 }
 ```
 
+**Key data format notes:**
+- Data saved at 1% increments (101 points per series: 0% to 100%)
+- `percent`: 0-100, where 0% = 0 RPM, 100% = maxRpm
+- `rpm`: Calculated from percent × maxRpm, displayed rounded to whole number
+- `torque`: Torque value at that percentage point
+- Multiple series per file (e.g., "Peak", "Continuous", custom names)
+
 ## User Workflow
 
 1. Launch application (no installation)
-2. Open existing JSON file or create new curve
-3. Optionally load background image for reference
-4. Scale background image to match graph dimensions
-5. View torque curve visualization
-6. Edit curve via:
+2. Open existing JSON file or create new motor data file
+3. View multiple series (Peak, Continuous, custom) in chart
+4. Toggle series visibility via checkboxes
+5. Select series to edit from list
+6. Optionally load background image for reference
+7. Scale background image to match graph dimensions
+8. Edit curve via:
    - Dragging points up/down (EQ-style)
    - Adjusting Q slider for curve sharpness
    - Direct numeric input in properties panel
-7. Hover over curve to see precise values
-8. Scale axes as needed to match reference image
-9. Toggle units (future feature)
-10. Save changes to file
+9. Hover over curve to see precise values (RPM rounded to whole number)
+10. Scale axes as needed to match reference image
+11. Customize series colors (persisted across sessions)
+12. Add/rename/delete curve series as needed
+13. Toggle units (future feature)
+14. Save changes to file (data saved at 1% increments)
 
 ## Success Criteria
 
-- [ ] Can load and parse JSON torque curve files
-- [ ] Displays interactive line graph
+- [ ] Can load and parse JSON motor data files
+- [ ] Displays interactive line graph with multiple series
+- [ ] Shows/hides individual series via checkboxes
+- [ ] Series distinguished by color
+- [ ] User can edit series colors (persisted per series name)
+- [ ] Data saved at 1% increments (0-100%)
+- [ ] RPM displayed rounded to nearest whole number
+- [ ] Default series: "Peak" and "Continuous"
+- [ ] Can add/rename/delete curve series
 - [ ] Supports direct numeric editing
 - [ ] Supports graph-based editing (EQ-style drag)
 - [ ] Q slider affects curve sharpness (0.0-1.0)

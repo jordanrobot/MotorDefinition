@@ -37,9 +37,11 @@ Phase 5: Units System (Future)
 - [ ] Implement window title showing current file
 
 ### 1.3 Data Models
-- [ ] Create TorqueCurve model class
-- [ ] Create DataPoint model class
-- [ ] Create CurveMetadata model class
+- [ ] Create MotorData model class (container for file)
+- [ ] Create CurveSeries model class (named curve)
+- [ ] Create DataPoint model class (percent, rpm, torque)
+- [ ] Create MotorMetadata model class
+- [ ] Implement 1% increment data structure (101 points per series)
 - [ ] Add JSON serialization attributes
 - [ ] Write model unit tests
 
@@ -59,11 +61,19 @@ Phase 5: Units System (Future)
 ### 2.1 Chart Integration
 - [ ] Add LiveCharts2 NuGet package
 - [ ] Create ChartView component
-- [ ] Bind chart to TorqueCurve data
+- [ ] Bind chart to MotorData with multiple series
 - [ ] Configure default axes (RPM = X, Torque = Y)
+- [ ] Display RPM values rounded to nearest whole number
 - [ ] Style chart appearance
 
-### 2.2 Grid Lines and Axis Labels
+### 2.2 Multiple Series Display
+- [ ] Load and display multiple curve series from file
+- [ ] Create default series ("Peak", "Continuous") for new files
+- [ ] Each series rendered as separate line on chart
+- [ ] Distinguish series by unique line colors
+- [ ] Series legend with names and colors
+
+### 2.3 Grid Lines and Axis Labels
 - [ ] Configure axis labels at rounded increments
   - RPM: 500, 1000, 1500, 2000, etc.
   - Torque: 5, 10, 15, 20, etc.
@@ -71,31 +81,39 @@ Phase 5: Units System (Future)
 - [ ] Implement auto-calculation for label spacing (avoid crowding)
 - [ ] Labels update smoothly when axis range changes
 
-### 2.3 Hover Tooltip
+### 2.4 Hover Tooltip
 - [ ] Show RPM and torque values on hover near curve
 - [ ] Position tooltip to not obscure cursor
 - [ ] Style tooltip for readability
 
-### 2.4 Properties Panel
+### 2.5 Series Management Panel
+- [ ] Create series list panel in UI
+- [ ] Checkbox for each series to show/hide visibility
+- [ ] Display series color swatch next to name
+- [ ] Editable series name field
+- [ ] Add Series button
+- [ ] Delete Series button (with confirmation)
+
+### 2.6 Properties Panel
 - [ ] Create PropertiesPanel component
 - [ ] Display curve metadata (name, manufacturer)
 - [ ] Display data grid of points
 - [ ] Bind grid to curve data
 - [ ] Enable editing in grid cells
 
-### 2.5 Two-Way Binding
+### 2.7 Two-Way Binding
 - [ ] Chart updates when grid values change
 - [ ] Grid updates when chart is modified (future)
 - [ ] Implement INotifyPropertyChanged throughout
 - [ ] Handle dirty state tracking (unsaved changes)
 
-### 2.6 Basic Validation
+### 2.8 Basic Validation
 - [ ] Validate RPM values (positive, ascending)
 - [ ] Validate torque values (non-negative)
 - [ ] Show validation errors in UI
 - [ ] Prevent saving invalid data
 
-**Deliverable:** Application with working chart and editable data grid.
+**Deliverable:** Application with working multi-series chart, series visibility toggles, and editable data grid.
 
 ---
 
@@ -150,6 +168,9 @@ Phase 5: Units System (Future)
 
 ### 4.1 User Settings
 - [ ] Toggle hover tooltip on/off
+- [ ] Series color editor (color picker per series)
+- [ ] Save series colors per series name (persistent)
+- [ ] Colors consistent across different files
 - [ ] Persist settings between sessions
 - [ ] Settings accessible via menu
 
@@ -225,25 +246,47 @@ dotnet publish src/CurveEditor -c Release -r win-x64 --self-contained true -p:Pu
 
 ## Sample JSON File
 
-Create `samples/example-curve.json` for testing:
+Create `samples/example-motor.json` for testing:
 
 ```json
 {
   "name": "Example Motor",
   "manufacturer": "Acme Motors",
   "unit": "Nm",
-  "data": [
-    { "rpm": 0, "torque": 50.0 },
-    { "rpm": 500, "torque": 52.0 },
-    { "rpm": 1000, "torque": 51.0 },
-    { "rpm": 1500, "torque": 49.0 },
-    { "rpm": 2000, "torque": 46.0 },
-    { "rpm": 2500, "torque": 42.0 },
-    { "rpm": 3000, "torque": 37.0 },
-    { "rpm": 3500, "torque": 31.0 },
-    { "rpm": 4000, "torque": 25.0 },
-    { "rpm": 4500, "torque": 19.0 },
-    { "rpm": 5000, "torque": 14.0 }
+  "maxRpm": 5000,
+  "series": [
+    {
+      "name": "Peak",
+      "data": [
+        { "percent": 0, "rpm": 0, "torque": 55.0 },
+        { "percent": 10, "rpm": 500, "torque": 57.0 },
+        { "percent": 20, "rpm": 1000, "torque": 56.0 },
+        { "percent": 30, "rpm": 1500, "torque": 54.0 },
+        { "percent": 40, "rpm": 2000, "torque": 51.0 },
+        { "percent": 50, "rpm": 2500, "torque": 47.0 },
+        { "percent": 60, "rpm": 3000, "torque": 42.0 },
+        { "percent": 70, "rpm": 3500, "torque": 36.0 },
+        { "percent": 80, "rpm": 4000, "torque": 29.0 },
+        { "percent": 90, "rpm": 4500, "torque": 21.0 },
+        { "percent": 100, "rpm": 5000, "torque": 14.0 }
+      ]
+    },
+    {
+      "name": "Continuous",
+      "data": [
+        { "percent": 0, "rpm": 0, "torque": 45.0 },
+        { "percent": 10, "rpm": 500, "torque": 46.0 },
+        { "percent": 20, "rpm": 1000, "torque": 45.5 },
+        { "percent": 30, "rpm": 1500, "torque": 44.0 },
+        { "percent": 40, "rpm": 2000, "torque": 41.5 },
+        { "percent": 50, "rpm": 2500, "torque": 38.0 },
+        { "percent": 60, "rpm": 3000, "torque": 33.5 },
+        { "percent": 70, "rpm": 3500, "torque": 28.0 },
+        { "percent": 80, "rpm": 4000, "torque": 22.0 },
+        { "percent": 90, "rpm": 4500, "torque": 15.5 },
+        { "percent": 100, "rpm": 5000, "torque": 10.0 }
+      ]
+    }
   ],
   "metadata": {
     "created": "2024-01-15T10:30:00Z",
@@ -253,14 +296,24 @@ Create `samples/example-curve.json` for testing:
 }
 ```
 
+**Note:** Full files will have 101 data points per series (0% to 100% in 1% increments).
+The sample above shows 10% increments for brevity.
+
 ---
 
 ## Success Metrics
 
 ### MVP Complete When:
-- [ ] Can create new curve file
-- [ ] Can open existing JSON files
-- [ ] Displays torque curve as line graph
+- [ ] Can create new motor data file
+- [ ] Can open existing JSON files with multiple series
+- [ ] Displays torque curve as line graph with multiple series
+- [ ] Default series: "Peak" and "Continuous"
+- [ ] Can add/rename/delete curve series
+- [ ] Series visibility toggleable via checkboxes
+- [ ] Series distinguished by unique colors
+- [ ] User can edit series colors (persisted per series name)
+- [ ] Data saved at 1% increments (0-100%)
+- [ ] RPM displayed rounded to nearest whole number
 - [ ] RPM on X axis, Torque on Y axis (default)
 - [ ] Grid lines at rounded value increments
 - [ ] Hover tooltip shows RPM/torque values

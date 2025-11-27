@@ -69,10 +69,11 @@ If cross-platform is not important and you want the most stable, proven solution
 ┌─────────────────────────────────────────────────────────────────┐
 │                         Model Layer                              │
 │  ┌─────────────────┐  ┌─────────────────┐  ┌─────────────────┐  │
-│  │  TorqueCurve    │  │  DataPoint      │  │  CurveMetadata  │  │
-│  │  - Name         │  │  - RPM          │  │  - Created      │  │
-│  │  - Data[]       │  │  - Torque       │  │  - Notes        │  │
-│  │  - Unit         │  │                 │  │                 │  │
+│  │  MotorData      │  │  CurveSeries    │  │  DataPoint      │  │
+│  │  - Name         │  │  - Name         │  │  - Percent      │  │
+│  │  - MaxRpm       │  │  - Data[]       │  │  - RPM          │  │
+│  │  - Series[]     │  │  - Color        │  │  - Torque       │  │
+│  │  - Unit         │  │  - IsVisible    │  │                 │  │
 │  └─────────────────┘  └─────────────────┘  └─────────────────┘  │
 └─────────────────────────────────────────────────────────────────┘
                               │
@@ -100,13 +101,15 @@ CurveEditor/
 │       ├── App.axaml.cs
 │       ├── Program.cs
 │       ├── Models/
-│       │   ├── TorqueCurve.cs
+│       │   ├── MotorData.cs
+│       │   ├── CurveSeries.cs
 │       │   ├── DataPoint.cs
-│       │   └── CurveMetadata.cs
+│       │   └── MotorMetadata.cs
 │       ├── ViewModels/
 │       │   ├── ViewModelBase.cs
 │       │   ├── MainWindowViewModel.cs
-│       │   ├── CurveViewModel.cs
+│       │   ├── ChartViewModel.cs
+│       │   ├── SeriesViewModel.cs
 │       │   └── PointViewModel.cs
 │       ├── Views/
 │       │   ├── MainWindow.axaml
@@ -117,7 +120,9 @@ CurveEditor/
 │       │   ├── IFileService.cs
 │       │   ├── FileService.cs
 │       │   ├── IUnitService.cs
-│       │   └── UnitService.cs
+│       │   ├── UnitService.cs
+│       │   ├── IUserPreferencesService.cs
+│       │   └── UserPreferencesService.cs
 │       └── Assets/
 │           └── app-icon.ico
 ├── tests/
@@ -323,8 +328,9 @@ public partial class ChartViewModel : ViewModelBase
         ? new SolidColorPaint(new SKColor(240, 240, 240, 220))
         : null;
     
+    // Display RPM rounded to nearest whole number
     public Func<ChartPoint, string> TooltipFormatter => point =>
-        $"RPM: {point.SecondaryValue:N0}\nTorque: {point.PrimaryValue:N1} Nm";
+        $"RPM: {Math.Round(point.SecondaryValue):N0}\nTorque: {point.PrimaryValue:N1} Nm";
 }
 ```
 
@@ -338,7 +344,189 @@ XAML for tooltip positioning:
 </lvc:CartesianChart>
 ```
 
-### 6. File Operations
+### 6. Multiple Series Support
+
+Load and display multiple curve series with individual visibility control:
+
+```csharp
+public partial class ChartViewModel : ViewModelBase
+{
+    [ObservableProperty]
+    private ObservableCollection<SeriesViewModel> _curveSeries = new();
+    
+    public ISeries[] ChartSeries => CurveSeries
+        .Where(s => s.IsVisible)
+        .Select(s => new LineSeries<DataPoint>
+        {
+            Values = s.DataPoints,
+            Name = s.Name,
+            Stroke = new SolidColorPaint(s.Color, 2),
+            GeometryStroke = new SolidColorPaint(s.Color, 2),
+            GeometryFill = new SolidColorPaint(s.Color),
+            GeometrySize = 8,
+            Fill = null,
+            Mapping = (point, _) => new Coordinate(Math.Round(point.Rpm), point.Torque)
+        })
+        .ToArray();
+    
+    public void CreateDefaultSeries()
+    {
+        CurveSeries.Add(new SeriesViewModel("Peak", SKColors.Blue));
+        CurveSeries.Add(new SeriesViewModel("Continuous", SKColors.Green));
+    }
+    
+    public void AddSeries(string name)
+    {
+        var color = _preferencesService.GetColorForSeries(name) 
+            ?? GenerateNextColor();
+        CurveSeries.Add(new SeriesViewModel(name, color));
+    }
+}
+
+public partial class SeriesViewModel : ViewModelBase
+{
+    [ObservableProperty]
+    private string _name;
+    
+    [ObservableProperty]
+    private bool _isVisible = true;
+    
+    [ObservableProperty]
+    private SKColor _color;
+    
+    [ObservableProperty]
+    private ObservableCollection<DataPoint> _dataPoints = new();
+    
+    partial void OnColorChanged(SKColor value)
+    {
+        // Notify chart to refresh
+        OnPropertyChanged(nameof(Color));
+    }
+}
+```
+
+### 7. Series List with Visibility Checkboxes
+
+XAML for series list panel:
+```xml
+<ItemsControl ItemsSource="{Binding CurveSeries}">
+    <ItemsControl.ItemTemplate>
+        <DataTemplate>
+            <StackPanel Orientation="Horizontal" Margin="5">
+                <CheckBox IsChecked="{Binding IsVisible}" />
+                <Rectangle Width="20" Height="3" 
+                          Fill="{Binding Color, Converter={StaticResource ColorToBrush}}"
+                          Margin="5,0"/>
+                <TextBox Text="{Binding Name}" MinWidth="100"/>
+                <Button Content="🎨" Command="{Binding EditColorCommand}" 
+                        ToolTip.Tip="Edit color"/>
+                <Button Content="❌" Command="{Binding $parent[ItemsControl].DataContext.DeleteSeriesCommand}"
+                        CommandParameter="{Binding}"
+                        ToolTip.Tip="Delete series"/>
+            </StackPanel>
+        </DataTemplate>
+    </ItemsControl.ItemTemplate>
+</ItemsControl>
+<Button Content="+ Add Series" Command="{Binding AddSeriesCommand}"/>
+```
+
+### 8. Data Format (1% Increments)
+
+Data model for percentage-based curve data:
+
+```csharp
+public class DataPoint
+{
+    /// <summary>Percentage (0-100) where 0% = 0 RPM, 100% = MaxRpm</summary>
+    public int Percent { get; set; }
+    
+    /// <summary>RPM value (calculated from Percent × MaxRpm)</summary>
+    public double Rpm { get; set; }
+    
+    /// <summary>Torque value at this percentage point</summary>
+    public double Torque { get; set; }
+    
+    /// <summary>Get RPM rounded to nearest whole number for display</summary>
+    public int DisplayRpm => (int)Math.Round(Rpm);
+}
+
+public class CurveSeries
+{
+    public string Name { get; set; } = "Peak";
+    public List<DataPoint> Data { get; set; } = new();
+    
+    /// <summary>Generate 101 data points (0% to 100%)</summary>
+    public void InitializeData(double maxRpm, double defaultTorque)
+    {
+        Data.Clear();
+        for (int percent = 0; percent <= 100; percent++)
+        {
+            Data.Add(new DataPoint
+            {
+                Percent = percent,
+                Rpm = percent / 100.0 * maxRpm,
+                Torque = defaultTorque
+            });
+        }
+    }
+}
+```
+
+### 9. User Preferences Service
+
+Persist series colors and other user settings:
+
+```csharp
+public interface IUserPreferencesService
+{
+    SKColor? GetColorForSeries(string seriesName);
+    void SetColorForSeries(string seriesName, SKColor color);
+    bool ShowHoverTooltip { get; set; }
+    void Save();
+    void Load();
+}
+
+public class UserPreferencesService : IUserPreferencesService
+{
+    private readonly string _prefsPath;
+    private UserPreferences _prefs = new();
+    
+    public UserPreferencesService()
+    {
+        _prefsPath = Path.Combine(
+            Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData),
+            "CurveEditor",
+            "preferences.json"
+        );
+        Load();
+    }
+    
+    public SKColor? GetColorForSeries(string seriesName)
+    {
+        if (_prefs.SeriesColors.TryGetValue(seriesName, out var hex))
+            return SKColor.Parse(hex);
+        return null;
+    }
+    
+    public void SetColorForSeries(string seriesName, SKColor color)
+    {
+        _prefs.SeriesColors[seriesName] = color.ToString();
+        Save();
+    }
+}
+
+public class UserPreferences
+{
+    public Dictionary<string, string> SeriesColors { get; set; } = new()
+    {
+        ["Peak"] = "#FF0000FF",      // Blue
+        ["Continuous"] = "#FF00AA00"  // Green
+    };
+    public bool ShowHoverTooltip { get; set; } = true;
+}
+```
+
+### 10. File Operations
 
 Standard file dialog integration:
 
@@ -363,7 +551,7 @@ public async Task OpenFileAsync()
 }
 ```
 
-### 7. Unit Conversion (Future)
+### 11. Unit Conversion (Future)
 
 Prepared for Tare integration:
 
