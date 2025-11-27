@@ -208,14 +208,14 @@ Create `samples/example-curve.json` for testing:
 ## Success Metrics
 
 ### MVP Complete When:
-- [x] Can create new curve file
-- [x] Can open existing JSON files
-- [x] Displays torque curve as line graph
-- [x] Can edit values in data grid
-- [x] Chart updates in real-time
-- [x] Can save to JSON file
-- [x] Runs as portable executable
-- [x] Works on Windows 11
+- [ ] Can create new curve file
+- [ ] Can open existing JSON files
+- [ ] Displays torque curve as line graph
+- [ ] Can edit values in data grid
+- [ ] Chart updates in real-time
+- [ ] Can save to JSON file
+- [ ] Runs as portable executable
+- [ ] Works on Windows 11
 
 ### Nice to Have for MVP:
 - [ ] Interactive chart point editing

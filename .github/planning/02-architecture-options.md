@@ -4,7 +4,7 @@ This document outlines viable architecture options for the motor torque curve ed
 
 ---
 
-## Option 1: .NET MAUI (Recommended for C# Developers)
+## Option 1: .NET MAUI
 
 ### Overview
 .NET MAUI (Multi-platform App UI) is Microsoft's evolution of Xamarin.Forms, providing a single codebase for cross-platform applications.

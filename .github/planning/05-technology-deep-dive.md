@@ -296,11 +296,19 @@ Write-Host "Executable: $outputDir\CurveEditor.exe"
 OUTPUT_DIR="./publish"
 PROJECT="./src/CurveEditor/CurveEditor.csproj"
 
-# Detect platform
+# Detect platform and architecture
 if [[ "$OSTYPE" == "linux-gnu"* ]]; then
-    RID="linux-x64"
+    if [[ "$(uname -m)" == "aarch64" ]]; then
+        RID="linux-arm64"
+    else
+        RID="linux-x64"
+    fi
 elif [[ "$OSTYPE" == "darwin"* ]]; then
-    RID="osx-x64"
+    if [[ "$(uname -m)" == "arm64" ]]; then
+        RID="osx-arm64"
+    else
+        RID="osx-x64"
+    fi
 else
     RID="win-x64"
 fi
