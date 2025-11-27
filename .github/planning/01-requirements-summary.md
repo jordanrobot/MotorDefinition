@@ -12,8 +12,29 @@ A dedicated desktop application for editing motor torque curves stored in JSON f
    - Load JSON files containing motor torque curve data
    - Save edited curves back to JSON files
    - Standard file editor behavior (Open, Save, Save As, New)
+   - **Save As**: Save current file as new file, new file becomes active
+   - **Save Copy As**: Save copy to new file, original file stays active
+   - File saves always overwrite (no append mode)
+   - Explicit save only (changes not written until user saves)
 
-2. **Visualization**
+2. **Directory Browser**
+   - Side pane for browsing directories (VS Code-style)
+   - Open a directory to view motor curve files
+   - Click file in list to load into editor
+   - Shows JSON files in selected directory
+
+3. **Dirty State Tracking**
+   - Track unsaved changes ("dirty" state) for each file
+   - Mark file as dirty when any edit is made
+   - Clear dirty state when file is saved
+   - Show dirty indicator in UI (e.g., asterisk in title)
+
+4. **Save Prompts**
+   - Prompt to save when closing app with dirty file
+   - Prompt to save when opening new file with dirty file active
+   - Options: Save / Don't Save / Cancel
+
+5. **Visualization**
    - Display torque curves as line graphs
    - Interactive graph manipulation
    - Real-time updates between graph and numeric values
@@ -77,6 +98,12 @@ A dedicated desktop application for editing motor torque curves stored in JSON f
    - Toggle between Nm (Newton-meters) and lbf-in (pound-force inches)
    - Automatic value conversion when switching units
    - Use the `Tare` NuGet package (by jordanrobot) for unit handling
+
+14. **Tabbed Interface (Future)**
+    - Load multiple motor files simultaneously
+    - Each file in its own tab
+    - Switch between tabs to edit different files
+    - Independent dirty state per tab
 
 ### Non-Functional Requirements
 
@@ -142,26 +169,40 @@ Motor data file with multiple curve series at 1% increments:
 ## User Workflow
 
 1. Launch application (no installation)
-2. Open existing JSON file or create new motor data file
-3. View multiple series (Peak, Continuous, custom) in chart
-4. Toggle series visibility via checkboxes
-5. Select series to edit from list
-6. Optionally load background image for reference
-7. Scale background image to match graph dimensions
-8. Edit curve via:
+2. Open a directory in the side pane to browse files
+3. Click a motor curve file to load it into the editor
+4. View multiple series (Peak, Continuous, custom) in chart
+5. Toggle series visibility via checkboxes
+6. Select series to edit from list
+7. Optionally load background image for reference
+8. Scale background image to match graph dimensions
+9. Edit curve via:
    - Dragging points up/down (EQ-style)
    - Adjusting Q slider for curve sharpness
    - Direct numeric input in properties panel
-9. Hover over curve to see precise values (RPM rounded to whole number)
-10. Scale axes as needed to match reference image
-11. Customize series colors (persisted across sessions)
-12. Add/rename/delete curve series as needed
-13. Toggle units (future feature)
-14. Save changes to file (data saved at 1% increments)
+10. File becomes "dirty" (unsaved changes indicator)
+11. Hover over curve to see precise values (RPM rounded to whole number)
+12. Scale axes as needed to match reference image
+13. Customize series colors (persisted across sessions)
+14. Add/rename/delete curve series as needed
+15. Toggle units (future feature)
+16. Save changes to file (explicit save, always overwrites)
+    - **Save**: Overwrite current file
+    - **Save As**: Save as new file, new file becomes active
+    - **Save Copy As**: Save copy, original file stays active
+17. If closing or opening new file with unsaved changes, prompted to save
 
 ## Success Criteria
 
 - [ ] Can load and parse JSON motor data files
+- [ ] Directory browser side pane (VS Code-style)
+- [ ] Click file in directory list to load
+- [ ] Dirty state tracked for unsaved changes
+- [ ] Prompt to save on close if dirty
+- [ ] Prompt to save when opening new file if dirty
+- [ ] Save command overwrites file
+- [ ] Save As creates new file (becomes active)
+- [ ] Save Copy As creates copy (original stays active)
 - [ ] Displays interactive line graph with multiple series
 - [ ] Shows/hides individual series via checkboxes
 - [ ] Series distinguished by color

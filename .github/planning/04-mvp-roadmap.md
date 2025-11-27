@@ -9,14 +9,20 @@ Phase 1: Foundation (Week 1-2)
 Phase 2: Core Features (Week 3-4)
     └── Chart visualization, data binding, grid lines, hover tooltip
 
-Phase 3: Advanced Editing (Week 5-7)
+Phase 3: File Management (Week 5)
+    └── Directory browser, dirty state, save prompts, Save As/Copy As
+
+Phase 4: Advanced Editing (Week 6-8)
     └── EQ-style editing, Q slider, background images, axis scaling
 
-Phase 4: Polish & User Preferences (Week 8)
+Phase 5: Polish & User Preferences (Week 9)
     └── User settings, keyboard shortcuts, undo/redo
 
-Phase 5: Units System (Future)
+Phase 6: Units System (Future)
     └── Tare integration, unit conversion, preferences
+
+Phase 7: Tabbed Interface (Future)
+    └── Multiple files open simultaneously in tabs
 ```
 
 ---
@@ -32,9 +38,10 @@ Phase 5: Units System (Future)
 
 ### 1.2 Basic Window Shell
 - [ ] Create MainWindow with menu bar
-- [ ] Implement basic layout (chart area + properties panel)
-- [ ] Add File menu (New, Open, Save, Save As, Exit)
+- [ ] Implement basic layout (directory pane + chart area + properties panel)
+- [ ] Add File menu (New, Open, Save, Save As, Save Copy As, Exit)
 - [ ] Implement window title showing current file
+- [ ] Add asterisk (*) to title when file is dirty
 
 ### 1.3 Data Models
 - [ ] Create MotorData model class (container for file)
@@ -47,7 +54,9 @@ Phase 5: Units System (Future)
 
 ### 1.4 File Service
 - [ ] Implement JSON loading
-- [ ] Implement JSON saving
+- [ ] Implement JSON saving (always overwrites)
+- [ ] Implement Save As (save to new file, becomes active)
+- [ ] Implement Save Copy As (save copy, original stays active)
 - [ ] Handle file dialogs
 - [ ] Error handling for invalid files
 - [ ] Write service unit tests
@@ -117,15 +126,48 @@ Phase 5: Units System (Future)
 
 ---
 
-## Phase 3: Advanced Editing
+## Phase 3: File Management
 
-### 3.1 EQ-Style Curve Editing
+### 3.1 Directory Browser (VS Code-style)
+- [ ] Create side pane for directory browsing
+- [ ] "Open Folder" command to select directory
+- [ ] List JSON files in selected directory
+- [ ] Click file in list to load into editor
+- [ ] Refresh button to reload file list
+- [ ] Show current directory path
+
+### 3.2 Dirty State Tracking
+- [ ] Track unsaved changes per file
+- [ ] Mark file dirty when any edit is made
+- [ ] Clear dirty state when file is saved
+- [ ] Show asterisk (*) in window title when dirty
+- [ ] Visual indicator in directory list for dirty files
+
+### 3.3 Save Prompts
+- [ ] Prompt to save when closing app with dirty file
+- [ ] Prompt to save when opening new file with dirty file active
+- [ ] Dialog with Save / Don't Save / Cancel options
+- [ ] Handle Cancel to abort the close/open operation
+
+### 3.4 Save Commands
+- [ ] Save command overwrites current file
+- [ ] Save As: save to new file, new file becomes active
+- [ ] Save Copy As: save copy to new file, original stays active
+- [ ] All saves overwrite (no append mode)
+
+**Deliverable:** Full file management with directory browser and save prompts.
+
+---
+
+## Phase 4: Advanced Editing
+
+### 4.1 EQ-Style Curve Editing
 - [ ] Enable point selection on chart (click to select)
 - [ ] Implement point dragging (drag up/down to adjust torque)
 - [ ] Visual feedback when point is selected
 - [ ] Sync dragged values back to data model in real-time
 
-### 3.2 Q Value Control
+### 4.2 Q Value Control
 - [ ] Add Q slider (range 0.0 to 1.0)
 - [ ] Q affects curve sharpness when editing
   - Low Q = sharp/abrupt changes (affects fewer neighbors)
@@ -133,7 +175,7 @@ Phase 5: Units System (Future)
 - [ ] Visual indication of affected zone when dragging
 - [ ] Q value persists during editing session
 
-### 3.3 Background Image Overlay
+### 4.3 Background Image Overlay
 - [ ] Add "Load Background Image" menu/button
 - [ ] Support PNG, JPG, BMP image formats
 - [ ] Render image behind chart (z-order below curve)
@@ -142,20 +184,20 @@ Phase 5: Units System (Future)
 - [ ] Position offset controls (optional)
 - [ ] Toggle image visibility on/off
 
-### 3.4 Axis Scaling
+### 4.4 Axis Scaling
 - [ ] X-axis range slider (min/max RPM)
 - [ ] Y-axis range slider (min/max Torque)
 - [ ] Smooth graph recalculation (no jitter)
 - [ ] Grid lines and labels update with scaling
 - [ ] Maintain nice rounded label increments
 
-### 3.5 Add/Remove Data Points
+### 4.5 Add/Remove Data Points
 - [ ] Add "Insert Point" button
 - [ ] Add "Delete Point" button
 - [ ] Handle insertion between existing points
 - [ ] Update chart and grid automatically
 
-### 3.6 Undo/Redo (Optional MVP)
+### 4.6 Undo/Redo (Optional MVP)
 - [ ] Implement command pattern for edits
 - [ ] Track edit history
 - [ ] Enable Ctrl+Z / Ctrl+Y shortcuts
@@ -164,9 +206,9 @@ Phase 5: Units System (Future)
 
 ---
 
-## Phase 4: Polish & User Preferences
+## Phase 5: Polish & User Preferences
 
-### 4.1 User Settings
+### 5.1 User Settings
 - [ ] Toggle hover tooltip on/off
 - [ ] Series color editor (color picker per series)
 - [ ] Save series colors per series name (persistent)
@@ -174,13 +216,13 @@ Phase 5: Units System (Future)
 - [ ] Persist settings between sessions
 - [ ] Settings accessible via menu
 
-### 4.2 UI Polish
+### 5.2 UI Polish
 - [ ] Add toolbar with common actions
 - [ ] Implement keyboard shortcuts
 - [ ] Add status bar
 - [ ] Add application icon
 
-### 4.3 Unsaved Changes Handling
+### 5.3 Unsaved Changes Handling
 - [ ] Prompt to save on close
 - [ ] Prompt to save on open new file
 - [ ] Show asterisk (*) in title for unsaved changes
@@ -189,29 +231,52 @@ Phase 5: Units System (Future)
 
 ---
 
-## Phase 5: Units System (Future)
+## Phase 6: Units System (Future)
 
-### 5.1 Tare Integration
+### 6.1 Tare Integration
 - [ ] Add Tare NuGet package
 - [ ] Create UnitService using Tare
 - [ ] Define supported units (Nm, lbf-in)
 
-### 5.2 Unit Toggle UI
+### 6.2 Unit Toggle UI
 - [ ] Add unit selector in UI
 - [ ] Store current unit preference
 - [ ] Convert displayed values on toggle
 
-### 5.3 Conversion Logic
+### 6.3 Conversion Logic
 - [ ] Convert on display (not stored data)
 - [ ] Or: Convert stored data (with user confirmation)
 - [ ] Handle precision/rounding
 
-### 5.4 Persistence
+### 6.4 Persistence
 - [ ] Save unit preference
 - [ ] Remember last used unit
 - [ ] Store unit in JSON file (optional)
 
 **Deliverable:** Full unit system support.
+
+---
+
+## Phase 7: Tabbed Interface (Future)
+
+### 7.1 Tab Management
+- [ ] Tab bar for multiple open files
+- [ ] Each file in its own tab
+- [ ] Click tab to switch between files
+- [ ] Close button on each tab
+
+### 7.2 Independent State
+- [ ] Each tab has independent dirty state
+- [ ] Each tab has independent undo/redo history
+- [ ] Prompt to save when closing dirty tab
+
+### 7.3 Tab Behavior
+- [ ] New file opens in new tab
+- [ ] Double-click file in directory browser opens new tab
+- [ ] Option to open in current tab vs new tab
+- [ ] Drag tabs to reorder
+
+**Deliverable:** Multi-file editing with tabbed interface.
 
 ---
 
@@ -306,6 +371,14 @@ The sample above shows 10% increments for brevity.
 ### MVP Complete When:
 - [ ] Can create new motor data file
 - [ ] Can open existing JSON files with multiple series
+- [ ] Directory browser side pane (VS Code-style)
+- [ ] Click file in directory list to load
+- [ ] Dirty state tracked for unsaved changes
+- [ ] Prompt to save on close if dirty
+- [ ] Prompt to save when opening new file if dirty
+- [ ] Save command overwrites file
+- [ ] Save As creates new file (becomes active)
+- [ ] Save Copy As creates copy (original stays active)
 - [ ] Displays torque curve as line graph with multiple series
 - [ ] Default series: "Peak" and "Continuous"
 - [ ] Can add/rename/delete curve series
@@ -333,6 +406,10 @@ The sample above shows 10% increments for brevity.
 - [ ] Keyboard shortcuts
 - [ ] Recent files list
 - [ ] Axis swap toggle (RPM ↔ Torque)
+
+### Future Features:
+- [ ] Tabbed interface for multiple files
+- [ ] Units system (Nm ↔ lbf-in via Tare)
 
 ---
 

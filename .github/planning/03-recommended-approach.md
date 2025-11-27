@@ -110,15 +110,19 @@ CurveEditor/
 │       │   ├── MainWindowViewModel.cs
 │       │   ├── ChartViewModel.cs
 │       │   ├── SeriesViewModel.cs
+│       │   ├── DirectoryBrowserViewModel.cs
 │       │   └── PointViewModel.cs
 │       ├── Views/
 │       │   ├── MainWindow.axaml
 │       │   ├── MainWindow.axaml.cs
 │       │   ├── ChartView.axaml
+│       │   ├── DirectoryBrowserPane.axaml
 │       │   └── PropertiesPanel.axaml
 │       ├── Services/
 │       │   ├── IFileService.cs
 │       │   ├── FileService.cs
+│       │   ├── IDirectoryService.cs
+│       │   ├── DirectoryService.cs
 │       │   ├── IUnitService.cs
 │       │   ├── UnitService.cs
 │       │   ├── IUserPreferencesService.cs
@@ -528,30 +532,284 @@ public class UserPreferences
 
 ### 10. File Operations
 
-Standard file dialog integration:
+File service with Save, Save As, and Save Copy As:
 
 ```csharp
-public async Task OpenFileAsync()
+public interface IFileService
 {
-    var dialog = new OpenFileDialog
-    {
-        Title = "Open Torque Curve",
-        Filters = new List<FileDialogFilter>
-        {
-            new() { Name = "JSON Files", Extensions = { "json" } },
-            new() { Name = "All Files", Extensions = { "*" } }
-        }
-    };
+    Task<MotorData?> LoadAsync(string filePath);
+    Task SaveAsync(MotorData data, string filePath);
+    string? CurrentFilePath { get; }
+    bool IsDirty { get; }
+    void MarkDirty();
+    void ClearDirty();
+}
+
+public class FileService : IFileService
+{
+    public string? CurrentFilePath { get; private set; }
+    public bool IsDirty { get; private set; }
     
-    var result = await dialog.ShowAsync(_window);
-    if (result?.Length > 0)
+    public async Task<MotorData?> LoadAsync(string filePath)
     {
-        await LoadCurveAsync(result[0]);
+        var json = await File.ReadAllTextAsync(filePath);
+        var data = JsonSerializer.Deserialize<MotorData>(json);
+        CurrentFilePath = filePath;
+        IsDirty = false;
+        return data;
+    }
+    
+    public async Task SaveAsync(MotorData data, string filePath)
+    {
+        var json = JsonSerializer.Serialize(data, new JsonSerializerOptions 
+        { 
+            WriteIndented = true 
+        });
+        await File.WriteAllTextAsync(filePath, json); // Always overwrites
+        CurrentFilePath = filePath;
+        IsDirty = false;
+    }
+    
+    public void MarkDirty() => IsDirty = true;
+    public void ClearDirty() => IsDirty = false;
+}
+```
+
+Save As vs Save Copy As:
+
+```csharp
+public partial class MainWindowViewModel : ViewModelBase
+{
+    /// <summary>Save current file (overwrite)</summary>
+    [RelayCommand]
+    private async Task SaveAsync()
+    {
+        if (_fileService.CurrentFilePath != null)
+        {
+            await _fileService.SaveAsync(_motorData, _fileService.CurrentFilePath);
+        }
+        else
+        {
+            await SaveAsAsync();
+        }
+    }
+    
+    /// <summary>Save as new file, new file becomes active</summary>
+    [RelayCommand]
+    private async Task SaveAsAsync()
+    {
+        var path = await ShowSaveDialogAsync();
+        if (path != null)
+        {
+            await _fileService.SaveAsync(_motorData, path);
+            // New file is now the active file (CurrentFilePath updated in SaveAsync)
+            UpdateWindowTitle();
+        }
+    }
+    
+    /// <summary>Save copy to new file, original file stays active</summary>
+    [RelayCommand]
+    private async Task SaveCopyAsAsync()
+    {
+        var path = await ShowSaveDialogAsync();
+        if (path != null)
+        {
+            var originalPath = _fileService.CurrentFilePath;
+            await _fileService.SaveAsync(_motorData, path);
+            // Restore original file as active
+            _fileService.CurrentFilePath = originalPath;
+            // Note: Dirty state preserved from original file
+        }
     }
 }
 ```
 
-### 11. Unit Conversion (Future)
+### 11. Directory Browser (VS Code-style)
+
+Side pane for browsing and selecting files:
+
+```csharp
+public partial class DirectoryBrowserViewModel : ViewModelBase
+{
+    [ObservableProperty]
+    private string? _currentDirectory;
+    
+    [ObservableProperty]
+    private ObservableCollection<FileItemViewModel> _files = new();
+    
+    [ObservableProperty]
+    private FileItemViewModel? _selectedFile;
+    
+    [RelayCommand]
+    private async Task OpenDirectoryAsync()
+    {
+        var dialog = new OpenFolderDialog
+        {
+            Title = "Open Directory"
+        };
+        
+        var result = await dialog.ShowAsync(_window);
+        if (result != null)
+        {
+            CurrentDirectory = result;
+            RefreshFileList();
+        }
+    }
+    
+    private void RefreshFileList()
+    {
+        Files.Clear();
+        if (CurrentDirectory == null) return;
+        
+        var jsonFiles = Directory.GetFiles(CurrentDirectory, "*.json");
+        foreach (var file in jsonFiles.OrderBy(f => f))
+        {
+            Files.Add(new FileItemViewModel
+            {
+                FileName = Path.GetFileName(file),
+                FullPath = file
+            });
+        }
+    }
+    
+    partial void OnSelectedFileChanged(FileItemViewModel? value)
+    {
+        if (value != null)
+        {
+            // Notify main view model to load the file
+            _messenger.Send(new FileSelectedMessage(value.FullPath));
+        }
+    }
+}
+
+public class FileItemViewModel
+{
+    public string FileName { get; set; } = "";
+    public string FullPath { get; set; } = "";
+}
+```
+
+XAML for directory browser pane:
+```xml
+<UserControl x:Class="CurveEditor.Views.DirectoryBrowserPane">
+    <DockPanel>
+        <StackPanel DockPanel.Dock="Top" Orientation="Horizontal" Margin="5">
+            <Button Content="📁 Open Folder" Command="{Binding OpenDirectoryCommand}"/>
+            <Button Content="🔄" Command="{Binding RefreshCommand}" ToolTip.Tip="Refresh"/>
+        </StackPanel>
+        
+        <TextBlock DockPanel.Dock="Top" Text="{Binding CurrentDirectory}" 
+                   FontSize="11" Margin="5" TextTrimming="CharacterEllipsis"/>
+        
+        <ListBox ItemsSource="{Binding Files}" 
+                 SelectedItem="{Binding SelectedFile}">
+            <ListBox.ItemTemplate>
+                <DataTemplate>
+                    <StackPanel Orientation="Horizontal">
+                        <TextBlock Text="📄" Margin="0,0,5,0"/>
+                        <TextBlock Text="{Binding FileName}"/>
+                    </StackPanel>
+                </DataTemplate>
+            </ListBox.ItemTemplate>
+        </ListBox>
+    </DockPanel>
+</UserControl>
+```
+
+### 12. Dirty State and Save Prompts
+
+Track unsaved changes and prompt before losing data:
+
+```csharp
+public partial class MainWindowViewModel : ViewModelBase
+{
+    [ObservableProperty]
+    private bool _isDirty;
+    
+    public string WindowTitle => _fileService.CurrentFilePath != null
+        ? $"{Path.GetFileName(_fileService.CurrentFilePath)}{(IsDirty ? " *" : "")} - Curve Editor"
+        : "Curve Editor";
+    
+    /// <summary>Mark file as dirty when any edit is made</summary>
+    private void OnDataChanged()
+    {
+        IsDirty = true;
+        _fileService.MarkDirty();
+        OnPropertyChanged(nameof(WindowTitle));
+    }
+    
+    /// <summary>Check for unsaved changes before opening new file</summary>
+    public async Task<bool> ConfirmDiscardChangesAsync()
+    {
+        if (!IsDirty) return true;
+        
+        var result = await ShowSavePromptAsync(
+            "Unsaved Changes",
+            "Do you want to save changes before continuing?"
+        );
+        
+        switch (result)
+        {
+            case SavePromptResult.Save:
+                await SaveAsync();
+                return true;
+            case SavePromptResult.DontSave:
+                return true;
+            case SavePromptResult.Cancel:
+            default:
+                return false;
+        }
+    }
+    
+    /// <summary>Handle file selected from directory browser</summary>
+    private async Task OnFileSelectedAsync(string filePath)
+    {
+        if (!await ConfirmDiscardChangesAsync())
+            return;
+            
+        await LoadFileAsync(filePath);
+    }
+    
+    /// <summary>Handle window closing</summary>
+    public async Task<bool> OnClosingAsync()
+    {
+        return await ConfirmDiscardChangesAsync();
+    }
+}
+
+public enum SavePromptResult
+{
+    Save,
+    DontSave,
+    Cancel
+}
+```
+
+Save prompt dialog:
+```csharp
+private async Task<SavePromptResult> ShowSavePromptAsync(string title, string message)
+{
+    var dialog = new ContentDialog
+    {
+        Title = title,
+        Content = message,
+        PrimaryButtonText = "Save",
+        SecondaryButtonText = "Don't Save",
+        CloseButtonText = "Cancel"
+    };
+    
+    var result = await dialog.ShowAsync();
+    
+    return result switch
+    {
+        ContentDialogResult.Primary => SavePromptResult.Save,
+        ContentDialogResult.Secondary => SavePromptResult.DontSave,
+        _ => SavePromptResult.Cancel
+    };
+}
+```
+
+### 13. Unit Conversion (Future)
 
 Prepared for Tare integration:
 
