@@ -51,7 +51,7 @@ Phase 8: Power Curve Overlay (Future)
 ### 1.1 Project Setup
 - [ ] Create solution with Avalonia template
 - [ ] Configure project for .NET 8
-- [ ] Add NuGet packages (Avalonia, CommunityToolkit.Mvvm, Serilog)
+- [ ] Add NuGet packages (Avalonia, CommunityToolkit.Mvvm, Serilog, Serilog.Sinks.File, Serilog.Sinks.Console)
 - [ ] Set up project structure (Models, Views, ViewModels, Services)
 - [ ] Configure single-file publishing
 - [ ] Set up Serilog logging infrastructure
@@ -119,7 +119,7 @@ Phase 8: Power Curve Overlay (Future)
 - [ ] Wire Ctrl+Z / Ctrl+Y keyboard shortcuts
 - [ ] Integrate undo/redo with dirty state tracking
 
-**Deliverable:** Application that can create new motor files, open, display JSON content, save files, with full undo/redo support and structured logging.
+**Deliverable:** Application that can create, open, and save motor files with JSON content display. Includes full undo/redo support and structured logging.
 
 ---
 
