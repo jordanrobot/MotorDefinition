@@ -10,7 +10,18 @@ namespace CurveEditor.Models;
 /// </summary>
 public class CurveSeries
 {
+    /// <summary>
+    /// The current schema version for curve series data.
+    /// </summary>
+    public const string CurrentSchemaVersion = "1.0";
+
     private string _name = string.Empty;
+
+    /// <summary>
+    /// Schema version for this curve series data structure.
+    /// </summary>
+    [JsonPropertyName("schemaVersion")]
+    public string SchemaVersion { get; set; } = CurrentSchemaVersion;
 
     /// <summary>
     /// The name of this curve series (e.g., "Peak", "Continuous").
@@ -28,6 +39,19 @@ public class CurveSeries
             _name = value;
         }
     }
+
+    /// <summary>
+    /// Notes or comments about this curve series.
+    /// </summary>
+    [JsonPropertyName("notes")]
+    public string Notes { get; set; } = string.Empty;
+
+    /// <summary>
+    /// Indicates whether this curve series is locked for editing.
+    /// When true, the curve data should not be modified.
+    /// </summary>
+    [JsonPropertyName("locked")]
+    public bool Locked { get; set; }
 
     /// <summary>
     /// The data points for this curve, stored at 1% increments.

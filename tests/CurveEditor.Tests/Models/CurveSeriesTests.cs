@@ -24,6 +24,53 @@ public class CurveSeriesTests
         Assert.Empty(series.Data);
     }
 
+    [Fact]
+    public void SchemaVersion_DefaultsToCurrentVersion()
+    {
+        var series = new CurveSeries();
+
+        Assert.Equal(CurveSeries.CurrentSchemaVersion, series.SchemaVersion);
+        Assert.Equal("1.0", series.SchemaVersion);
+    }
+
+    [Fact]
+    public void Notes_DefaultsToEmpty()
+    {
+        var series = new CurveSeries();
+
+        Assert.Equal(string.Empty, series.Notes);
+    }
+
+    [Fact]
+    public void Notes_CanBeSet()
+    {
+        var series = new CurveSeries("Peak")
+        {
+            Notes = "Measured at 25°C ambient temperature"
+        };
+
+        Assert.Equal("Measured at 25°C ambient temperature", series.Notes);
+    }
+
+    [Fact]
+    public void Locked_DefaultsToFalse()
+    {
+        var series = new CurveSeries();
+
+        Assert.False(series.Locked);
+    }
+
+    [Fact]
+    public void Locked_CanBeSetToTrue()
+    {
+        var series = new CurveSeries("Peak")
+        {
+            Locked = true
+        };
+
+        Assert.True(series.Locked);
+    }
+
     [Theory]
     [InlineData(null)]
     [InlineData("")]

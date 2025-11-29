@@ -37,7 +37,10 @@
           "peakAmperage": 22.0,
           "series": [
             {
+              "schemaVersion": "1.0",
               "name": "Peak",
+              "notes": "Peak torque curve for short-term operation",
+              "locked": false,
               "data": [
                 { "percent": 0, "rpm": 0, "torque": 52.0 },
                 { "percent": 10, "rpm": 480, "torque": 52.0 },
@@ -53,7 +56,10 @@
               ]
             },
             {
+              "schemaVersion": "1.0",
               "name": "Continuous",
+              "notes": "Continuous torque curve for sustained operation",
+              "locked": true,
               "data": [
                 { "percent": 0, "rpm": 0, "torque": 42.0 },
                 { "percent": 10, "rpm": 480, "torque": 42.0 },
@@ -81,7 +87,10 @@
           "peakAmperage": 25.0,
           "series": [
             {
+              "schemaVersion": "1.0",
               "name": "Peak",
+              "notes": "",
+              "locked": false,
               "data": [
                 { "percent": 0, "rpm": 0, "torque": 55.0 },
                 { "percent": 10, "rpm": 500, "torque": 55.0 },
@@ -97,7 +106,10 @@
               ]
             },
             {
+              "schemaVersion": "1.0",
               "name": "Continuous",
+              "notes": "",
+              "locked": false,
               "data": [
                 { "percent": 0, "rpm": 0, "torque": 45.0 },
                 { "percent": 10, "rpm": 500, "torque": 45.0 },
@@ -132,7 +144,10 @@
           "peakAmperage": 21.0,
           "series": [
             {
+              "schemaVersion": "1.0",
               "name": "Peak",
+              "notes": "",
+              "locked": false,
               "data": [
                 { "percent": 0, "rpm": 0, "torque": 50.0 },
                 { "percent": 10, "rpm": 460, "torque": 50.0 },
@@ -148,7 +163,10 @@
               ]
             },
             {
+              "schemaVersion": "1.0",
               "name": "Continuous",
+              "notes": "",
+              "locked": false,
               "data": [
                 { "percent": 0, "rpm": 0, "torque": 40.0 },
                 { "percent": 10, "rpm": 460, "torque": 40.0 },
