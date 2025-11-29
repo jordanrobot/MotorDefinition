@@ -1,5 +1,6 @@
 using System;
 using System.IO;
+using System.Linq;
 using System.Text.Json;
 using System.Threading.Tasks;
 using CurveEditor.Models;
@@ -33,22 +34,30 @@ public class FileServiceTests : IDisposable
         GC.SuppressFinalize(this);
     }
 
-    private MotorDefinition CreateTestMotorDefinition()
+    private static MotorDefinition CreateTestMotorDefinition()
     {
         var motor = new MotorDefinition("Test Motor")
         {
             Manufacturer = "Test Mfg",
             PartNumber = "TM-1234",
-            MaxRpm = 5000,
+            MaxSpeed = 5000,
             RatedPeakTorque = 55.0,
             RatedContinuousTorque = 45.0,
             HasBrake = true,
             Power = 1500
         };
 
+        // Add a drive with a voltage configuration and series
+        var drive = motor.AddDrive("Test Drive");
+        var voltage = drive.AddVoltageConfiguration(220);
+        voltage.MaxSpeed = 5000;
+        voltage.Power = 1500;
+        voltage.RatedPeakTorque = 55.0;
+        voltage.RatedContinuousTorque = 45.0;
+
         var series = new CurveSeries("Peak");
         series.InitializeData(5000, 55.0);
-        motor.Series.Add(series);
+        voltage.Series.Add(series);
 
         return motor;
     }
@@ -210,9 +219,6 @@ public class FileServiceTests : IDisposable
     {
         var original = CreateTestMotorDefinition();
         original.Manufacturer = "Test Corp";
-        original.Voltage = 48;
-        original.ContinuousAmperage = 10.5;
-        original.PeakAmperage = 25.0;
         original.Units.Torque = "lbf-in";
         original.Metadata.Notes = "Test notes";
 
@@ -223,14 +229,40 @@ public class FileServiceTests : IDisposable
         Assert.Equal(original.MotorName, loaded.MotorName);
         Assert.Equal(original.Manufacturer, loaded.Manufacturer);
         Assert.Equal(original.PartNumber, loaded.PartNumber);
-        Assert.Equal(original.MaxRpm, loaded.MaxRpm);
+        Assert.Equal(original.MaxSpeed, loaded.MaxSpeed);
         Assert.Equal(original.RatedPeakTorque, loaded.RatedPeakTorque);
         Assert.Equal(original.HasBrake, loaded.HasBrake);
-        Assert.Equal(original.Voltage, loaded.Voltage);
-        Assert.Equal(original.ContinuousAmperage, loaded.ContinuousAmperage);
-        Assert.Equal(original.PeakAmperage, loaded.PeakAmperage);
         Assert.Equal(original.Units.Torque, loaded.Units.Torque);
         Assert.Equal(original.Metadata.Notes, loaded.Metadata.Notes);
+    }
+
+    [Fact]
+    public async Task SaveAndLoad_RoundTrip_PreservesDriveVoltageSeriesHierarchy()
+    {
+        var original = CreateTestMotorDefinition();
+        var filePath = Path.Combine(_tempDir, "hierarchy-roundtrip.json");
+
+        await _service.SaveAsAsync(original, filePath);
+        var loaded = await _service.LoadAsync(filePath);
+
+        Assert.Equal(original.Drives.Count, loaded.Drives.Count);
+        
+        var origDrive = original.Drives[0];
+        var loadDrive = loaded.Drives[0];
+        Assert.Equal(origDrive.Name, loadDrive.Name);
+        Assert.Equal(origDrive.Voltages.Count, loadDrive.Voltages.Count);
+
+        var origVoltage = origDrive.Voltages[0];
+        var loadVoltage = loadDrive.Voltages[0];
+        Assert.Equal(origVoltage.Voltage, loadVoltage.Voltage);
+        Assert.Equal(origVoltage.Power, loadVoltage.Power);
+        Assert.Equal(origVoltage.MaxSpeed, loadVoltage.MaxSpeed);
+        Assert.Equal(origVoltage.Series.Count, loadVoltage.Series.Count);
+
+        var origSeries = origVoltage.Series[0];
+        var loadSeries = loadVoltage.Series[0];
+        Assert.Equal(origSeries.Name, loadSeries.Name);
+        Assert.Equal(101, loadSeries.Data.Count);
     }
 
     [Fact]
@@ -242,11 +274,14 @@ public class FileServiceTests : IDisposable
         await _service.SaveAsAsync(original, filePath);
         var loaded = await _service.LoadAsync(filePath);
 
-        Assert.Equal(original.Series.Count, loaded.Series.Count);
-        for (var s = 0; s < original.Series.Count; s++)
+        var originalAllSeries = original.GetAllSeries().ToList();
+        var loadedAllSeries = loaded.GetAllSeries().ToList();
+
+        Assert.Equal(originalAllSeries.Count, loadedAllSeries.Count);
+        for (var s = 0; s < originalAllSeries.Count; s++)
         {
-            var origSeries = original.Series[s];
-            var loadSeries = loaded.Series[s];
+            var origSeries = originalAllSeries[s];
+            var loadSeries = loadedAllSeries[s];
 
             Assert.Equal(origSeries.Name, loadSeries.Name);
             Assert.Equal(101, loadSeries.Data.Count);
@@ -278,14 +313,16 @@ public class FileServiceTests : IDisposable
     }
 
     [Fact]
-    public void CreateNew_CreatesMotorWithDefaultSeries()
+    public void CreateNew_CreatesMotorWithDefaultDriveAndSeries()
     {
         var motor = _service.CreateNew("New Motor", 5000, 50, 1500);
 
         Assert.Equal("New Motor", motor.MotorName);
-        Assert.Equal(2, motor.Series.Count);
-        Assert.NotNull(motor.GetSeriesByName("Peak"));
-        Assert.NotNull(motor.GetSeriesByName("Continuous"));
+        Assert.Single(motor.Drives);
+        Assert.Single(motor.Drives[0].Voltages);
+        Assert.Equal(2, motor.Drives[0].Voltages[0].Series.Count);
+        Assert.NotNull(motor.Drives[0].Voltages[0].GetSeriesByName("Peak"));
+        Assert.NotNull(motor.Drives[0].Voltages[0].GetSeriesByName("Continuous"));
     }
 
     [Fact]
@@ -309,7 +346,8 @@ public class FileServiceTests : IDisposable
     {
         var motor = _service.CreateNew("New Motor", 5000, 50, 1500);
 
-        Assert.All(motor.Series, s => Assert.Equal(101, s.Data.Count));
+        var allSeries = motor.GetAllSeries();
+        Assert.All(allSeries, s => Assert.Equal(101, s.Data.Count));
     }
 
     [Fact]

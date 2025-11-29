@@ -1,5 +1,6 @@
 using System;
 using System.IO;
+using System.Linq;
 using System.Text.Json;
 using System.Threading.Tasks;
 using CurveEditor.Models;
@@ -67,8 +68,9 @@ public class FileService : IFileService
             CurrentFilePath = filePath;
             IsDirty = false;
 
-            Log.Debug("Loaded motor: {MotorName} with {SeriesCount} series", 
-                motorDefinition.MotorName, motorDefinition.Series.Count);
+            var totalSeries = motorDefinition.GetAllSeries().Count();
+            Log.Debug("Loaded motor: {MotorName} with {DriveCount} drives and {SeriesCount} total series", 
+                motorDefinition.MotorName, motorDefinition.Drives.Count, totalSeries);
 
             return motorDefinition;
         }
@@ -123,13 +125,13 @@ public class FileService : IFileService
     }
 
     /// <inheritdoc />
-    public MotorDefinition CreateNew(string motorName, double maxRpm, double maxTorque, double maxPower)
+    public MotorDefinition CreateNew(string motorName, double maxSpeed, double maxTorque, double maxPower)
     {
         Log.Information("Creating new motor definition: {MotorName}", motorName);
 
         var motor = new MotorDefinition(motorName)
         {
-            MaxRpm = maxRpm,
+            MaxSpeed = maxSpeed,
             RatedPeakTorque = maxTorque,
             Power = maxPower,
             Metadata = new MotorMetadata
@@ -139,16 +141,26 @@ public class FileService : IFileService
             }
         };
 
+        // Create default drive configuration
+        var drive = motor.AddDrive("Default Drive");
+        
+        // Add a default voltage configuration
+        var voltageConfig = drive.AddVoltageConfiguration(220);
+        voltageConfig.MaxSpeed = maxSpeed;
+        voltageConfig.RatedPeakTorque = maxTorque;
+        voltageConfig.RatedContinuousTorque = maxTorque * 0.8;
+        voltageConfig.Power = maxPower;
+
         // Create default Peak and Continuous series
         var peakSeries = new CurveSeries("Peak");
         var continuousSeries = new CurveSeries("Continuous");
 
         // Use injected curve generator
-        peakSeries.Data = _curveGenerator.InterpolateCurve(maxRpm, maxTorque, maxPower);
-        continuousSeries.Data = _curveGenerator.InterpolateCurve(maxRpm, maxTorque * 0.8, maxPower * 0.8);
+        peakSeries.Data = _curveGenerator.InterpolateCurve(maxSpeed, maxTorque, maxPower);
+        continuousSeries.Data = _curveGenerator.InterpolateCurve(maxSpeed, maxTorque * 0.8, maxPower * 0.8);
 
-        motor.Series.Add(peakSeries);
-        motor.Series.Add(continuousSeries);
+        voltageConfig.Series.Add(peakSeries);
+        voltageConfig.Series.Add(continuousSeries);
 
         CurrentFilePath = null;
         IsDirty = true;

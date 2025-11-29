@@ -1,19 +1,26 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Text.Json.Serialization;
 
 namespace CurveEditor.Models;
 
 /// <summary>
-/// Represents a complete motor definition including all properties, curves, and metadata.
+/// Represents a complete motor definition including all properties, drive configurations, and metadata.
+/// Structure: Motor → Drive(s) → Voltage(s) → CurveSeries
 /// </summary>
 public class MotorDefinition
 {
     /// <summary>
+    /// The current schema version for motor definition files.
+    /// </summary>
+    public const string CurrentSchemaVersion = "2.0";
+
+    /// <summary>
     /// Schema version for JSON compatibility.
     /// </summary>
     [JsonPropertyName("schemaVersion")]
-    public string SchemaVersion { get; set; } = "1.0";
+    public string SchemaVersion { get; set; } = CurrentSchemaVersion;
 
     // Motor Identification
     /// <summary>
@@ -34,66 +41,33 @@ public class MotorDefinition
     [JsonPropertyName("partNumber")]
     public string PartNumber { get; set; } = string.Empty;
 
-    // Drive Information
+    // Motor Base Properties (theoretical maximums from motor cut sheet)
     /// <summary>
-    /// The name of the servo drive used with the motor.
-    /// </summary>
-    [JsonPropertyName("driveName")]
-    public string DriveName { get; set; } = string.Empty;
-
-    /// <summary>
-    /// The manufacturer's part number for the servo drive.
-    /// </summary>
-    [JsonPropertyName("drivePartNumber")]
-    public string DrivePartNumber { get; set; } = string.Empty;
-
-    // Electrical Properties
-    /// <summary>
-    /// The operating voltage for the motor/drive combination (V).
-    /// </summary>
-    [JsonPropertyName("voltage")]
-    public double Voltage { get; set; }
-
-    /// <summary>
-    /// The current draw during continuous operation at rated torque (A).
-    /// </summary>
-    [JsonPropertyName("continuousAmperage")]
-    public double ContinuousAmperage { get; set; }
-
-    /// <summary>
-    /// The maximum current draw during peak torque operation (A).
-    /// </summary>
-    [JsonPropertyName("peakAmperage")]
-    public double PeakAmperage { get; set; }
-
-    /// <summary>
-    /// The power output of the motor (in the unit specified by Units.Power).
+    /// The theoretical maximum power output of the motor (in the unit specified by Units.Power).
     /// </summary>
     [JsonPropertyName("power")]
     public double Power { get; set; }
 
-    // Speed Properties
     /// <summary>
-    /// The maximum rotational speed of the motor (RPM).
+    /// The theoretical maximum rotational speed of the motor (RPM).
     /// </summary>
-    [JsonPropertyName("maxRpm")]
-    public double MaxRpm { get; set; }
+    [JsonPropertyName("maxSpeed")]
+    public double MaxSpeed { get; set; }
 
     /// <summary>
     /// The rated continuous operating speed of the motor (RPM).
     /// </summary>
-    [JsonPropertyName("ratedRpm")]
-    public double RatedRpm { get; set; }
+    [JsonPropertyName("ratedSpeed")]
+    public double RatedSpeed { get; set; }
 
-    // Torque Properties
     /// <summary>
-    /// The torque the motor can produce continuously without overheating.
+    /// The theoretical maximum torque the motor can produce continuously without overheating.
     /// </summary>
     [JsonPropertyName("ratedContinuousTorque")]
     public double RatedContinuousTorque { get; set; }
 
     /// <summary>
-    /// The maximum torque the motor can produce for short periods.
+    /// The theoretical maximum torque the motor can produce for short periods.
     /// </summary>
     [JsonPropertyName("ratedPeakTorque")]
     public double RatedPeakTorque { get; set; }
@@ -130,6 +104,12 @@ public class MotorDefinition
     [JsonPropertyName("brakeAmperage")]
     public double BrakeAmperage { get; set; }
 
+    /// <summary>
+    /// The voltage requirement of the brake (if present) (V).
+    /// </summary>
+    [JsonPropertyName("brakeVoltage")]
+    public double BrakeVoltage { get; set; }
+
     // Units Configuration
     /// <summary>
     /// The unit settings for this motor definition.
@@ -137,12 +117,13 @@ public class MotorDefinition
     [JsonPropertyName("units")]
     public UnitSettings Units { get; set; } = new();
 
-    // Curve Series
+    // Drive Configurations
     /// <summary>
-    /// The collection of curve series (e.g., "Peak", "Continuous").
+    /// The collection of drive configurations for this motor.
+    /// Each drive can have multiple voltage configurations with their own curve series.
     /// </summary>
-    [JsonPropertyName("series")]
-    public List<CurveSeries> Series { get; set; } = [];
+    [JsonPropertyName("drives")]
+    public List<DriveConfiguration> Drives { get; set; } = [];
 
     // Metadata
     /// <summary>
@@ -168,66 +149,76 @@ public class MotorDefinition
     }
 
     /// <summary>
-    /// Validates that the motor definition has at least one series.
+    /// Validates that the motor definition has at least one drive with a valid configuration.
     /// </summary>
     /// <returns>True if valid; otherwise false.</returns>
-    public bool HasValidSeries()
+    public bool HasValidConfiguration()
     {
-        return Series.Count > 0;
+        return Drives.Count > 0 && 
+               Drives.Any(d => d.Voltages.Count > 0 && 
+                              d.Voltages.Any(v => v.Series.Count > 0));
     }
 
     /// <summary>
-    /// Gets a curve series by name.
+    /// Gets a drive configuration by name.
     /// </summary>
-    /// <param name="name">The name of the series to find.</param>
-    /// <returns>The matching series, or null if not found.</returns>
-    public CurveSeries? GetSeriesByName(string name)
+    /// <param name="name">The name of the drive to find.</param>
+    /// <returns>The matching drive configuration, or null if not found.</returns>
+    public DriveConfiguration? GetDriveByName(string name)
     {
-        return Series.Find(s => s.Name.Equals(name, StringComparison.OrdinalIgnoreCase));
+        return Drives.Find(d => d.Name.Equals(name, StringComparison.OrdinalIgnoreCase));
     }
 
     /// <summary>
-    /// Adds a new series with the specified name.
+    /// Adds a new drive configuration with the specified name.
     /// </summary>
-    /// <param name="name">The name for the new series.</param>
-    /// <param name="initializeTorque">The default torque value for all points.</param>
-    /// <returns>The newly created series.</returns>
-    /// <exception cref="InvalidOperationException">Thrown if a series with the same name already exists.</exception>
-    public CurveSeries AddSeries(string name, double initializeTorque = 0)
+    /// <param name="name">The name for the new drive.</param>
+    /// <returns>The newly created drive configuration.</returns>
+    /// <exception cref="InvalidOperationException">Thrown if a drive with the same name already exists.</exception>
+    public DriveConfiguration AddDrive(string name)
     {
-        if (GetSeriesByName(name) is not null)
+        if (GetDriveByName(name) is not null)
         {
-            throw new InvalidOperationException($"A series with the name '{name}' already exists.");
+            throw new InvalidOperationException($"A drive with the name '{name}' already exists.");
         }
 
-        var series = new CurveSeries(name);
-        series.InitializeData(MaxRpm, initializeTorque);
-        Series.Add(series);
+        var drive = new DriveConfiguration(name);
+        Drives.Add(drive);
         Metadata.UpdateModified();
-        return series;
+        return drive;
     }
 
     /// <summary>
-    /// Removes a series by name.
+    /// Removes a drive configuration by name.
     /// </summary>
-    /// <param name="name">The name of the series to remove.</param>
+    /// <param name="name">The name of the drive to remove.</param>
     /// <returns>True if removed; false if not found.</returns>
-    /// <exception cref="InvalidOperationException">Thrown if attempting to remove the last series.</exception>
-    public bool RemoveSeries(string name)
+    /// <exception cref="InvalidOperationException">Thrown if attempting to remove the last drive.</exception>
+    public bool RemoveDrive(string name)
     {
-        if (Series.Count <= 1)
+        if (Drives.Count <= 1)
         {
-            throw new InvalidOperationException("Cannot remove the last series. At least one series must exist.");
+            throw new InvalidOperationException("Cannot remove the last drive. At least one drive must exist.");
         }
 
-        var series = GetSeriesByName(name);
-        if (series is null)
+        var drive = GetDriveByName(name);
+        if (drive is null)
         {
             return false;
         }
 
-        Series.Remove(series);
+        Drives.Remove(drive);
         Metadata.UpdateModified();
         return true;
+    }
+
+    /// <summary>
+    /// Gets all curve series across all drives and voltages.
+    /// Useful for getting a flat list of all curves in the motor definition.
+    /// </summary>
+    /// <returns>All curve series in the motor definition.</returns>
+    public IEnumerable<CurveSeries> GetAllSeries()
+    {
+        return Drives.SelectMany(d => d.Voltages.SelectMany(v => v.Series));
     }
 }
