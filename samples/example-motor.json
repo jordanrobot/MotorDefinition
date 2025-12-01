@@ -37,7 +37,6 @@
           "peakAmperage": 22.0,
           "series": [
             {
-              "schemaVersion": "1.0",
               "name": "Peak",
               "notes": "Peak torque curve for short-term operation",
               "locked": false,
@@ -56,7 +55,6 @@
               ]
             },
             {
-              "schemaVersion": "1.0",
               "name": "Continuous",
               "notes": "Continuous torque curve for sustained operation",
               "locked": true,
@@ -87,7 +85,6 @@
           "peakAmperage": 25.0,
           "series": [
             {
-              "schemaVersion": "1.0",
               "name": "Peak",
               "notes": "",
               "locked": false,
@@ -106,7 +103,6 @@
               ]
             },
             {
-              "schemaVersion": "1.0",
               "name": "Continuous",
               "notes": "",
               "locked": false,
@@ -144,7 +140,6 @@
           "peakAmperage": 21.0,
           "series": [
             {
-              "schemaVersion": "1.0",
               "name": "Peak",
               "notes": "",
               "locked": false,
@@ -163,7 +158,6 @@
               ]
             },
             {
-              "schemaVersion": "1.0",
               "name": "Continuous",
               "notes": "",
               "locked": false,

@@ -25,15 +25,6 @@ public class CurveSeriesTests
     }
 
     [Fact]
-    public void SchemaVersion_DefaultsToCurrentVersion()
-    {
-        var series = new CurveSeries();
-
-        Assert.Equal(CurveSeries.CurrentSchemaVersion, series.SchemaVersion);
-        Assert.Equal("1.0", series.SchemaVersion);
-    }
-
-    [Fact]
     public void Notes_DefaultsToEmpty()
     {
         var series = new CurveSeries();

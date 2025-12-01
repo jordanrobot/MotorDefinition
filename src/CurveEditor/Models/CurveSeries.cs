@@ -10,18 +10,7 @@ namespace CurveEditor.Models;
 /// </summary>
 public class CurveSeries
 {
-    /// <summary>
-    /// The current schema version for curve series data.
-    /// </summary>
-    public const string CurrentSchemaVersion = "1.0";
-
     private string _name = string.Empty;
-
-    /// <summary>
-    /// Schema version for this curve series data structure.
-    /// </summary>
-    [JsonPropertyName("schemaVersion")]
-    public string SchemaVersion { get; set; } = CurrentSchemaVersion;
 
     /// <summary>
     /// The name of this curve series (e.g., "Peak", "Continuous").

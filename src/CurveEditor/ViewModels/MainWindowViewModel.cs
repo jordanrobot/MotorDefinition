@@ -1,12 +1,17 @@
 using Avalonia;
+using Avalonia.Controls;
 using Avalonia.Controls.ApplicationLifetimes;
+using Avalonia.Platform.Storage;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using CurveEditor.Models;
 using CurveEditor.Services;
 using Serilog;
 using System;
+using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.IO;
+using System.Linq;
 using System.Threading.Tasks;
 
 namespace CurveEditor.ViewModels;
@@ -15,6 +20,12 @@ public partial class MainWindowViewModel : ViewModelBase
 {
     private readonly IFileService _fileService;
     private readonly ICurveGeneratorService _curveGeneratorService;
+
+    private static readonly FilePickerFileType JsonFileType = new("JSON Files")
+    {
+        Patterns = ["*.json"],
+        MimeTypes = ["application/json"]
+    };
 
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(WindowTitle))]
@@ -26,6 +37,26 @@ public partial class MainWindowViewModel : ViewModelBase
 
     [ObservableProperty]
     private string _statusMessage = "Ready";
+
+    // Drive selection
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(AvailableVoltages))]
+    private DriveConfiguration? _selectedDrive;
+
+    // Voltage selection
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(AvailableSeries))]
+    private VoltageConfiguration? _selectedVoltage;
+
+    // Series selection
+    [ObservableProperty]
+    private CurveSeries? _selectedSeries;
+
+    public ObservableCollection<VoltageConfiguration> AvailableVoltages =>
+        new(SelectedDrive?.Voltages ?? []);
+
+    public ObservableCollection<CurveSeries> AvailableSeries =>
+        new(SelectedVoltage?.Series ?? []);
 
     public MainWindowViewModel()
     {
@@ -52,6 +83,28 @@ public partial class MainWindowViewModel : ViewModelBase
         }
     }
 
+    partial void OnCurrentMotorChanged(MotorDefinition? value)
+    {
+        // When motor changes, update selections
+        SelectedDrive = value?.Drives.FirstOrDefault();
+        OnPropertyChanged(nameof(AvailableVoltages));
+        OnPropertyChanged(nameof(AvailableSeries));
+    }
+
+    partial void OnSelectedDriveChanged(DriveConfiguration? value)
+    {
+        // When drive changes, update voltage selection
+        SelectedVoltage = value?.Voltages.FirstOrDefault();
+        OnPropertyChanged(nameof(AvailableVoltages));
+    }
+
+    partial void OnSelectedVoltageChanged(VoltageConfiguration? value)
+    {
+        // When voltage changes, update series selection
+        SelectedSeries = value?.Series.FirstOrDefault();
+        OnPropertyChanged(nameof(AvailableSeries));
+    }
+
     [RelayCommand]
     private void NewMotor()
     {
@@ -75,52 +128,39 @@ public partial class MainWindowViewModel : ViewModelBase
 
         try
         {
-            // TODO: In a full implementation, this would open a file dialog.
-            // For now, we search for the sample file in common locations.
-            var samplePath = FindSampleFile();
+            var storageProvider = GetStorageProvider();
+            if (storageProvider is null)
+            {
+                StatusMessage = "File dialogs are not supported on this platform.";
+                return;
+            }
 
-            if (samplePath is not null && File.Exists(samplePath))
+            var files = await storageProvider.OpenFilePickerAsync(new FilePickerOpenOptions
             {
-                CurrentMotor = await _fileService.LoadAsync(samplePath);
-                IsDirty = _fileService.IsDirty;
-                StatusMessage = $"Loaded: {Path.GetFileName(samplePath)}";
-                OnPropertyChanged(nameof(WindowTitle));
-            }
-            else
+                Title = "Open Motor Definition",
+                AllowMultiple = false,
+                FileTypeFilter = [JsonFileType]
+            });
+
+            if (files.Count == 0)
             {
-                StatusMessage = "Sample file not found. Use File > New to create a motor.";
+                StatusMessage = "Open cancelled.";
+                return;
             }
+
+            var file = files[0];
+            var filePath = file.Path.LocalPath;
+
+            CurrentMotor = await _fileService.LoadAsync(filePath);
+            IsDirty = _fileService.IsDirty;
+            StatusMessage = $"Loaded: {Path.GetFileName(filePath)}";
+            OnPropertyChanged(nameof(WindowTitle));
         }
         catch (Exception ex)
         {
             Log.Error(ex, "Failed to open file");
             StatusMessage = $"Error: {ex.Message}";
         }
-    }
-
-    private static string? FindSampleFile()
-    {
-        // Search for the sample file in multiple locations
-        var possiblePaths = new[]
-        {
-            Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "samples", "example-motor.json"),
-            Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "..", "samples", "example-motor.json"),
-            Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "..", "..", "samples", "example-motor.json"),
-            Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "..", "..", "..", "samples", "example-motor.json"),
-            Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "..", "..", "..", "..", "samples", "example-motor.json"),
-            Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "..", "..", "..", "..", "..", "samples", "example-motor.json"),
-        };
-
-        foreach (var path in possiblePaths)
-        {
-            var normalizedPath = Path.GetFullPath(path);
-            if (File.Exists(normalizedPath))
-            {
-                return normalizedPath;
-            }
-        }
-
-        return null;
     }
 
     [RelayCommand(CanExecute = nameof(CanSave))]
@@ -132,8 +172,8 @@ public partial class MainWindowViewModel : ViewModelBase
         {
             if (_fileService.CurrentFilePath is null)
             {
-                // No file path yet, would need SaveAs dialog
-                StatusMessage = "Use Save As to save new file";
+                // No file path yet, use SaveAs
+                await SaveAsAsync();
                 return;
             }
 
@@ -158,11 +198,35 @@ public partial class MainWindowViewModel : ViewModelBase
 
         try
         {
-            // For now, save to a temp location - in real implementation, show dialog
-            var tempPath = Path.Combine(Path.GetTempPath(), $"{CurrentMotor.MotorName}.json");
-            await _fileService.SaveAsAsync(CurrentMotor, tempPath);
+            var storageProvider = GetStorageProvider();
+            if (storageProvider is null)
+            {
+                StatusMessage = "File dialogs are not supported on this platform.";
+                return;
+            }
+
+            var suggestedFileName = !string.IsNullOrWhiteSpace(CurrentMotor.MotorName)
+                ? $"{CurrentMotor.MotorName}.json"
+                : "motor.json";
+
+            var file = await storageProvider.SaveFilePickerAsync(new FilePickerSaveOptions
+            {
+                Title = "Save Motor Definition As",
+                SuggestedFileName = suggestedFileName,
+                DefaultExtension = "json",
+                FileTypeChoices = [JsonFileType]
+            });
+
+            if (file is null)
+            {
+                StatusMessage = "Save cancelled.";
+                return;
+            }
+
+            var filePath = file.Path.LocalPath;
+            await _fileService.SaveAsAsync(CurrentMotor, filePath);
             IsDirty = false;
-            StatusMessage = $"Saved to: {tempPath}";
+            StatusMessage = $"Saved to: {Path.GetFileName(filePath)}";
             OnPropertyChanged(nameof(WindowTitle));
         }
         catch (Exception ex)
@@ -179,16 +243,242 @@ public partial class MainWindowViewModel : ViewModelBase
 
         try
         {
-            // Save a copy without changing the current file
-            var copyPath = Path.Combine(Path.GetTempPath(), $"{CurrentMotor.MotorName}_copy.json");
-            await _fileService.SaveCopyAsAsync(CurrentMotor, copyPath);
-            StatusMessage = $"Copy saved to: {copyPath}";
+            var storageProvider = GetStorageProvider();
+            if (storageProvider is null)
+            {
+                StatusMessage = "File dialogs are not supported on this platform.";
+                return;
+            }
+
+            var suggestedFileName = !string.IsNullOrWhiteSpace(CurrentMotor.MotorName)
+                ? $"{CurrentMotor.MotorName}_copy.json"
+                : "motor_copy.json";
+
+            var file = await storageProvider.SaveFilePickerAsync(new FilePickerSaveOptions
+            {
+                Title = "Save Copy As",
+                SuggestedFileName = suggestedFileName,
+                DefaultExtension = "json",
+                FileTypeChoices = [JsonFileType]
+            });
+
+            if (file is null)
+            {
+                StatusMessage = "Save copy cancelled.";
+                return;
+            }
+
+            var filePath = file.Path.LocalPath;
+            await _fileService.SaveCopyAsAsync(CurrentMotor, filePath);
+            StatusMessage = $"Copy saved to: {Path.GetFileName(filePath)}";
         }
         catch (Exception ex)
         {
             Log.Error(ex, "Failed to save copy");
             StatusMessage = $"Error saving copy: {ex.Message}";
         }
+    }
+
+    // Drive management commands
+    [RelayCommand]
+    private void AddDrive()
+    {
+        if (CurrentMotor is null) return;
+
+        try
+        {
+            var newDriveName = GenerateUniqueName(
+                CurrentMotor.Drives.Select(d => d.Name),
+                "New Drive");
+            
+            var drive = CurrentMotor.AddDrive(newDriveName);
+            
+            // Add a default voltage configuration
+            var voltage = drive.AddVoltageConfiguration(220);
+            voltage.MaxSpeed = CurrentMotor.MaxSpeed;
+            voltage.Power = CurrentMotor.Power;
+            voltage.RatedPeakTorque = CurrentMotor.RatedPeakTorque;
+            voltage.RatedContinuousTorque = CurrentMotor.RatedContinuousTorque;
+            
+            // Add default series
+            var peakSeries = new CurveSeries("Peak");
+            var continuousSeries = new CurveSeries("Continuous");
+            peakSeries.InitializeData(voltage.MaxSpeed, voltage.RatedPeakTorque);
+            continuousSeries.InitializeData(voltage.MaxSpeed, voltage.RatedContinuousTorque);
+            voltage.Series.Add(peakSeries);
+            voltage.Series.Add(continuousSeries);
+            
+            SelectedDrive = drive;
+            OnPropertyChanged(nameof(CurrentMotor));
+            MarkDirty();
+            StatusMessage = $"Added drive: {newDriveName}";
+        }
+        catch (Exception ex)
+        {
+            Log.Error(ex, "Failed to add drive");
+            StatusMessage = $"Error adding drive: {ex.Message}";
+        }
+    }
+
+    [RelayCommand]
+    private void RemoveDrive()
+    {
+        if (CurrentMotor is null || SelectedDrive is null) return;
+
+        try
+        {
+            var driveName = SelectedDrive.Name;
+            if (CurrentMotor.RemoveDrive(driveName))
+            {
+                SelectedDrive = CurrentMotor.Drives.FirstOrDefault();
+                OnPropertyChanged(nameof(CurrentMotor));
+                MarkDirty();
+                StatusMessage = $"Removed drive: {driveName}";
+            }
+        }
+        catch (InvalidOperationException ex)
+        {
+            StatusMessage = ex.Message;
+        }
+        catch (Exception ex)
+        {
+            Log.Error(ex, "Failed to remove drive");
+            StatusMessage = $"Error removing drive: {ex.Message}";
+        }
+    }
+
+    // Voltage management commands
+    [RelayCommand]
+    private void AddVoltage()
+    {
+        if (SelectedDrive is null) return;
+
+        try
+        {
+            // Find a unique voltage value
+            var existingVoltages = SelectedDrive.Voltages.Select(v => v.Voltage).ToHashSet();
+            var newVoltage = 220.0;
+            while (existingVoltages.Contains(newVoltage))
+            {
+                newVoltage += 10;
+            }
+            
+            var voltage = SelectedDrive.AddVoltageConfiguration(newVoltage);
+            voltage.MaxSpeed = CurrentMotor?.MaxSpeed ?? 5000;
+            voltage.Power = CurrentMotor?.Power ?? 1500;
+            voltage.RatedPeakTorque = CurrentMotor?.RatedPeakTorque ?? 50;
+            voltage.RatedContinuousTorque = CurrentMotor?.RatedContinuousTorque ?? 40;
+            
+            // Add default series
+            var peakSeries = new CurveSeries("Peak");
+            var continuousSeries = new CurveSeries("Continuous");
+            peakSeries.InitializeData(voltage.MaxSpeed, voltage.RatedPeakTorque);
+            continuousSeries.InitializeData(voltage.MaxSpeed, voltage.RatedContinuousTorque);
+            voltage.Series.Add(peakSeries);
+            voltage.Series.Add(continuousSeries);
+            
+            SelectedVoltage = voltage;
+            OnPropertyChanged(nameof(AvailableVoltages));
+            MarkDirty();
+            StatusMessage = $"Added voltage: {newVoltage}V";
+        }
+        catch (Exception ex)
+        {
+            Log.Error(ex, "Failed to add voltage");
+            StatusMessage = $"Error adding voltage: {ex.Message}";
+        }
+    }
+
+    [RelayCommand]
+    private void RemoveVoltage()
+    {
+        if (SelectedDrive is null || SelectedVoltage is null) return;
+
+        try
+        {
+            if (SelectedDrive.Voltages.Count <= 1)
+            {
+                StatusMessage = "Cannot remove the last voltage configuration.";
+                return;
+            }
+
+            var voltage = SelectedVoltage.Voltage;
+            SelectedDrive.Voltages.Remove(SelectedVoltage);
+            SelectedVoltage = SelectedDrive.Voltages.FirstOrDefault();
+            OnPropertyChanged(nameof(AvailableVoltages));
+            MarkDirty();
+            StatusMessage = $"Removed voltage: {voltage}V";
+        }
+        catch (Exception ex)
+        {
+            Log.Error(ex, "Failed to remove voltage");
+            StatusMessage = $"Error removing voltage: {ex.Message}";
+        }
+    }
+
+    // Series management commands
+    [RelayCommand]
+    private void AddSeries()
+    {
+        if (SelectedVoltage is null) return;
+
+        try
+        {
+            var newSeriesName = GenerateUniqueName(
+                SelectedVoltage.Series.Select(s => s.Name),
+                "New Series");
+            
+            var series = SelectedVoltage.AddSeries(newSeriesName, SelectedVoltage.RatedContinuousTorque);
+            SelectedSeries = series;
+            OnPropertyChanged(nameof(AvailableSeries));
+            MarkDirty();
+            StatusMessage = $"Added series: {newSeriesName}";
+        }
+        catch (Exception ex)
+        {
+            Log.Error(ex, "Failed to add series");
+            StatusMessage = $"Error adding series: {ex.Message}";
+        }
+    }
+
+    [RelayCommand]
+    private void RemoveSeries()
+    {
+        if (SelectedVoltage is null || SelectedSeries is null) return;
+
+        try
+        {
+            if (SelectedVoltage.Series.Count <= 1)
+            {
+                StatusMessage = "Cannot remove the last series.";
+                return;
+            }
+
+            var seriesName = SelectedSeries.Name;
+            SelectedVoltage.Series.Remove(SelectedSeries);
+            SelectedSeries = SelectedVoltage.Series.FirstOrDefault();
+            OnPropertyChanged(nameof(AvailableSeries));
+            MarkDirty();
+            StatusMessage = $"Removed series: {seriesName}";
+        }
+        catch (Exception ex)
+        {
+            Log.Error(ex, "Failed to remove series");
+            StatusMessage = $"Error removing series: {ex.Message}";
+        }
+    }
+
+    [RelayCommand]
+    private void ToggleSeriesLock(CurveSeries? series)
+    {
+        if (series is null) return;
+
+        series.Locked = !series.Locked;
+        OnPropertyChanged(nameof(AvailableSeries));
+        MarkDirty();
+        StatusMessage = series.Locked
+            ? $"Locked series: {series.Name}"
+            : $"Unlocked series: {series.Name}";
     }
 
     [RelayCommand]
@@ -210,5 +500,32 @@ public partial class MainWindowViewModel : ViewModelBase
     {
         _fileService.MarkDirty();
         IsDirty = true;
+    }
+
+    private static IStorageProvider? GetStorageProvider()
+    {
+        if (Application.Current?.ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop)
+        {
+            return desktop.MainWindow?.StorageProvider;
+        }
+        return null;
+    }
+
+    private static string GenerateUniqueName(IEnumerable<string> existingNames, string baseName)
+    {
+        var names = existingNames.ToHashSet(StringComparer.OrdinalIgnoreCase);
+        if (!names.Contains(baseName))
+        {
+            return baseName;
+        }
+
+        var counter = 1;
+        string newName;
+        do
+        {
+            newName = $"{baseName} {counter++}";
+        } while (names.Contains(newName));
+
+        return newName;
     }
 }
