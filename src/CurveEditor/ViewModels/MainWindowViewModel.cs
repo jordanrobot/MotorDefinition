@@ -87,22 +87,18 @@ public partial class MainWindowViewModel : ViewModelBase
     {
         // When motor changes, update selections
         SelectedDrive = value?.Drives.FirstOrDefault();
-        OnPropertyChanged(nameof(AvailableVoltages));
-        OnPropertyChanged(nameof(AvailableSeries));
     }
 
     partial void OnSelectedDriveChanged(DriveConfiguration? value)
     {
         // When drive changes, update voltage selection
         SelectedVoltage = value?.Voltages.FirstOrDefault();
-        OnPropertyChanged(nameof(AvailableVoltages));
     }
 
     partial void OnSelectedVoltageChanged(VoltageConfiguration? value)
     {
         // When voltage changes, update series selection
         SelectedSeries = value?.Series.FirstOrDefault();
-        OnPropertyChanged(nameof(AvailableSeries));
     }
 
     [RelayCommand]
@@ -347,6 +343,9 @@ public partial class MainWindowViewModel : ViewModelBase
         }
     }
 
+    // Common voltage values used in industrial motor applications
+    private static readonly double[] CommonVoltages = [110, 115, 120, 200, 208, 220, 230, 240, 277, 380, 400, 415, 440, 460, 480, 500, 575, 600, 690];
+
     // Voltage management commands
     [RelayCommand]
     private void AddVoltage()
@@ -355,12 +354,14 @@ public partial class MainWindowViewModel : ViewModelBase
 
         try
         {
-            // Find a unique voltage value
+            // Find the first common voltage not already in use
             var existingVoltages = SelectedDrive.Voltages.Select(v => v.Voltage).ToHashSet();
-            var newVoltage = 220.0;
-            while (existingVoltages.Contains(newVoltage))
+            var newVoltage = CommonVoltages.FirstOrDefault(v => !existingVoltages.Any(ev => Math.Abs(ev - v) < DriveConfiguration.DefaultVoltageTolerance));
+            
+            if (newVoltage == 0)
             {
-                newVoltage += 10;
+                // All common voltages in use, generate a unique one
+                newVoltage = existingVoltages.Max() + 10;
             }
             
             var voltage = SelectedDrive.AddVoltageConfiguration(newVoltage);
