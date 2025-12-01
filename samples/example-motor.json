@@ -1,0 +1,194 @@
+{
+  "schemaVersion": "2.0",
+  "motorName": "High Torque Servo Motor",
+  "manufacturer": "Acme Motors",
+  "partNumber": "M-1234-HT",
+  "power": 1500,
+  "maxSpeed": 5000,
+  "ratedSpeed": 3000,
+  "ratedContinuousTorque": 45.0,
+  "ratedPeakTorque": 55.0,
+  "weight": 8.5,
+  "rotorInertia": 0.0025,
+  "hasBrake": true,
+  "brakeTorque": 12.0,
+  "brakeAmperage": 0.5,
+  "brakeVoltage": 24,
+  "units": {
+    "torque": "Nm",
+    "speed": "rpm",
+    "power": "W",
+    "weight": "kg"
+  },
+  "drives": [
+    {
+      "name": "Servo Drive Pro X-203",
+      "partNumber": "SD-X203",
+      "manufacturer": "Acme Drives",
+      "voltages": [
+        {
+          "voltage": 208,
+          "power": 1400,
+          "maxSpeed": 4800,
+          "ratedSpeed": 2900,
+          "ratedContinuousTorque": 42.0,
+          "ratedPeakTorque": 52.0,
+          "continuousAmperage": 9.5,
+          "peakAmperage": 22.0,
+          "series": [
+            {
+              "schemaVersion": "1.0",
+              "name": "Peak",
+              "notes": "Peak torque curve for short-term operation",
+              "locked": false,
+              "data": [
+                { "percent": 0, "rpm": 0, "torque": 52.0 },
+                { "percent": 10, "rpm": 480, "torque": 52.0 },
+                { "percent": 20, "rpm": 960, "torque": 51.5 },
+                { "percent": 30, "rpm": 1440, "torque": 50.8 },
+                { "percent": 40, "rpm": 1920, "torque": 49.2 },
+                { "percent": 50, "rpm": 2400, "torque": 46.5 },
+                { "percent": 60, "rpm": 2880, "torque": 43.1 },
+                { "percent": 70, "rpm": 3360, "torque": 39.2 },
+                { "percent": 80, "rpm": 3840, "torque": 35.5 },
+                { "percent": 90, "rpm": 4320, "torque": 32.1 },
+                { "percent": 100, "rpm": 4800, "torque": 29.0 }
+              ]
+            },
+            {
+              "schemaVersion": "1.0",
+              "name": "Continuous",
+              "notes": "Continuous torque curve for sustained operation",
+              "locked": true,
+              "data": [
+                { "percent": 0, "rpm": 0, "torque": 42.0 },
+                { "percent": 10, "rpm": 480, "torque": 42.0 },
+                { "percent": 20, "rpm": 960, "torque": 41.5 },
+                { "percent": 30, "rpm": 1440, "torque": 40.5 },
+                { "percent": 40, "rpm": 1920, "torque": 38.8 },
+                { "percent": 50, "rpm": 2400, "torque": 36.2 },
+                { "percent": 60, "rpm": 2880, "torque": 33.1 },
+                { "percent": 70, "rpm": 3360, "torque": 29.8 },
+                { "percent": 80, "rpm": 3840, "torque": 26.8 },
+                { "percent": 90, "rpm": 4320, "torque": 24.2 },
+                { "percent": 100, "rpm": 4800, "torque": 22.0 }
+              ]
+            }
+          ]
+        },
+        {
+          "voltage": 220,
+          "power": 1500,
+          "maxSpeed": 5000,
+          "ratedSpeed": 3000,
+          "ratedContinuousTorque": 45.0,
+          "ratedPeakTorque": 55.0,
+          "continuousAmperage": 10.5,
+          "peakAmperage": 25.0,
+          "series": [
+            {
+              "schemaVersion": "1.0",
+              "name": "Peak",
+              "notes": "",
+              "locked": false,
+              "data": [
+                { "percent": 0, "rpm": 0, "torque": 55.0 },
+                { "percent": 10, "rpm": 500, "torque": 55.0 },
+                { "percent": 20, "rpm": 1000, "torque": 54.2 },
+                { "percent": 30, "rpm": 1500, "torque": 52.5 },
+                { "percent": 40, "rpm": 2000, "torque": 49.8 },
+                { "percent": 50, "rpm": 2500, "torque": 46.2 },
+                { "percent": 60, "rpm": 3000, "torque": 42.1 },
+                { "percent": 70, "rpm": 3500, "torque": 38.2 },
+                { "percent": 80, "rpm": 4000, "torque": 34.5 },
+                { "percent": 90, "rpm": 4500, "torque": 31.2 },
+                { "percent": 100, "rpm": 5000, "torque": 28.5 }
+              ]
+            },
+            {
+              "schemaVersion": "1.0",
+              "name": "Continuous",
+              "notes": "",
+              "locked": false,
+              "data": [
+                { "percent": 0, "rpm": 0, "torque": 45.0 },
+                { "percent": 10, "rpm": 500, "torque": 45.0 },
+                { "percent": 20, "rpm": 1000, "torque": 44.2 },
+                { "percent": 30, "rpm": 1500, "torque": 42.5 },
+                { "percent": 40, "rpm": 2000, "torque": 39.8 },
+                { "percent": 50, "rpm": 2500, "torque": 36.2 },
+                { "percent": 60, "rpm": 3000, "torque": 32.1 },
+                { "percent": 70, "rpm": 3500, "torque": 28.5 },
+                { "percent": 80, "rpm": 4000, "torque": 25.5 },
+                { "percent": 90, "rpm": 4500, "torque": 23.0 },
+                { "percent": 100, "rpm": 5000, "torque": 21.0 }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Servo Drive Max X-220",
+      "partNumber": "SD-X220",
+      "manufacturer": "Acme Drives",
+      "voltages": [
+        {
+          "voltage": 208,
+          "power": 1350,
+          "maxSpeed": 4600,
+          "ratedSpeed": 2800,
+          "ratedContinuousTorque": 40.0,
+          "ratedPeakTorque": 50.0,
+          "continuousAmperage": 9.0,
+          "peakAmperage": 21.0,
+          "series": [
+            {
+              "schemaVersion": "1.0",
+              "name": "Peak",
+              "notes": "",
+              "locked": false,
+              "data": [
+                { "percent": 0, "rpm": 0, "torque": 50.0 },
+                { "percent": 10, "rpm": 460, "torque": 50.0 },
+                { "percent": 20, "rpm": 920, "torque": 49.5 },
+                { "percent": 30, "rpm": 1380, "torque": 48.2 },
+                { "percent": 40, "rpm": 1840, "torque": 46.1 },
+                { "percent": 50, "rpm": 2300, "torque": 43.2 },
+                { "percent": 60, "rpm": 2760, "torque": 39.8 },
+                { "percent": 70, "rpm": 3220, "torque": 36.1 },
+                { "percent": 80, "rpm": 3680, "torque": 32.8 },
+                { "percent": 90, "rpm": 4140, "torque": 29.8 },
+                { "percent": 100, "rpm": 4600, "torque": 27.2 }
+              ]
+            },
+            {
+              "schemaVersion": "1.0",
+              "name": "Continuous",
+              "notes": "",
+              "locked": false,
+              "data": [
+                { "percent": 0, "rpm": 0, "torque": 40.0 },
+                { "percent": 10, "rpm": 460, "torque": 40.0 },
+                { "percent": 20, "rpm": 920, "torque": 39.5 },
+                { "percent": 30, "rpm": 1380, "torque": 38.2 },
+                { "percent": 40, "rpm": 1840, "torque": 36.1 },
+                { "percent": 50, "rpm": 2300, "torque": 33.2 },
+                { "percent": 60, "rpm": 2760, "torque": 29.8 },
+                { "percent": 70, "rpm": 3220, "torque": 26.5 },
+                { "percent": 80, "rpm": 3680, "torque": 23.8 },
+                { "percent": 90, "rpm": 4140, "torque": 21.5 },
+                { "percent": 100, "rpm": 4600, "torque": 19.5 }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "metadata": {
+    "created": "2024-01-15T10:30:00Z",
+    "modified": "2024-01-20T14:45:00Z",
+    "notes": "Measured at 25°C ambient temperature. Motor base properties are theoretical maximums from cut sheet."
+  }
+}

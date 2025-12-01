@@ -1,0 +1,304 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:vm="using:CurveEditor.ViewModels"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        mc:Ignorable="d" d:DesignWidth="1200" d:DesignHeight="800"
+        x:Class="CurveEditor.Views.MainWindow"
+        x:DataType="vm:MainWindowViewModel"
+        Icon="/Assets/avalonia-logo.ico"
+        Title="{Binding WindowTitle}"
+        Width="1200" Height="800"
+        MinWidth="800" MinHeight="600">
+
+    <Design.DataContext>
+        <vm:MainWindowViewModel/>
+    </Design.DataContext>
+
+    <DockPanel>
+        <!-- Menu Bar -->
+        <Menu DockPanel.Dock="Top">
+            <MenuItem Header="_File">
+                <MenuItem Header="_New" Command="{Binding NewMotorCommand}" InputGesture="Ctrl+N"/>
+                <MenuItem Header="_Open..." Command="{Binding OpenFileCommand}" InputGesture="Ctrl+O"/>
+                <Separator/>
+                <MenuItem Header="_Save" Command="{Binding SaveCommand}" InputGesture="Ctrl+S"/>
+                <MenuItem Header="Save _As..." Command="{Binding SaveAsCommand}" InputGesture="Ctrl+Shift+S"/>
+                <MenuItem Header="Save Copy As..." Command="{Binding SaveCopyAsCommand}"/>
+                <Separator/>
+                <MenuItem Header="E_xit" Command="{Binding ExitCommand}" InputGesture="Alt+F4"/>
+            </MenuItem>
+            <MenuItem Header="_Edit">
+                <MenuItem Header="_Undo" IsEnabled="False" InputGesture="Ctrl+Z"/>
+                <MenuItem Header="_Redo" IsEnabled="False" InputGesture="Ctrl+Y"/>
+            </MenuItem>
+            <MenuItem Header="_View">
+                <MenuItem Header="Show _Grid Lines" IsEnabled="False"/>
+                <MenuItem Header="Show _Hover Tooltip" IsEnabled="False"/>
+            </MenuItem>
+            <MenuItem Header="_Help">
+                <MenuItem Header="_About" IsEnabled="False"/>
+            </MenuItem>
+        </Menu>
+
+        <!-- Status Bar -->
+        <Border DockPanel.Dock="Bottom" 
+                Background="{DynamicResource SystemControlBackgroundBaseLowBrush}"
+                Padding="8,4">
+            <TextBlock Text="{Binding StatusMessage}" 
+                       FontSize="12"
+                       VerticalAlignment="Center"/>
+        </Border>
+
+        <!-- Main Content Area -->
+        <Grid ColumnDefinitions="200,*,300">
+            
+            <!-- Left: Directory Browser (placeholder) -->
+            <Border Grid.Column="0" 
+                    BorderBrush="{DynamicResource SystemControlBackgroundBaseMediumBrush}"
+                    BorderThickness="0,0,1,0"
+                    Padding="8">
+                <StackPanel>
+                    <TextBlock Text="Directory Browser" 
+                               FontWeight="Bold" 
+                               Margin="0,0,0,8"/>
+                    <TextBlock Text="(Coming Soon)" 
+                               Foreground="Gray"
+                               FontStyle="Italic"/>
+                    <Button Content="Open Folder..." 
+                            Margin="0,8,0,0"
+                            HorizontalAlignment="Stretch"
+                            IsEnabled="False"/>
+                </StackPanel>
+            </Border>
+
+            <!-- Center: Chart Area -->
+            <Border Grid.Column="1" 
+                    Margin="8"
+                    BorderBrush="{DynamicResource SystemControlBackgroundBaseMediumBrush}"
+                    BorderThickness="1"
+                    CornerRadius="4">
+                <Grid>
+                    <!-- Chart placeholder -->
+                    <StackPanel VerticalAlignment="Center" 
+                                HorizontalAlignment="Center"
+                                IsVisible="{Binding CurrentMotor, Converter={x:Static ObjectConverters.IsNull}}">
+                        <TextBlock Text="Motor Torque Curve Editor" 
+                                   FontSize="24" 
+                                   FontWeight="Bold"
+                                   HorizontalAlignment="Center"/>
+                        <TextBlock Text="Create a new motor definition or open an existing file to get started."
+                                   Margin="0,16,0,0"
+                                   Foreground="Gray"
+                                   HorizontalAlignment="Center"/>
+                        <StackPanel Orientation="Horizontal" 
+                                    HorizontalAlignment="Center" 
+                                    Margin="0,24,0,0"
+                                    Spacing="16">
+                            <Button Content="New Motor" 
+                                    Command="{Binding NewMotorCommand}"
+                                    Padding="16,8"/>
+                            <Button Content="Open File" 
+                                    Command="{Binding OpenFileCommand}"
+                                    Padding="16,8"/>
+                        </StackPanel>
+                    </StackPanel>
+
+                    <!-- Motor info when loaded -->
+                    <StackPanel VerticalAlignment="Center" 
+                                HorizontalAlignment="Center"
+                                IsVisible="{Binding CurrentMotor, Converter={x:Static ObjectConverters.IsNotNull}}">
+                        <TextBlock Text="{Binding CurrentMotor.MotorName}" 
+                                   FontSize="24" 
+                                   FontWeight="Bold"
+                                   HorizontalAlignment="Center"/>
+                        <TextBlock Text="{Binding CurrentMotor.Manufacturer}" 
+                                   FontSize="14" 
+                                   Foreground="Gray"
+                                   HorizontalAlignment="Center"
+                                   Margin="0,4,0,0"/>
+                        <TextBlock Text="Chart visualization coming in Phase 2"
+                                   Margin="0,32,0,0"
+                                   Foreground="Gray"
+                                   FontStyle="Italic"
+                                   HorizontalAlignment="Center"/>
+                        <StackPanel Orientation="Horizontal" 
+                                    HorizontalAlignment="Center" 
+                                    Margin="0,24,0,0"
+                                    Spacing="16">
+                            <StackPanel>
+                                <TextBlock Text="Max Speed" FontWeight="Bold"/>
+                                <TextBlock Text="{Binding CurrentMotor.MaxSpeed, StringFormat=N0}"/>
+                            </StackPanel>
+                            <StackPanel>
+                                <TextBlock Text="Peak Torque" FontWeight="Bold"/>
+                                <TextBlock Text="{Binding CurrentMotor.RatedPeakTorque, StringFormat=N1}"/>
+                            </StackPanel>
+                            <StackPanel>
+                                <TextBlock Text="Power" FontWeight="Bold"/>
+                                <TextBlock Text="{Binding CurrentMotor.Power, StringFormat=N0}"/>
+                            </StackPanel>
+                            <StackPanel>
+                                <TextBlock Text="Drives" FontWeight="Bold"/>
+                                <TextBlock Text="{Binding CurrentMotor.Drives.Count}"/>
+                            </StackPanel>
+                        </StackPanel>
+                    </StackPanel>
+                </Grid>
+            </Border>
+
+            <!-- Right: Properties Panel -->
+            <Border Grid.Column="2" 
+                    BorderBrush="{DynamicResource SystemControlBackgroundBaseMediumBrush}"
+                    BorderThickness="1,0,0,0"
+                    Padding="8">
+                <ScrollViewer>
+                    <StackPanel IsVisible="{Binding CurrentMotor, Converter={x:Static ObjectConverters.IsNotNull}}">
+                        <TextBlock Text="Motor Properties" 
+                                   FontWeight="Bold" 
+                                   FontSize="14"
+                                   Margin="0,0,0,16"/>
+                        
+                        <!-- Motor Info Section -->
+                        <Expander Header="Identification" IsExpanded="True">
+                            <StackPanel Margin="8,8,0,0" Spacing="8">
+                                <StackPanel>
+                                    <TextBlock Text="Motor Name" FontWeight="SemiBold" FontSize="11"/>
+                                    <TextBlock Text="{Binding CurrentMotor.MotorName}"/>
+                                </StackPanel>
+                                <StackPanel>
+                                    <TextBlock Text="Manufacturer" FontWeight="SemiBold" FontSize="11"/>
+                                    <TextBlock Text="{Binding CurrentMotor.Manufacturer}"/>
+                                </StackPanel>
+                                <StackPanel>
+                                    <TextBlock Text="Part Number" FontWeight="SemiBold" FontSize="11"/>
+                                    <TextBlock Text="{Binding CurrentMotor.PartNumber}"/>
+                                </StackPanel>
+                            </StackPanel>
+                        </Expander>
+                        
+                        <!-- Motor Base Performance (theoretical maximums) -->
+                        <Expander Header="Base Performance (Cut Sheet)" IsExpanded="True" Margin="0,8,0,0">
+                            <StackPanel Margin="8,8,0,0" Spacing="8">
+                                <StackPanel>
+                                    <TextBlock Text="Max Speed (RPM)" FontWeight="SemiBold" FontSize="11"/>
+                                    <TextBlock Text="{Binding CurrentMotor.MaxSpeed, StringFormat=N0}"/>
+                                </StackPanel>
+                                <StackPanel>
+                                    <TextBlock Text="Rated Speed (RPM)" FontWeight="SemiBold" FontSize="11"/>
+                                    <TextBlock Text="{Binding CurrentMotor.RatedSpeed, StringFormat=N0}"/>
+                                </StackPanel>
+                                <StackPanel>
+                                    <TextBlock Text="Peak Torque (Nm)" FontWeight="SemiBold" FontSize="11"/>
+                                    <TextBlock Text="{Binding CurrentMotor.RatedPeakTorque, StringFormat=N2}"/>
+                                </StackPanel>
+                                <StackPanel>
+                                    <TextBlock Text="Continuous Torque (Nm)" FontWeight="SemiBold" FontSize="11"/>
+                                    <TextBlock Text="{Binding CurrentMotor.RatedContinuousTorque, StringFormat=N2}"/>
+                                </StackPanel>
+                                <StackPanel>
+                                    <TextBlock Text="Power (W)" FontWeight="SemiBold" FontSize="11"/>
+                                    <TextBlock Text="{Binding CurrentMotor.Power, StringFormat=N0}"/>
+                                </StackPanel>
+                            </StackPanel>
+                        </Expander>
+                        
+                        <!-- Mechanical Section -->
+                        <Expander Header="Mechanical" Margin="0,8,0,0">
+                            <StackPanel Margin="8,8,0,0" Spacing="8">
+                                <StackPanel>
+                                    <TextBlock Text="Weight" FontWeight="SemiBold" FontSize="11"/>
+                                    <TextBlock Text="{Binding CurrentMotor.Weight, StringFormat=N2}"/>
+                                </StackPanel>
+                                <StackPanel>
+                                    <TextBlock Text="Rotor Inertia" FontWeight="SemiBold" FontSize="11"/>
+                                    <TextBlock Text="{Binding CurrentMotor.RotorInertia, StringFormat=N4}"/>
+                                </StackPanel>
+                            </StackPanel>
+                        </Expander>
+                        
+                        <!-- Brake Section -->
+                        <Expander Header="Brake" Margin="0,8,0,0">
+                            <StackPanel Margin="8,8,0,0" Spacing="8">
+                                <StackPanel>
+                                    <TextBlock Text="Has Brake" FontWeight="SemiBold" FontSize="11"/>
+                                    <TextBlock Text="{Binding CurrentMotor.HasBrake}"/>
+                                </StackPanel>
+                                <StackPanel>
+                                    <TextBlock Text="Brake Torque" FontWeight="SemiBold" FontSize="11"/>
+                                    <TextBlock Text="{Binding CurrentMotor.BrakeTorque, StringFormat=N2}"/>
+                                </StackPanel>
+                                <StackPanel>
+                                    <TextBlock Text="Brake Amperage (A)" FontWeight="SemiBold" FontSize="11"/>
+                                    <TextBlock Text="{Binding CurrentMotor.BrakeAmperage, StringFormat=N2}"/>
+                                </StackPanel>
+                                <StackPanel>
+                                    <TextBlock Text="Brake Voltage (V)" FontWeight="SemiBold" FontSize="11"/>
+                                    <TextBlock Text="{Binding CurrentMotor.BrakeVoltage, StringFormat=N0}"/>
+                                </StackPanel>
+                            </StackPanel>
+                        </Expander>
+                        
+                        <!-- Drive Configurations Section -->
+                        <Expander Header="Drive Configurations" IsExpanded="True" Margin="0,8,0,0">
+                            <StackPanel Margin="8,8,0,0">
+                                <ItemsControl ItemsSource="{Binding CurrentMotor.Drives}">
+                                    <ItemsControl.ItemTemplate>
+                                        <DataTemplate>
+                                            <Expander Margin="0,4" IsExpanded="True">
+                                                <Expander.Header>
+                                                    <TextBlock Text="{Binding Name}" FontWeight="SemiBold"/>
+                                                </Expander.Header>
+                                                <StackPanel Margin="8,4,0,0">
+                                                    <TextBlock Text="{Binding PartNumber}" FontSize="11" Foreground="Gray"/>
+                                                    <ItemsControl ItemsSource="{Binding Voltages}" Margin="0,8,0,0">
+                                                        <ItemsControl.ItemTemplate>
+                                                            <DataTemplate>
+                                                                <Border BorderBrush="Gray" BorderThickness="0,0,0,1" Padding="0,4" Margin="0,2">
+                                                                    <StackPanel>
+                                                                        <TextBlock FontWeight="SemiBold" FontSize="12">
+                                                                            <TextBlock.Text>
+                                                                                <MultiBinding StringFormat="{}{0}V">
+                                                                                    <Binding Path="Voltage"/>
+                                                                                </MultiBinding>
+                                                                            </TextBlock.Text>
+                                                                        </TextBlock>
+                                                                        <StackPanel Orientation="Horizontal" Spacing="16" Margin="0,4,0,0">
+                                                                            <TextBlock FontSize="10">
+                                                                                <Run Text="Power: "/><Run Text="{Binding Power, StringFormat=N0}"/><Run Text="W"/>
+                                                                            </TextBlock>
+                                                                            <TextBlock FontSize="10">
+                                                                                <Run Text="Max: "/><Run Text="{Binding MaxSpeed, StringFormat=N0}"/><Run Text=" RPM"/>
+                                                                            </TextBlock>
+                                                                        </StackPanel>
+                                                                        <ItemsControl ItemsSource="{Binding Series}" Margin="0,4,0,0">
+                                                                            <ItemsControl.ItemTemplate>
+                                                                                <DataTemplate>
+                                                                                    <StackPanel Orientation="Horizontal" Margin="0,2">
+                                                                                        <CheckBox IsChecked="True" IsEnabled="False" MinWidth="0" Padding="0"/>
+                                                                                        <Rectangle Width="12" Height="2" Fill="SteelBlue" Margin="4,0"/>
+                                                                                        <TextBlock Text="{Binding Name}" FontSize="11" VerticalAlignment="Center"/>
+                                                                                        <TextBlock Text="{Binding Data.Count, StringFormat=' ({0} pts)'}" FontSize="10" Foreground="Gray" VerticalAlignment="Center"/>
+                                                                                    </StackPanel>
+                                                                                </DataTemplate>
+                                                                            </ItemsControl.ItemTemplate>
+                                                                        </ItemsControl>
+                                                                    </StackPanel>
+                                                                </Border>
+                                                            </DataTemplate>
+                                                        </ItemsControl.ItemTemplate>
+                                                    </ItemsControl>
+                                                </StackPanel>
+                                            </Expander>
+                                        </DataTemplate>
+                                    </ItemsControl.ItemTemplate>
+                                </ItemsControl>
+                            </StackPanel>
+                        </Expander>
+                    </StackPanel>
+                </ScrollViewer>
+            </Border>
+        </Grid>
+    </DockPanel>
+
+</Window>
