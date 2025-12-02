@@ -52,6 +52,12 @@ public partial class MainWindowViewModel : ViewModelBase
     [ObservableProperty]
     private CurveSeries? _selectedSeries;
 
+    /// <summary>
+    /// ViewModel for the chart component.
+    /// </summary>
+    [ObservableProperty]
+    private ChartViewModel _chartViewModel = new();
+
     public ObservableCollection<VoltageConfiguration> AvailableVoltages =>
         new(SelectedDrive?.Voltages ?? []);
 
@@ -62,6 +68,7 @@ public partial class MainWindowViewModel : ViewModelBase
     {
         _curveGeneratorService = new CurveGeneratorService();
         _fileService = new FileService(_curveGeneratorService);
+        ChartViewModel.DataChanged += OnChartDataChanged;
     }
 
     public MainWindowViewModel(IFileService fileService, ICurveGeneratorService curveGeneratorService)
@@ -99,6 +106,15 @@ public partial class MainWindowViewModel : ViewModelBase
     {
         // When voltage changes, update series selection
         SelectedSeries = value?.Series.FirstOrDefault();
+        
+        // Update chart with new voltage configuration
+        ChartViewModel.TorqueUnit = CurrentMotor?.Units.Torque ?? "Nm";
+        ChartViewModel.CurrentVoltage = value;
+    }
+
+    private void OnChartDataChanged(object? sender, EventArgs e)
+    {
+        MarkDirty();
     }
 
     [RelayCommand]
@@ -480,6 +496,23 @@ public partial class MainWindowViewModel : ViewModelBase
         StatusMessage = series.Locked
             ? $"Locked series: {series.Name}"
             : $"Unlocked series: {series.Name}";
+    }
+
+    /// <summary>
+    /// Toggles the visibility of a series on the chart.
+    /// </summary>
+    /// <param name="series">The series to toggle visibility for.</param>
+    [RelayCommand]
+    private void ToggleSeriesVisibility(CurveSeries? series)
+    {
+        if (series is null) return;
+
+        series.IsVisible = !series.IsVisible;
+        ChartViewModel.SetSeriesVisibility(series.Name, series.IsVisible);
+        OnPropertyChanged(nameof(AvailableSeries));
+        StatusMessage = series.IsVisible
+            ? $"Showing series: {series.Name}"
+            : $"Hiding series: {series.Name}";
     }
 
     [RelayCommand]

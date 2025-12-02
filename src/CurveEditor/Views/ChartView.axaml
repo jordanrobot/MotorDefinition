@@ -1,0 +1,43 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:vm="using:CurveEditor.ViewModels"
+             xmlns:lvc="using:LiveChartsCore.SkiaSharpView.Avalonia"
+             mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="500"
+             x:Class="CurveEditor.Views.ChartView"
+             x:DataType="vm:ChartViewModel">
+    
+    <Design.DataContext>
+        <vm:ChartViewModel/>
+    </Design.DataContext>
+    
+    <Grid>
+        <!-- Chart -->
+        <lvc:CartesianChart
+            x:Name="TorqueChart"
+            Series="{Binding Series}"
+            XAxes="{Binding XAxes}"
+            YAxes="{Binding YAxes}"
+            TooltipPosition="Top"
+            ZoomMode="X"
+            AnimationsSpeed="00:00:00.200">
+            <lvc:CartesianChart.TooltipBackgroundPaint>
+                <lvc:SolidColorPaint Color="#F5F5F5" />
+            </lvc:CartesianChart.TooltipBackgroundPaint>
+            <lvc:CartesianChart.TooltipTextPaint>
+                <lvc:SolidColorPaint Color="#333333" />
+            </lvc:CartesianChart.TooltipTextPaint>
+        </lvc:CartesianChart>
+        
+        <!-- Title Overlay -->
+        <TextBlock Text="{Binding Title}"
+                   FontSize="16"
+                   FontWeight="SemiBold"
+                   Foreground="Gray"
+                   HorizontalAlignment="Center"
+                   VerticalAlignment="Top"
+                   Margin="0,10,0,0"
+                   IsHitTestVisible="False"/>
+    </Grid>
+</UserControl>

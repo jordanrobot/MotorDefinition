@@ -1,6 +1,7 @@
 <Window xmlns="https://github.com/avaloniaui"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:vm="using:CurveEditor.ViewModels"
+        xmlns:views="using:CurveEditor.Views"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         mc:Ignorable="d" d:DesignWidth="1200" d:DesignHeight="800"
@@ -110,80 +111,57 @@
                 </StackPanel>
             </Border>
 
-            <!-- Center: Chart Area -->
-            <Border Grid.Column="1" 
-                    Margin="8"
-                    BorderBrush="{DynamicResource SystemControlBackgroundBaseMediumBrush}"
-                    BorderThickness="1"
-                    CornerRadius="4">
-                <Grid>
-                    <!-- Chart placeholder -->
-                    <StackPanel VerticalAlignment="Center" 
-                                HorizontalAlignment="Center"
-                                IsVisible="{Binding CurrentMotor, Converter={x:Static ObjectConverters.IsNull}}">
-                        <TextBlock Text="Motor Torque Curve Editor" 
-                                   FontSize="24" 
-                                   FontWeight="Bold"
-                                   HorizontalAlignment="Center"/>
-                        <TextBlock Text="Create a new motor definition or open an existing file to get started."
-                                   Margin="0,16,0,0"
-                                   Foreground="Gray"
-                                   HorizontalAlignment="Center"/>
-                        <StackPanel Orientation="Horizontal" 
-                                    HorizontalAlignment="Center" 
-                                    Margin="0,24,0,0"
-                                    Spacing="16">
-                            <Button Content="New Motor" 
-                                    Command="{Binding NewMotorCommand}"
-                                    Padding="16,8"/>
-                            <Button Content="Open File" 
-                                    Command="{Binding OpenFileCommand}"
-                                    Padding="16,8"/>
+            <!-- Center: Chart Area and Data Panel -->
+            <Grid Grid.Column="1" RowDefinitions="*,Auto">
+                <!-- Chart Area -->
+                <Border Grid.Row="0"
+                        Margin="8"
+                        BorderBrush="{DynamicResource SystemControlBackgroundBaseMediumBrush}"
+                        BorderThickness="1"
+                        CornerRadius="4">
+                    <Grid>
+                        <!-- Welcome screen when no motor loaded -->
+                        <StackPanel VerticalAlignment="Center" 
+                                    HorizontalAlignment="Center"
+                                    IsVisible="{Binding CurrentMotor, Converter={x:Static ObjectConverters.IsNull}}">
+                            <TextBlock Text="Motor Torque Curve Editor" 
+                                       FontSize="24" 
+                                       FontWeight="Bold"
+                                       HorizontalAlignment="Center"/>
+                            <TextBlock Text="Create a new motor definition or open an existing file to get started."
+                                       Margin="0,16,0,0"
+                                       Foreground="Gray"
+                                       HorizontalAlignment="Center"/>
+                            <StackPanel Orientation="Horizontal" 
+                                        HorizontalAlignment="Center" 
+                                        Margin="0,24,0,0"
+                                        Spacing="16">
+                                <Button Content="New Motor" 
+                                        Command="{Binding NewMotorCommand}"
+                                        Padding="16,8"/>
+                                <Button Content="Open File" 
+                                        Command="{Binding OpenFileCommand}"
+                                        Padding="16,8"/>
+                            </StackPanel>
                         </StackPanel>
-                    </StackPanel>
 
-                    <!-- Motor info when loaded -->
-                    <StackPanel VerticalAlignment="Center" 
-                                HorizontalAlignment="Center"
-                                IsVisible="{Binding CurrentMotor, Converter={x:Static ObjectConverters.IsNotNull}}">
-                        <TextBlock Text="{Binding CurrentMotor.MotorName}" 
-                                   FontSize="24" 
-                                   FontWeight="Bold"
-                                   HorizontalAlignment="Center"/>
-                        <TextBlock Text="{Binding CurrentMotor.Manufacturer}" 
-                                   FontSize="14" 
-                                   Foreground="Gray"
-                                   HorizontalAlignment="Center"
-                                   Margin="0,4,0,0"/>
-                        <TextBlock Text="Chart visualization coming in Phase 2"
-                                   Margin="0,32,0,0"
-                                   Foreground="Gray"
-                                   FontStyle="Italic"
-                                   HorizontalAlignment="Center"/>
-                        <StackPanel Orientation="Horizontal" 
-                                    HorizontalAlignment="Center" 
-                                    Margin="0,24,0,0"
-                                    Spacing="16">
-                            <StackPanel>
-                                <TextBlock Text="Max Speed" FontWeight="Bold"/>
-                                <TextBlock Text="{Binding CurrentMotor.MaxSpeed, StringFormat=N0}"/>
-                            </StackPanel>
-                            <StackPanel>
-                                <TextBlock Text="Peak Torque" FontWeight="Bold"/>
-                                <TextBlock Text="{Binding CurrentMotor.RatedPeakTorque, StringFormat=N1}"/>
-                            </StackPanel>
-                            <StackPanel>
-                                <TextBlock Text="Power" FontWeight="Bold"/>
-                                <TextBlock Text="{Binding CurrentMotor.Power, StringFormat=N0}"/>
-                            </StackPanel>
-                            <StackPanel>
-                                <TextBlock Text="Drives" FontWeight="Bold"/>
-                                <TextBlock Text="{Binding CurrentMotor.Drives.Count}"/>
-                            </StackPanel>
-                        </StackPanel>
-                    </StackPanel>
-                </Grid>
-            </Border>
+                        <!-- Chart when motor is loaded -->
+                        <views:ChartView DataContext="{Binding ChartViewModel}"
+                                         IsVisible="{Binding $parent[Window].((vm:MainWindowViewModel)DataContext).CurrentMotor, Converter={x:Static ObjectConverters.IsNotNull}}"/>
+                    </Grid>
+                </Border>
+                
+                <!-- Curve Data Panel -->
+                <Border Grid.Row="1"
+                        Margin="8,0,8,8"
+                        BorderBrush="{DynamicResource SystemControlBackgroundBaseMediumBrush}"
+                        BorderThickness="1"
+                        CornerRadius="4"
+                        MaxHeight="250"
+                        IsVisible="{Binding CurrentMotor, Converter={x:Static ObjectConverters.IsNotNull}}">
+                    <views:CurveDataPanel DataContext="{Binding}"/>
+                </Border>
+            </Grid>
 
             <!-- Right: Properties Panel -->
             <Border Grid.Column="2" 
@@ -499,7 +477,7 @@
                                             ToolTip.Tip="Remove Series"/>
                                 </Grid>
                                 
-                                <!-- Series ListBox with lock buttons -->
+                                <!-- Series ListBox with visibility checkboxes and lock buttons -->
                                 <ListBox Grid.Row="1" 
                                          ItemsSource="{Binding AvailableSeries}"
                                          SelectedItem="{Binding SelectedSeries}"
@@ -507,8 +485,17 @@
                                          MaxHeight="120">
                                     <ListBox.ItemTemplate>
                                         <DataTemplate>
-                                            <Grid ColumnDefinitions="Auto,*">
-                                                <Button Grid.Column="0" 
+                                            <Grid ColumnDefinitions="Auto,Auto,*">
+                                                <!-- Visibility Checkbox -->
+                                                <CheckBox Grid.Column="0"
+                                                          IsChecked="{Binding IsVisible}"
+                                                          VerticalAlignment="Center"
+                                                          Margin="0,0,4,0"
+                                                          ToolTip.Tip="Toggle Visibility"
+                                                          Command="{Binding $parent[ListBox].((vm:MainWindowViewModel)DataContext).ToggleSeriesVisibilityCommand}"
+                                                          CommandParameter="{Binding}"/>
+                                                <!-- Lock Button -->
+                                                <Button Grid.Column="1" 
                                                         Width="24" Height="24" 
                                                         Padding="0" 
                                                         Margin="0,0,8,0"
@@ -520,7 +507,7 @@
                                                         <TextBlock Text="🔓" FontSize="12" IsVisible="{Binding !Locked}"/>
                                                     </Panel>
                                                 </Button>
-                                                <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
+                                                <StackPanel Grid.Column="2" Orientation="Horizontal" VerticalAlignment="Center">
                                                     <TextBlock Text="{Binding Name}" VerticalAlignment="Center"/>
                                                     <TextBlock Text="{Binding Data.Count, StringFormat=' ({0} pts)'}" 
                                                                Foreground="Gray" FontSize="10" VerticalAlignment="Center"/>
