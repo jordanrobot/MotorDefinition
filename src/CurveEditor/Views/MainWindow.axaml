@@ -84,9 +84,26 @@
         <Border DockPanel.Dock="Bottom" 
                 Background="{DynamicResource SystemControlBackgroundBaseLowBrush}"
                 Padding="8,4">
-            <TextBlock Text="{Binding StatusMessage}" 
-                       FontSize="12"
-                       VerticalAlignment="Center"/>
+            <Grid ColumnDefinitions="*,Auto">
+                <TextBlock Grid.Column="0"
+                           Text="{Binding StatusMessage}" 
+                           FontSize="12"
+                           VerticalAlignment="Center"/>
+                <!-- Validation Error Indicator -->
+                <StackPanel Grid.Column="1"
+                            Orientation="Horizontal"
+                            Spacing="4"
+                            IsVisible="{Binding HasValidationErrors}">
+                    <TextBlock Text="⚠️"
+                               FontSize="12"
+                               VerticalAlignment="Center"/>
+                    <TextBlock Text="Validation errors"
+                               Foreground="Orange"
+                               FontSize="12"
+                               VerticalAlignment="Center"
+                               ToolTip.Tip="{Binding ValidationErrors}"/>
+                </StackPanel>
+            </Grid>
         </Border>
 
         <!-- Main Content Area -->

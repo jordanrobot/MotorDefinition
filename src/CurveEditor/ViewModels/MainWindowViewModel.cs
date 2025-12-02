@@ -20,6 +20,7 @@ public partial class MainWindowViewModel : ViewModelBase
 {
     private readonly IFileService _fileService;
     private readonly ICurveGeneratorService _curveGeneratorService;
+    private readonly IValidationService _validationService;
 
     private static readonly FilePickerFileType JsonFileType = new("JSON Files")
     {
@@ -37,6 +38,19 @@ public partial class MainWindowViewModel : ViewModelBase
 
     [ObservableProperty]
     private string _statusMessage = "Ready";
+
+    /// <summary>
+    /// Current validation errors for the motor definition.
+    /// </summary>
+    [ObservableProperty]
+    private string _validationErrors = string.Empty;
+
+    /// <summary>
+    /// Whether there are validation errors.
+    /// </summary>
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(CanSaveWithValidation))]
+    private bool _hasValidationErrors;
 
     // Drive selection
     [ObservableProperty]
@@ -64,10 +78,16 @@ public partial class MainWindowViewModel : ViewModelBase
     public ObservableCollection<CurveSeries> AvailableSeries =>
         new(SelectedVoltage?.Series ?? []);
 
+    /// <summary>
+    /// Whether save is enabled (motor exists and no validation errors).
+    /// </summary>
+    public bool CanSaveWithValidation => CurrentMotor is not null && !HasValidationErrors;
+
     public MainWindowViewModel()
     {
         _curveGeneratorService = new CurveGeneratorService();
         _fileService = new FileService(_curveGeneratorService);
+        _validationService = new ValidationService();
         ChartViewModel.DataChanged += OnChartDataChanged;
     }
 
@@ -75,6 +95,7 @@ public partial class MainWindowViewModel : ViewModelBase
     {
         _fileService = fileService ?? throw new ArgumentNullException(nameof(fileService));
         _curveGeneratorService = curveGeneratorService ?? throw new ArgumentNullException(nameof(curveGeneratorService));
+        _validationService = new ValidationService();
     }
 
     public string WindowTitle
@@ -180,6 +201,14 @@ public partial class MainWindowViewModel : ViewModelBase
     {
         if (CurrentMotor is null) return;
 
+        // Validate before saving
+        ValidateMotor();
+        if (HasValidationErrors)
+        {
+            StatusMessage = "Cannot save: validation errors exist";
+            return;
+        }
+
         try
         {
             if (_fileService.CurrentFilePath is null)
@@ -207,6 +236,14 @@ public partial class MainWindowViewModel : ViewModelBase
     private async Task SaveAsAsync()
     {
         if (CurrentMotor is null) return;
+
+        // Validate before saving
+        ValidateMotor();
+        if (HasValidationErrors)
+        {
+            StatusMessage = "Cannot save: validation errors exist";
+            return;
+        }
 
         try
         {
@@ -534,6 +571,26 @@ public partial class MainWindowViewModel : ViewModelBase
     {
         _fileService.MarkDirty();
         IsDirty = true;
+        ValidateMotor();
+    }
+
+    /// <summary>
+    /// Validates the current motor definition and updates validation state.
+    /// </summary>
+    private void ValidateMotor()
+    {
+        if (CurrentMotor is null)
+        {
+            HasValidationErrors = false;
+            ValidationErrors = string.Empty;
+            return;
+        }
+
+        var errors = _validationService.ValidateMotorDefinition(CurrentMotor);
+        HasValidationErrors = errors.Count > 0;
+        ValidationErrors = errors.Count > 0
+            ? string.Join("\n", errors)
+            : string.Empty;
     }
 
     private static IStorageProvider? GetStorageProvider()
