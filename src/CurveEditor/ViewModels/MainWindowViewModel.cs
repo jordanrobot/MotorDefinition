@@ -446,8 +446,11 @@ public partial class MainWindowViewModel : ViewModelBase
             voltage.Series.Add(peakSeries);
             voltage.Series.Add(continuousSeries);
 
-            SelectedDrive = drive;
+            // Force refresh the drive list in UI by notifying the CurrentMotor property changed
             OnPropertyChanged(nameof(CurrentMotor));
+            
+            // Select the new drive and update chart
+            SelectedDrive = drive;
             MarkDirty();
             StatusMessage = $"Added drive: {driveName}";
         }
@@ -538,8 +541,13 @@ public partial class MainWindowViewModel : ViewModelBase
             voltage.Series.Add(peakSeries);
             voltage.Series.Add(continuousSeries);
 
-            SelectedVoltage = voltage;
+            // Refresh the available voltages and select the new one
             OnPropertyChanged(nameof(AvailableVoltages));
+            SelectedVoltage = voltage;
+            
+            // Force chart refresh to update axes based on new max speed
+            ChartViewModel.RefreshChart();
+            
             MarkDirty();
             StatusMessage = $"Added voltage: {result.Voltage}V";
         }
