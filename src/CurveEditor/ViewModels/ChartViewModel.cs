@@ -54,6 +54,15 @@ public partial class ChartViewModel : ViewModelBase
     [ObservableProperty]
     private string _torqueUnit = "Nm";
 
+    [ObservableProperty]
+    private double _motorMaxSpeed;
+
+    /// <summary>
+    /// Controls whether zoom/pan is enabled on the chart.
+    /// When false, the graph is static and shows the full range of data.
+    /// </summary>
+    public static bool EnableZoomPan => false;
+
     /// <summary>
     /// Event raised when any series data point changes.
     /// </summary>
@@ -187,7 +196,8 @@ public partial class ChartViewModel : ViewModelBase
     {
         if (_currentVoltage is null) return;
 
-        var maxRpm = _currentVoltage.MaxSpeed;
+        // Use motor's max speed for x-axis if available, otherwise fall back to voltage's max speed
+        var maxRpm = MotorMaxSpeed > 0 ? MotorMaxSpeed : _currentVoltage.MaxSpeed;
         var maxTorque = _currentVoltage.Series
             .SelectMany(s => s.Data)
             .Select(dp => dp.Torque)

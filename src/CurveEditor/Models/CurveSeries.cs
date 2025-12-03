@@ -1,5 +1,7 @@
 using System;
 using System.Collections.Generic;
+using System.ComponentModel;
+using System.Runtime.CompilerServices;
 using System.Text.Json.Serialization;
 
 namespace CurveEditor.Models;
@@ -8,9 +10,16 @@ namespace CurveEditor.Models;
 /// Represents a named series of motor torque/speed data points.
 /// Each series represents a specific operating condition (e.g., "Peak" or "Continuous").
 /// </summary>
-public class CurveSeries
+public class CurveSeries : INotifyPropertyChanged
 {
     private string _name = string.Empty;
+    private bool _locked;
+    private bool _isVisible = true;
+
+    /// <summary>
+    /// Occurs when a property value changes.
+    /// </summary>
+    public event PropertyChangedEventHandler? PropertyChanged;
 
     /// <summary>
     /// The name of this curve series (e.g., "Peak", "Continuous").
@@ -25,7 +34,11 @@ public class CurveSeries
             {
                 throw new ArgumentException("Series name cannot be null or empty.", nameof(value));
             }
-            _name = value;
+            if (_name != value)
+            {
+                _name = value;
+                OnPropertyChanged();
+            }
         }
     }
 
@@ -40,14 +53,36 @@ public class CurveSeries
     /// When true, the curve data should not be modified.
     /// </summary>
     [JsonPropertyName("locked")]
-    public bool Locked { get; set; }
+    public bool Locked
+    {
+        get => _locked;
+        set
+        {
+            if (_locked != value)
+            {
+                _locked = value;
+                OnPropertyChanged();
+            }
+        }
+    }
 
     /// <summary>
     /// Indicates whether this curve series is visible in the chart.
     /// This is a runtime-only property that is not persisted to JSON.
     /// </summary>
     [JsonIgnore]
-    public bool IsVisible { get; set; } = true;
+    public bool IsVisible
+    {
+        get => _isVisible;
+        set
+        {
+            if (_isVisible != value)
+            {
+                _isVisible = value;
+                OnPropertyChanged();
+            }
+        }
+    }
 
     /// <summary>
     /// The data points for this curve, stored at 1% increments.
@@ -120,5 +155,14 @@ public class CurveSeries
         }
 
         return true;
+    }
+
+    /// <summary>
+    /// Raises the PropertyChanged event.
+    /// </summary>
+    /// <param name="propertyName">The name of the property that changed.</param>
+    protected virtual void OnPropertyChanged([CallerMemberName] string? propertyName = null)
+    {
+        PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
     }
 }

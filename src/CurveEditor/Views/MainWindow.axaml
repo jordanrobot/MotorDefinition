@@ -618,12 +618,11 @@
                                     <Grid ColumnDefinitions="Auto,Auto,*">
                                         <!-- Visibility Checkbox -->
                                         <CheckBox Grid.Column="0"
-                                                  IsChecked="{Binding IsVisible}"
+                                                  IsChecked="{Binding IsVisible, Mode=TwoWay}"
                                                   VerticalAlignment="Center"
                                                   Margin="0,0,4,0"
                                                   ToolTip.Tip="Toggle Visibility"
-                                                  Command="{Binding $parent[ListBox].((vm:MainWindowViewModel)DataContext).ToggleSeriesVisibilityCommand}"
-                                                  CommandParameter="{Binding}"/>
+                                                  Click="OnSeriesVisibilityCheckboxClick"/>
                                         <!-- Lock Button -->
                                         <Button Grid.Column="1" 
                                                 Width="20" Height="20" 

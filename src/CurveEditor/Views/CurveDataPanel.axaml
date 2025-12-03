@@ -15,7 +15,7 @@
                   CanUserReorderColumns="False"
                   CanUserResizeColumns="True"
                   CanUserSortColumns="False"
-                  IsReadOnly="False"
+                  IsReadOnly="{Binding SelectedSeries.Locked}"
                   GridLinesVisibility="Horizontal"
                   HeadersVisibility="Column"
                   SelectionMode="Single"
