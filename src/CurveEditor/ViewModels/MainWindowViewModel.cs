@@ -71,6 +71,12 @@ public partial class MainWindowViewModel : ViewModelBase
     private ChartViewModel _chartViewModel = new();
 
     /// <summary>
+    /// ViewModel for the curve data table.
+    /// </summary>
+    [ObservableProperty]
+    private CurveDataTableViewModel _curveDataTableViewModel = new();
+
+    /// <summary>
     /// Whether the units section is expanded.
     /// </summary>
     [ObservableProperty]
@@ -156,6 +162,7 @@ public partial class MainWindowViewModel : ViewModelBase
         _fileService = new FileService(_curveGeneratorService);
         _validationService = new ValidationService();
         ChartViewModel.DataChanged += OnChartDataChanged;
+        CurveDataTableViewModel.DataChanged += OnDataTableDataChanged;
     }
 
     public MainWindowViewModel(IFileService fileService, ICurveGeneratorService curveGeneratorService)
@@ -260,11 +267,20 @@ public partial class MainWindowViewModel : ViewModelBase
         ChartViewModel.TorqueUnit = CurrentMotor?.Units.Torque ?? "Nm";
         ChartViewModel.MotorMaxSpeed = CurrentMotor?.MaxSpeed ?? 0;
         ChartViewModel.CurrentVoltage = value;
+
+        // Update data table with new voltage configuration
+        CurveDataTableViewModel.CurrentVoltage = value;
     }
 
     private void OnChartDataChanged(object? sender, EventArgs e)
     {
         MarkDirty();
+    }
+
+    private void OnDataTableDataChanged(object? sender, EventArgs e)
+    {
+        MarkDirty();
+        ChartViewModel.RefreshChart();
     }
 
     [RelayCommand]
@@ -716,21 +732,40 @@ public partial class MainWindowViewModel : ViewModelBase
 
     // Series management commands
     [RelayCommand]
-    private void AddSeries()
+    private async Task AddSeriesAsync()
     {
         if (SelectedVoltage is null) return;
 
         try
         {
-            var newSeriesName = GenerateUniqueName(
+            var dialog = new Views.AddCurveSeriesDialog();
+            dialog.Initialize(
+                SelectedVoltage.MaxSpeed,
+                SelectedVoltage.RatedContinuousTorque,
+                SelectedVoltage.Power);
+
+            if (Application.Current?.ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop)
+            {
+                await dialog.ShowDialog(desktop.MainWindow!);
+            }
+
+            if (dialog.Result is null) return;
+
+            var result = dialog.Result;
+            var seriesName = GenerateUniqueName(
                 SelectedVoltage.Series.Select(s => s.Name),
-                "New Series");
+                result.Name);
             
-            var series = SelectedVoltage.AddSeries(newSeriesName, SelectedVoltage.RatedContinuousTorque);
+            var series = SelectedVoltage.AddSeries(seriesName, result.BaseTorque);
+            series.IsVisible = result.IsVisible;
+            series.Locked = result.IsLocked;
+            
             RefreshAvailableSeries();
+            CurveDataTableViewModel.RefreshData();
             SelectedSeries = series;
+            ChartViewModel.RefreshChart();
             MarkDirty();
-            StatusMessage = $"Added series: {newSeriesName}";
+            StatusMessage = $"Added series: {seriesName}";
         }
         catch (Exception ex)
         {
