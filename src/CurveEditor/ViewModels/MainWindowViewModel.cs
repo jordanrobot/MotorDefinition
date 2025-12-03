@@ -72,6 +72,18 @@ public partial class MainWindowViewModel : ViewModelBase
     [ObservableProperty]
     private ChartViewModel _chartViewModel = new();
 
+    /// <summary>
+    /// Whether the units section is expanded.
+    /// </summary>
+    [ObservableProperty]
+    private bool _isUnitsExpanded;
+
+    /// <summary>
+    /// Whether the curve data panel is expanded.
+    /// </summary>
+    [ObservableProperty]
+    private bool _isCurveDataExpanded;
+
     public ObservableCollection<VoltageConfiguration> AvailableVoltages =>
         new(SelectedDrive?.Voltages ?? []);
 
@@ -82,6 +94,41 @@ public partial class MainWindowViewModel : ViewModelBase
     /// Whether save is enabled (motor exists and no validation errors).
     /// </summary>
     public bool CanSaveWithValidation => CurrentMotor is not null && !HasValidationErrors;
+
+    /// <summary>
+    /// Supported speed units for dropdowns.
+    /// </summary>
+    public static string[] SpeedUnits => UnitSettings.SupportedSpeedUnits;
+
+    /// <summary>
+    /// Supported weight units for dropdowns.
+    /// </summary>
+    public static string[] WeightUnits => UnitSettings.SupportedWeightUnits;
+
+    /// <summary>
+    /// Supported torque units for dropdowns.
+    /// </summary>
+    public static string[] TorqueUnits => UnitSettings.SupportedTorqueUnits;
+
+    /// <summary>
+    /// Supported power units for dropdowns.
+    /// </summary>
+    public static string[] PowerUnits => UnitSettings.SupportedPowerUnits;
+
+    /// <summary>
+    /// Supported voltage units for dropdowns.
+    /// </summary>
+    public static string[] VoltageUnits => UnitSettings.SupportedVoltageUnits;
+
+    /// <summary>
+    /// Supported current units for dropdowns.
+    /// </summary>
+    public static string[] CurrentUnits => UnitSettings.SupportedCurrentUnits;
+
+    /// <summary>
+    /// Supported inertia units for dropdowns.
+    /// </summary>
+    public static string[] InertiaUnits => UnitSettings.SupportedInertiaUnits;
 
     public MainWindowViewModel()
     {

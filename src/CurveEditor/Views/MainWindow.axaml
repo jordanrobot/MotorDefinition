@@ -17,40 +17,53 @@
     </Design.DataContext>
     
     <Window.Styles>
-        <!-- Property Panel Header Style -->
-        <Style Selector="TextBlock.PropertyHeader">
-            <Setter Property="FontWeight" Value="Bold"/>
-            <Setter Property="FontSize" Value="13"/>
+        <!-- Collapsible Header Style -->
+        <Style Selector="ToggleButton.CollapsibleHeader">
             <Setter Property="Background" Value="{DynamicResource SystemControlBackgroundBaseLowBrush}"/>
-            <Setter Property="Padding" Value="8,6"/>
-            <Setter Property="Margin" Value="-8,8,-8,4"/>
+            <Setter Property="BorderThickness" Value="0"/>
+            <Setter Property="Padding" Value="8,4"/>
+            <Setter Property="HorizontalAlignment" Value="Stretch"/>
+            <Setter Property="HorizontalContentAlignment" Value="Left"/>
+            <Setter Property="Cursor" Value="Hand"/>
         </Style>
         
         <!-- Property Label Style -->
         <Style Selector="TextBlock.PropertyLabel">
             <Setter Property="FontSize" Value="11"/>
             <Setter Property="Foreground" Value="{DynamicResource SystemControlForegroundBaseMediumBrush}"/>
-            <Setter Property="Margin" Value="0,0,8,0"/>
-            <Setter Property="MinWidth" Value="100"/>
+            <Setter Property="Margin" Value="0,0,4,0"/>
+            <Setter Property="MinWidth" Value="85"/>
+            <Setter Property="VerticalAlignment" Value="Center"/>
         </Style>
         
         <!-- Property Value Style -->
         <Style Selector="TextBlock.PropertyValue">
-            <Setter Property="FontSize" Value="12"/>
+            <Setter Property="FontSize" Value="11"/>
+            <Setter Property="VerticalAlignment" Value="Center"/>
+        </Style>
+        
+        <!-- Property Input Style -->
+        <Style Selector="TextBox.PropertyInput">
+            <Setter Property="FontSize" Value="11"/>
+            <Setter Property="Padding" Value="4,2"/>
+            <Setter Property="MinHeight" Value="24"/>
+        </Style>
+        
+        <!-- Property ComboBox Style -->
+        <Style Selector="ComboBox.PropertyComboBox">
+            <Setter Property="FontSize" Value="11"/>
+            <Setter Property="Padding" Value="4,2"/>
+            <Setter Property="MinHeight" Value="24"/>
         </Style>
         
         <!-- Property Row Style -->
         <Style Selector="Grid.PropertyRow">
-            <Setter Property="Margin" Value="0,2"/>
+            <Setter Property="Margin" Value="0,1"/>
         </Style>
         
-        <!-- List Box with buttons style -->
-        <Style Selector="Border.SelectionPanel">
-            <Setter Property="BorderBrush" Value="{DynamicResource SystemControlForegroundBaseMediumLowBrush}"/>
-            <Setter Property="BorderThickness" Value="1"/>
-            <Setter Property="CornerRadius" Value="4"/>
-            <Setter Property="Padding" Value="4"/>
-            <Setter Property="Margin" Value="0,4,0,8"/>
+        <!-- GridSplitter Style -->
+        <Style Selector="GridSplitter">
+            <Setter Property="Background" Value="{DynamicResource SystemControlBackgroundBaseMediumBrush}"/>
         </Style>
     </Window.Styles>
 
@@ -106,8 +119,8 @@
             </Grid>
         </Border>
 
-        <!-- Main Content Area -->
-        <Grid ColumnDefinitions="200,*,320">
+        <!-- Main Content Area with resizable panels -->
+        <Grid ColumnDefinitions="200,4,*,4,280">
             
             <!-- Left: Directory Browser (placeholder) -->
             <Border Grid.Column="0" 
@@ -127,12 +140,15 @@
                             IsEnabled="False"/>
                 </StackPanel>
             </Border>
+            
+            <!-- Left GridSplitter -->
+            <GridSplitter Grid.Column="1" Width="4" ResizeDirection="Columns"/>
 
-            <!-- Center: Chart Area and Data Panel -->
-            <Grid Grid.Column="1" RowDefinitions="*,Auto">
+            <!-- Center: Chart Area and Collapsible Data Panel -->
+            <Grid Grid.Column="2" RowDefinitions="*,Auto,Auto">
                 <!-- Chart Area -->
                 <Border Grid.Row="0"
-                        Margin="8"
+                        Margin="4"
                         BorderBrush="{DynamicResource SystemControlBackgroundBaseMediumBrush}"
                         BorderThickness="1"
                         CornerRadius="4">
@@ -168,392 +184,427 @@
                     </Grid>
                 </Border>
                 
-                <!-- Curve Data Panel -->
-                <Border Grid.Row="1"
-                        Margin="8,0,8,8"
+                <!-- Vertical GridSplitter between chart and data table -->
+                <GridSplitter Grid.Row="1" 
+                              Height="4" 
+                              ResizeDirection="Rows"
+                              IsVisible="{Binding IsCurveDataExpanded}"/>
+                
+                <!-- Collapsible Curve Data Panel -->
+                <Border Grid.Row="2"
+                        Margin="4,0,4,4"
                         BorderBrush="{DynamicResource SystemControlBackgroundBaseMediumBrush}"
                         BorderThickness="1"
                         CornerRadius="4"
-                        MaxHeight="250"
                         IsVisible="{Binding CurrentMotor, Converter={x:Static ObjectConverters.IsNotNull}}">
-                    <views:CurveDataPanel DataContext="{Binding}"/>
+                    <Grid RowDefinitions="Auto,*">
+                        <!-- Collapsible Header -->
+                        <ToggleButton Grid.Row="0" 
+                                      IsChecked="{Binding IsCurveDataExpanded}"
+                                      Classes="CollapsibleHeader">
+                            <StackPanel Orientation="Horizontal" Spacing="8">
+                                <TextBlock Text="▶" FontSize="10" VerticalAlignment="Center"
+                                           IsVisible="{Binding !IsCurveDataExpanded}"/>
+                                <TextBlock Text="▼" FontSize="10" VerticalAlignment="Center"
+                                           IsVisible="{Binding IsCurveDataExpanded}"/>
+                                <TextBlock Text="Curve Data" FontWeight="Bold" FontSize="12"/>
+                                <TextBlock Text="{Binding SelectedSeries.Name, StringFormat='- {0}'}"
+                                           FontSize="11" Foreground="Gray"
+                                           IsVisible="{Binding SelectedSeries, Converter={x:Static ObjectConverters.IsNotNull}}"/>
+                            </StackPanel>
+                        </ToggleButton>
+                        
+                        <!-- Data Content -->
+                        <Border Grid.Row="1" 
+                                IsVisible="{Binding IsCurveDataExpanded}"
+                                MaxHeight="200">
+                            <views:CurveDataPanel DataContext="{Binding}"/>
+                        </Border>
+                    </Grid>
                 </Border>
             </Grid>
+            
+            <!-- Right GridSplitter -->
+            <GridSplitter Grid.Column="3" Width="4" ResizeDirection="Columns"/>
 
             <!-- Right: Properties Panel -->
-            <Border Grid.Column="2" 
+            <Border Grid.Column="4" 
                     BorderBrush="{DynamicResource SystemControlBackgroundBaseMediumBrush}"
                     BorderThickness="1,0,0,0">
                 <ScrollViewer>
-                    <StackPanel Margin="8" 
+                    <StackPanel Margin="6" 
                                 IsVisible="{Binding CurrentMotor, Converter={x:Static ObjectConverters.IsNotNull}}">
                         
-                        <TextBlock Text="Properties" 
+                        <TextBlock Text="Motor Properties" 
                                    FontWeight="Bold" 
-                                   FontSize="16"
-                                   Margin="0,0,0,8"/>
+                                   FontSize="14"
+                                   Margin="0,0,0,6"/>
                         
-                        <!-- IDENTIFICATION SECTION -->
-                        <TextBlock Text="Identification" Classes="PropertyHeader"/>
-                        
+                        <!-- Motor Name -->
                         <Grid Classes="PropertyRow" ColumnDefinitions="Auto,*">
                             <TextBlock Grid.Column="0" Text="Motor Name" Classes="PropertyLabel"/>
-                            <TextBlock Grid.Column="1" Text="{Binding CurrentMotor.MotorName}" Classes="PropertyValue"/>
+                            <TextBox Grid.Column="1" Text="{Binding CurrentMotor.MotorName}" Classes="PropertyInput"/>
                         </Grid>
                         
+                        <!-- Manufacturer -->
                         <Grid Classes="PropertyRow" ColumnDefinitions="Auto,*">
                             <TextBlock Grid.Column="0" Text="Manufacturer" Classes="PropertyLabel"/>
-                            <TextBlock Grid.Column="1" Text="{Binding CurrentMotor.Manufacturer}" Classes="PropertyValue"/>
+                            <TextBox Grid.Column="1" Text="{Binding CurrentMotor.Manufacturer}" Classes="PropertyInput"/>
                         </Grid>
                         
+                        <!-- Part Number -->
                         <Grid Classes="PropertyRow" ColumnDefinitions="Auto,*">
                             <TextBlock Grid.Column="0" Text="Part Number" Classes="PropertyLabel"/>
-                            <TextBlock Grid.Column="1" Text="{Binding CurrentMotor.PartNumber}" Classes="PropertyValue"/>
+                            <TextBox Grid.Column="1" Text="{Binding CurrentMotor.PartNumber}" Classes="PropertyInput"/>
                         </Grid>
                         
-                        <!-- PERFORMANCE SECTION -->
-                        <TextBlock Text="Performance (Cut Sheet)" Classes="PropertyHeader"/>
-                        
+                        <!-- Max Speed -->
                         <Grid Classes="PropertyRow" ColumnDefinitions="Auto,*">
                             <TextBlock Grid.Column="0" Text="Max Speed" Classes="PropertyLabel"/>
-                            <TextBlock Grid.Column="1" Classes="PropertyValue">
-                                <Run Text="{Binding CurrentMotor.MaxSpeed, StringFormat=N0}"/>
-                                <Run Text=" RPM"/>
-                            </TextBlock>
+                            <Grid Grid.Column="1" ColumnDefinitions="*,Auto">
+                                <TextBox Grid.Column="0" Text="{Binding CurrentMotor.MaxSpeed}" Classes="PropertyInput"/>
+                                <TextBlock Grid.Column="1" Text="RPM" Classes="PropertyValue" Margin="4,0,0,0"/>
+                            </Grid>
                         </Grid>
                         
+                        <!-- Rated Speed -->
                         <Grid Classes="PropertyRow" ColumnDefinitions="Auto,*">
                             <TextBlock Grid.Column="0" Text="Rated Speed" Classes="PropertyLabel"/>
-                            <TextBlock Grid.Column="1" Classes="PropertyValue">
-                                <Run Text="{Binding CurrentMotor.RatedSpeed, StringFormat=N0}"/>
-                                <Run Text=" RPM"/>
-                            </TextBlock>
+                            <Grid Grid.Column="1" ColumnDefinitions="*,Auto">
+                                <TextBox Grid.Column="0" Text="{Binding CurrentMotor.RatedSpeed}" Classes="PropertyInput"/>
+                                <TextBlock Grid.Column="1" Text="RPM" Classes="PropertyValue" Margin="4,0,0,0"/>
+                            </Grid>
                         </Grid>
                         
+                        <!-- Peak Torque -->
                         <Grid Classes="PropertyRow" ColumnDefinitions="Auto,*">
                             <TextBlock Grid.Column="0" Text="Peak Torque" Classes="PropertyLabel"/>
-                            <TextBlock Grid.Column="1" Classes="PropertyValue">
-                                <Run Text="{Binding CurrentMotor.RatedPeakTorque, StringFormat=N2}"/>
-                                <Run Text=" "/>
-                                <Run Text="{Binding CurrentMotor.Units.Torque}"/>
-                            </TextBlock>
+                            <Grid Grid.Column="1" ColumnDefinitions="*,Auto">
+                                <TextBox Grid.Column="0" Text="{Binding CurrentMotor.RatedPeakTorque}" Classes="PropertyInput"/>
+                                <TextBlock Grid.Column="1" Text="{Binding CurrentMotor.Units.Torque}" Classes="PropertyValue" Margin="4,0,0,0"/>
+                            </Grid>
                         </Grid>
                         
+                        <!-- Cont. Torque -->
                         <Grid Classes="PropertyRow" ColumnDefinitions="Auto,*">
                             <TextBlock Grid.Column="0" Text="Cont. Torque" Classes="PropertyLabel"/>
-                            <TextBlock Grid.Column="1" Classes="PropertyValue">
-                                <Run Text="{Binding CurrentMotor.RatedContinuousTorque, StringFormat=N2}"/>
-                                <Run Text=" "/>
-                                <Run Text="{Binding CurrentMotor.Units.Torque}"/>
-                            </TextBlock>
+                            <Grid Grid.Column="1" ColumnDefinitions="*,Auto">
+                                <TextBox Grid.Column="0" Text="{Binding CurrentMotor.RatedContinuousTorque}" Classes="PropertyInput"/>
+                                <TextBlock Grid.Column="1" Text="{Binding CurrentMotor.Units.Torque}" Classes="PropertyValue" Margin="4,0,0,0"/>
+                            </Grid>
                         </Grid>
                         
+                        <!-- Power -->
                         <Grid Classes="PropertyRow" ColumnDefinitions="Auto,*">
                             <TextBlock Grid.Column="0" Text="Power" Classes="PropertyLabel"/>
-                            <TextBlock Grid.Column="1" Classes="PropertyValue">
-                                <Run Text="{Binding CurrentMotor.Power, StringFormat=N0}"/>
-                                <Run Text=" "/>
-                                <Run Text="{Binding CurrentMotor.Units.Power}"/>
-                            </TextBlock>
+                            <Grid Grid.Column="1" ColumnDefinitions="*,Auto">
+                                <TextBox Grid.Column="0" Text="{Binding CurrentMotor.Power}" Classes="PropertyInput"/>
+                                <TextBlock Grid.Column="1" Text="{Binding CurrentMotor.Units.Power}" Classes="PropertyValue" Margin="4,0,0,0"/>
+                            </Grid>
                         </Grid>
                         
-                        <!-- PHYSICAL PROPERTIES SECTION -->
-                        <TextBlock Text="Physical Properties" Classes="PropertyHeader"/>
-                        
+                        <!-- Weight -->
                         <Grid Classes="PropertyRow" ColumnDefinitions="Auto,*">
                             <TextBlock Grid.Column="0" Text="Weight" Classes="PropertyLabel"/>
-                            <TextBlock Grid.Column="1" Classes="PropertyValue">
-                                <Run Text="{Binding CurrentMotor.Weight, StringFormat=N2}"/>
-                                <Run Text=" "/>
-                                <Run Text="{Binding CurrentMotor.Units.Weight}"/>
-                            </TextBlock>
+                            <Grid Grid.Column="1" ColumnDefinitions="*,Auto">
+                                <TextBox Grid.Column="0" Text="{Binding CurrentMotor.Weight}" Classes="PropertyInput"/>
+                                <TextBlock Grid.Column="1" Text="{Binding CurrentMotor.Units.Weight}" Classes="PropertyValue" Margin="4,0,0,0"/>
+                            </Grid>
                         </Grid>
                         
+                        <!-- Rotor Inertia -->
                         <Grid Classes="PropertyRow" ColumnDefinitions="Auto,*">
                             <TextBlock Grid.Column="0" Text="Rotor Inertia" Classes="PropertyLabel"/>
-                            <TextBlock Grid.Column="1" Text="{Binding CurrentMotor.RotorInertia, StringFormat=N4}" Classes="PropertyValue"/>
+                            <TextBox Grid.Column="1" Text="{Binding CurrentMotor.RotorInertia}" Classes="PropertyInput"/>
                         </Grid>
                         
+                        <!-- Feedback PPR -->
                         <Grid Classes="PropertyRow" ColumnDefinitions="Auto,*">
                             <TextBlock Grid.Column="0" Text="Feedback PPR" Classes="PropertyLabel"/>
-                            <TextBlock Grid.Column="1" Text="{Binding CurrentMotor.FeedbackPpr, StringFormat=N0}" Classes="PropertyValue"/>
+                            <TextBox Grid.Column="1" Text="{Binding CurrentMotor.FeedbackPpr}" Classes="PropertyInput"/>
                         </Grid>
                         
-                        <!-- BRAKE SECTION -->
-                        <TextBlock Text="Brake" Classes="PropertyHeader"/>
-                        
+                        <!-- Has Brake (Checkbox) -->
                         <Grid Classes="PropertyRow" ColumnDefinitions="Auto,*">
                             <TextBlock Grid.Column="0" Text="Has Brake" Classes="PropertyLabel"/>
-                            <TextBlock Grid.Column="1" Text="{Binding CurrentMotor.HasBrake}" Classes="PropertyValue"/>
+                            <CheckBox Grid.Column="1" IsChecked="{Binding CurrentMotor.HasBrake}" VerticalAlignment="Center"/>
                         </Grid>
                         
+                        <!-- Brake Torque -->
                         <Grid Classes="PropertyRow" ColumnDefinitions="Auto,*">
                             <TextBlock Grid.Column="0" Text="Brake Torque" Classes="PropertyLabel"/>
-                            <TextBlock Grid.Column="1" Classes="PropertyValue">
-                                <Run Text="{Binding CurrentMotor.BrakeTorque, StringFormat=N2}"/>
-                                <Run Text=" "/>
-                                <Run Text="{Binding CurrentMotor.Units.Torque}"/>
-                            </TextBlock>
+                            <Grid Grid.Column="1" ColumnDefinitions="*,Auto">
+                                <TextBox Grid.Column="0" Text="{Binding CurrentMotor.BrakeTorque}" Classes="PropertyInput"/>
+                                <TextBlock Grid.Column="1" Text="{Binding CurrentMotor.Units.Torque}" Classes="PropertyValue" Margin="4,0,0,0"/>
+                            </Grid>
                         </Grid>
                         
+                        <!-- Brake Amperage -->
                         <Grid Classes="PropertyRow" ColumnDefinitions="Auto,*">
-                            <TextBlock Grid.Column="0" Text="Brake Amperage" Classes="PropertyLabel"/>
-                            <TextBlock Grid.Column="1" Classes="PropertyValue">
-                                <Run Text="{Binding CurrentMotor.BrakeAmperage, StringFormat=N2}"/>
-                                <Run Text=" A"/>
-                            </TextBlock>
+                            <TextBlock Grid.Column="0" Text="Brake Amps" Classes="PropertyLabel"/>
+                            <Grid Grid.Column="1" ColumnDefinitions="*,Auto">
+                                <TextBox Grid.Column="0" Text="{Binding CurrentMotor.BrakeAmperage}" Classes="PropertyInput"/>
+                                <TextBlock Grid.Column="1" Text="A" Classes="PropertyValue" Margin="4,0,0,0"/>
+                            </Grid>
                         </Grid>
                         
+                        <!-- Brake Voltage -->
                         <Grid Classes="PropertyRow" ColumnDefinitions="Auto,*">
                             <TextBlock Grid.Column="0" Text="Brake Voltage" Classes="PropertyLabel"/>
-                            <TextBlock Grid.Column="1" Classes="PropertyValue">
-                                <Run Text="{Binding CurrentMotor.BrakeVoltage, StringFormat=N0}"/>
-                                <Run Text=" V"/>
-                            </TextBlock>
-                        </Grid>
-                        
-                        <!-- UNITS SECTION -->
-                        <TextBlock Text="Units" Classes="PropertyHeader"/>
-                        
-                        <Grid Classes="PropertyRow" ColumnDefinitions="Auto,*">
-                            <TextBlock Grid.Column="0" Text="Torque" Classes="PropertyLabel"/>
-                            <TextBlock Grid.Column="1" Text="{Binding CurrentMotor.Units.Torque}" Classes="PropertyValue"/>
-                        </Grid>
-                        
-                        <Grid Classes="PropertyRow" ColumnDefinitions="Auto,*">
-                            <TextBlock Grid.Column="0" Text="Speed" Classes="PropertyLabel"/>
-                            <TextBlock Grid.Column="1" Text="{Binding CurrentMotor.Units.Speed}" Classes="PropertyValue"/>
-                        </Grid>
-                        
-                        <Grid Classes="PropertyRow" ColumnDefinitions="Auto,*">
-                            <TextBlock Grid.Column="0" Text="Power" Classes="PropertyLabel"/>
-                            <TextBlock Grid.Column="1" Text="{Binding CurrentMotor.Units.Power}" Classes="PropertyValue"/>
-                        </Grid>
-                        
-                        <Grid Classes="PropertyRow" ColumnDefinitions="Auto,*">
-                            <TextBlock Grid.Column="0" Text="Weight" Classes="PropertyLabel"/>
-                            <TextBlock Grid.Column="1" Text="{Binding CurrentMotor.Units.Weight}" Classes="PropertyValue"/>
-                        </Grid>
-                        
-                        <!-- DRIVE SELECTION SECTION -->
-                        <TextBlock Text="Drive Configuration" Classes="PropertyHeader"/>
-                        
-                        <Border Classes="SelectionPanel">
-                            <Grid RowDefinitions="Auto,*">
-                                <!-- List Box Header with +/- buttons -->
-                                <Grid Grid.Row="0" ColumnDefinitions="*,Auto,Auto" Margin="0,0,0,4">
-                                    <TextBlock Grid.Column="0" Text="Drives" FontWeight="SemiBold" VerticalAlignment="Center"/>
-                                    <Button Grid.Column="1" Content="+" Width="24" Height="24" Padding="0"
-                                            Command="{Binding AddDriveCommand}"
-                                            ToolTip.Tip="Add Drive"/>
-                                    <Button Grid.Column="2" Content="−" Width="24" Height="24" Padding="0" Margin="4,0,0,0"
-                                            Command="{Binding RemoveDriveCommand}"
-                                            ToolTip.Tip="Remove Drive"/>
-                                </Grid>
-                                
-                                <!-- Drive ListBox -->
-                                <ListBox Grid.Row="1" 
-                                         ItemsSource="{Binding CurrentMotor.Drives}"
-                                         SelectedItem="{Binding SelectedDrive}"
-                                         MinHeight="60"
-                                         MaxHeight="120">
-                                    <ListBox.ItemTemplate>
-                                        <DataTemplate>
-                                            <StackPanel Orientation="Horizontal">
-                                                <TextBlock Text="{Binding Name}" VerticalAlignment="Center"/>
-                                                <TextBlock Text="{Binding PartNumber, StringFormat=' ({0})'}" 
-                                                           Foreground="Gray" FontSize="10" VerticalAlignment="Center"/>
-                                            </StackPanel>
-                                        </DataTemplate>
-                                    </ListBox.ItemTemplate>
-                                </ListBox>
+                            <Grid Grid.Column="1" ColumnDefinitions="*,Auto">
+                                <TextBox Grid.Column="0" Text="{Binding CurrentMotor.BrakeVoltage}" Classes="PropertyInput"/>
+                                <TextBlock Grid.Column="1" Text="V" Classes="PropertyValue" Margin="4,0,0,0"/>
                             </Grid>
-                        </Border>
+                        </Grid>
+                        
+                        <!-- UNITS SECTION (Collapsible) -->
+                        <ToggleButton IsChecked="{Binding IsUnitsExpanded}"
+                                      Classes="CollapsibleHeader"
+                                      Margin="0,8,0,0">
+                            <StackPanel Orientation="Horizontal" Spacing="8">
+                                <TextBlock Text="▶" FontSize="10" VerticalAlignment="Center"
+                                           IsVisible="{Binding !IsUnitsExpanded}"/>
+                                <TextBlock Text="▼" FontSize="10" VerticalAlignment="Center"
+                                           IsVisible="{Binding IsUnitsExpanded}"/>
+                                <TextBlock Text="Units" FontWeight="SemiBold" FontSize="12"/>
+                            </StackPanel>
+                        </ToggleButton>
+                        
+                        <StackPanel IsVisible="{Binding IsUnitsExpanded}" Margin="0,4,0,0">
+                            <Grid Classes="PropertyRow" ColumnDefinitions="Auto,*">
+                                <TextBlock Grid.Column="0" Text="Torque" Classes="PropertyLabel"/>
+                                <ComboBox Grid.Column="1" 
+                                          ItemsSource="{Binding TorqueUnits}"
+                                          SelectedItem="{Binding CurrentMotor.Units.Torque}"
+                                          Classes="PropertyComboBox"/>
+                            </Grid>
+                            
+                            <Grid Classes="PropertyRow" ColumnDefinitions="Auto,*">
+                                <TextBlock Grid.Column="0" Text="Speed" Classes="PropertyLabel"/>
+                                <ComboBox Grid.Column="1" 
+                                          ItemsSource="{Binding SpeedUnits}"
+                                          SelectedItem="{Binding CurrentMotor.Units.Speed}"
+                                          Classes="PropertyComboBox"/>
+                            </Grid>
+                            
+                            <Grid Classes="PropertyRow" ColumnDefinitions="Auto,*">
+                                <TextBlock Grid.Column="0" Text="Power" Classes="PropertyLabel"/>
+                                <ComboBox Grid.Column="1" 
+                                          ItemsSource="{Binding PowerUnits}"
+                                          SelectedItem="{Binding CurrentMotor.Units.Power}"
+                                          Classes="PropertyComboBox"/>
+                            </Grid>
+                            
+                            <Grid Classes="PropertyRow" ColumnDefinitions="Auto,*">
+                                <TextBlock Grid.Column="0" Text="Weight" Classes="PropertyLabel"/>
+                                <ComboBox Grid.Column="1" 
+                                          ItemsSource="{Binding WeightUnits}"
+                                          SelectedItem="{Binding CurrentMotor.Units.Weight}"
+                                          Classes="PropertyComboBox"/>
+                            </Grid>
+                        </StackPanel>
+                        
+                        <!-- DRIVE PROPERTIES SECTION -->
+                        <TextBlock Text="Drive Properties" 
+                                   FontWeight="SemiBold" 
+                                   FontSize="12"
+                                   Background="{DynamicResource SystemControlBackgroundBaseLowBrush}"
+                                   Padding="4,4"
+                                   Margin="-6,8,-6,4"/>
+                        
+                        <!-- Drive Selection ComboBox -->
+                        <Grid Classes="PropertyRow" ColumnDefinitions="Auto,*,Auto">
+                            <TextBlock Grid.Column="0" Text="Drive" Classes="PropertyLabel"/>
+                            <ComboBox Grid.Column="1" 
+                                      ItemsSource="{Binding CurrentMotor.Drives}"
+                                      SelectedItem="{Binding SelectedDrive}"
+                                      Classes="PropertyComboBox">
+                                <ComboBox.ItemTemplate>
+                                    <DataTemplate>
+                                        <TextBlock Text="{Binding Name}"/>
+                                    </DataTemplate>
+                                </ComboBox.ItemTemplate>
+                            </ComboBox>
+                            <Button Grid.Column="2" 
+                                    Content="🗑" 
+                                    Width="24" Height="24" 
+                                    Padding="0" 
+                                    Margin="4,0,0,0"
+                                    Command="{Binding RemoveDriveCommand}"
+                                    ToolTip.Tip="Delete Drive"/>
+                        </Grid>
+                        
+                        <Button Content="+ Add New Drive"
+                                HorizontalAlignment="Stretch"
+                                Command="{Binding AddDriveCommand}"
+                                Margin="0,2,0,4"
+                                Padding="4,2"/>
                         
                         <!-- Selected Drive Properties -->
-                        <StackPanel IsVisible="{Binding SelectedDrive, Converter={x:Static ObjectConverters.IsNotNull}}"
-                                    Margin="0,0,0,8">
+                        <StackPanel IsVisible="{Binding SelectedDrive, Converter={x:Static ObjectConverters.IsNotNull}}">
                             <Grid Classes="PropertyRow" ColumnDefinitions="Auto,*">
                                 <TextBlock Grid.Column="0" Text="Drive Name" Classes="PropertyLabel"/>
-                                <TextBlock Grid.Column="1" Text="{Binding SelectedDrive.Name}" Classes="PropertyValue"/>
+                                <TextBox Grid.Column="1" Text="{Binding SelectedDrive.Name}" Classes="PropertyInput"/>
                             </Grid>
                             <Grid Classes="PropertyRow" ColumnDefinitions="Auto,*">
                                 <TextBlock Grid.Column="0" Text="Part Number" Classes="PropertyLabel"/>
-                                <TextBlock Grid.Column="1" Text="{Binding SelectedDrive.PartNumber}" Classes="PropertyValue"/>
+                                <TextBox Grid.Column="1" Text="{Binding SelectedDrive.PartNumber}" Classes="PropertyInput"/>
                             </Grid>
                             <Grid Classes="PropertyRow" ColumnDefinitions="Auto,*">
                                 <TextBlock Grid.Column="0" Text="Manufacturer" Classes="PropertyLabel"/>
-                                <TextBlock Grid.Column="1" Text="{Binding SelectedDrive.Manufacturer}" Classes="PropertyValue"/>
+                                <TextBox Grid.Column="1" Text="{Binding SelectedDrive.Manufacturer}" Classes="PropertyInput"/>
                             </Grid>
-                        </StackPanel>
-                        
-                        <!-- VOLTAGE SELECTION SECTION -->
-                        <TextBlock Text="Voltage Configuration" Classes="PropertyHeader"/>
-                        
-                        <Border Classes="SelectionPanel">
-                            <Grid RowDefinitions="Auto,*">
-                                <!-- List Box Header with +/- buttons -->
-                                <Grid Grid.Row="0" ColumnDefinitions="*,Auto,Auto" Margin="0,0,0,4">
-                                    <TextBlock Grid.Column="0" Text="Voltages" FontWeight="SemiBold" VerticalAlignment="Center"/>
-                                    <Button Grid.Column="1" Content="+" Width="24" Height="24" Padding="0"
-                                            Command="{Binding AddVoltageCommand}"
-                                            ToolTip.Tip="Add Voltage"/>
-                                    <Button Grid.Column="2" Content="−" Width="24" Height="24" Padding="0" Margin="4,0,0,0"
-                                            Command="{Binding RemoveVoltageCommand}"
-                                            ToolTip.Tip="Remove Voltage"/>
-                                </Grid>
-                                
-                                <!-- Voltage ListBox -->
-                                <ListBox Grid.Row="1" 
-                                         ItemsSource="{Binding AvailableVoltages}"
-                                         SelectedItem="{Binding SelectedVoltage}"
-                                         MinHeight="60"
-                                         MaxHeight="100">
-                                    <ListBox.ItemTemplate>
-                                        <DataTemplate>
-                                            <StackPanel Orientation="Horizontal">
-                                                <TextBlock Text="{Binding Voltage, StringFormat={}{0}V}" VerticalAlignment="Center"/>
-                                                <TextBlock Text="{Binding Power, StringFormat=' - {0}W'}" 
-                                                           Foreground="Gray" FontSize="10" VerticalAlignment="Center"/>
-                                            </StackPanel>
-                                        </DataTemplate>
-                                    </ListBox.ItemTemplate>
-                                </ListBox>
-                            </Grid>
-                        </Border>
-                        
-                        <!-- Selected Voltage Properties -->
-                        <StackPanel IsVisible="{Binding SelectedVoltage, Converter={x:Static ObjectConverters.IsNotNull}}"
-                                    Margin="0,0,0,8">
-                            <Grid Classes="PropertyRow" ColumnDefinitions="Auto,*">
+                            
+                            <!-- Voltage Selection ComboBox -->
+                            <Grid Classes="PropertyRow" ColumnDefinitions="Auto,*,Auto" Margin="0,6,0,0">
                                 <TextBlock Grid.Column="0" Text="Voltage" Classes="PropertyLabel"/>
-                                <TextBlock Grid.Column="1" Classes="PropertyValue">
-                                    <Run Text="{Binding SelectedVoltage.Voltage, StringFormat=N0}"/>
-                                    <Run Text=" V"/>
-                                </TextBlock>
+                                <ComboBox Grid.Column="1" 
+                                          ItemsSource="{Binding AvailableVoltages}"
+                                          SelectedItem="{Binding SelectedVoltage}"
+                                          Classes="PropertyComboBox">
+                                    <ComboBox.ItemTemplate>
+                                        <DataTemplate>
+                                            <TextBlock Text="{Binding Voltage, StringFormat={}{0}V}"/>
+                                        </DataTemplate>
+                                    </ComboBox.ItemTemplate>
+                                </ComboBox>
+                                <Button Grid.Column="2" 
+                                        Content="🗑" 
+                                        Width="24" Height="24" 
+                                        Padding="0" 
+                                        Margin="4,0,0,0"
+                                        Command="{Binding RemoveVoltageCommand}"
+                                        ToolTip.Tip="Delete Voltage"/>
                             </Grid>
-                            <Grid Classes="PropertyRow" ColumnDefinitions="Auto,*">
-                                <TextBlock Grid.Column="0" Text="Power" Classes="PropertyLabel"/>
-                                <TextBlock Grid.Column="1" Classes="PropertyValue">
-                                    <Run Text="{Binding SelectedVoltage.Power, StringFormat=N0}"/>
-                                    <Run Text=" W"/>
-                                </TextBlock>
-                            </Grid>
-                            <Grid Classes="PropertyRow" ColumnDefinitions="Auto,*">
-                                <TextBlock Grid.Column="0" Text="Max Speed" Classes="PropertyLabel"/>
-                                <TextBlock Grid.Column="1" Classes="PropertyValue">
-                                    <Run Text="{Binding SelectedVoltage.MaxSpeed, StringFormat=N0}"/>
-                                    <Run Text=" RPM"/>
-                                </TextBlock>
-                            </Grid>
-                            <Grid Classes="PropertyRow" ColumnDefinitions="Auto,*">
-                                <TextBlock Grid.Column="0" Text="Peak Torque" Classes="PropertyLabel"/>
-                                <TextBlock Grid.Column="1" Classes="PropertyValue">
-                                    <Run Text="{Binding SelectedVoltage.RatedPeakTorque, StringFormat=N2}"/>
-                                    <Run Text=" "/>
-                                    <Run Text="{Binding CurrentMotor.Units.Torque}"/>
-                                </TextBlock>
-                            </Grid>
-                            <Grid Classes="PropertyRow" ColumnDefinitions="Auto,*">
-                                <TextBlock Grid.Column="0" Text="Cont. Torque" Classes="PropertyLabel"/>
-                                <TextBlock Grid.Column="1" Classes="PropertyValue">
-                                    <Run Text="{Binding SelectedVoltage.RatedContinuousTorque, StringFormat=N2}"/>
-                                    <Run Text=" "/>
-                                    <Run Text="{Binding CurrentMotor.Units.Torque}"/>
-                                </TextBlock>
-                            </Grid>
-                            <Grid Classes="PropertyRow" ColumnDefinitions="Auto,*">
-                                <TextBlock Grid.Column="0" Text="Cont. Amps" Classes="PropertyLabel"/>
-                                <TextBlock Grid.Column="1" Classes="PropertyValue">
-                                    <Run Text="{Binding SelectedVoltage.ContinuousAmperage, StringFormat=N1}"/>
-                                    <Run Text=" A"/>
-                                </TextBlock>
-                            </Grid>
-                            <Grid Classes="PropertyRow" ColumnDefinitions="Auto,*">
-                                <TextBlock Grid.Column="0" Text="Peak Amps" Classes="PropertyLabel"/>
-                                <TextBlock Grid.Column="1" Classes="PropertyValue">
-                                    <Run Text="{Binding SelectedVoltage.PeakAmperage, StringFormat=N1}"/>
-                                    <Run Text=" A"/>
-                                </TextBlock>
-                            </Grid>
+                            
+                            <Button Content="+ Add New Voltage"
+                                    HorizontalAlignment="Stretch"
+                                    Command="{Binding AddVoltageCommand}"
+                                    Margin="0,2,0,4"
+                                    Padding="4,2"/>
+                            
+                            <!-- Selected Voltage Properties -->
+                            <StackPanel IsVisible="{Binding SelectedVoltage, Converter={x:Static ObjectConverters.IsNotNull}}">
+                                <Grid Classes="PropertyRow" ColumnDefinitions="Auto,*">
+                                    <TextBlock Grid.Column="0" Text="Voltage" Classes="PropertyLabel"/>
+                                    <Grid Grid.Column="1" ColumnDefinitions="*,Auto">
+                                        <TextBox Grid.Column="0" Text="{Binding SelectedVoltage.Voltage}" Classes="PropertyInput"/>
+                                        <TextBlock Grid.Column="1" Text="V" Classes="PropertyValue" Margin="4,0,0,0"/>
+                                    </Grid>
+                                </Grid>
+                                <Grid Classes="PropertyRow" ColumnDefinitions="Auto,*">
+                                    <TextBlock Grid.Column="0" Text="Power" Classes="PropertyLabel"/>
+                                    <Grid Grid.Column="1" ColumnDefinitions="*,Auto">
+                                        <TextBox Grid.Column="0" Text="{Binding SelectedVoltage.Power}" Classes="PropertyInput"/>
+                                        <TextBlock Grid.Column="1" Text="W" Classes="PropertyValue" Margin="4,0,0,0"/>
+                                    </Grid>
+                                </Grid>
+                                <Grid Classes="PropertyRow" ColumnDefinitions="Auto,*">
+                                    <TextBlock Grid.Column="0" Text="Max Speed" Classes="PropertyLabel"/>
+                                    <Grid Grid.Column="1" ColumnDefinitions="*,Auto">
+                                        <TextBox Grid.Column="0" Text="{Binding SelectedVoltage.MaxSpeed}" Classes="PropertyInput"/>
+                                        <TextBlock Grid.Column="1" Text="RPM" Classes="PropertyValue" Margin="4,0,0,0"/>
+                                    </Grid>
+                                </Grid>
+                                <Grid Classes="PropertyRow" ColumnDefinitions="Auto,*">
+                                    <TextBlock Grid.Column="0" Text="Peak Torque" Classes="PropertyLabel"/>
+                                    <TextBox Grid.Column="1" Text="{Binding SelectedVoltage.RatedPeakTorque}" Classes="PropertyInput"/>
+                                </Grid>
+                                <Grid Classes="PropertyRow" ColumnDefinitions="Auto,*">
+                                    <TextBlock Grid.Column="0" Text="Cont. Torque" Classes="PropertyLabel"/>
+                                    <TextBox Grid.Column="1" Text="{Binding SelectedVoltage.RatedContinuousTorque}" Classes="PropertyInput"/>
+                                </Grid>
+                                <Grid Classes="PropertyRow" ColumnDefinitions="Auto,*">
+                                    <TextBlock Grid.Column="0" Text="Cont. Amps" Classes="PropertyLabel"/>
+                                    <Grid Grid.Column="1" ColumnDefinitions="*,Auto">
+                                        <TextBox Grid.Column="0" Text="{Binding SelectedVoltage.ContinuousAmperage}" Classes="PropertyInput"/>
+                                        <TextBlock Grid.Column="1" Text="A" Classes="PropertyValue" Margin="4,0,0,0"/>
+                                    </Grid>
+                                </Grid>
+                                <Grid Classes="PropertyRow" ColumnDefinitions="Auto,*">
+                                    <TextBlock Grid.Column="0" Text="Peak Amps" Classes="PropertyLabel"/>
+                                    <Grid Grid.Column="1" ColumnDefinitions="*,Auto">
+                                        <TextBox Grid.Column="0" Text="{Binding SelectedVoltage.PeakAmperage}" Classes="PropertyInput"/>
+                                        <TextBlock Grid.Column="1" Text="A" Classes="PropertyValue" Margin="4,0,0,0"/>
+                                    </Grid>
+                                </Grid>
+                            </StackPanel>
                         </StackPanel>
                         
                         <!-- CURVE SERIES SECTION -->
-                        <TextBlock Text="Curve Series" Classes="PropertyHeader"/>
+                        <TextBlock Text="Curve Series" 
+                                   FontWeight="SemiBold" 
+                                   FontSize="12"
+                                   Background="{DynamicResource SystemControlBackgroundBaseLowBrush}"
+                                   Padding="4,4"
+                                   Margin="-6,8,-6,4"/>
                         
-                        <Border Classes="SelectionPanel">
-                            <Grid RowDefinitions="Auto,*">
-                                <!-- List Box Header with +/- buttons -->
-                                <Grid Grid.Row="0" ColumnDefinitions="*,Auto,Auto" Margin="0,0,0,4">
-                                    <TextBlock Grid.Column="0" Text="Series" FontWeight="SemiBold" VerticalAlignment="Center"/>
-                                    <Button Grid.Column="1" Content="+" Width="24" Height="24" Padding="0"
-                                            Command="{Binding AddSeriesCommand}"
-                                            ToolTip.Tip="Add Series"/>
-                                    <Button Grid.Column="2" Content="−" Width="24" Height="24" Padding="0" Margin="4,0,0,0"
-                                            Command="{Binding RemoveSeriesCommand}"
-                                            ToolTip.Tip="Remove Series"/>
-                                </Grid>
-                                
-                                <!-- Series ListBox with visibility checkboxes and lock buttons -->
-                                <ListBox Grid.Row="1" 
-                                         ItemsSource="{Binding AvailableSeries}"
-                                         SelectedItem="{Binding SelectedSeries}"
-                                         MinHeight="60"
-                                         MaxHeight="120">
-                                    <ListBox.ItemTemplate>
-                                        <DataTemplate>
-                                            <Grid ColumnDefinitions="Auto,Auto,*">
-                                                <!-- Visibility Checkbox -->
-                                                <CheckBox Grid.Column="0"
-                                                          IsChecked="{Binding IsVisible}"
-                                                          VerticalAlignment="Center"
-                                                          Margin="0,0,4,0"
-                                                          ToolTip.Tip="Toggle Visibility"
-                                                          Command="{Binding $parent[ListBox].((vm:MainWindowViewModel)DataContext).ToggleSeriesVisibilityCommand}"
-                                                          CommandParameter="{Binding}"/>
-                                                <!-- Lock Button -->
-                                                <Button Grid.Column="1" 
-                                                        Width="24" Height="24" 
-                                                        Padding="0" 
-                                                        Margin="0,0,8,0"
-                                                        Command="{Binding $parent[ListBox].((vm:MainWindowViewModel)DataContext).ToggleSeriesLockCommand}"
-                                                        CommandParameter="{Binding}"
-                                                        ToolTip.Tip="Toggle Lock">
-                                                    <Panel>
-                                                        <TextBlock Text="🔒" FontSize="12" IsVisible="{Binding Locked}"/>
-                                                        <TextBlock Text="🔓" FontSize="12" IsVisible="{Binding !Locked}"/>
-                                                    </Panel>
-                                                </Button>
-                                                <StackPanel Grid.Column="2" Orientation="Horizontal" VerticalAlignment="Center">
-                                                    <TextBlock Text="{Binding Name}" VerticalAlignment="Center"/>
-                                                    <TextBlock Text="{Binding Data.Count, StringFormat=' ({0} pts)'}" 
-                                                               Foreground="Gray" FontSize="10" VerticalAlignment="Center"/>
-                                                </StackPanel>
-                                            </Grid>
-                                        </DataTemplate>
-                                    </ListBox.ItemTemplate>
-                                </ListBox>
-                            </Grid>
-                        </Border>
+                        <!-- Series ListBox with visibility checkboxes and lock buttons -->
+                        <ListBox ItemsSource="{Binding AvailableSeries}"
+                                 SelectedItem="{Binding SelectedSeries}"
+                                 MinHeight="50"
+                                 MaxHeight="100"
+                                 Margin="0,4,0,4">
+                            <ListBox.ItemTemplate>
+                                <DataTemplate>
+                                    <Grid ColumnDefinitions="Auto,Auto,*">
+                                        <!-- Visibility Checkbox -->
+                                        <CheckBox Grid.Column="0"
+                                                  IsChecked="{Binding IsVisible}"
+                                                  VerticalAlignment="Center"
+                                                  Margin="0,0,4,0"
+                                                  ToolTip.Tip="Toggle Visibility"
+                                                  Command="{Binding $parent[ListBox].((vm:MainWindowViewModel)DataContext).ToggleSeriesVisibilityCommand}"
+                                                  CommandParameter="{Binding}"/>
+                                        <!-- Lock Button -->
+                                        <Button Grid.Column="1" 
+                                                Width="20" Height="20" 
+                                                Padding="0" 
+                                                Margin="0,0,4,0"
+                                                Command="{Binding $parent[ListBox].((vm:MainWindowViewModel)DataContext).ToggleSeriesLockCommand}"
+                                                CommandParameter="{Binding}"
+                                                ToolTip.Tip="Toggle Lock">
+                                            <Panel>
+                                                <TextBlock Text="🔒" FontSize="10" IsVisible="{Binding Locked}"/>
+                                                <TextBlock Text="🔓" FontSize="10" IsVisible="{Binding !Locked}"/>
+                                            </Panel>
+                                        </Button>
+                                        <TextBlock Grid.Column="2" Text="{Binding Name}" VerticalAlignment="Center" FontSize="11"/>
+                                    </Grid>
+                                </DataTemplate>
+                            </ListBox.ItemTemplate>
+                        </ListBox>
+                        
+                        <Grid ColumnDefinitions="*,Auto">
+                            <Button Grid.Column="0" 
+                                    Content="+ Add Series"
+                                    HorizontalAlignment="Stretch"
+                                    Command="{Binding AddSeriesCommand}"
+                                    Padding="4,2"/>
+                            <Button Grid.Column="1" 
+                                    Content="🗑" 
+                                    Width="24" Height="24" 
+                                    Padding="0" 
+                                    Margin="4,0,0,0"
+                                    Command="{Binding RemoveSeriesCommand}"
+                                    ToolTip.Tip="Delete Series"/>
+                        </Grid>
                         
                         <!-- Selected Series Properties -->
                         <StackPanel IsVisible="{Binding SelectedSeries, Converter={x:Static ObjectConverters.IsNotNull}}"
-                                    Margin="0,0,0,8">
+                                    Margin="0,4,0,0">
                             <Grid Classes="PropertyRow" ColumnDefinitions="Auto,*">
-                                <TextBlock Grid.Column="0" Text="Series Name" Classes="PropertyLabel"/>
-                                <TextBlock Grid.Column="1" Text="{Binding SelectedSeries.Name}" Classes="PropertyValue"/>
-                            </Grid>
-                            <Grid Classes="PropertyRow" ColumnDefinitions="Auto,*">
-                                <TextBlock Grid.Column="0" Text="Data Points" Classes="PropertyLabel"/>
-                                <TextBlock Grid.Column="1" Text="{Binding SelectedSeries.Data.Count}" Classes="PropertyValue"/>
+                                <TextBlock Grid.Column="0" Text="Name" Classes="PropertyLabel"/>
+                                <TextBox Grid.Column="1" Text="{Binding SelectedSeries.Name}" Classes="PropertyInput"/>
                             </Grid>
                             <Grid Classes="PropertyRow" ColumnDefinitions="Auto,*">
                                 <TextBlock Grid.Column="0" Text="Locked" Classes="PropertyLabel"/>
-                                <TextBlock Grid.Column="1" Text="{Binding SelectedSeries.Locked}" Classes="PropertyValue"/>
+                                <CheckBox Grid.Column="1" IsChecked="{Binding SelectedSeries.Locked}" VerticalAlignment="Center"/>
                             </Grid>
                             <Grid Classes="PropertyRow" ColumnDefinitions="Auto,*">
                                 <TextBlock Grid.Column="0" Text="Notes" Classes="PropertyLabel"/>
-                                <TextBlock Grid.Column="1" Text="{Binding SelectedSeries.Notes}" Classes="PropertyValue" TextWrapping="Wrap"/>
+                                <TextBox Grid.Column="1" Text="{Binding SelectedSeries.Notes}" Classes="PropertyInput" 
+                                         AcceptsReturn="True" TextWrapping="Wrap" MinHeight="40"/>
                             </Grid>
                         </StackPanel>
                         

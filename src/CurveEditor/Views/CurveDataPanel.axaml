@@ -8,36 +8,9 @@
              x:Class="CurveEditor.Views.CurveDataPanel"
              x:DataType="vm:MainWindowViewModel">
     
-    <Grid RowDefinitions="Auto,*">
-        <!-- Header -->
-        <Border Grid.Row="0" 
-                Background="{DynamicResource SystemControlBackgroundBaseLowBrush}"
-                Padding="8,6">
-            <Grid ColumnDefinitions="*,Auto">
-                <StackPanel Grid.Column="0">
-                    <TextBlock Text="Curve Data"
-                               FontWeight="Bold"
-                               FontSize="13"/>
-                    <TextBlock Text="{Binding SelectedSeries.Name, StringFormat='Series: {0}'}"
-                               FontSize="11"
-                               Foreground="Gray"
-                               IsVisible="{Binding SelectedSeries, Converter={x:Static ObjectConverters.IsNotNull}}"/>
-                </StackPanel>
-                <StackPanel Grid.Column="1" 
-                            Orientation="Horizontal"
-                            Spacing="4">
-                    <TextBlock Text="{Binding SelectedSeries.Data.Count, StringFormat=\{0\} points}"
-                               FontSize="10"
-                               Foreground="Gray"
-                               VerticalAlignment="Center"
-                               IsVisible="{Binding SelectedSeries, Converter={x:Static ObjectConverters.IsNotNull}}"/>
-                </StackPanel>
-            </Grid>
-        </Border>
-        
+    <Grid>
         <!-- Data Grid -->
-        <DataGrid Grid.Row="1"
-                  ItemsSource="{Binding SelectedSeries.Data}"
+        <DataGrid ItemsSource="{Binding SelectedSeries.Data}"
                   AutoGenerateColumns="False"
                   CanUserReorderColumns="False"
                   CanUserResizeColumns="True"
@@ -65,8 +38,7 @@
         </DataGrid>
         
         <!-- Empty state -->
-        <StackPanel Grid.Row="1"
-                    VerticalAlignment="Center"
+        <StackPanel VerticalAlignment="Center"
                     HorizontalAlignment="Center"
                     IsVisible="{Binding SelectedSeries, Converter={x:Static ObjectConverters.IsNull}}">
             <TextBlock Text="No series selected"
