@@ -177,6 +177,39 @@ public partial class CurveDataPanel : UserControl
             MoveSelectionDown(dataGrid);
             e.Handled = true;
         }
+
+        // Handle F2 to enter edit mode
+        if (e.Key == Key.F2)
+        {
+            dataGrid.BeginEdit();
+            e.Handled = true;
+        }
+
+        // Handle up/down arrows for navigation
+        if (e.Key == Key.Up && !e.KeyModifiers.HasFlag(KeyModifiers.Shift))
+        {
+            MoveSelectionUp(dataGrid);
+            e.Handled = true;
+        }
+
+        if (e.Key == Key.Down && !e.KeyModifiers.HasFlag(KeyModifiers.Shift))
+        {
+            MoveSelectionDown(dataGrid);
+            e.Handled = true;
+        }
+
+        // Handle Shift+Up/Down to extend selection
+        if (e.Key == Key.Up && e.KeyModifiers.HasFlag(KeyModifiers.Shift))
+        {
+            ExtendSelectionUp(dataGrid);
+            e.Handled = true;
+        }
+
+        if (e.Key == Key.Down && e.KeyModifiers.HasFlag(KeyModifiers.Shift))
+        {
+            ExtendSelectionDown(dataGrid);
+            e.Handled = true;
+        }
     }
 
     private void CopySelectedCells(DataGrid dataGrid)
@@ -271,6 +304,65 @@ public partial class CurveDataPanel : UserControl
             {
                 dataGrid.SelectedIndex = currentIndex + 1;
                 dataGrid.ScrollIntoView(dataGrid.SelectedItem, null);
+            }
+        }
+    }
+
+    private void MoveSelectionUp(DataGrid dataGrid)
+    {
+        var currentIndex = dataGrid.SelectedIndex;
+        if (currentIndex > 0)
+        {
+            dataGrid.SelectedIndex = currentIndex - 1;
+            dataGrid.ScrollIntoView(dataGrid.SelectedItem, null);
+        }
+    }
+
+    private void ExtendSelectionDown(DataGrid dataGrid)
+    {
+        if (dataGrid.ItemsSource is System.Collections.ICollection collection)
+        {
+            // Get current selection bounds
+            var selectedRows = dataGrid.SelectedItems.OfType<CurveDataRow>().ToList();
+            if (selectedRows.Count == 0) return;
+
+            var maxIndex = selectedRows.Max(r => r.RowIndex);
+            if (maxIndex < collection.Count - 1)
+            {
+                // Find the item at the next index
+                var allRows = dataGrid.ItemsSource.Cast<CurveDataRow>().ToList();
+                if (maxIndex + 1 < allRows.Count)
+                {
+                    var nextRow = allRows[maxIndex + 1];
+                    if (!dataGrid.SelectedItems.Contains(nextRow))
+                    {
+                        dataGrid.SelectedItems.Add(nextRow);
+                    }
+                    dataGrid.ScrollIntoView(nextRow, null);
+                }
+            }
+        }
+    }
+
+    private void ExtendSelectionUp(DataGrid dataGrid)
+    {
+        // Get current selection bounds
+        var selectedRows = dataGrid.SelectedItems.OfType<CurveDataRow>().ToList();
+        if (selectedRows.Count == 0) return;
+
+        var minIndex = selectedRows.Min(r => r.RowIndex);
+        if (minIndex > 0)
+        {
+            // Find the item at the previous index
+            var allRows = dataGrid.ItemsSource.Cast<CurveDataRow>().ToList();
+            if (minIndex - 1 >= 0)
+            {
+                var prevRow = allRows[minIndex - 1];
+                if (!dataGrid.SelectedItems.Contains(prevRow))
+                {
+                    dataGrid.SelectedItems.Add(prevRow);
+                }
+                dataGrid.ScrollIntoView(prevRow, null);
             }
         }
     }
