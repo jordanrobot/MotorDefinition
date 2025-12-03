@@ -23,8 +23,8 @@
                     HorizontalAlignment="Right" 
                     Spacing="8" 
                     Margin="0,16,0,0">
-            <Button Content="Cancel" Width="80" Click="OnCancelClick"/>
-            <Button Content="OK" Width="80" Classes="accent" Click="OnOkClick"/>
+            <Button x:Name="CancelButton" Content="Cancel" Width="80" Click="OnCancelClick"/>
+            <Button x:Name="OkButton" Content="OK" Width="80" Classes="accent" Click="OnOkClick"/>
         </StackPanel>
     </Grid>
 </Window>

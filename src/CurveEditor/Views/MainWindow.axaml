@@ -464,7 +464,7 @@
                         <Grid Classes="PropertyRow" ColumnDefinitions="Auto,*,Auto,Auto">
                             <TextBlock Grid.Column="0" Text="Drive" Classes="PropertyLabel"/>
                             <ComboBox Grid.Column="1" 
-                                      ItemsSource="{Binding CurrentMotor.Drives}"
+                                      ItemsSource="{Binding AvailableDrives}"
                                       SelectedItem="{Binding SelectedDrive}"
                                       Classes="PropertyComboBox">
                                 <ComboBox.ItemTemplate>

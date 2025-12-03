@@ -30,6 +30,7 @@ public partial class MainWindowViewModel : ViewModelBase
 
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(WindowTitle))]
+    [NotifyPropertyChangedFor(nameof(AvailableDrives))]
     private MotorDefinition? _currentMotor;
 
     [ObservableProperty]
@@ -55,6 +56,7 @@ public partial class MainWindowViewModel : ViewModelBase
     // Drive selection
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(AvailableVoltages))]
+    [NotifyPropertyChangedFor(nameof(AvailableDrives))]
     private DriveConfiguration? _selectedDrive;
 
     // Voltage selection
@@ -89,6 +91,12 @@ public partial class MainWindowViewModel : ViewModelBase
 
     public ObservableCollection<CurveSeries> AvailableSeries =>
         new(SelectedVoltage?.Series ?? []);
+
+    /// <summary>
+    /// Available drives from current motor definition.
+    /// </summary>
+    public ObservableCollection<DriveConfiguration> AvailableDrives =>
+        new(CurrentMotor?.Drives ?? []);
 
     /// <summary>
     /// Whether save is enabled (motor exists and no validation errors).
@@ -207,9 +215,45 @@ public partial class MainWindowViewModel : ViewModelBase
     }
 
     [RelayCommand]
-    private void NewMotor()
+    private async Task NewMotorAsync()
     {
         Log.Information("Creating new motor definition");
+
+        // Check if current file is dirty and prompt user
+        if (IsDirty)
+        {
+            if (Application.Current?.ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop)
+            {
+                var dialog = new Views.MessageDialog
+                {
+                    Title = "Unsaved Changes",
+                    Message = "You have unsaved changes. Would you like to save them before creating a new file?",
+                    ShowCancelButton = true,
+                    OkButtonText = "Save",
+                    CancelButtonText = "Ignore"
+                };
+                await dialog.ShowDialog(desktop.MainWindow!);
+                
+                if (dialog.Result == true)
+                {
+                    // User wants to save
+                    await SaveAsync();
+                    if (IsDirty)
+                    {
+                        // Save was cancelled or failed
+                        StatusMessage = "New file cancelled.";
+                        return;
+                    }
+                }
+                else if (dialog.Result is null)
+                {
+                    // User closed dialog without choosing
+                    StatusMessage = "New file cancelled.";
+                    return;
+                }
+                // If dialog.Result == false, user chose "Ignore", continue with new file
+            }
+        }
 
         // Create a new motor with default values
         CurrentMotor = _fileService.CreateNew(
@@ -446,11 +490,15 @@ public partial class MainWindowViewModel : ViewModelBase
             voltage.Series.Add(peakSeries);
             voltage.Series.Add(continuousSeries);
 
-            // Force refresh the drive list in UI by notifying the CurrentMotor property changed
-            OnPropertyChanged(nameof(CurrentMotor));
+            // Force refresh the drive list in UI
+            OnPropertyChanged(nameof(AvailableDrives));
             
             // Select the new drive and update chart
             SelectedDrive = drive;
+            
+            // Explicitly refresh chart to ensure axes are updated with new max speed
+            ChartViewModel.RefreshChart();
+            
             MarkDirty();
             StatusMessage = $"Added drive: {driveName}";
         }
@@ -713,11 +761,14 @@ public partial class MainWindowViewModel : ViewModelBase
     /// </summary>
     public async Task<bool> ConfirmMaxSpeedChangeAsync()
     {
-        var dialog = new Views.MessageDialog();
-        dialog.SetMessage("Changing the maximum speed will affect existing curve data. " +
-                          "The curve data points are based on speed percentages, so changing the " +
-                          "maximum speed will shift the RPM values of all data points.\n\n" +
-                          "Do you want to proceed with this change?");
+        var dialog = new Views.MessageDialog
+        {
+            Title = "Confirm Max Speed Change",
+            Message = "Changing the maximum speed will affect existing curve data. " +
+                      "The curve data points are based on speed percentages, so changing the " +
+                      "maximum speed will shift the RPM values of all data points.\n\n" +
+                      "Do you want to proceed with this change?"
+        };
 
         if (Application.Current?.ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop)
         {

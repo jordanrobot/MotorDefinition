@@ -9,9 +9,50 @@ namespace CurveEditor.Views;
 public partial class MessageDialog : Window
 {
     /// <summary>
-    /// Gets whether the user clicked OK.
+    /// Gets the result of the dialog: true = OK, false = Cancel, null = closed without choosing.
     /// </summary>
-    public bool IsConfirmed { get; private set; }
+    public bool? Result { get; private set; }
+
+    /// <summary>
+    /// Gets or sets the message to display.
+    /// </summary>
+    public string Message
+    {
+        get => MessageText.Text ?? string.Empty;
+        set => MessageText.Text = value;
+    }
+
+    /// <summary>
+    /// Gets or sets the OK button text.
+    /// </summary>
+    public string OkButtonText
+    {
+        get => OkButton.Content?.ToString() ?? "OK";
+        set => OkButton.Content = value;
+    }
+
+    /// <summary>
+    /// Gets or sets the Cancel button text.
+    /// </summary>
+    public string CancelButtonText
+    {
+        get => CancelButton.Content?.ToString() ?? "Cancel";
+        set => CancelButton.Content = value;
+    }
+
+    /// <summary>
+    /// Gets or sets whether to show the Cancel button.
+    /// </summary>
+    public bool ShowCancelButton
+    {
+        get => CancelButton.IsVisible;
+        set => CancelButton.IsVisible = value;
+    }
+
+    /// <summary>
+    /// Gets whether the user clicked OK (backwards compatibility).
+    /// </summary>
+    public bool IsConfirmed => Result == true;
 
     public MessageDialog()
     {
@@ -28,13 +69,13 @@ public partial class MessageDialog : Window
 
     private void OnCancelClick(object? sender, RoutedEventArgs e)
     {
-        IsConfirmed = false;
+        Result = false;
         Close();
     }
 
     private void OnOkClick(object? sender, RoutedEventArgs e)
     {
-        IsConfirmed = true;
+        Result = true;
         Close();
     }
 }
