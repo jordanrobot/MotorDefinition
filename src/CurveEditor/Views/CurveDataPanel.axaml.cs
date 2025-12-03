@@ -1,6 +1,7 @@
 using System;
 using System.Linq;
 using Avalonia.Controls;
+using Avalonia.Controls.Templates;
 using Avalonia.Input;
 using Avalonia.Interactivity;
 using CurveEditor.Models;
@@ -19,6 +20,90 @@ public partial class CurveDataPanel : UserControl
     public CurveDataPanel()
     {
         InitializeComponent();
+        DataContextChanged += OnDataContextChanged;
+    }
+
+    private void OnDataContextChanged(object? sender, EventArgs e)
+    {
+        if (DataContext is MainWindowViewModel vm)
+        {
+            // Subscribe to series changes to rebuild columns
+            vm.CurveDataTableViewModel.PropertyChanged += OnCurveDataTablePropertyChanged;
+            RebuildDataGridColumns();
+        }
+    }
+
+    private void OnCurveDataTablePropertyChanged(object? sender, System.ComponentModel.PropertyChangedEventArgs e)
+    {
+        if (e.PropertyName == nameof(CurveDataTableViewModel.SeriesColumns) ||
+            e.PropertyName == nameof(CurveDataTableViewModel.CurrentVoltage))
+        {
+            RebuildDataGridColumns();
+        }
+    }
+
+    private void RebuildDataGridColumns()
+    {
+        if (DataContext is not MainWindowViewModel vm) return;
+        if (DataTable is null) return;
+
+        // Remove all columns except the first two (% and RPM)
+        while (DataTable.Columns.Count > 2)
+        {
+            DataTable.Columns.RemoveAt(DataTable.Columns.Count - 1);
+        }
+
+        // Add a column for each series
+        foreach (var series in vm.AvailableSeries)
+        {
+            var column = new DataGridTemplateColumn
+            {
+                Header = series.Name,
+                Width = new DataGridLength(80),
+                IsReadOnly = series.Locked
+            };
+
+            // Create cell template
+            var cellTemplate = new FuncDataTemplate<CurveDataRow>((row, _) =>
+            {
+                var textBlock = new TextBlock
+                {
+                    VerticalAlignment = Avalonia.Layout.VerticalAlignment.Center,
+                    Margin = new Avalonia.Thickness(4, 2)
+                };
+                textBlock.Bind(TextBlock.TextProperty, 
+                    new Avalonia.Data.Binding($"[{series.Name}]") 
+                    { 
+                        Mode = Avalonia.Data.BindingMode.OneWay,
+                        StringFormat = "N2"
+                    });
+                return textBlock;
+            });
+            column.CellTemplate = cellTemplate;
+
+            // Create editing template
+            if (!series.Locked)
+            {
+                var editingTemplate = new FuncDataTemplate<CurveDataRow>((row, _) =>
+                {
+                    var textBox = new TextBox
+                    {
+                        VerticalAlignment = Avalonia.Layout.VerticalAlignment.Center,
+                        Margin = new Avalonia.Thickness(2)
+                    };
+                    textBox.Bind(TextBox.TextProperty,
+                        new Avalonia.Data.Binding($"[{series.Name}]")
+                        {
+                            Mode = Avalonia.Data.BindingMode.TwoWay,
+                            StringFormat = "N2"
+                        });
+                    return textBox;
+                });
+                column.CellEditingTemplate = editingTemplate;
+            }
+
+            DataTable.Columns.Add(column);
+        }
     }
 
     /// <summary>

@@ -1,8 +1,6 @@
 using CommunityToolkit.Mvvm.ComponentModel;
-using CommunityToolkit.Mvvm.Input;
 using CurveEditor.Models;
 using System;
-using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Linq;
@@ -50,6 +48,15 @@ public class CurveDataRow : INotifyPropertyChanged
     }
 
     /// <summary>
+    /// Indexer to get/set torque values by series name (for data binding).
+    /// </summary>
+    public double this[string seriesName]
+    {
+        get => GetTorque(seriesName);
+        set => SetTorque(seriesName, value);
+    }
+
+    /// <summary>
     /// Gets the torque value for a specific series at this row.
     /// </summary>
     public double GetTorque(string seriesName)
@@ -71,7 +78,7 @@ public class CurveDataRow : INotifyPropertyChanged
         if (series is not null && _rowIndex < series.Data.Count)
         {
             series.Data[_rowIndex].Torque = value;
-            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs($"Torque_{seriesName}"));
+            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs($"Item[{seriesName}]"));
         }
     }
 

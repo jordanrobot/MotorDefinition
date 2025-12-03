@@ -11,6 +11,16 @@ namespace CurveEditor.Views;
 public partial class AddCurveSeriesDialog : Window
 {
     /// <summary>
+    /// Conversion factor from horsepower to watts.
+    /// </summary>
+    private const double HorsepowerToWatts = 745.7;
+
+    /// <summary>
+    /// Conversion factor from kilowatts to watts.
+    /// </summary>
+    private const double KilowattsToWatts = 1000.0;
+
+    /// <summary>
     /// Gets the result of the dialog.
     /// </summary>
     public AddCurveSeriesResult? Result { get; private set; }
@@ -91,8 +101,8 @@ public partial class AddCurveSeriesDialog : Window
             // Convert to watts if needed
             var powerWatts = powerUnit switch
             {
-                "kW" => power * 1000,
-                "HP" => power * 745.7,
+                "kW" => power * KilowattsToWatts,
+                "HP" => power * HorsepowerToWatts,
                 _ => power
             };
 
