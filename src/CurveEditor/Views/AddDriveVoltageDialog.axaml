@@ -1,0 +1,102 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        mc:Ignorable="d" d:DesignWidth="400" d:DesignHeight="450"
+        x:Class="CurveEditor.Views.AddDriveVoltageDialog"
+        Title="Add New Drive/Voltage Configuration"
+        Width="400" Height="450"
+        WindowStartupLocation="CenterOwner"
+        CanResize="False"
+        ShowInTaskbar="False">
+    
+    <Window.Styles>
+        <Style Selector="TextBlock.Label">
+            <Setter Property="FontSize" Value="12"/>
+            <Setter Property="VerticalAlignment" Value="Center"/>
+            <Setter Property="Margin" Value="0,0,8,0"/>
+            <Setter Property="MinWidth" Value="100"/>
+        </Style>
+        <Style Selector="TextBox.Input">
+            <Setter Property="FontSize" Value="12"/>
+            <Setter Property="Padding" Value="6,4"/>
+        </Style>
+    </Window.Styles>
+    
+    <Grid RowDefinitions="*,Auto" Margin="16">
+        <!-- Form Fields -->
+        <ScrollViewer Grid.Row="0">
+            <StackPanel Spacing="8">
+                <TextBlock Text="Enter the properties for the new drive/voltage configuration:" 
+                           TextWrapping="Wrap" Margin="0,0,0,12"/>
+                
+                <Grid ColumnDefinitions="Auto,*">
+                    <TextBlock Grid.Column="0" Text="Name" Classes="Label"/>
+                    <TextBox Grid.Column="1" x:Name="NameInput" Classes="Input" Watermark="Drive Name"/>
+                </Grid>
+                
+                <Grid ColumnDefinitions="Auto,*">
+                    <TextBlock Grid.Column="0" Text="Manufacturer" Classes="Label"/>
+                    <TextBox Grid.Column="1" x:Name="ManufacturerInput" Classes="Input" Watermark="Manufacturer"/>
+                </Grid>
+                
+                <Grid ColumnDefinitions="Auto,*">
+                    <TextBlock Grid.Column="0" Text="Model" Classes="Label"/>
+                    <TextBox Grid.Column="1" x:Name="ModelInput" Classes="Input" Watermark="Part Number"/>
+                </Grid>
+                
+                <Separator Margin="0,8"/>
+                
+                <Grid ColumnDefinitions="Auto,*,Auto">
+                    <TextBlock Grid.Column="0" Text="Voltage" Classes="Label"/>
+                    <TextBox Grid.Column="1" x:Name="VoltageInput" Classes="Input" Watermark="208" Text="208"/>
+                    <TextBlock Grid.Column="2" Text="V" VerticalAlignment="Center" Margin="4,0,0,0"/>
+                </Grid>
+                
+                <Grid ColumnDefinitions="Auto,*,Auto">
+                    <TextBlock Grid.Column="0" Text="Power" Classes="Label"/>
+                    <TextBox Grid.Column="1" x:Name="PowerInput" Classes="Input" Watermark="1500" Text="1500"/>
+                    <TextBlock Grid.Column="2" Text="W" VerticalAlignment="Center" Margin="4,0,0,0"/>
+                </Grid>
+                
+                <Grid ColumnDefinitions="Auto,*,Auto">
+                    <TextBlock Grid.Column="0" Text="Max Speed" Classes="Label"/>
+                    <TextBox Grid.Column="1" x:Name="MaxSpeedInput" Classes="Input" Watermark="5000" Text="5000"/>
+                    <TextBlock Grid.Column="2" Text="RPM" VerticalAlignment="Center" Margin="4,0,0,0"/>
+                </Grid>
+                
+                <Separator Margin="0,8"/>
+                
+                <Grid ColumnDefinitions="Auto,*,Auto">
+                    <TextBlock Grid.Column="0" Text="Peak Torque" Classes="Label"/>
+                    <TextBox Grid.Column="1" x:Name="PeakTorqueInput" Classes="Input" Watermark="50" Text="50"/>
+                    <TextBlock Grid.Column="2" Text="Nm" VerticalAlignment="Center" Margin="4,0,0,0"/>
+                </Grid>
+                
+                <Grid ColumnDefinitions="Auto,*,Auto">
+                    <TextBlock Grid.Column="0" Text="Cont. Torque" Classes="Label"/>
+                    <TextBox Grid.Column="1" x:Name="ContinuousTorqueInput" Classes="Input" Watermark="40" Text="40"/>
+                    <TextBlock Grid.Column="2" Text="Nm" VerticalAlignment="Center" Margin="4,0,0,0"/>
+                </Grid>
+                
+                <Grid ColumnDefinitions="Auto,*,Auto">
+                    <TextBlock Grid.Column="0" Text="Cont. Current" Classes="Label"/>
+                    <TextBox Grid.Column="1" x:Name="ContinuousCurrentInput" Classes="Input" Watermark="10" Text="10"/>
+                    <TextBlock Grid.Column="2" Text="A" VerticalAlignment="Center" Margin="4,0,0,0"/>
+                </Grid>
+                
+                <Grid ColumnDefinitions="Auto,*,Auto">
+                    <TextBlock Grid.Column="0" Text="Peak Current" Classes="Label"/>
+                    <TextBox Grid.Column="1" x:Name="PeakCurrentInput" Classes="Input" Watermark="20" Text="20"/>
+                    <TextBlock Grid.Column="2" Text="A" VerticalAlignment="Center" Margin="4,0,0,0"/>
+                </Grid>
+            </StackPanel>
+        </ScrollViewer>
+        
+        <!-- Buttons -->
+        <StackPanel Grid.Row="1" Orientation="Horizontal" HorizontalAlignment="Right" Spacing="8" Margin="0,16,0,0">
+            <Button Content="Cancel" Width="80" Click="OnCancelClick"/>
+            <Button Content="Add" Width="80" Classes="accent" Click="OnAddClick"/>
+        </StackPanel>
+    </Grid>
+</Window>

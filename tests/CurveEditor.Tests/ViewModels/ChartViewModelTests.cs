@@ -1,0 +1,211 @@
+using CurveEditor.Models;
+using CurveEditor.ViewModels;
+
+namespace CurveEditor.Tests.ViewModels;
+
+/// <summary>
+/// Tests for the ChartViewModel class.
+/// </summary>
+public class ChartViewModelTests
+{
+    [Fact]
+    public void Constructor_InitializesWithDefaultAxes()
+    {
+        // Arrange & Act
+        var viewModel = new ChartViewModel();
+
+        // Assert
+        Assert.NotNull(viewModel.XAxes);
+        Assert.NotNull(viewModel.YAxes);
+        Assert.Single(viewModel.XAxes);
+        Assert.Single(viewModel.YAxes);
+    }
+
+    [Fact]
+    public void CurrentVoltage_WhenNull_SeriesIsEmpty()
+    {
+        // Arrange
+        var viewModel = new ChartViewModel();
+
+        // Act
+        viewModel.CurrentVoltage = null;
+
+        // Assert
+        Assert.Empty(viewModel.Series);
+    }
+
+    [Fact]
+    public void CurrentVoltage_WhenSet_UpdatesSeriesWithCurveData()
+    {
+        // Arrange
+        var viewModel = new ChartViewModel();
+        var voltage = CreateTestVoltageConfiguration();
+
+        // Act
+        viewModel.CurrentVoltage = voltage;
+
+        // Assert
+        Assert.Equal(2, viewModel.Series.Count);
+    }
+
+    [Fact]
+    public void CurrentVoltage_WhenSet_TitleShowsVoltage()
+    {
+        // Arrange
+        var viewModel = new ChartViewModel();
+        var voltage = CreateTestVoltageConfiguration();
+
+        // Act
+        viewModel.CurrentVoltage = voltage;
+
+        // Assert
+        Assert.Contains("220V", viewModel.Title);
+    }
+
+    [Fact]
+    public void SetSeriesVisibility_HidesSeries()
+    {
+        // Arrange
+        var viewModel = new ChartViewModel();
+        var voltage = CreateTestVoltageConfiguration();
+        viewModel.CurrentVoltage = voltage;
+
+        // Act
+        viewModel.SetSeriesVisibility("Peak", false);
+
+        // Assert
+        Assert.False(viewModel.IsSeriesVisible("Peak"));
+    }
+
+    [Fact]
+    public void SetSeriesVisibility_ShowsSeries()
+    {
+        // Arrange
+        var viewModel = new ChartViewModel();
+        var voltage = CreateTestVoltageConfiguration();
+        viewModel.CurrentVoltage = voltage;
+        viewModel.SetSeriesVisibility("Peak", false);
+
+        // Act
+        viewModel.SetSeriesVisibility("Peak", true);
+
+        // Assert
+        Assert.True(viewModel.IsSeriesVisible("Peak"));
+    }
+
+    [Fact]
+    public void IsSeriesVisible_DefaultsToTrue()
+    {
+        // Arrange
+        var viewModel = new ChartViewModel();
+
+        // Act & Assert
+        Assert.True(viewModel.IsSeriesVisible("NonExistentSeries"));
+    }
+
+    [Fact]
+    public void RefreshChart_UpdatesSeriesFromVoltage()
+    {
+        // Arrange
+        var viewModel = new ChartViewModel();
+        var voltage = CreateTestVoltageConfiguration();
+        viewModel.CurrentVoltage = voltage;
+        var initialCount = viewModel.Series.Count;
+
+        // Add a new series to the voltage
+        voltage.Series.Add(new CurveSeries("New Series"));
+
+        // Act
+        viewModel.RefreshChart();
+
+        // Assert
+        Assert.Equal(initialCount + 1, viewModel.Series.Count);
+    }
+
+    [Fact]
+    public void DataChanged_RaisedWhenUpdateDataPointCalled()
+    {
+        // Arrange
+        var viewModel = new ChartViewModel();
+        var voltage = CreateTestVoltageConfiguration();
+        viewModel.CurrentVoltage = voltage;
+        var eventRaised = false;
+        viewModel.DataChanged += (s, e) => eventRaised = true;
+
+        // Act
+        viewModel.UpdateDataPoint("Peak", 0, 0, 55.0);
+
+        // Assert
+        Assert.True(eventRaised);
+    }
+
+    [Fact]
+    public void UpdateDataPoint_WithInvalidSeriesName_DoesNotThrow()
+    {
+        // Arrange
+        var viewModel = new ChartViewModel();
+        var voltage = CreateTestVoltageConfiguration();
+        viewModel.CurrentVoltage = voltage;
+
+        // Act & Assert - should not throw
+        viewModel.UpdateDataPoint("NonExistent", 0, 100, 50);
+    }
+
+    [Fact]
+    public void UpdateDataPoint_WithInvalidIndex_DoesNotThrow()
+    {
+        // Arrange
+        var viewModel = new ChartViewModel();
+        var voltage = CreateTestVoltageConfiguration();
+        viewModel.CurrentVoltage = voltage;
+
+        // Act & Assert - should not throw
+        viewModel.UpdateDataPoint("Peak", 999, 100, 50);
+    }
+
+    [Fact]
+    public void TorqueUnit_DefaultsToNm()
+    {
+        // Arrange & Act
+        var viewModel = new ChartViewModel();
+
+        // Assert
+        Assert.Equal("Nm", viewModel.TorqueUnit);
+    }
+
+    [Fact]
+    public void TorqueUnit_WhenSet_UpdatesAxisLabel()
+    {
+        // Arrange
+        var viewModel = new ChartViewModel();
+
+        // Act
+        viewModel.TorqueUnit = "lbf-in";
+        viewModel.CurrentVoltage = CreateTestVoltageConfiguration();
+
+        // Assert
+        Assert.Contains("lbf-in", viewModel.YAxes[0].Name);
+    }
+
+    private static VoltageConfiguration CreateTestVoltageConfiguration()
+    {
+        var voltage = new VoltageConfiguration(220)
+        {
+            MaxSpeed = 5000,
+            Power = 1500,
+            RatedPeakTorque = 55,
+            RatedContinuousTorque = 45
+        };
+
+        var peakSeries = new CurveSeries("Peak");
+        peakSeries.InitializeData(5000, 55);
+        
+        var continuousSeries = new CurveSeries("Continuous");
+        continuousSeries.InitializeData(5000, 45);
+
+        voltage.Series.Add(peakSeries);
+        voltage.Series.Add(continuousSeries);
+
+        return voltage;
+    }
+}

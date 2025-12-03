@@ -1,3 +1,5 @@
+using System.ComponentModel;
+using System.Runtime.CompilerServices;
 using System.Text.Json.Serialization;
 
 namespace CurveEditor.Models;
@@ -5,49 +7,174 @@ namespace CurveEditor.Models;
 /// <summary>
 /// Specifies the units used for various motor properties.
 /// </summary>
-public class UnitSettings
+public class UnitSettings : INotifyPropertyChanged
 {
+    private string _torque = "Nm";
+    private string _speed = "rpm";
+    private string _power = "W";
+    private string _weight = "kg";
+    private string _voltage = "V";
+    private string _current = "A";
+    private string _inertia = "kg-m^2";
+    private string _torqueConstant = "Nm/A";
+    private string _backlash = "arcmin";
+
     /// <summary>
-    /// Torque unit: "Nm" (Newton-meters), "lbf-in" (pound-force inches), or "oz-in" (ounce-force inches).
+    /// Occurs when a property value changes.
+    /// </summary>
+    public event PropertyChangedEventHandler? PropertyChanged;
+
+    /// <summary>
+    /// Torque unit: "Nm", "lbf-ft", "lbf-in", or "oz-in".
     /// </summary>
     [JsonPropertyName("torque")]
-    public string Torque { get; set; } = "Nm";
+    public string Torque
+    {
+        get => _torque;
+        set => SetProperty(ref _torque, value);
+    }
 
     /// <summary>
-    /// Speed unit: "rpm" (revolutions per minute) or "rev/s" (revolutions per second).
+    /// Speed unit: "rpm".
     /// </summary>
     [JsonPropertyName("speed")]
-    public string Speed { get; set; } = "rpm";
+    public string Speed
+    {
+        get => _speed;
+        set => SetProperty(ref _speed, value);
+    }
 
     /// <summary>
-    /// Power unit: "W" (Watts), "kW" (kilowatts), or "hp" (horsepower).
+    /// Power unit: "kW", "W", or "hp".
     /// </summary>
     [JsonPropertyName("power")]
-    public string Power { get; set; } = "W";
+    public string Power
+    {
+        get => _power;
+        set => SetProperty(ref _power, value);
+    }
 
     /// <summary>
-    /// Weight unit: "kg" (kilograms), "lbs" (pounds), or "g" (grams).
+    /// Weight unit: "kg", "g", "lbs", or "oz".
     /// </summary>
     [JsonPropertyName("weight")]
-    public string Weight { get; set; } = "kg";
+    public string Weight
+    {
+        get => _weight;
+        set => SetProperty(ref _weight, value);
+    }
 
     /// <summary>
-    /// Gets the supported torque units.
+    /// Voltage unit: "V" or "kV".
     /// </summary>
-    public static string[] SupportedTorqueUnits => ["Nm", "lbf-in", "oz-in"];
+    [JsonPropertyName("voltage")]
+    public string Voltage
+    {
+        get => _voltage;
+        set => SetProperty(ref _voltage, value);
+    }
+
+    /// <summary>
+    /// Current unit: "A" or "mA".
+    /// </summary>
+    [JsonPropertyName("current")]
+    public string Current
+    {
+        get => _current;
+        set => SetProperty(ref _current, value);
+    }
+
+    /// <summary>
+    /// Inertia unit: "kg-m^2" or "g-cm^2".
+    /// </summary>
+    [JsonPropertyName("inertia")]
+    public string Inertia
+    {
+        get => _inertia;
+        set => SetProperty(ref _inertia, value);
+    }
+
+    /// <summary>
+    /// Torque constant unit: "Nm/A".
+    /// </summary>
+    [JsonPropertyName("torqueConstant")]
+    public string TorqueConstant
+    {
+        get => _torqueConstant;
+        set => SetProperty(ref _torqueConstant, value);
+    }
+
+    /// <summary>
+    /// Backlash unit: "arcmin" or "arcsec".
+    /// </summary>
+    [JsonPropertyName("backlash")]
+    public string Backlash
+    {
+        get => _backlash;
+        set => SetProperty(ref _backlash, value);
+    }
+
+    /// <summary>
+    /// Sets the property value and raises PropertyChanged if the value changed.
+    /// </summary>
+    protected bool SetProperty<T>(ref T field, T value, [CallerMemberName] string? propertyName = null)
+    {
+        if (Equals(field, value)) return false;
+        field = value;
+        OnPropertyChanged(propertyName);
+        return true;
+    }
+
+    /// <summary>
+    /// Raises the PropertyChanged event.
+    /// </summary>
+    protected virtual void OnPropertyChanged([CallerMemberName] string? propertyName = null)
+    {
+        PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
+    }
 
     /// <summary>
     /// Gets the supported speed units.
     /// </summary>
-    public static string[] SupportedSpeedUnits => ["rpm", "rev/s"];
-
-    /// <summary>
-    /// Gets the supported power units.
-    /// </summary>
-    public static string[] SupportedPowerUnits => ["W", "kW", "hp"];
+    public static string[] SupportedSpeedUnits => ["rpm"];
 
     /// <summary>
     /// Gets the supported weight units.
     /// </summary>
-    public static string[] SupportedWeightUnits => ["kg", "lbs", "g"];
+    public static string[] SupportedWeightUnits => ["kg", "g", "lbs", "oz"];
+
+    /// <summary>
+    /// Gets the supported torque units.
+    /// </summary>
+    public static string[] SupportedTorqueUnits => ["Nm", "lbf-ft", "lbf-in", "oz-in"];
+
+    /// <summary>
+    /// Gets the supported power units.
+    /// </summary>
+    public static string[] SupportedPowerUnits => ["kW", "W", "hp"];
+
+    /// <summary>
+    /// Gets the supported voltage units.
+    /// </summary>
+    public static string[] SupportedVoltageUnits => ["V", "kV"];
+
+    /// <summary>
+    /// Gets the supported current units.
+    /// </summary>
+    public static string[] SupportedCurrentUnits => ["A", "mA"];
+
+    /// <summary>
+    /// Gets the supported inertia units.
+    /// </summary>
+    public static string[] SupportedInertiaUnits => ["kg-m^2", "g-cm^2"];
+
+    /// <summary>
+    /// Gets the supported torque constant units.
+    /// </summary>
+    public static string[] SupportedTorqueConstantUnits => ["Nm/A"];
+
+    /// <summary>
+    /// Gets the supported backlash units.
+    /// </summary>
+    public static string[] SupportedBacklashUnits => ["arcmin", "arcsec"];
 }

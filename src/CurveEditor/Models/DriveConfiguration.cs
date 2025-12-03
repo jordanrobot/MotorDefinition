@@ -1,5 +1,7 @@
 using System;
 using System.Collections.Generic;
+using System.ComponentModel;
+using System.Runtime.CompilerServices;
 using System.Text.Json.Serialization;
 
 namespace CurveEditor.Models;
@@ -8,9 +10,14 @@ namespace CurveEditor.Models;
 /// Represents a servo drive configuration for a motor.
 /// Contains voltage-specific configurations and their associated curve series.
 /// </summary>
-public class DriveConfiguration
+public class DriveConfiguration : INotifyPropertyChanged
 {
     private string _name = string.Empty;
+
+    /// <summary>
+    /// Occurs when a property value changes.
+    /// </summary>
+    public event PropertyChangedEventHandler? PropertyChanged;
 
     /// <summary>
     /// The name or model identifier of the drive.
@@ -25,7 +32,11 @@ public class DriveConfiguration
             {
                 throw new ArgumentException("Drive name cannot be null or empty.", nameof(value));
             }
-            _name = value;
+            if (_name != value)
+            {
+                _name = value;
+                OnPropertyChanged();
+            }
         }
     }
 
@@ -96,5 +107,14 @@ public class DriveConfiguration
         var config = new VoltageConfiguration(voltage);
         Voltages.Add(config);
         return config;
+    }
+
+    /// <summary>
+    /// Raises the PropertyChanged event.
+    /// </summary>
+    /// <param name="propertyName">The name of the property that changed.</param>
+    protected virtual void OnPropertyChanged([CallerMemberName] string? propertyName = null)
+    {
+        PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
     }
 }

@@ -210,4 +210,35 @@ public class CurveSeriesTests
 
         Assert.Equal(5000, series.Data[100].Rpm);
     }
+
+    [Fact]
+    public void IsVisible_DefaultsToTrue()
+    {
+        var series = new CurveSeries();
+
+        Assert.True(series.IsVisible);
+    }
+
+    [Fact]
+    public void IsVisible_CanBeSetToFalse()
+    {
+        var series = new CurveSeries("Peak")
+        {
+            IsVisible = false
+        };
+
+        Assert.False(series.IsVisible);
+    }
+
+    [Fact]
+    public void IsVisible_CanBeToggled()
+    {
+        var series = new CurveSeries("Peak");
+        
+        series.IsVisible = false;
+        Assert.False(series.IsVisible);
+        
+        series.IsVisible = true;
+        Assert.True(series.IsVisible);
+    }
 }

@@ -43,6 +43,13 @@ public class CurveSeries
     public bool Locked { get; set; }
 
     /// <summary>
+    /// Indicates whether this curve series is visible in the chart.
+    /// This is a runtime-only property that is not persisted to JSON.
+    /// </summary>
+    [JsonIgnore]
+    public bool IsVisible { get; set; } = true;
+
+    /// <summary>
     /// The data points for this curve, stored at 1% increments.
     /// Should contain 101 points (0% through 100%).
     /// </summary>

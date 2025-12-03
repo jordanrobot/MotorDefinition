@@ -4,7 +4,7 @@ A desktop application for creating and editing motor torque curves stored in JSO
 
 ## Features
 
-### Phase 1 (Current - Foundation)
+### Phase 1 (Foundation) - Complete
 - ✅ Create new motor definition files
 - ✅ Load and save motor curve data in JSON format
 - ✅ Hierarchical data structure: Motor → Drive(s) → Voltage(s) → Curve Series
@@ -13,10 +13,19 @@ A desktop application for creating and editing motor torque curves stored in JSO
 - ✅ 1% increment data storage (101 points per curve)
 - ✅ Basic UI shell with menu bar
 - ✅ Structured logging with Serilog
-- ✅ Comprehensive unit tests (138 tests)
+
+### Phase 2 (Current - Core Features)
+- ✅ Interactive chart with LiveCharts2
+- ✅ Multiple series display with unique colors
+- ✅ Series visibility toggles
+- ✅ Grid lines at rounded value increments
+- ✅ Hover tooltips showing RPM/torque values
+- ✅ Curve data panel with editable DataGrid
+- ✅ Two-way binding between chart and data grid
+- ✅ Data validation with error indicators
+- ✅ Comprehensive unit tests (172 tests)
 
 ### Future Phases
-- Phase 2: Interactive chart with LiveCharts2
 - Phase 3: Directory browser and save prompts
 - Phase 4: EQ-style curve editing with Q slider
 - Phase 5: User preferences and settings

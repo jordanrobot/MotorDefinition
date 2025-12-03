@@ -1,0 +1,55 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:vm="using:CurveEditor.ViewModels"
+             xmlns:models="using:CurveEditor.Models"
+             mc:Ignorable="d" d:DesignWidth="300" d:DesignHeight="400"
+             x:Class="CurveEditor.Views.CurveDataPanel"
+             x:DataType="vm:MainWindowViewModel">
+    
+    <Grid>
+        <!-- Data Grid -->
+        <DataGrid ItemsSource="{Binding SelectedSeries.Data}"
+                  AutoGenerateColumns="False"
+                  CanUserReorderColumns="False"
+                  CanUserResizeColumns="True"
+                  CanUserSortColumns="False"
+                  IsReadOnly="False"
+                  GridLinesVisibility="Horizontal"
+                  HeadersVisibility="Column"
+                  SelectionMode="Single"
+                  IsVisible="{Binding SelectedSeries, Converter={x:Static ObjectConverters.IsNotNull}}"
+                  CellEditEnded="DataGrid_CellEditEnded">
+            <DataGrid.Columns>
+                <DataGridTextColumn Header="%" 
+                                    Binding="{Binding Percent}" 
+                                    Width="50"
+                                    IsReadOnly="True"/>
+                <DataGridTextColumn Header="RPM" 
+                                    Binding="{Binding DisplayRpm}" 
+                                    Width="80"
+                                    IsReadOnly="True"/>
+                <DataGridTextColumn Header="Torque" 
+                                    Binding="{Binding Torque, StringFormat=N2}" 
+                                    Width="80"
+                                    IsReadOnly="False"/>
+            </DataGrid.Columns>
+        </DataGrid>
+        
+        <!-- Empty state -->
+        <StackPanel VerticalAlignment="Center"
+                    HorizontalAlignment="Center"
+                    IsVisible="{Binding SelectedSeries, Converter={x:Static ObjectConverters.IsNull}}">
+            <TextBlock Text="No series selected"
+                       Foreground="Gray"
+                       FontStyle="Italic"
+                       HorizontalAlignment="Center"/>
+            <TextBlock Text="Select a series to view data"
+                       Foreground="Gray"
+                       FontSize="11"
+                       HorizontalAlignment="Center"
+                       Margin="0,4,0,0"/>
+        </StackPanel>
+    </Grid>
+</UserControl>
