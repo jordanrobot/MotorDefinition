@@ -403,6 +403,17 @@ public partial class CurveDataPanel : UserControl
 
         if (properties.IsLeftButtonPressed)
         {
+            // Check for double-click to enter edit mode
+            if (e.ClickCount == 2)
+            {
+                // Select the row in the DataGrid to enable editing
+                SelectDataGridRow(pos.RowIndex);
+                
+                // Enter edit mode
+                DataTable.BeginEdit();
+                return; // Don't handle as regular click
+            }
+            
             if (e.KeyModifiers.HasFlag(KeyModifiers.Control))
             {
                 // Ctrl+click: Toggle selection without clearing existing selection
@@ -672,7 +683,14 @@ public partial class CurveDataPanel : UserControl
         // Handle F2 to enter edit mode
         if (e.Key == Key.F2)
         {
-            dataGrid.BeginEdit();
+            // Select the row in the DataGrid to enable editing
+            var selectedCells = vm.CurveDataTableViewModel.SelectedCells;
+            if (selectedCells.Count > 0)
+            {
+                var firstCell = selectedCells.First();
+                SelectDataGridRow(firstCell.RowIndex);
+                dataGrid.BeginEdit();
+            }
             e.Handled = true;
         }
 
@@ -745,6 +763,21 @@ public partial class CurveDataPanel : UserControl
         {
             var row = vm.CurveDataTableViewModel.Rows[firstSelected.RowIndex];
             dataGrid.ScrollIntoView(row, null);
+        }
+    }
+
+    /// <summary>
+    /// Selects a row in the DataGrid by index to enable editing operations.
+    /// </summary>
+    private void SelectDataGridRow(int rowIndex)
+    {
+        if (DataContext is not MainWindowViewModel vm || DataTable is null) return;
+        
+        if (rowIndex >= 0 && rowIndex < vm.CurveDataTableViewModel.Rows.Count)
+        {
+            var row = vm.CurveDataTableViewModel.Rows[rowIndex];
+            DataTable.SelectedItem = row;
+            DataTable.ScrollIntoView(row, null);
         }
     }
 
