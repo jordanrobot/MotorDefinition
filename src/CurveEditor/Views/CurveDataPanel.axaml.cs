@@ -645,6 +645,29 @@ public partial class CurveDataPanel : UserControl
         if (sender is not DataGrid dataGrid) return;
         if (DataContext is not MainWindowViewModel vm) return;
 
+        // If we're in edit mode (event source is a TextBox), let most keys pass through
+        // to allow normal text editing behavior
+        var isInEditMode = e.Source is TextBox;
+        
+        if (isInEditMode)
+        {
+            // In edit mode, only handle Escape to cancel and Enter to commit
+            if (e.Key == Key.Escape)
+            {
+                dataGrid.CancelEdit();
+                e.Handled = true;
+            }
+            else if (e.Key == Key.Enter)
+            {
+                dataGrid.CommitEdit();
+                vm.CurveDataTableViewModel.MoveSelection(1, 0);
+                ScrollToSelection(dataGrid);
+                e.Handled = true;
+            }
+            // Let all other keys pass through to the TextBox for normal editing
+            return;
+        }
+
         // Handle clipboard operations
         if (e.KeyModifiers.HasFlag(KeyModifiers.Control))
         {
