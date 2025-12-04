@@ -54,6 +54,52 @@ public partial class ChartViewModel : ViewModelBase
     [ObservableProperty]
     private string _torqueUnit = "Nm";
 
+    [ObservableProperty]
+    private double _motorMaxSpeed;
+
+    [ObservableProperty]
+    private bool _hasBrake;
+
+    [ObservableProperty]
+    private double _brakeTorque;
+
+    /// <summary>
+    /// Called when MotorMaxSpeed changes to update the chart axes.
+    /// </summary>
+    partial void OnMotorMaxSpeedChanged(double value)
+    {
+        // Update chart axes when motor max speed changes
+        if (_currentVoltage is not null)
+        {
+            UpdateAxes();
+        }
+    }
+
+    /// <summary>
+    /// Called when HasBrake changes to update the brake torque line.
+    /// </summary>
+    partial void OnHasBrakeChanged(bool value)
+    {
+        UpdateChart();
+    }
+
+    /// <summary>
+    /// Called when BrakeTorque changes to update the brake torque line.
+    /// </summary>
+    partial void OnBrakeTorqueChanged(double value)
+    {
+        if (HasBrake)
+        {
+            UpdateChart();
+        }
+    }
+
+    /// <summary>
+    /// Controls whether zoom/pan is enabled on the chart.
+    /// When false, the graph is static and shows the full range of data.
+    /// </summary>
+    public static bool EnableZoomPan => false;
+
     /// <summary>
     /// Event raised when any series data point changes.
     /// </summary>
@@ -179,26 +225,75 @@ public partial class ChartViewModel : ViewModelBase
             Series.Add(lineSeries);
         }
 
+        // Add brake torque line if motor has a brake
+        if (HasBrake && BrakeTorque > 0)
+        {
+            AddBrakeTorqueLine();
+        }
+
         // Update axes based on data
         UpdateAxes();
+    }
+
+    /// <summary>
+    /// Adds a horizontal line to the chart indicating the brake torque value.
+    /// </summary>
+    private void AddBrakeTorqueLine()
+    {
+        // Use the maximum of Motor Max Speed and Drive (voltage) Max Speed for line width
+        var maxRpm = Math.Max(MotorMaxSpeed, _currentVoltage?.MaxSpeed ?? 0);
+        if (maxRpm <= 0)
+        {
+            maxRpm = 6000; // Default fallback
+        }
+
+        // Create two points for a horizontal line from 0 to maxRpm at BrakeTorque
+        var brakePoints = new ObservableCollection<ObservablePoint>
+        {
+            new(0, BrakeTorque),
+            new(maxRpm, BrakeTorque)
+        };
+
+        var brakeLine = new LineSeries<ObservablePoint>
+        {
+            Name = "Brake Torque",
+            Values = brakePoints,
+            Fill = null, // No fill for the brake line
+            GeometrySize = 0, // No points on the line
+            Stroke = new SolidColorPaint(new SKColor(255, 165, 0)) // Orange color
+            {
+                StrokeThickness = 2,
+                PathEffect = new DashEffect([5, 5]) // Dashed line
+            },
+            LineSmoothness = 0, // Straight line
+            IsVisible = true
+        };
+
+        Series.Add(brakeLine);
     }
 
     private void UpdateAxes()
     {
         if (_currentVoltage is null) return;
 
-        var maxRpm = _currentVoltage.MaxSpeed;
+        // Use the maximum of Motor Max Speed and Drive (voltage) Max Speed for the x-axis
+        // Do NOT round the x-axis maximum - use the exact value
+        var maxRpm = Math.Max(MotorMaxSpeed, _currentVoltage.MaxSpeed);
+        if (maxRpm <= 0)
+        {
+            maxRpm = 6000; // Default fallback
+        }
+
         var maxTorque = _currentVoltage.Series
             .SelectMany(s => s.Data)
             .Select(dp => dp.Torque)
             .DefaultIfEmpty(0)
             .Max();
 
-        // Round up to nice values
-        var xMax = RoundToNiceValue(maxRpm, true);
+        // Use exact max RPM (no rounding), but round torque for nice Y-axis
         var yMax = RoundToNiceValue(maxTorque * 1.1, true); // Add 10% margin
 
-        XAxes = CreateXAxes(xMax);
+        XAxes = CreateXAxes(maxRpm);
         YAxes = CreateYAxes(yMax);
     }
 

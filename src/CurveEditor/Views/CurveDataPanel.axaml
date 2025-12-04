@@ -4,23 +4,141 @@
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:vm="using:CurveEditor.ViewModels"
              xmlns:models="using:CurveEditor.Models"
-             mc:Ignorable="d" d:DesignWidth="300" d:DesignHeight="400"
+             mc:Ignorable="d" d:DesignWidth="600" d:DesignHeight="400"
              x:Class="CurveEditor.Views.CurveDataPanel"
              x:DataType="vm:MainWindowViewModel">
     
-    <Grid>
-        <!-- Data Grid -->
-        <DataGrid ItemsSource="{Binding SelectedSeries.Data}"
+    <UserControl.Styles>
+        <!-- Cell style -->
+        <Style Selector="TextBox.Cell">
+            <Setter Property="FontSize" Value="11"/>
+            <Setter Property="Padding" Value="4,2"/>
+            <Setter Property="MinHeight" Value="24"/>
+            <Setter Property="MinWidth" Value="60"/>
+            <Setter Property="BorderThickness" Value="0"/>
+            <Setter Property="Background" Value="Transparent"/>
+        </Style>
+        <Style Selector="TextBox.Cell:focus">
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="BorderBrush" Value="{DynamicResource SystemAccentColor}"/>
+        </Style>
+        <Style Selector="TextBlock.Cell">
+            <Setter Property="FontSize" Value="11"/>
+            <Setter Property="Padding" Value="4,2"/>
+            <Setter Property="VerticalAlignment" Value="Center"/>
+        </Style>
+        <Style Selector="TextBlock.Header">
+            <Setter Property="FontSize" Value="11"/>
+            <Setter Property="FontWeight" Value="SemiBold"/>
+            <Setter Property="Padding" Value="4,2"/>
+            <Setter Property="VerticalAlignment" Value="Center"/>
+        </Style>
+    </UserControl.Styles>
+    
+    <Grid RowDefinitions="Auto,*">
+        <!-- Header Row -->
+        <Border Grid.Row="0" 
+                BorderBrush="{DynamicResource SystemControlBackgroundBaseMediumBrush}"
+                BorderThickness="0,0,0,1"
+                IsVisible="{Binding SelectedVoltage, Converter={x:Static ObjectConverters.IsNotNull}}">
+            <ScrollViewer x:Name="HeaderScrollViewer" 
+                          HorizontalScrollBarVisibility="Hidden"
+                          VerticalScrollBarVisibility="Disabled">
+                <StackPanel Orientation="Horizontal">
+                    <!-- Fixed columns: % and RPM -->
+                    <Border Width="50" BorderThickness="0,0,1,0" 
+                            BorderBrush="{DynamicResource SystemControlBackgroundBaseMediumBrush}">
+                        <TextBlock Text="%" Classes="Header" HorizontalAlignment="Center"/>
+                    </Border>
+                    <Border Width="70" BorderThickness="0,0,1,0" 
+                            BorderBrush="{DynamicResource SystemControlBackgroundBaseMediumBrush}">
+                        <TextBlock Text="RPM" Classes="Header" HorizontalAlignment="Center"/>
+                    </Border>
+                    
+                    <!-- Dynamic series columns -->
+                    <ItemsControl ItemsSource="{Binding AvailableSeries}">
+                        <ItemsControl.ItemsPanel>
+                            <ItemsPanelTemplate>
+                                <StackPanel Orientation="Horizontal"/>
+                            </ItemsPanelTemplate>
+                        </ItemsControl.ItemsPanel>
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate DataType="models:CurveSeries">
+                                <Border Width="80" BorderThickness="0,0,1,0" 
+                                        BorderBrush="{DynamicResource SystemControlBackgroundBaseMediumBrush}">
+                                    <StackPanel Margin="2,2">
+                                        <!-- Series Name (double-click to rename) -->
+                                        <TextBlock Text="{Binding Name}" 
+                                                   Classes="Header" 
+                                                   HorizontalAlignment="Center"
+                                                   Cursor="Hand"
+                                                   DoubleTapped="OnSeriesNameDoubleTapped"/>
+                                        <!-- Controls row -->
+                                        <StackPanel Orientation="Horizontal" 
+                                                    HorizontalAlignment="Center"
+                                                    Spacing="4">
+                                            <!-- Visibility checkbox -->
+                                            <CheckBox IsChecked="{Binding IsVisible, Mode=TwoWay}"
+                                                      ToolTip.Tip="Toggle Visibility"
+                                                      Click="OnSeriesVisibilityCheckboxClick"
+                                                      Padding="0"
+                                                      MinWidth="0"/>
+                                            <!-- Lock button -->
+                                            <ToggleButton IsChecked="{Binding Locked, Mode=TwoWay}"
+                                                          Width="20" Height="20"
+                                                          Padding="0"
+                                                          ToolTip.Tip="Toggle Lock"
+                                                          Click="OnSeriesLockToggleClick">
+                                                <Panel>
+                                                    <TextBlock Text="🔒" FontSize="10" IsVisible="{Binding Locked}"/>
+                                                    <TextBlock Text="🔓" FontSize="10" IsVisible="{Binding !Locked}"/>
+                                                </Panel>
+                                            </ToggleButton>
+                                            <!-- Trash button (in header) - disabled when locked -->
+                                            <Button Width="20" Height="20"
+                                                    Padding="0"
+                                                    ToolTip.Tip="Delete Series"
+                                                    Click="OnDeleteSeriesClick"
+                                                    IsEnabled="{Binding !Locked}">
+                                                <TextBlock Text="🗑" FontSize="10"/>
+                                            </Button>
+                                        </StackPanel>
+                                    </StackPanel>
+                                </Border>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                    
+                    <!-- Add Series button in header -->
+                    <Button Width="30" Height="30"
+                            Padding="0"
+                            Margin="4,0"
+                            VerticalAlignment="Center"
+                            HorizontalContentAlignment="Center"
+                            VerticalContentAlignment="Center"
+                            ToolTip.Tip="Add new curve series"
+                            Command="{Binding AddSeriesCommand}">
+                        <TextBlock Text="+" FontSize="16" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                    </Button>
+                </StackPanel>
+            </ScrollViewer>
+        </Border>
+        
+        <!-- Data Grid for rows -->
+        <DataGrid Grid.Row="1"
+                  x:Name="DataTable"
+                  ItemsSource="{Binding CurveDataTableViewModel.Rows}"
                   AutoGenerateColumns="False"
                   CanUserReorderColumns="False"
                   CanUserResizeColumns="True"
                   CanUserSortColumns="False"
                   IsReadOnly="False"
                   GridLinesVisibility="Horizontal"
-                  HeadersVisibility="Column"
-                  SelectionMode="Single"
-                  IsVisible="{Binding SelectedSeries, Converter={x:Static ObjectConverters.IsNotNull}}"
-                  CellEditEnded="DataGrid_CellEditEnded">
+                  HeadersVisibility="None"
+                  SelectionMode="Extended"
+                  IsVisible="{Binding SelectedVoltage, Converter={x:Static ObjectConverters.IsNotNull}}"
+                  CellEditEnded="DataGrid_CellEditEnded"
+                  KeyDown="DataTable_KeyDown">
             <DataGrid.Columns>
                 <DataGridTextColumn Header="%" 
                                     Binding="{Binding Percent}" 
@@ -28,24 +146,21 @@
                                     IsReadOnly="True"/>
                 <DataGridTextColumn Header="RPM" 
                                     Binding="{Binding DisplayRpm}" 
-                                    Width="80"
+                                    Width="70"
                                     IsReadOnly="True"/>
-                <DataGridTextColumn Header="Torque" 
-                                    Binding="{Binding Torque, StringFormat=N2}" 
-                                    Width="80"
-                                    IsReadOnly="False"/>
             </DataGrid.Columns>
         </DataGrid>
         
         <!-- Empty state -->
-        <StackPanel VerticalAlignment="Center"
+        <StackPanel Grid.Row="0" Grid.RowSpan="2"
+                    VerticalAlignment="Center"
                     HorizontalAlignment="Center"
-                    IsVisible="{Binding SelectedSeries, Converter={x:Static ObjectConverters.IsNull}}">
-            <TextBlock Text="No series selected"
+                    IsVisible="{Binding SelectedVoltage, Converter={x:Static ObjectConverters.IsNull}}">
+            <TextBlock Text="No voltage configuration selected"
                        Foreground="Gray"
                        FontStyle="Italic"
                        HorizontalAlignment="Center"/>
-            <TextBlock Text="Select a series to view data"
+            <TextBlock Text="Select a drive and voltage to view curve data"
                        Foreground="Gray"
                        FontSize="11"
                        HorizontalAlignment="Center"

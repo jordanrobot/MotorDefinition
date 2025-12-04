@@ -16,7 +16,7 @@ public partial class MainWindow : Window
     }
 
     /// <summary>
-    /// Handles the max speed field losing focus to show confirmation dialog.
+    /// Handles the drive max speed field losing focus to show confirmation dialog and refresh chart.
     /// </summary>
     private async void OnMaxSpeedLostFocus(object? sender, RoutedEventArgs e)
     {
@@ -31,6 +31,49 @@ public partial class MainWindow : Window
             }
             
             _previousMaxSpeed = currentMaxSpeed;
+            
+            // Refresh the chart to update the x-axis
+            viewModel.ChartViewModel.RefreshChart();
+        }
+    }
+
+    /// <summary>
+    /// Handles the motor max speed field losing focus to refresh chart.
+    /// </summary>
+    private void OnMotorMaxSpeedLostFocus(object? sender, RoutedEventArgs e)
+    {
+        if (DataContext is MainWindowViewModel viewModel && viewModel.CurrentMotor is not null)
+        {
+            // Update the motor max speed in the chart view model (triggers OnMotorMaxSpeedChanged which updates axes)
+            viewModel.ChartViewModel.MotorMaxSpeed = viewModel.CurrentMotor.MaxSpeed;
+            viewModel.MarkDirty();
+        }
+    }
+
+    /// <summary>
+    /// Handles when the HasBrake checkbox changes to update the brake torque line on the chart.
+    /// </summary>
+    private void OnHasBrakeChanged(object? sender, RoutedEventArgs e)
+    {
+        if (DataContext is MainWindowViewModel viewModel && viewModel.CurrentMotor is not null)
+        {
+            viewModel.ChartViewModel.HasBrake = viewModel.CurrentMotor.HasBrake;
+            viewModel.ChartViewModel.BrakeTorque = viewModel.CurrentMotor.BrakeTorque;
+            viewModel.ChartViewModel.RefreshChart();
+            viewModel.MarkDirty();
+        }
+    }
+
+    /// <summary>
+    /// Handles when the BrakeTorque field loses focus to update the brake torque line on the chart.
+    /// </summary>
+    private void OnBrakeTorqueLostFocus(object? sender, RoutedEventArgs e)
+    {
+        if (DataContext is MainWindowViewModel viewModel && viewModel.CurrentMotor is not null)
+        {
+            viewModel.ChartViewModel.BrakeTorque = viewModel.CurrentMotor.BrakeTorque;
+            viewModel.ChartViewModel.RefreshChart();
+            viewModel.MarkDirty();
         }
     }
 }

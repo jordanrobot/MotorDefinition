@@ -205,7 +205,7 @@
                         BorderThickness="1"
                         CornerRadius="4"
                         IsVisible="{Binding CurrentMotor, Converter={x:Static ObjectConverters.IsNotNull}}">
-                    <Grid RowDefinitions="Auto,*">
+                    <Grid RowDefinitions="Auto,Auto">
                         <!-- Collapsible Header -->
                         <ToggleButton Grid.Row="0" 
                                       IsChecked="{Binding IsCurveDataExpanded}"
@@ -222,10 +222,10 @@
                             </StackPanel>
                         </ToggleButton>
                         
-                        <!-- Data Content -->
+                        <!-- Data Content - max height to take about half window -->
                         <Border Grid.Row="1" 
-                                IsVisible="{Binding IsCurveDataExpanded}"
-                                MaxHeight="200">
+                                MaxHeight="300"
+                                IsVisible="{Binding IsCurveDataExpanded}">
                             <views:CurveDataPanel DataContext="{Binding}"/>
                         </Border>
                     </Grid>
@@ -270,7 +270,7 @@
                         <Grid Classes="PropertyRow" ColumnDefinitions="Auto,*">
                             <TextBlock Grid.Column="0" Text="Max Speed" Classes="PropertyLabel"/>
                             <Grid Grid.Column="1" ColumnDefinitions="*,Auto">
-                                <TextBox Grid.Column="0" Text="{Binding CurrentMotor.MaxSpeed}" Classes="PropertyInput"/>
+                                <TextBox Grid.Column="0" Text="{Binding CurrentMotor.MaxSpeed}" Classes="PropertyInput" LostFocus="OnMotorMaxSpeedLostFocus"/>
                                 <TextBlock Grid.Column="1" Text="RPM" Classes="PropertyValue" Margin="4,0,0,0"/>
                             </Grid>
                         </Grid>
@@ -335,14 +335,16 @@
                         <!-- Has Brake (Checkbox) -->
                         <Grid Classes="PropertyRow" ColumnDefinitions="Auto,*">
                             <TextBlock Grid.Column="0" Text="Has Brake" Classes="PropertyLabel"/>
-                            <CheckBox Grid.Column="1" IsChecked="{Binding CurrentMotor.HasBrake}" VerticalAlignment="Center"/>
+                            <CheckBox Grid.Column="1" IsChecked="{Binding CurrentMotor.HasBrake}" VerticalAlignment="Center"
+                                      Click="OnHasBrakeChanged"/>
                         </Grid>
                         
                         <!-- Brake Torque -->
                         <Grid Classes="PropertyRow" ColumnDefinitions="Auto,*">
                             <TextBlock Grid.Column="0" Text="Brake Torque" Classes="PropertyLabel"/>
                             <Grid Grid.Column="1" ColumnDefinitions="*,Auto">
-                                <TextBox Grid.Column="0" Text="{Binding CurrentMotor.BrakeTorque}" Classes="PropertyInput"/>
+                                <TextBox Grid.Column="0" Text="{Binding CurrentMotor.BrakeTorque}" Classes="PropertyInput"
+                                         LostFocus="OnBrakeTorqueLostFocus"/>
                                 <TextBlock Grid.Column="1" Text="{Binding CurrentMotor.Units.Torque}" Classes="PropertyValue" Margin="4,0,0,0"/>
                             </Grid>
                         </Grid>
@@ -597,92 +599,6 @@
                                     </Grid>
                                 </Grid>
                             </StackPanel>
-                        </StackPanel>
-                        
-                        <!-- CURVE SERIES SECTION -->
-                        <TextBlock Text="Curve Series" 
-                                   FontWeight="SemiBold" 
-                                   FontSize="12"
-                                   Background="{DynamicResource SystemControlBackgroundBaseLowBrush}"
-                                   Padding="4,4"
-                                   Margin="-6,8,-6,4"/>
-                        
-                        <!-- Series ListBox with visibility checkboxes and lock buttons -->
-                        <ListBox ItemsSource="{Binding AvailableSeries}"
-                                 SelectedItem="{Binding SelectedSeries}"
-                                 MinHeight="50"
-                                 MaxHeight="100"
-                                 Margin="0,4,0,4">
-                            <ListBox.ItemTemplate>
-                                <DataTemplate>
-                                    <Grid ColumnDefinitions="Auto,Auto,*">
-                                        <!-- Visibility Checkbox -->
-                                        <CheckBox Grid.Column="0"
-                                                  IsChecked="{Binding IsVisible}"
-                                                  VerticalAlignment="Center"
-                                                  Margin="0,0,4,0"
-                                                  ToolTip.Tip="Toggle Visibility"
-                                                  Command="{Binding $parent[ListBox].((vm:MainWindowViewModel)DataContext).ToggleSeriesVisibilityCommand}"
-                                                  CommandParameter="{Binding}"/>
-                                        <!-- Lock Button -->
-                                        <Button Grid.Column="1" 
-                                                Width="20" Height="20" 
-                                                Padding="0" 
-                                                Margin="0,0,4,0"
-                                                Command="{Binding $parent[ListBox].((vm:MainWindowViewModel)DataContext).ToggleSeriesLockCommand}"
-                                                CommandParameter="{Binding}"
-                                                ToolTip.Tip="Toggle Lock">
-                                            <Panel>
-                                                <TextBlock Text="🔒" FontSize="10" IsVisible="{Binding Locked}"/>
-                                                <TextBlock Text="🔓" FontSize="10" IsVisible="{Binding !Locked}"/>
-                                            </Panel>
-                                        </Button>
-                                        <TextBlock Grid.Column="2" Text="{Binding Name}" VerticalAlignment="Center" FontSize="11"/>
-                                    </Grid>
-                                </DataTemplate>
-                            </ListBox.ItemTemplate>
-                        </ListBox>
-                        
-                        <Grid ColumnDefinitions="*,Auto">
-                            <Button Grid.Column="0" 
-                                    HorizontalAlignment="Stretch"
-                                    Command="{Binding AddSeriesCommand}"
-                                    Padding="4,2"
-                                    ToolTip.Tip="Add new series"
-                                    HorizontalContentAlignment="Center">
-                                <StackPanel Orientation="Horizontal" Spacing="4">
-                                    <TextBlock Text="+" FontWeight="Bold"/>
-                                    <TextBlock Text="Add Series"/>
-                                </StackPanel>
-                            </Button>
-                            <Button Grid.Column="1" 
-                                    Width="24" Height="24" 
-                                    Padding="0" 
-                                    Margin="4,0,0,0"
-                                    Command="{Binding RemoveSeriesCommand}"
-                                    ToolTip.Tip="Delete selected series"
-                                    HorizontalContentAlignment="Center"
-                                    VerticalContentAlignment="Center">
-                                <TextBlock Text="🗑" FontSize="12"/>
-                            </Button>
-                        </Grid>
-                        
-                        <!-- Selected Series Properties -->
-                        <StackPanel IsVisible="{Binding SelectedSeries, Converter={x:Static ObjectConverters.IsNotNull}}"
-                                    Margin="0,4,0,0">
-                            <Grid Classes="PropertyRow" ColumnDefinitions="Auto,*">
-                                <TextBlock Grid.Column="0" Text="Name" Classes="PropertyLabel"/>
-                                <TextBox Grid.Column="1" Text="{Binding SelectedSeries.Name}" Classes="PropertyInput"/>
-                            </Grid>
-                            <Grid Classes="PropertyRow" ColumnDefinitions="Auto,*">
-                                <TextBlock Grid.Column="0" Text="Locked" Classes="PropertyLabel"/>
-                                <CheckBox Grid.Column="1" IsChecked="{Binding SelectedSeries.Locked}" VerticalAlignment="Center"/>
-                            </Grid>
-                            <Grid Classes="PropertyRow" ColumnDefinitions="Auto,*">
-                                <TextBlock Grid.Column="0" Text="Notes" Classes="PropertyLabel"/>
-                                <TextBox Grid.Column="1" Text="{Binding SelectedSeries.Notes}" Classes="PropertyInput" 
-                                         AcceptsReturn="True" TextWrapping="Wrap" MinHeight="40"/>
-                            </Grid>
                         </StackPanel>
                         
                     </StackPanel>

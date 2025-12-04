@@ -71,6 +71,12 @@ public partial class MainWindowViewModel : ViewModelBase
     private ChartViewModel _chartViewModel = new();
 
     /// <summary>
+    /// ViewModel for the curve data table.
+    /// </summary>
+    [ObservableProperty]
+    private CurveDataTableViewModel _curveDataTableViewModel = new();
+
+    /// <summary>
     /// Whether the units section is expanded.
     /// </summary>
     [ObservableProperty]
@@ -156,6 +162,7 @@ public partial class MainWindowViewModel : ViewModelBase
         _fileService = new FileService(_curveGeneratorService);
         _validationService = new ValidationService();
         ChartViewModel.DataChanged += OnChartDataChanged;
+        CurveDataTableViewModel.DataChanged += OnDataTableDataChanged;
     }
 
     public MainWindowViewModel(IFileService fileService, ICurveGeneratorService curveGeneratorService)
@@ -223,6 +230,14 @@ public partial class MainWindowViewModel : ViewModelBase
         }
     }
 
+    /// <summary>
+    /// Public method to refresh the available series collection.
+    /// </summary>
+    public void RefreshAvailableSeriesPublic()
+    {
+        RefreshAvailableSeries();
+    }
+
     partial void OnCurrentMotorChanged(MotorDefinition? value)
     {
         // Refresh the drives collection
@@ -258,12 +273,24 @@ public partial class MainWindowViewModel : ViewModelBase
         
         // Update chart with new voltage configuration
         ChartViewModel.TorqueUnit = CurrentMotor?.Units.Torque ?? "Nm";
+        ChartViewModel.MotorMaxSpeed = CurrentMotor?.MaxSpeed ?? 0;
+        ChartViewModel.HasBrake = CurrentMotor?.HasBrake ?? false;
+        ChartViewModel.BrakeTorque = CurrentMotor?.BrakeTorque ?? 0;
         ChartViewModel.CurrentVoltage = value;
+
+        // Update data table with new voltage configuration
+        CurveDataTableViewModel.CurrentVoltage = value;
     }
 
     private void OnChartDataChanged(object? sender, EventArgs e)
     {
         MarkDirty();
+    }
+
+    private void OnDataTableDataChanged(object? sender, EventArgs e)
+    {
+        MarkDirty();
+        ChartViewModel.RefreshChart();
     }
 
     [RelayCommand]
@@ -509,9 +536,15 @@ public partial class MainWindowViewModel : ViewModelBase
                 CurrentMotor.RatedContinuousTorque,
                 CurrentMotor.Power);
 
-            if (Application.Current?.ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop)
+            if (Application.Current?.ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop &&
+                desktop.MainWindow is not null)
             {
-                await dialog.ShowDialog(desktop.MainWindow!);
+                await dialog.ShowDialog(desktop.MainWindow);
+            }
+            else
+            {
+                StatusMessage = "Cannot show dialog - no main window available";
+                return;
             }
 
             if (dialog.Result is null) return;
@@ -542,10 +575,10 @@ public partial class MainWindowViewModel : ViewModelBase
             voltage.Series.Add(peakSeries);
             voltage.Series.Add(continuousSeries);
 
-            // Refresh the drive list in UI
-            RefreshAvailableDrives();
+            // Add the new drive directly to the collection (don't clear/refresh)
+            AvailableDrives.Add(drive);
             
-            // Select the new drive and update chart
+            // Select the new drive - this will trigger OnSelectedDriveChanged which updates voltages
             SelectedDrive = drive;
             
             // Explicitly refresh chart to ensure axes are updated with new max speed
@@ -715,21 +748,55 @@ public partial class MainWindowViewModel : ViewModelBase
 
     // Series management commands
     [RelayCommand]
-    private void AddSeries()
+    private async Task AddSeriesAsync()
     {
         if (SelectedVoltage is null) return;
 
         try
         {
-            var newSeriesName = GenerateUniqueName(
+            var dialog = new Views.AddCurveSeriesDialog();
+            dialog.Initialize(
+                SelectedVoltage.MaxSpeed,
+                SelectedVoltage.RatedContinuousTorque,
+                SelectedVoltage.Power);
+
+            if (Application.Current?.ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop &&
+                desktop.MainWindow is not null)
+            {
+                await dialog.ShowDialog(desktop.MainWindow);
+            }
+            else
+            {
+                StatusMessage = "Cannot show dialog - no main window available";
+                return;
+            }
+
+            if (dialog.Result is null) return;
+
+            // Re-check SelectedVoltage in case it changed during async operation
+            if (SelectedVoltage is null)
+            {
+                StatusMessage = "No voltage selected";
+                return;
+            }
+
+            var result = dialog.Result;
+            var seriesName = GenerateUniqueName(
                 SelectedVoltage.Series.Select(s => s.Name),
-                "New Series");
+                result.Name);
             
-            var series = SelectedVoltage.AddSeries(newSeriesName, SelectedVoltage.RatedContinuousTorque);
+            var series = SelectedVoltage.AddSeries(seriesName, result.BaseTorque);
+            series.IsVisible = result.IsVisible;
+            series.Locked = result.IsLocked;
+            
+            // IMPORTANT: RefreshData BEFORE RefreshAvailableSeries to prevent DataGrid column sync issues
+            // The column rebuild is triggered by AvailableSeries collection change, so data must be ready first
+            CurveDataTableViewModel.RefreshData();
             RefreshAvailableSeries();
             SelectedSeries = series;
+            ChartViewModel.RefreshChart();
             MarkDirty();
-            StatusMessage = $"Added series: {newSeriesName}";
+            StatusMessage = $"Added series: {seriesName}";
         }
         catch (Exception ex)
         {

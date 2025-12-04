@@ -1,0 +1,113 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        mc:Ignorable="d" d:DesignWidth="400" d:DesignHeight="350"
+        x:Class="CurveEditor.Views.AddCurveSeriesDialog"
+        Title="Add New Curve Series"
+        Width="400" Height="350"
+        WindowStartupLocation="CenterOwner"
+        CanResize="False"
+        ShowInTaskbar="False">
+    
+    <Window.Styles>
+        <Style Selector="TextBlock.Label">
+            <Setter Property="FontSize" Value="12"/>
+            <Setter Property="VerticalAlignment" Value="Center"/>
+            <Setter Property="Margin" Value="0,0,8,0"/>
+            <Setter Property="MinWidth" Value="100"/>
+        </Style>
+        <Style Selector="TextBox.Input">
+            <Setter Property="FontSize" Value="12"/>
+            <Setter Property="Padding" Value="6,4"/>
+        </Style>
+    </Window.Styles>
+    
+    <Grid RowDefinitions="*,Auto" Margin="16">
+        <!-- Form Fields -->
+        <ScrollViewer Grid.Row="0">
+            <StackPanel Spacing="8">
+                <TextBlock Text="Enter the properties for the new curve series:" 
+                           TextWrapping="Wrap" Margin="0,0,0,12"/>
+                
+                <!-- Name -->
+                <Grid ColumnDefinitions="Auto,*">
+                    <TextBlock Grid.Column="0" Text="Name" Classes="Label"/>
+                    <TextBox Grid.Column="1" x:Name="NameInput" Classes="Input" 
+                             Watermark="Series Name" Text="New Series"/>
+                </Grid>
+                
+                <!-- Color -->
+                <Grid ColumnDefinitions="Auto,*,Auto">
+                    <TextBlock Grid.Column="0" Text="Color" Classes="Label"/>
+                    <TextBox Grid.Column="1" x:Name="ColorInput" Classes="Input" 
+                             Text="#FF5050" Watermark="#RRGGBB"/>
+                    <Border Grid.Column="2" 
+                            x:Name="ColorPreview"
+                            Width="24" Height="24" 
+                            Margin="8,0,0,0"
+                            CornerRadius="4"
+                            Background="#FF5050"/>
+                </Grid>
+                
+                <Separator Margin="0,8"/>
+                
+                <!-- Torque Input Mode -->
+                <TextBlock Text="Initial Torque Values:" FontWeight="SemiBold"/>
+                
+                <StackPanel Margin="0,4,0,0">
+                    <RadioButton x:Name="BaselineTorqueRadio" 
+                                 IsChecked="True" 
+                                 Content="Constant torque value"
+                                 GroupName="TorqueMode"/>
+                    <Grid ColumnDefinitions="Auto,*,Auto" Margin="24,4,0,0">
+                        <TextBlock Grid.Column="0" Text="Torque" Classes="Label"/>
+                        <TextBox Grid.Column="1" x:Name="TorqueInput" Classes="Input" 
+                                 Text="40" Watermark="40"/>
+                        <TextBlock Grid.Column="2" Text="Nm" VerticalAlignment="Center" Margin="4,0,0,0"/>
+                    </Grid>
+                </StackPanel>
+                
+                <StackPanel Margin="0,8,0,0">
+                    <RadioButton x:Name="PowerBasedRadio"
+                                 Content="Calculate from power"
+                                 GroupName="TorqueMode"/>
+                    <Grid ColumnDefinitions="Auto,*" Margin="24,4,0,0"
+                          IsEnabled="{Binding #PowerBasedRadio.IsChecked}">
+                        <TextBlock Grid.Column="0" Text="Power" Classes="Label"/>
+                        <StackPanel Grid.Column="1" Orientation="Horizontal">
+                            <TextBox x:Name="PowerInput" Classes="Input" 
+                                     Text="1500" Watermark="1500" Width="80"/>
+                            <ComboBox x:Name="PowerUnitCombo" 
+                                      Margin="8,0,0,0"
+                                      SelectedIndex="0">
+                                <ComboBoxItem Content="W"/>
+                                <ComboBoxItem Content="kW"/>
+                                <ComboBoxItem Content="HP"/>
+                            </ComboBox>
+                        </StackPanel>
+                    </Grid>
+                </StackPanel>
+                
+                <Separator Margin="0,8"/>
+                
+                <!-- Visibility and Lock defaults -->
+                <Grid ColumnDefinitions="Auto,*">
+                    <TextBlock Grid.Column="0" Text="Visible" Classes="Label"/>
+                    <CheckBox Grid.Column="1" x:Name="VisibleCheckBox" IsChecked="True"/>
+                </Grid>
+                
+                <Grid ColumnDefinitions="Auto,*">
+                    <TextBlock Grid.Column="0" Text="Locked" Classes="Label"/>
+                    <CheckBox Grid.Column="1" x:Name="LockedCheckBox" IsChecked="False"/>
+                </Grid>
+            </StackPanel>
+        </ScrollViewer>
+        
+        <!-- Buttons -->
+        <StackPanel Grid.Row="1" Orientation="Horizontal" HorizontalAlignment="Right" Spacing="8" Margin="0,16,0,0">
+            <Button Content="Cancel" Width="80" Click="OnCancelClick"/>
+            <Button Content="Add" Width="80" Classes="accent" Click="OnAddClick"/>
+        </StackPanel>
+    </Grid>
+</Window>
