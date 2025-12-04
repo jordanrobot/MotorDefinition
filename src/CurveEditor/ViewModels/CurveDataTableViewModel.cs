@@ -1,11 +1,27 @@
 using CommunityToolkit.Mvvm.ComponentModel;
 using CurveEditor.Models;
 using System;
+using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Linq;
 
 namespace CurveEditor.ViewModels;
+
+/// <summary>
+/// Represents a cell position in the data table grid.
+/// </summary>
+public readonly record struct CellPosition(int RowIndex, int ColumnIndex)
+{
+    /// <summary>
+    /// Compares two cell positions for ordering.
+    /// </summary>
+    public static int Compare(CellPosition a, CellPosition b)
+    {
+        var rowCompare = a.RowIndex.CompareTo(b.RowIndex);
+        return rowCompare != 0 ? rowCompare : a.ColumnIndex.CompareTo(b.ColumnIndex);
+    }
+}
 
 /// <summary>
 /// Represents a single row in the curve data table, containing speed info and torque values for all series.
@@ -94,6 +110,7 @@ public class CurveDataRow : INotifyPropertyChanged
 public partial class CurveDataTableViewModel : ViewModelBase
 {
     private VoltageConfiguration? _currentVoltage;
+    private CellPosition? _anchorCell;
 
     [ObservableProperty]
     private ObservableCollection<CurveDataRow> _rows = [];
@@ -114,9 +131,19 @@ public partial class CurveDataTableViewModel : ViewModelBase
     private string? _selectedSeriesName;
 
     /// <summary>
+    /// Collection of currently selected cells.
+    /// </summary>
+    public HashSet<CellPosition> SelectedCells { get; } = [];
+
+    /// <summary>
     /// Event raised when data changes.
     /// </summary>
     public event EventHandler? DataChanged;
+
+    /// <summary>
+    /// Event raised when cell selection changes.
+    /// </summary>
+    public event EventHandler? SelectionChanged;
 
     /// <summary>
     /// Gets or sets the current voltage configuration.
@@ -193,5 +220,232 @@ public partial class CurveDataTableViewModel : ViewModelBase
     {
         var series = _currentVoltage?.Series.FirstOrDefault(s => s.Name == seriesName);
         return series?.Locked ?? false;
+    }
+
+    /// <summary>
+    /// Gets the number of columns in the data table (% + RPM + series columns).
+    /// </summary>
+    public int ColumnCount => 2 + SeriesColumns.Count;
+
+    /// <summary>
+    /// Gets the anchor cell for range selections.
+    /// </summary>
+    public CellPosition? AnchorCell => _anchorCell;
+
+    /// <summary>
+    /// Checks if a cell at the specified position is selected.
+    /// </summary>
+    public bool IsCellSelected(int rowIndex, int columnIndex)
+    {
+        return SelectedCells.Contains(new CellPosition(rowIndex, columnIndex));
+    }
+
+    /// <summary>
+    /// Clears all selected cells.
+    /// </summary>
+    public void ClearSelection()
+    {
+        SelectedCells.Clear();
+        _anchorCell = null;
+        SelectionChanged?.Invoke(this, EventArgs.Empty);
+    }
+
+    /// <summary>
+    /// Selects a single cell, clearing any previous selection.
+    /// </summary>
+    public void SelectCell(int rowIndex, int columnIndex)
+    {
+        SelectedCells.Clear();
+        var cell = new CellPosition(rowIndex, columnIndex);
+        SelectedCells.Add(cell);
+        _anchorCell = cell;
+        SelectedRowIndex = rowIndex;
+        SelectionChanged?.Invoke(this, EventArgs.Empty);
+    }
+
+    /// <summary>
+    /// Toggles selection of a cell (for Ctrl+click behavior).
+    /// </summary>
+    public void ToggleCellSelection(int rowIndex, int columnIndex)
+    {
+        var cell = new CellPosition(rowIndex, columnIndex);
+        if (SelectedCells.Contains(cell))
+        {
+            SelectedCells.Remove(cell);
+        }
+        else
+        {
+            SelectedCells.Add(cell);
+            _anchorCell = cell;
+        }
+        SelectionChanged?.Invoke(this, EventArgs.Empty);
+    }
+
+    /// <summary>
+    /// Selects a range of cells from the anchor cell to the specified cell (for Shift+click).
+    /// </summary>
+    public void SelectRange(int rowIndex, int columnIndex)
+    {
+        if (_anchorCell is null)
+        {
+            SelectCell(rowIndex, columnIndex);
+            return;
+        }
+
+        var anchor = _anchorCell.Value;
+        var minRow = Math.Min(anchor.RowIndex, rowIndex);
+        var maxRow = Math.Max(anchor.RowIndex, rowIndex);
+        var minCol = Math.Min(anchor.ColumnIndex, columnIndex);
+        var maxCol = Math.Max(anchor.ColumnIndex, columnIndex);
+
+        SelectedCells.Clear();
+        for (var row = minRow; row <= maxRow; row++)
+        {
+            for (var col = minCol; col <= maxCol; col++)
+            {
+                SelectedCells.Add(new CellPosition(row, col));
+            }
+        }
+        SelectionChanged?.Invoke(this, EventArgs.Empty);
+    }
+
+    /// <summary>
+    /// Adds cells to selection (for drag selection).
+    /// </summary>
+    public void AddToSelection(int rowIndex, int columnIndex)
+    {
+        var cell = new CellPosition(rowIndex, columnIndex);
+        if (!SelectedCells.Contains(cell))
+        {
+            SelectedCells.Add(cell);
+        }
+        SelectionChanged?.Invoke(this, EventArgs.Empty);
+    }
+
+    /// <summary>
+    /// Selects a rectangular range from startCell to endCell (for rubber-band selection).
+    /// </summary>
+    public void SelectRectangularRange(CellPosition startCell, CellPosition endCell)
+    {
+        var minRow = Math.Min(startCell.RowIndex, endCell.RowIndex);
+        var maxRow = Math.Max(startCell.RowIndex, endCell.RowIndex);
+        var minCol = Math.Min(startCell.ColumnIndex, endCell.ColumnIndex);
+        var maxCol = Math.Max(startCell.ColumnIndex, endCell.ColumnIndex);
+
+        SelectedCells.Clear();
+        for (var row = minRow; row <= maxRow; row++)
+        {
+            for (var col = minCol; col <= maxCol; col++)
+            {
+                SelectedCells.Add(new CellPosition(row, col));
+            }
+        }
+        _anchorCell = startCell;
+        SelectionChanged?.Invoke(this, EventArgs.Empty);
+    }
+
+    /// <summary>
+    /// Extends selection in a direction (for Shift+Arrow keys).
+    /// </summary>
+    public void ExtendSelection(int rowDelta, int columnDelta)
+    {
+        if (SelectedCells.Count == 0) return;
+
+        // Find the current bounds of the selection
+        var minRow = SelectedCells.Min(c => c.RowIndex);
+        var maxRow = SelectedCells.Max(c => c.RowIndex);
+        var minCol = SelectedCells.Min(c => c.ColumnIndex);
+        var maxCol = SelectedCells.Max(c => c.ColumnIndex);
+
+        // Extend in the specified direction
+        if (rowDelta < 0 && minRow > 0)
+        {
+            // Extend upward
+            for (var col = minCol; col <= maxCol; col++)
+            {
+                SelectedCells.Add(new CellPosition(minRow - 1, col));
+            }
+        }
+        else if (rowDelta > 0 && maxRow < Rows.Count - 1)
+        {
+            // Extend downward
+            for (var col = minCol; col <= maxCol; col++)
+            {
+                SelectedCells.Add(new CellPosition(maxRow + 1, col));
+            }
+        }
+        else if (columnDelta < 0 && minCol > 0)
+        {
+            // Extend left
+            for (var row = minRow; row <= maxRow; row++)
+            {
+                SelectedCells.Add(new CellPosition(row, minCol - 1));
+            }
+        }
+        else if (columnDelta > 0 && maxCol < ColumnCount - 1)
+        {
+            // Extend right
+            for (var row = minRow; row <= maxRow; row++)
+            {
+                SelectedCells.Add(new CellPosition(row, maxCol + 1));
+            }
+        }
+
+        SelectionChanged?.Invoke(this, EventArgs.Empty);
+    }
+
+    /// <summary>
+    /// Moves the selection in a direction (for Arrow keys without Shift).
+    /// </summary>
+    public void MoveSelection(int rowDelta, int columnDelta)
+    {
+        if (SelectedCells.Count == 0)
+        {
+            // If no selection, select the first cell
+            if (Rows.Count > 0 && ColumnCount > 0)
+            {
+                SelectCell(0, 0);
+            }
+            return;
+        }
+
+        // Use the anchor cell or the first selected cell
+        var referenceCell = _anchorCell ?? SelectedCells.First();
+        var newRow = Math.Clamp(referenceCell.RowIndex + rowDelta, 0, Math.Max(0, Rows.Count - 1));
+        var newCol = Math.Clamp(referenceCell.ColumnIndex + columnDelta, 0, Math.Max(0, ColumnCount - 1));
+
+        SelectCell(newRow, newCol);
+    }
+
+    /// <summary>
+    /// Gets the series name for a given column index.
+    /// Returns null for non-series columns (% and RPM).
+    /// </summary>
+    public string? GetSeriesNameForColumn(int columnIndex)
+    {
+        // First two columns are % and RPM
+        if (columnIndex < 2) return null;
+        var seriesIndex = columnIndex - 2;
+        if (seriesIndex >= 0 && seriesIndex < SeriesColumns.Count)
+        {
+            return SeriesColumns[seriesIndex].Name;
+        }
+        return null;
+    }
+
+    /// <summary>
+    /// Gets the column index for a given series name.
+    /// Returns -1 if the series is not found.
+    /// </summary>
+    public int GetColumnIndexForSeries(string seriesName)
+    {
+        for (var i = 0; i < SeriesColumns.Count; i++)
+        {
+            if (SeriesColumns[i].Name == seriesName)
+            {
+                return i + 2; // Add 2 for % and RPM columns
+            }
+        }
+        return -1;
     }
 }

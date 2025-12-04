@@ -1,9 +1,14 @@
 using System;
+using System.Collections.Generic;
 using System.Linq;
+using Avalonia;
 using Avalonia.Controls;
+using Avalonia.Controls.Primitives;
 using Avalonia.Controls.Templates;
 using Avalonia.Input;
 using Avalonia.Interactivity;
+using Avalonia.Media;
+using Avalonia.VisualTree;
 using CurveEditor.Models;
 using CurveEditor.ViewModels;
 
@@ -14,6 +19,12 @@ namespace CurveEditor.Views;
 /// </summary>
 public partial class CurveDataPanel : UserControl
 {
+    private MainWindowViewModel? _subscribedViewModel;
+    private bool _isRebuildingColumns;
+    private bool _isDragging;
+    private CellPosition? _dragStartCell;
+    private readonly Dictionary<CellPosition, Border> _cellBorders = [];
+
     /// <summary>
     /// Creates a new CurveDataPanel instance.
     /// </summary>
@@ -24,15 +35,13 @@ public partial class CurveDataPanel : UserControl
         Unloaded += OnUnloaded;
     }
 
-    private MainWindowViewModel? _subscribedViewModel;
-    private bool _isRebuildingColumns;
-
-    private void OnUnloaded(object? sender, Avalonia.Interactivity.RoutedEventArgs e)
+    private void OnUnloaded(object? sender, RoutedEventArgs e)
     {
         // Unsubscribe from events to prevent memory leaks
         if (_subscribedViewModel is not null)
         {
             _subscribedViewModel.CurveDataTableViewModel.PropertyChanged -= OnCurveDataTablePropertyChanged;
+            _subscribedViewModel.CurveDataTableViewModel.SelectionChanged -= OnSelectionChanged;
             _subscribedViewModel.AvailableSeries.CollectionChanged -= OnAvailableSeriesCollectionChanged;
             _subscribedViewModel = null;
         }
@@ -44,6 +53,7 @@ public partial class CurveDataPanel : UserControl
         if (_subscribedViewModel is not null)
         {
             _subscribedViewModel.CurveDataTableViewModel.PropertyChanged -= OnCurveDataTablePropertyChanged;
+            _subscribedViewModel.CurveDataTableViewModel.SelectionChanged -= OnSelectionChanged;
             _subscribedViewModel.AvailableSeries.CollectionChanged -= OnAvailableSeriesCollectionChanged;
         }
 
@@ -51,6 +61,7 @@ public partial class CurveDataPanel : UserControl
         {
             // Subscribe to series changes to rebuild columns
             vm.CurveDataTableViewModel.PropertyChanged += OnCurveDataTablePropertyChanged;
+            vm.CurveDataTableViewModel.SelectionChanged += OnSelectionChanged;
             // Subscribe to the AvailableSeries collection changes
             vm.AvailableSeries.CollectionChanged += OnAvailableSeriesCollectionChanged;
             _subscribedViewModel = vm;
@@ -59,6 +70,38 @@ public partial class CurveDataPanel : UserControl
         else
         {
             _subscribedViewModel = null;
+        }
+    }
+
+    private void OnSelectionChanged(object? sender, EventArgs e)
+    {
+        UpdateCellSelectionVisuals();
+    }
+
+    private void UpdateCellSelectionVisuals()
+    {
+        if (DataContext is not MainWindowViewModel vm) return;
+
+        foreach (var kvp in _cellBorders)
+        {
+            var isSelected = vm.CurveDataTableViewModel.IsCellSelected(kvp.Key.RowIndex, kvp.Key.ColumnIndex);
+            UpdateCellBorderVisual(kvp.Value, isSelected);
+        }
+    }
+
+    private static void UpdateCellBorderVisual(Border border, bool isSelected)
+    {
+        if (isSelected)
+        {
+            border.BorderThickness = new Thickness(2);
+            border.BorderBrush = Brushes.White;
+            border.Background = new SolidColorBrush(Color.FromArgb(51, 255, 255, 255)); // #33FFFFFF
+        }
+        else
+        {
+            border.BorderThickness = new Thickness(1);
+            border.BorderBrush = Brushes.Transparent;
+            border.Background = Brushes.Transparent;
         }
     }
 
@@ -98,6 +141,8 @@ public partial class CurveDataPanel : UserControl
         if (_isRebuildingColumns) return;
 
         _isRebuildingColumns = true;
+        _cellBorders.Clear();
+        
         try
         {
             // Critical fix: Temporarily disconnect ItemsSource to prevent layout issues
@@ -113,11 +158,13 @@ public partial class CurveDataPanel : UserControl
             }
 
             // Add a column for each series
+            var columnIndex = 2; // Start after % and RPM columns
             foreach (var series in vm.AvailableSeries)
             {
-                // Capture series name to avoid closure issues
+                // Capture series name and column index to avoid closure issues
                 var seriesName = series.Name;
                 var isLocked = series.Locked;
+                var currentColumnIndex = columnIndex;
                 
                 var column = new DataGridTemplateColumn
                 {
@@ -126,17 +173,40 @@ public partial class CurveDataPanel : UserControl
                     IsReadOnly = isLocked
                 };
 
-                // Create cell template - directly set text instead of using binding with indexer
-                // Avalonia's binding parser cannot handle series names with spaces in indexer syntax
+                // Create cell template with selection border
                 var cellTemplate = new FuncDataTemplate<CurveDataRow>((row, _) =>
                 {
+                    if (row is null) return new TextBlock { Text = "0.00" };
+                    
+                    var border = new Border
+                    {
+                        BorderThickness = new Thickness(1),
+                        BorderBrush = Brushes.Transparent,
+                        Background = Brushes.Transparent,
+                        Padding = new Thickness(2)
+                    };
+
                     var textBlock = new TextBlock
                     {
                         VerticalAlignment = Avalonia.Layout.VerticalAlignment.Center,
-                        Margin = new Avalonia.Thickness(4, 2),
-                        Text = row?.GetTorque(seriesName).ToString("N2") ?? "0.00"
+                        Margin = new Thickness(2),
+                        Text = row.GetTorque(seriesName).ToString("N2")
                     };
-                    return textBlock;
+                    
+                    border.Child = textBlock;
+                    
+                    // Register the border for selection updates
+                    var cellPos = new CellPosition(row.RowIndex, currentColumnIndex);
+                    _cellBorders[cellPos] = border;
+                    
+                    // Update visual based on current selection state
+                    if (DataContext is MainWindowViewModel viewModel)
+                    {
+                        var isSelected = viewModel.CurveDataTableViewModel.IsCellSelected(row.RowIndex, currentColumnIndex);
+                        UpdateCellBorderVisual(border, isSelected);
+                    }
+                    
+                    return border;
                 });
                 column.CellTemplate = cellTemplate;
 
@@ -148,8 +218,10 @@ public partial class CurveDataPanel : UserControl
                         var textBox = new TextBox
                         {
                             VerticalAlignment = Avalonia.Layout.VerticalAlignment.Center,
-                            Margin = new Avalonia.Thickness(2),
-                            Text = row?.GetTorque(seriesName).ToString("N2") ?? "0.00"
+                            Margin = new Thickness(2),
+                            Text = row?.GetTorque(seriesName).ToString("N2") ?? "0.00",
+                            BorderThickness = new Thickness(2),
+                            BorderBrush = Brushes.White
                         };
                         
                         // Handle text changes to update the underlying data
@@ -170,6 +242,7 @@ public partial class CurveDataPanel : UserControl
                 }
 
                 DataTable.Columns.Add(column);
+                columnIndex++;
             }
             
             // Restore ItemsSource after columns are rebuilt
@@ -179,6 +252,153 @@ public partial class CurveDataPanel : UserControl
         {
             _isRebuildingColumns = false;
         }
+    }
+
+    /// <summary>
+    /// Gets the cell position from a pointer position.
+    /// </summary>
+    private CellPosition? GetCellPositionFromPoint(Point point)
+    {
+        if (DataContext is not MainWindowViewModel vm) return null;
+        if (DataTable is null) return null;
+
+        // Get the row index from the Y position
+        var rowIndex = -1;
+        var columnIndex = -1;
+
+        // Find the visual element at the point
+        var hitElement = DataTable.InputHitTest(point);
+        if (hitElement is null) return null;
+
+        // Walk up the visual tree to find the DataGridCell and DataGridRow
+        var element = hitElement as Visual;
+        DataGridRow? row = null;
+        DataGridCell? cell = null;
+
+        while (element is not null)
+        {
+            if (element is DataGridCell foundCell)
+            {
+                cell = foundCell;
+            }
+            if (element is DataGridRow foundRow)
+            {
+                row = foundRow;
+                break;
+            }
+            element = element.GetVisualParent();
+        }
+
+        if (row is null) return null;
+
+        // Get the row index
+        if (row.DataContext is CurveDataRow dataRow)
+        {
+            rowIndex = dataRow.RowIndex;
+        }
+        else
+        {
+            return null;
+        }
+
+        // Get the column index
+        if (cell is not null)
+        {
+            // In Avalonia, DataGridCell doesn't have a Column property like WPF
+            // We need to find the column index by looking at the cell's position in the row
+            var cellsPresenter = row.GetVisualDescendants().OfType<DataGridCellsPresenter>().FirstOrDefault();
+            if (cellsPresenter is not null)
+            {
+                var cells = cellsPresenter.GetVisualChildren().OfType<DataGridCell>().ToList();
+                columnIndex = cells.IndexOf(cell);
+            }
+        }
+        
+        if (columnIndex < 0)
+        {
+            // If we can't find the cell, calculate column from X position
+            var x = point.X;
+            var accumulatedWidth = 0.0;
+            for (var i = 0; i < DataTable.Columns.Count; i++)
+            {
+                var colWidth = DataTable.Columns[i].ActualWidth;
+                if (x >= accumulatedWidth && x < accumulatedWidth + colWidth)
+                {
+                    columnIndex = i;
+                    break;
+                }
+                accumulatedWidth += colWidth;
+            }
+        }
+
+        if (rowIndex < 0 || columnIndex < 0) return null;
+        
+        return new CellPosition(rowIndex, columnIndex);
+    }
+
+    /// <summary>
+    /// Handles pointer press on the data table for cell selection.
+    /// </summary>
+    private void DataTable_PointerPressed(object? sender, PointerPressedEventArgs e)
+    {
+        if (DataContext is not MainWindowViewModel vm) return;
+        
+        var point = e.GetPosition(DataTable);
+        var cellPos = GetCellPositionFromPoint(point);
+        
+        if (cellPos is null) return;
+
+        var pos = cellPos.Value;
+        var properties = e.GetCurrentPoint(DataTable).Properties;
+
+        if (properties.IsLeftButtonPressed)
+        {
+            if (e.KeyModifiers.HasFlag(KeyModifiers.Control))
+            {
+                // Ctrl+click: Toggle selection
+                vm.CurveDataTableViewModel.ToggleCellSelection(pos.RowIndex, pos.ColumnIndex);
+            }
+            else if (e.KeyModifiers.HasFlag(KeyModifiers.Shift))
+            {
+                // Shift+click: Select range
+                vm.CurveDataTableViewModel.SelectRange(pos.RowIndex, pos.ColumnIndex);
+            }
+            else
+            {
+                // Normal click: Start new selection and potentially start drag
+                vm.CurveDataTableViewModel.SelectCell(pos.RowIndex, pos.ColumnIndex);
+                _isDragging = true;
+                _dragStartCell = pos;
+            }
+            
+            e.Handled = true;
+        }
+    }
+
+    /// <summary>
+    /// Handles pointer move on the data table for drag selection.
+    /// </summary>
+    private void DataTable_PointerMoved(object? sender, PointerEventArgs e)
+    {
+        if (!_isDragging || _dragStartCell is null) return;
+        if (DataContext is not MainWindowViewModel vm) return;
+
+        var point = e.GetPosition(DataTable);
+        var cellPos = GetCellPositionFromPoint(point);
+        
+        if (cellPos is null) return;
+
+        // Update selection to cover the range from drag start to current position
+        vm.CurveDataTableViewModel.SelectRectangularRange(_dragStartCell.Value, cellPos.Value);
+    }
+
+    /// <summary>
+    /// Handles pointer release on the data table.
+    /// </summary>
+    private void DataTable_PointerReleased(object? sender, PointerReleasedEventArgs e)
+    {
+        _isDragging = false;
+        _dragStartCell = null;
     }
 
     /// <summary>
@@ -214,7 +434,7 @@ public partial class CurveDataPanel : UserControl
             var textBox = new TextBox
             {
                 Text = series.Name,
-                Margin = new Avalonia.Thickness(16),
+                Margin = new Thickness(16),
                 VerticalAlignment = Avalonia.Layout.VerticalAlignment.Center
             };
 
@@ -222,7 +442,7 @@ public partial class CurveDataPanel : UserControl
             {
                 Content = "OK",
                 Width = 80,
-                Margin = new Avalonia.Thickness(8, 0, 0, 0)
+                Margin = new Thickness(8, 0, 0, 0)
             };
 
             var cancelButton = new Button
@@ -235,7 +455,7 @@ public partial class CurveDataPanel : UserControl
             {
                 Orientation = Avalonia.Layout.Orientation.Horizontal,
                 HorizontalAlignment = Avalonia.Layout.HorizontalAlignment.Right,
-                Margin = new Avalonia.Thickness(16, 0, 16, 16)
+                Margin = new Thickness(16, 0, 16, 16)
             };
             buttonPanel.Children.Add(cancelButton);
             buttonPanel.Children.Add(okButton);
@@ -350,6 +570,7 @@ public partial class CurveDataPanel : UserControl
     private void DataTable_KeyDown(object? sender, KeyEventArgs e)
     {
         if (sender is not DataGrid dataGrid) return;
+        if (DataContext is not MainWindowViewModel vm) return;
 
         // Handle clipboard operations
         if (e.KeyModifiers.HasFlag(KeyModifiers.Control))
@@ -381,7 +602,7 @@ public partial class CurveDataPanel : UserControl
         // Handle Enter key to move down
         if (e.Key == Key.Enter && !e.KeyModifiers.HasFlag(KeyModifiers.Shift))
         {
-            MoveSelectionDown(dataGrid);
+            vm.CurveDataTableViewModel.MoveSelection(1, 0);
             e.Handled = true;
         }
 
@@ -392,49 +613,129 @@ public partial class CurveDataPanel : UserControl
             e.Handled = true;
         }
 
-        // Handle up/down arrows for navigation
-        if (e.Key == Key.Up && !e.KeyModifiers.HasFlag(KeyModifiers.Shift))
+        // Handle arrow keys for navigation and selection extension
+        if (e.KeyModifiers.HasFlag(KeyModifiers.Shift))
         {
-            MoveSelectionUp(dataGrid);
-            e.Handled = true;
+            // Shift+Arrow: Extend selection
+            switch (e.Key)
+            {
+                case Key.Up:
+                    vm.CurveDataTableViewModel.ExtendSelection(-1, 0);
+                    e.Handled = true;
+                    break;
+                case Key.Down:
+                    vm.CurveDataTableViewModel.ExtendSelection(1, 0);
+                    e.Handled = true;
+                    break;
+                case Key.Left:
+                    vm.CurveDataTableViewModel.ExtendSelection(0, -1);
+                    e.Handled = true;
+                    break;
+                case Key.Right:
+                    vm.CurveDataTableViewModel.ExtendSelection(0, 1);
+                    e.Handled = true;
+                    break;
+            }
         }
-
-        if (e.Key == Key.Down && !e.KeyModifiers.HasFlag(KeyModifiers.Shift))
+        else
         {
-            MoveSelectionDown(dataGrid);
-            e.Handled = true;
+            // Arrow: Move selection
+            switch (e.Key)
+            {
+                case Key.Up:
+                    vm.CurveDataTableViewModel.MoveSelection(-1, 0);
+                    ScrollToSelection(dataGrid);
+                    e.Handled = true;
+                    break;
+                case Key.Down:
+                    vm.CurveDataTableViewModel.MoveSelection(1, 0);
+                    ScrollToSelection(dataGrid);
+                    e.Handled = true;
+                    break;
+                case Key.Left:
+                    vm.CurveDataTableViewModel.MoveSelection(0, -1);
+                    e.Handled = true;
+                    break;
+                case Key.Right:
+                    vm.CurveDataTableViewModel.MoveSelection(0, 1);
+                    e.Handled = true;
+                    break;
+            }
         }
+    }
 
-        // Handle Shift+Up/Down to extend selection
-        if (e.Key == Key.Up && e.KeyModifiers.HasFlag(KeyModifiers.Shift))
-        {
-            ExtendSelectionUp(dataGrid);
-            e.Handled = true;
-        }
+    private void ScrollToSelection(DataGrid dataGrid)
+    {
+        if (DataContext is not MainWindowViewModel vm) return;
+        
+        var selectedCells = vm.CurveDataTableViewModel.SelectedCells;
+        if (selectedCells.Count == 0) return;
 
-        if (e.Key == Key.Down && e.KeyModifiers.HasFlag(KeyModifiers.Shift))
+        var firstSelected = selectedCells.First();
+        if (firstSelected.RowIndex >= 0 && firstSelected.RowIndex < vm.CurveDataTableViewModel.Rows.Count)
         {
-            ExtendSelectionDown(dataGrid);
-            e.Handled = true;
+            var row = vm.CurveDataTableViewModel.Rows[firstSelected.RowIndex];
+            dataGrid.ScrollIntoView(row, null);
         }
     }
 
     private void CopySelectedCells(DataGrid dataGrid)
     {
-        var selectedItems = dataGrid.SelectedItems;
-        if (selectedItems.Count == 0) return;
+        if (DataContext is not MainWindowViewModel vm) return;
 
-        var rows = selectedItems.OfType<CurveDataRow>().OrderBy(r => r.RowIndex).ToList();
-        if (rows.Count == 0) return;
+        var selectedCells = vm.CurveDataTableViewModel.SelectedCells;
+        if (selectedCells.Count == 0) return;
 
-        // For now, copy torque values from first series
-        if (DataContext is MainWindowViewModel vm && vm.AvailableSeries.Count > 0)
+        // Get unique rows and columns
+        var rows = selectedCells.Select(c => c.RowIndex).Distinct().OrderBy(r => r).ToList();
+        var cols = selectedCells.Select(c => c.ColumnIndex).Distinct().OrderBy(c => c).ToList();
+
+        var lines = new List<string>();
+        foreach (var rowIndex in rows)
         {
-            var seriesName = vm.AvailableSeries[0].Name;
-            var values = rows.Select(r => r.GetTorque(seriesName).ToString("F2"));
-            var clipboardText = string.Join(Environment.NewLine, values);
-            TopLevel.GetTopLevel(this)?.Clipboard?.SetTextAsync(clipboardText);
+            var values = new List<string>();
+            foreach (var colIndex in cols)
+            {
+                if (!selectedCells.Contains(new CellPosition(rowIndex, colIndex)))
+                {
+                    values.Add("");
+                    continue;
+                }
+
+                var row = vm.CurveDataTableViewModel.Rows.ElementAtOrDefault(rowIndex);
+                if (row is null)
+                {
+                    values.Add("");
+                    continue;
+                }
+
+                // Get value based on column
+                if (colIndex == 0)
+                {
+                    values.Add(row.Percent.ToString());
+                }
+                else if (colIndex == 1)
+                {
+                    values.Add(row.DisplayRpm.ToString());
+                }
+                else
+                {
+                    var seriesName = vm.CurveDataTableViewModel.GetSeriesNameForColumn(colIndex);
+                    if (seriesName is not null)
+                    {
+                        values.Add(row.GetTorque(seriesName).ToString("F2"));
+                    }
+                    else
+                    {
+                        values.Add("");
+                    }
+                }
+            }
+            lines.Add(string.Join("\t", values));
         }
+
+        var clipboardText = string.Join(Environment.NewLine, lines);
+        TopLevel.GetTopLevel(this)?.Clipboard?.SetTextAsync(clipboardText);
     }
 
     private async void PasteToSelectedCells(DataGrid dataGrid)
@@ -447,30 +748,48 @@ public partial class CurveDataPanel : UserControl
 #pragma warning restore CS0618
         if (string.IsNullOrEmpty(text)) return;
 
-        var selectedItems = dataGrid.SelectedItems;
-        if (selectedItems.Count == 0) return;
+        if (DataContext is not MainWindowViewModel vm) return;
 
-        var rows = selectedItems.OfType<CurveDataRow>().OrderBy(r => r.RowIndex).ToList();
-        if (rows.Count == 0) return;
+        var selectedCells = vm.CurveDataTableViewModel.SelectedCells;
+        if (selectedCells.Count == 0) return;
+
+        // Find the top-left selected cell as the paste anchor
+        var minRow = selectedCells.Min(c => c.RowIndex);
+        var minCol = selectedCells.Min(c => c.ColumnIndex);
 
         var lines = text.Split(['\r', '\n'], StringSplitOptions.RemoveEmptyEntries);
         
-        if (DataContext is MainWindowViewModel vm && vm.AvailableSeries.Count > 0)
+        for (var lineIndex = 0; lineIndex < lines.Length; lineIndex++)
         {
-            var series = vm.AvailableSeries[0];
-            if (series.Locked) return;
-
-            for (var i = 0; i < Math.Min(rows.Count, lines.Length); i++)
+            var values = lines[lineIndex].Split('\t');
+            var rowIndex = minRow + lineIndex;
+            
+            if (rowIndex >= vm.CurveDataTableViewModel.Rows.Count) break;
+            
+            var row = vm.CurveDataTableViewModel.Rows[rowIndex];
+            
+            for (var valueIndex = 0; valueIndex < values.Length; valueIndex++)
             {
-                if (double.TryParse(lines[i], out var value))
+                var colIndex = minCol + valueIndex;
+                
+                // Skip % and RPM columns (read-only)
+                if (colIndex < 2) continue;
+                
+                var seriesName = vm.CurveDataTableViewModel.GetSeriesNameForColumn(colIndex);
+                if (seriesName is null) continue;
+                
+                // Check if series is locked
+                if (vm.CurveDataTableViewModel.IsSeriesLocked(seriesName)) continue;
+                
+                if (double.TryParse(values[valueIndex], out var value))
                 {
-                    rows[i].SetTorque(series.Name, value);
+                    row.SetTorque(seriesName, value);
                 }
             }
-
-            vm.MarkDirty();
-            vm.ChartViewModel.RefreshChart();
         }
+
+        vm.MarkDirty();
+        vm.ChartViewModel.RefreshChart();
     }
 
     private void CutSelectedCells(DataGrid dataGrid)
@@ -481,96 +800,29 @@ public partial class CurveDataPanel : UserControl
 
     private void ClearSelectedCells(DataGrid dataGrid)
     {
-        var selectedItems = dataGrid.SelectedItems;
-        if (selectedItems.Count == 0) return;
+        if (DataContext is not MainWindowViewModel vm) return;
 
-        var rows = selectedItems.OfType<CurveDataRow>().ToList();
-        if (rows.Count == 0) return;
+        var selectedCells = vm.CurveDataTableViewModel.SelectedCells;
+        if (selectedCells.Count == 0) return;
 
-        if (DataContext is MainWindowViewModel vm && vm.AvailableSeries.Count > 0)
+        foreach (var cellPos in selectedCells)
         {
-            var series = vm.AvailableSeries[0];
-            if (series.Locked) return;
-
-            foreach (var row in rows)
+            // Skip % and RPM columns (read-only)
+            if (cellPos.ColumnIndex < 2) continue;
+            
+            var seriesName = vm.CurveDataTableViewModel.GetSeriesNameForColumn(cellPos.ColumnIndex);
+            if (seriesName is null) continue;
+            
+            // Check if series is locked
+            if (vm.CurveDataTableViewModel.IsSeriesLocked(seriesName)) continue;
+            
+            if (cellPos.RowIndex >= 0 && cellPos.RowIndex < vm.CurveDataTableViewModel.Rows.Count)
             {
-                row.SetTorque(series.Name, 0);
-            }
-
-            vm.MarkDirty();
-            vm.ChartViewModel.RefreshChart();
-        }
-    }
-
-    private void MoveSelectionDown(DataGrid dataGrid)
-    {
-        var currentIndex = dataGrid.SelectedIndex;
-        if (dataGrid.ItemsSource is System.Collections.ICollection collection)
-        {
-            if (currentIndex >= 0 && currentIndex < collection.Count - 1)
-            {
-                dataGrid.SelectedIndex = currentIndex + 1;
-                dataGrid.ScrollIntoView(dataGrid.SelectedItem, null);
+                vm.CurveDataTableViewModel.Rows[cellPos.RowIndex].SetTorque(seriesName, 0);
             }
         }
-    }
 
-    private void MoveSelectionUp(DataGrid dataGrid)
-    {
-        var currentIndex = dataGrid.SelectedIndex;
-        if (currentIndex > 0)
-        {
-            dataGrid.SelectedIndex = currentIndex - 1;
-            dataGrid.ScrollIntoView(dataGrid.SelectedItem, null);
-        }
-    }
-
-    private void ExtendSelectionDown(DataGrid dataGrid)
-    {
-        if (dataGrid.ItemsSource is System.Collections.ICollection collection)
-        {
-            // Get current selection bounds
-            var selectedRows = dataGrid.SelectedItems.OfType<CurveDataRow>().ToList();
-            if (selectedRows.Count == 0) return;
-
-            var maxIndex = selectedRows.Max(r => r.RowIndex);
-            if (maxIndex < collection.Count - 1)
-            {
-                // Find the item at the next index
-                var allRows = dataGrid.ItemsSource.Cast<CurveDataRow>().ToList();
-                if (maxIndex + 1 < allRows.Count)
-                {
-                    var nextRow = allRows[maxIndex + 1];
-                    if (!dataGrid.SelectedItems.Contains(nextRow))
-                    {
-                        dataGrid.SelectedItems.Add(nextRow);
-                    }
-                    dataGrid.ScrollIntoView(nextRow, null);
-                }
-            }
-        }
-    }
-
-    private void ExtendSelectionUp(DataGrid dataGrid)
-    {
-        // Get current selection bounds
-        var selectedRows = dataGrid.SelectedItems.OfType<CurveDataRow>().ToList();
-        if (selectedRows.Count == 0) return;
-
-        var minIndex = selectedRows.Min(r => r.RowIndex);
-        if (minIndex > 0)
-        {
-            // Find the item at the previous index
-            var allRows = dataGrid.ItemsSource.Cast<CurveDataRow>().ToList();
-            if (minIndex - 1 >= 0)
-            {
-                var prevRow = allRows[minIndex - 1];
-                if (!dataGrid.SelectedItems.Contains(prevRow))
-                {
-                    dataGrid.SelectedItems.Add(prevRow);
-                }
-                dataGrid.ScrollIntoView(prevRow, null);
-            }
-        }
+        vm.MarkDirty();
+        vm.ChartViewModel.RefreshChart();
     }
 }
