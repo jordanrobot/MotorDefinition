@@ -25,6 +25,11 @@ public partial class CurveDataPanel : UserControl
     private CellPosition? _dragStartCell;
     private readonly Dictionary<CellPosition, Border> _cellBorders = [];
     private bool _eventHandlersRegistered;
+    
+    // Override Mode: when user types while cells are selected (not in edit mode),
+    // the typed value replaces the existing values of all selected cells
+    private bool _isInOverrideMode;
+    private string _overrideText = "";
 
     /// <summary>
     /// Creates a new CurveDataPanel instance.
@@ -49,6 +54,7 @@ public partial class CurveDataPanel : UserControl
         DataTable.AddHandler(PointerMovedEvent, DataTable_PointerMoved, Avalonia.Interactivity.RoutingStrategies.Tunnel);
         DataTable.AddHandler(PointerReleasedEvent, DataTable_PointerReleased, Avalonia.Interactivity.RoutingStrategies.Tunnel);
         DataTable.AddHandler(KeyDownEvent, DataTable_KeyDown, Avalonia.Interactivity.RoutingStrategies.Tunnel);
+        DataTable.AddHandler(TextInputEvent, DataTable_TextInput, Avalonia.Interactivity.RoutingStrategies.Tunnel);
         _eventHandlersRegistered = true;
     }
 
@@ -70,6 +76,7 @@ public partial class CurveDataPanel : UserControl
             DataTable.RemoveHandler(PointerMovedEvent, DataTable_PointerMoved);
             DataTable.RemoveHandler(PointerReleasedEvent, DataTable_PointerReleased);
             DataTable.RemoveHandler(KeyDownEvent, DataTable_KeyDown);
+            DataTable.RemoveHandler(TextInputEvent, DataTable_TextInput);
             _eventHandlersRegistered = false;
         }
     }
@@ -428,6 +435,12 @@ public partial class CurveDataPanel : UserControl
         if (DataContext is not MainWindowViewModel vm) return;
         if (DataTable is null) return;
         
+        // If we're in Override Mode, commit it when clicking
+        if (_isInOverrideMode)
+        {
+            CommitOverrideMode();
+        }
+        
         var point = e.GetPosition(DataTable);
         var cellPos = GetCellPositionFromPoint(point);
         
@@ -715,6 +728,60 @@ public partial class CurveDataPanel : UserControl
             return;
         }
 
+        // Handle Override Mode key events
+        if (_isInOverrideMode)
+        {
+            if (e.Key == Key.Enter)
+            {
+                // Commit override and move selection down
+                CommitOverrideMode();
+                vm.CurveDataTableViewModel.MoveSelection(1, 0);
+                ScrollToSelection(dataGrid);
+                e.Handled = true;
+                return;
+            }
+            else if (e.Key == Key.Tab)
+            {
+                // Commit override and move selection right (or left with Shift)
+                CommitOverrideMode();
+                if (e.KeyModifiers.HasFlag(KeyModifiers.Shift))
+                {
+                    vm.CurveDataTableViewModel.MoveSelection(0, -1);
+                }
+                else
+                {
+                    vm.CurveDataTableViewModel.MoveSelection(0, 1);
+                }
+                ScrollToSelection(dataGrid);
+                e.Handled = true;
+                return;
+            }
+            else if (e.Key == Key.Escape)
+            {
+                // Cancel override without applying
+                CancelOverrideMode();
+                e.Handled = true;
+                return;
+            }
+            else if (e.Key == Key.Back)
+            {
+                // Handle backspace in Override Mode - remove last character
+                if (_overrideText.Length > 0)
+                {
+                    _overrideText = _overrideText[..^1];
+                    if (_overrideText.Length == 0)
+                    {
+                        // If all text deleted, exit Override Mode
+                        _isInOverrideMode = false;
+                    }
+                }
+                e.Handled = true;
+                return;
+            }
+            // Let TextInput handle other keys for typing
+            return;
+        }
+
         // Handle clipboard operations
         if (e.KeyModifiers.HasFlag(KeyModifiers.Control))
         {
@@ -735,7 +802,7 @@ public partial class CurveDataPanel : UserControl
             }
         }
 
-        // Handle delete/backspace to clear cells
+        // Handle delete/backspace to clear cells (when not in Override Mode)
         if (e.Key == Key.Delete || e.Key == Key.Back)
         {
             ClearSelectedCells(dataGrid);
@@ -1014,6 +1081,99 @@ public partial class CurveDataPanel : UserControl
             if (cellPos.RowIndex >= 0 && cellPos.RowIndex < vm.CurveDataTableViewModel.Rows.Count)
             {
                 vm.CurveDataTableViewModel.Rows[cellPos.RowIndex].SetTorque(seriesName, 0);
+            }
+        }
+
+        vm.MarkDirty();
+        vm.ChartViewModel.RefreshChart();
+    }
+
+    /// <summary>
+    /// Handles text input for Override Mode.
+    /// When cells are selected and user types, the typed value replaces all selected cells.
+    /// </summary>
+    private void DataTable_TextInput(object? sender, TextInputEventArgs e)
+    {
+        if (DataContext is not MainWindowViewModel vm) return;
+        
+        // Don't handle if we're in edit mode (TextBox is focused)
+        var isInEditMode = e.Source is TextBox;
+        if (isInEditMode) return;
+        
+        // Don't handle if no cells selected
+        var selectedCells = vm.CurveDataTableViewModel.SelectedCells;
+        if (selectedCells.Count == 0) return;
+        
+        // Accept any text input - validation happens on commit
+        var text = e.Text;
+        if (string.IsNullOrEmpty(text)) return;
+        
+        // Enter Override Mode and accumulate typed text
+        if (!_isInOverrideMode)
+        {
+            _isInOverrideMode = true;
+            _overrideText = "";
+        }
+        
+        _overrideText += text;
+        
+        // Prevent the event from reaching the DataGrid
+        e.Handled = true;
+    }
+
+    /// <summary>
+    /// Commits the Override Mode text to all selected cells and exits Override Mode.
+    /// If the text cannot be parsed as a number, the changes are silently discarded.
+    /// </summary>
+    private void CommitOverrideMode()
+    {
+        if (!_isInOverrideMode) return;
+        if (DataContext is not MainWindowViewModel vm) return;
+        
+        // Try to parse the accumulated text as a number
+        if (double.TryParse(_overrideText, out var value))
+        {
+            ApplyValueToSelectedCells(value);
+        }
+        
+        // Exit Override Mode
+        _isInOverrideMode = false;
+        _overrideText = "";
+    }
+
+    /// <summary>
+    /// Cancels Override Mode without applying changes.
+    /// </summary>
+    private void CancelOverrideMode()
+    {
+        _isInOverrideMode = false;
+        _overrideText = "";
+    }
+
+    /// <summary>
+    /// Applies a value to all selected cells.
+    /// </summary>
+    private void ApplyValueToSelectedCells(double value)
+    {
+        if (DataContext is not MainWindowViewModel vm) return;
+
+        var selectedCells = vm.CurveDataTableViewModel.SelectedCells;
+        if (selectedCells.Count == 0) return;
+
+        foreach (var cellPos in selectedCells)
+        {
+            // Skip % and RPM columns (read-only)
+            if (cellPos.ColumnIndex < 2) continue;
+            
+            var seriesName = vm.CurveDataTableViewModel.GetSeriesNameForColumn(cellPos.ColumnIndex);
+            if (seriesName is null) continue;
+            
+            // Check if series is locked
+            if (vm.CurveDataTableViewModel.IsSeriesLocked(seriesName)) continue;
+            
+            if (cellPos.RowIndex >= 0 && cellPos.RowIndex < vm.CurveDataTableViewModel.Rows.Count)
+            {
+                vm.CurveDataTableViewModel.Rows[cellPos.RowIndex].SetTorque(seriesName, value);
             }
         }
 
