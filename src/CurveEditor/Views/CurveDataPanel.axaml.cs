@@ -424,6 +424,9 @@ public partial class CurveDataPanel : UserControl
                 e.Pointer.Capture(DataTable);
             }
             
+            // Ensure the DataGrid has focus for keyboard events
+            DataTable.Focus();
+            
             e.Handled = true;
         }
     }
@@ -662,6 +665,7 @@ public partial class CurveDataPanel : UserControl
         if (e.Key == Key.Enter && !e.KeyModifiers.HasFlag(KeyModifiers.Shift))
         {
             vm.CurveDataTableViewModel.MoveSelection(1, 0);
+            ScrollToSelection(dataGrid);
             e.Handled = true;
         }
 
@@ -680,18 +684,22 @@ public partial class CurveDataPanel : UserControl
             {
                 case Key.Up:
                     vm.CurveDataTableViewModel.ExtendSelection(-1, 0);
+                    ScrollToSelection(dataGrid);
                     e.Handled = true;
                     break;
                 case Key.Down:
                     vm.CurveDataTableViewModel.ExtendSelection(1, 0);
+                    ScrollToSelection(dataGrid);
                     e.Handled = true;
                     break;
                 case Key.Left:
                     vm.CurveDataTableViewModel.ExtendSelection(0, -1);
+                    ScrollToSelection(dataGrid);
                     e.Handled = true;
                     break;
                 case Key.Right:
                     vm.CurveDataTableViewModel.ExtendSelection(0, 1);
+                    ScrollToSelection(dataGrid);
                     e.Handled = true;
                     break;
             }
@@ -713,10 +721,12 @@ public partial class CurveDataPanel : UserControl
                     break;
                 case Key.Left:
                     vm.CurveDataTableViewModel.MoveSelection(0, -1);
+                    ScrollToSelection(dataGrid);
                     e.Handled = true;
                     break;
                 case Key.Right:
                     vm.CurveDataTableViewModel.MoveSelection(0, 1);
+                    ScrollToSelection(dataGrid);
                     e.Handled = true;
                     break;
             }
