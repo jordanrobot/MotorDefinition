@@ -335,14 +335,16 @@
                         <!-- Has Brake (Checkbox) -->
                         <Grid Classes="PropertyRow" ColumnDefinitions="Auto,*">
                             <TextBlock Grid.Column="0" Text="Has Brake" Classes="PropertyLabel"/>
-                            <CheckBox Grid.Column="1" IsChecked="{Binding CurrentMotor.HasBrake}" VerticalAlignment="Center"/>
+                            <CheckBox Grid.Column="1" IsChecked="{Binding CurrentMotor.HasBrake}" VerticalAlignment="Center"
+                                      Click="OnHasBrakeChanged"/>
                         </Grid>
                         
                         <!-- Brake Torque -->
                         <Grid Classes="PropertyRow" ColumnDefinitions="Auto,*">
                             <TextBlock Grid.Column="0" Text="Brake Torque" Classes="PropertyLabel"/>
                             <Grid Grid.Column="1" ColumnDefinitions="*,Auto">
-                                <TextBox Grid.Column="0" Text="{Binding CurrentMotor.BrakeTorque}" Classes="PropertyInput"/>
+                                <TextBox Grid.Column="0" Text="{Binding CurrentMotor.BrakeTorque}" Classes="PropertyInput"
+                                         LostFocus="OnBrakeTorqueLostFocus"/>
                                 <TextBlock Grid.Column="1" Text="{Binding CurrentMotor.Units.Torque}" Classes="PropertyValue" Margin="4,0,0,0"/>
                             </Grid>
                         </Grid>

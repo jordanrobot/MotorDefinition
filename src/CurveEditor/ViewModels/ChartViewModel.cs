@@ -57,6 +57,12 @@ public partial class ChartViewModel : ViewModelBase
     [ObservableProperty]
     private double _motorMaxSpeed;
 
+    [ObservableProperty]
+    private bool _hasBrake;
+
+    [ObservableProperty]
+    private double _brakeTorque;
+
     /// <summary>
     /// Called when MotorMaxSpeed changes to update the chart axes.
     /// </summary>
@@ -66,6 +72,25 @@ public partial class ChartViewModel : ViewModelBase
         if (_currentVoltage is not null)
         {
             UpdateAxes();
+        }
+    }
+
+    /// <summary>
+    /// Called when HasBrake changes to update the brake torque line.
+    /// </summary>
+    partial void OnHasBrakeChanged(bool value)
+    {
+        UpdateChart();
+    }
+
+    /// <summary>
+    /// Called when BrakeTorque changes to update the brake torque line.
+    /// </summary>
+    partial void OnBrakeTorqueChanged(double value)
+    {
+        if (HasBrake)
+        {
+            UpdateChart();
         }
     }
 
@@ -200,8 +225,51 @@ public partial class ChartViewModel : ViewModelBase
             Series.Add(lineSeries);
         }
 
+        // Add brake torque line if motor has a brake
+        if (HasBrake && BrakeTorque > 0)
+        {
+            AddBrakeTorqueLine();
+        }
+
         // Update axes based on data
         UpdateAxes();
+    }
+
+    /// <summary>
+    /// Adds a horizontal line to the chart indicating the brake torque value.
+    /// </summary>
+    private void AddBrakeTorqueLine()
+    {
+        // Use the maximum of Motor Max Speed and Drive (voltage) Max Speed for line width
+        var maxRpm = Math.Max(MotorMaxSpeed, _currentVoltage?.MaxSpeed ?? 0);
+        if (maxRpm <= 0)
+        {
+            maxRpm = 6000; // Default fallback
+        }
+
+        // Create two points for a horizontal line from 0 to maxRpm at BrakeTorque
+        var brakePoints = new ObservableCollection<ObservablePoint>
+        {
+            new(0, BrakeTorque),
+            new(maxRpm, BrakeTorque)
+        };
+
+        var brakeLine = new LineSeries<ObservablePoint>
+        {
+            Name = "Brake Torque",
+            Values = brakePoints,
+            Fill = null, // No fill for the brake line
+            GeometrySize = 0, // No points on the line
+            Stroke = new SolidColorPaint(new SKColor(255, 165, 0)) // Orange color
+            {
+                StrokeThickness = 2,
+                PathEffect = new DashEffect([5, 5]) // Dashed line
+            },
+            LineSmoothness = 0, // Straight line
+            IsVisible = true
+        };
+
+        Series.Add(brakeLine);
     }
 
     private void UpdateAxes()

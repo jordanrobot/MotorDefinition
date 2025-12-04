@@ -274,6 +274,8 @@ public partial class MainWindowViewModel : ViewModelBase
         // Update chart with new voltage configuration
         ChartViewModel.TorqueUnit = CurrentMotor?.Units.Torque ?? "Nm";
         ChartViewModel.MotorMaxSpeed = CurrentMotor?.MaxSpeed ?? 0;
+        ChartViewModel.HasBrake = CurrentMotor?.HasBrake ?? false;
+        ChartViewModel.BrakeTorque = CurrentMotor?.BrakeTorque ?? 0;
         ChartViewModel.CurrentVoltage = value;
 
         // Update data table with new voltage configuration

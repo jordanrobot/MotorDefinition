@@ -49,4 +49,31 @@ public partial class MainWindow : Window
             viewModel.MarkDirty();
         }
     }
+
+    /// <summary>
+    /// Handles when the HasBrake checkbox changes to update the brake torque line on the chart.
+    /// </summary>
+    private void OnHasBrakeChanged(object? sender, RoutedEventArgs e)
+    {
+        if (DataContext is MainWindowViewModel viewModel && viewModel.CurrentMotor is not null)
+        {
+            viewModel.ChartViewModel.HasBrake = viewModel.CurrentMotor.HasBrake;
+            viewModel.ChartViewModel.BrakeTorque = viewModel.CurrentMotor.BrakeTorque;
+            viewModel.ChartViewModel.RefreshChart();
+            viewModel.MarkDirty();
+        }
+    }
+
+    /// <summary>
+    /// Handles when the BrakeTorque field loses focus to update the brake torque line on the chart.
+    /// </summary>
+    private void OnBrakeTorqueLostFocus(object? sender, RoutedEventArgs e)
+    {
+        if (DataContext is MainWindowViewModel viewModel && viewModel.CurrentMotor is not null)
+        {
+            viewModel.ChartViewModel.BrakeTorque = viewModel.CurrentMotor.BrakeTorque;
+            viewModel.ChartViewModel.RefreshChart();
+            viewModel.MarkDirty();
+        }
+    }
 }

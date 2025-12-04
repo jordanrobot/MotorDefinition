@@ -67,77 +67,96 @@ public partial class AddCurveSeriesDialog : Window
 
     private void OnAddClick(object? sender, RoutedEventArgs e)
     {
-        // Validate name
-        var name = NameInput.Text?.Trim();
-        if (string.IsNullOrWhiteSpace(name))
+        try
         {
-            name = "New Series";
-        }
-
-        // Validate color
-        var colorText = ColorInput.Text?.Trim() ?? "#FF5050";
-        if (!Color.TryParse(colorText, out var color))
-        {
-            color = Colors.Red;
-            colorText = "#FF0000";
-        }
-
-        // Determine torque calculation mode
-        double baseTorque;
-        bool usePowerCalculation = PowerBasedRadio.IsChecked == true;
-        double power = 0;
-        string powerUnit = "W";
-
-        if (usePowerCalculation)
-        {
-            if (!double.TryParse(PowerInput.Text, out power) || power < 0)
+            // Validate name
+            var name = NameInput?.Text?.Trim();
+            if (string.IsNullOrWhiteSpace(name))
             {
-                power = 1500;
+                name = "New Series";
             }
 
-            var selectedItem = PowerUnitCombo.SelectedItem as ComboBoxItem;
-            powerUnit = selectedItem?.Content?.ToString() ?? "W";
-
-            // Convert to watts if needed
-            var powerWatts = powerUnit switch
+            // Validate color
+            var colorText = ColorInput?.Text?.Trim() ?? "#FF5050";
+            if (!Color.TryParse(colorText, out var color))
             {
-                "kW" => power * KilowattsToWatts,
-                "HP" => power * HorsepowerToWatts,
-                _ => power
-            };
+                color = Colors.Red;
+                colorText = "#FF0000";
+            }
 
-            // Calculate torque from power at rated speed (assume 50% speed for average)
-            // P = T * ω, where ω = 2π * RPM / 60
-            // T = P / ω = P * 60 / (2π * RPM)
-            var avgSpeed = _maxSpeed * 0.5;
-            if (avgSpeed > 0)
+            // Determine torque calculation mode
+            double baseTorque;
+            bool usePowerCalculation = PowerBasedRadio?.IsChecked == true;
+            double power = 0;
+            string powerUnit = "W";
+
+            if (usePowerCalculation)
             {
-                baseTorque = powerWatts * 60 / (2 * Math.PI * avgSpeed);
+                if (!double.TryParse(PowerInput?.Text, out power) || power < 0)
+                {
+                    power = 1500;
+                }
+
+                var selectedItem = PowerUnitCombo?.SelectedItem as ComboBoxItem;
+                powerUnit = selectedItem?.Content?.ToString() ?? "W";
+
+                // Convert to watts if needed
+                var powerWatts = powerUnit switch
+                {
+                    "kW" => power * KilowattsToWatts,
+                    "HP" => power * HorsepowerToWatts,
+                    _ => power
+                };
+
+                // Calculate torque from power at rated speed (assume 50% speed for average)
+                // P = T * ω, where ω = 2π * RPM / 60
+                // T = P / ω = P * 60 / (2π * RPM)
+                var avgSpeed = _maxSpeed * 0.5;
+                if (avgSpeed > 0)
+                {
+                    baseTorque = powerWatts * 60 / (2 * Math.PI * avgSpeed);
+                }
+                else
+                {
+                    baseTorque = 0;
+                }
             }
             else
             {
-                baseTorque = 0;
+                if (!double.TryParse(TorqueInput?.Text, out baseTorque) || baseTorque < 0)
+                {
+                    baseTorque = 40;
+                }
             }
-        }
-        else
-        {
-            if (!double.TryParse(TorqueInput.Text, out baseTorque) || baseTorque < 0)
-            {
-                baseTorque = 40;
-            }
-        }
 
-        Result = new AddCurveSeriesResult
+            Result = new AddCurveSeriesResult
+            {
+                Name = name,
+                Color = colorText,
+                BaseTorque = baseTorque,
+                UsePowerCalculation = usePowerCalculation,
+                Power = power,
+                PowerUnit = powerUnit,
+                IsVisible = VisibleCheckBox?.IsChecked == true,
+                IsLocked = LockedCheckBox?.IsChecked == true
+            };
+        }
+        catch (Exception ex)
         {
-            Name = name,
-            Color = colorText,
-            BaseTorque = baseTorque,
-            UsePowerCalculation = usePowerCalculation,
-            Power = power,
-            PowerUnit = powerUnit,
-            IsVisible = VisibleCheckBox.IsChecked == true,
-            IsLocked = LockedCheckBox.IsChecked == true
-        };
+            // If any error occurs during result creation, set a default result
+            Result = new AddCurveSeriesResult
+            {
+                Name = "New Series",
+                Color = "#FF5050",
+                BaseTorque = 40,
+                UsePowerCalculation = false,
+                Power = 0,
+                PowerUnit = "W",
+                IsVisible = true,
+                IsLocked = false
+            };
+            System.Diagnostics.Debug.WriteLine($"Error in OnAddClick: {ex.Message}");
+        }
 
         Close();
     }

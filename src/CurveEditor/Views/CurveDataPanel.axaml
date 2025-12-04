@@ -110,13 +110,16 @@
                     </ItemsControl>
                     
                     <!-- Add Series button in header -->
-                    <Button Content="+"
-                            Width="30" Height="30"
+                    <Button Width="30" Height="30"
                             Padding="0"
                             Margin="4,0"
                             VerticalAlignment="Center"
+                            HorizontalContentAlignment="Center"
+                            VerticalContentAlignment="Center"
                             ToolTip.Tip="Add new curve series"
-                            Command="{Binding AddSeriesCommand}"/>
+                            Command="{Binding AddSeriesCommand}">
+                        <TextBlock Text="+" FontSize="16" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                    </Button>
                 </StackPanel>
             </ScrollViewer>
         </Border>
