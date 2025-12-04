@@ -230,6 +230,14 @@ public partial class MainWindowViewModel : ViewModelBase
         }
     }
 
+    /// <summary>
+    /// Public method to refresh the available series collection.
+    /// </summary>
+    public void RefreshAvailableSeriesPublic()
+    {
+        RefreshAvailableSeries();
+    }
+
     partial void OnCurrentMotorChanged(MotorDefinition? value)
     {
         // Refresh the drives collection

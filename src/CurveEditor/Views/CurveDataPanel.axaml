@@ -94,6 +94,13 @@
                                                     <TextBlock Text="🔓" FontSize="10" IsVisible="{Binding !Locked}"/>
                                                 </Panel>
                                             </ToggleButton>
+                                            <!-- Trash button (in header) -->
+                                            <Button Width="20" Height="20"
+                                                    Padding="0"
+                                                    ToolTip.Tip="Delete Series"
+                                                    Click="OnDeleteSeriesClick">
+                                                <TextBlock Text="🗑" FontSize="10"/>
+                                            </Button>
                                         </StackPanel>
                                     </StackPanel>
                                 </Border>
@@ -131,49 +138,17 @@
             </DataGrid.Columns>
         </DataGrid>
         
-        <!-- Footer Row with Add Series button and Trash icons -->
+        <!-- Footer Row with Add Series button only -->
         <Border Grid.Row="2" 
                 BorderBrush="{DynamicResource SystemControlBackgroundBaseMediumBrush}"
                 BorderThickness="0,1,0,0"
                 Padding="4"
                 IsVisible="{Binding SelectedVoltage, Converter={x:Static ObjectConverters.IsNotNull}}">
-            <ScrollViewer HorizontalScrollBarVisibility="Hidden"
-                          VerticalScrollBarVisibility="Disabled">
-                <StackPanel Orientation="Horizontal">
-                    <!-- Spacer for % and RPM columns -->
-                    <Border Width="120"/>
-                    
-                    <!-- Trash buttons for each series -->
-                    <ItemsControl ItemsSource="{Binding AvailableSeries}">
-                        <ItemsControl.ItemsPanel>
-                            <ItemsPanelTemplate>
-                                <StackPanel Orientation="Horizontal"/>
-                            </ItemsPanelTemplate>
-                        </ItemsControl.ItemsPanel>
-                        <ItemsControl.ItemTemplate>
-                            <DataTemplate DataType="models:CurveSeries">
-                                <Border Width="100">
-                                    <Button Width="24" Height="24"
-                                            Padding="0"
-                                            HorizontalAlignment="Center"
-                                            ToolTip.Tip="Delete Series"
-                                            Command="{Binding $parent[UserControl].((vm:MainWindowViewModel)DataContext).RemoveSeriesCommand}"
-                                            CommandParameter="{Binding}">
-                                        <TextBlock Text="🗑" FontSize="12"/>
-                                    </Button>
-                                </Border>
-                            </DataTemplate>
-                        </ItemsControl.ItemTemplate>
-                    </ItemsControl>
-                    
-                    <!-- Add Series button -->
-                    <Button Content="+ Add Series"
-                            Margin="8,0,0,0"
-                            Padding="8,4"
-                            Command="{Binding AddSeriesCommand}"
-                            ToolTip.Tip="Add new curve series"/>
-                </StackPanel>
-            </ScrollViewer>
+            <Button Content="+ Add Series"
+                    HorizontalAlignment="Left"
+                    Padding="8,4"
+                    Command="{Binding AddSeriesCommand}"
+                    ToolTip.Tip="Add new curve series"/>
         </Border>
         
         <!-- Empty state -->

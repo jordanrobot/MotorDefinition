@@ -153,7 +153,7 @@
             <GridSplitter Grid.Column="1" Width="4" ResizeDirection="Columns"/>
 
             <!-- Center: Chart Area and Collapsible Data Panel -->
-            <Grid Grid.Column="2" RowDefinitions="2*,Auto,*">
+            <Grid Grid.Column="2" RowDefinitions="2*,Auto,Auto">
                 <!-- Chart Area -->
                 <Border Grid.Row="0"
                         Margin="4"
@@ -205,7 +205,7 @@
                         BorderThickness="1"
                         CornerRadius="4"
                         IsVisible="{Binding CurrentMotor, Converter={x:Static ObjectConverters.IsNotNull}}">
-                    <Grid RowDefinitions="Auto,*">
+                    <Grid RowDefinitions="Auto,Auto">
                         <!-- Collapsible Header -->
                         <ToggleButton Grid.Row="0" 
                                       IsChecked="{Binding IsCurveDataExpanded}"
@@ -269,7 +269,7 @@
                         <Grid Classes="PropertyRow" ColumnDefinitions="Auto,*">
                             <TextBlock Grid.Column="0" Text="Max Speed" Classes="PropertyLabel"/>
                             <Grid Grid.Column="1" ColumnDefinitions="*,Auto">
-                                <TextBox Grid.Column="0" Text="{Binding CurrentMotor.MaxSpeed}" Classes="PropertyInput"/>
+                                <TextBox Grid.Column="0" Text="{Binding CurrentMotor.MaxSpeed}" Classes="PropertyInput" LostFocus="OnMotorMaxSpeedLostFocus"/>
                                 <TextBlock Grid.Column="1" Text="RPM" Classes="PropertyValue" Margin="4,0,0,0"/>
                             </Grid>
                         </Grid>

@@ -58,6 +58,18 @@ public partial class ChartViewModel : ViewModelBase
     private double _motorMaxSpeed;
 
     /// <summary>
+    /// Called when MotorMaxSpeed changes to update the chart axes.
+    /// </summary>
+    partial void OnMotorMaxSpeedChanged(double value)
+    {
+        // Update chart axes when motor max speed changes
+        if (_currentVoltage is not null)
+        {
+            UpdateAxes();
+        }
+    }
+
+    /// <summary>
     /// Controls whether zoom/pan is enabled on the chart.
     /// When false, the graph is static and shows the full range of data.
     /// </summary>
@@ -196,8 +208,13 @@ public partial class ChartViewModel : ViewModelBase
     {
         if (_currentVoltage is null) return;
 
-        // Use motor's max speed for x-axis if available, otherwise fall back to voltage's max speed
-        var maxRpm = MotorMaxSpeed > 0 ? MotorMaxSpeed : _currentVoltage.MaxSpeed;
+        // Use the maximum of Motor Max Speed and Drive (voltage) Max Speed for the x-axis
+        var maxRpm = Math.Max(MotorMaxSpeed, _currentVoltage.MaxSpeed);
+        if (maxRpm <= 0)
+        {
+            maxRpm = 6000; // Default fallback
+        }
+
         var maxTorque = _currentVoltage.Series
             .SelectMany(s => s.Data)
             .Select(dp => dp.Torque)

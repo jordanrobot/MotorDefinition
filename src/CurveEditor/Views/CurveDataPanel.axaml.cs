@@ -29,8 +29,16 @@ public partial class CurveDataPanel : UserControl
         {
             // Subscribe to series changes to rebuild columns
             vm.CurveDataTableViewModel.PropertyChanged += OnCurveDataTablePropertyChanged;
+            // Subscribe to the AvailableSeries collection changes
+            vm.AvailableSeries.CollectionChanged += OnAvailableSeriesCollectionChanged;
             RebuildDataGridColumns();
         }
+    }
+
+    private void OnAvailableSeriesCollectionChanged(object? sender, System.Collections.Specialized.NotifyCollectionChangedEventArgs e)
+    {
+        // Rebuild columns when series are added or removed
+        RebuildDataGridColumns();
     }
 
     private void OnCurveDataTablePropertyChanged(object? sender, System.ComponentModel.PropertyChangedEventArgs e)
@@ -219,6 +227,51 @@ public partial class CurveDataPanel : UserControl
         if (DataContext is MainWindowViewModel viewModel)
         {
             viewModel.MarkDirty();
+            // Rebuild columns to update read-only state
+            RebuildDataGridColumns();
+        }
+    }
+
+    /// <summary>
+    /// Handles delete series button click.
+    /// </summary>
+    private async void OnDeleteSeriesClick(object? sender, RoutedEventArgs e)
+    {
+        if (sender is Button button && button.DataContext is CurveSeries series)
+        {
+            if (DataContext is MainWindowViewModel viewModel && viewModel.SelectedVoltage is not null)
+            {
+                // Show confirmation dialog
+                var dialog = new MessageDialog
+                {
+                    Title = "Confirm Delete",
+                    Message = $"Are you sure you want to delete the series '{series.Name}'?"
+                };
+
+                if (TopLevel.GetTopLevel(this) is Window parentWindow)
+                {
+                    await dialog.ShowDialog(parentWindow);
+                }
+
+                if (!dialog.IsConfirmed) return;
+
+                // Check if this is the last series
+                if (viewModel.SelectedVoltage.Series.Count <= 1)
+                {
+                    viewModel.StatusMessage = "Cannot remove the last series.";
+                    return;
+                }
+
+                // Remove the series from the voltage configuration
+                var seriesName = series.Name;
+                viewModel.SelectedVoltage.Series.Remove(series);
+                viewModel.RefreshAvailableSeriesPublic();
+                viewModel.CurveDataTableViewModel.RefreshData();
+                viewModel.SelectedSeries = viewModel.SelectedVoltage.Series.FirstOrDefault();
+                viewModel.ChartViewModel.RefreshChart();
+                viewModel.MarkDirty();
+                viewModel.StatusMessage = $"Removed series: {seriesName}";
+            }
         }
     }
 

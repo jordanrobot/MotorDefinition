@@ -16,7 +16,7 @@ public partial class MainWindow : Window
     }
 
     /// <summary>
-    /// Handles the max speed field losing focus to show confirmation dialog.
+    /// Handles the drive max speed field losing focus to show confirmation dialog and refresh chart.
     /// </summary>
     private async void OnMaxSpeedLostFocus(object? sender, RoutedEventArgs e)
     {
@@ -31,6 +31,21 @@ public partial class MainWindow : Window
             }
             
             _previousMaxSpeed = currentMaxSpeed;
+            
+            // Refresh the chart to update the x-axis
+            viewModel.ChartViewModel.RefreshChart();
+        }
+    }
+
+    /// <summary>
+    /// Handles the motor max speed field losing focus to refresh chart.
+    /// </summary>
+    private void OnMotorMaxSpeedLostFocus(object? sender, RoutedEventArgs e)
+    {
+        if (DataContext is MainWindowViewModel viewModel && viewModel.CurrentMotor is not null)
+        {
+            // Update the motor max speed in the chart view model
+            viewModel.ChartViewModel.MotorMaxSpeed = viewModel.CurrentMotor.MaxSpeed;
         }
     }
 }
