@@ -35,7 +35,7 @@
         </Style>
     </UserControl.Styles>
     
-    <Grid RowDefinitions="Auto,*,Auto">
+    <Grid RowDefinitions="Auto,*">
         <!-- Header Row -->
         <Border Grid.Row="0" 
                 BorderBrush="{DynamicResource SystemControlBackgroundBaseMediumBrush}"
@@ -94,11 +94,12 @@
                                                     <TextBlock Text="🔓" FontSize="10" IsVisible="{Binding !Locked}"/>
                                                 </Panel>
                                             </ToggleButton>
-                                            <!-- Trash button (in header) -->
+                                            <!-- Trash button (in header) - disabled when locked -->
                                             <Button Width="20" Height="20"
                                                     Padding="0"
                                                     ToolTip.Tip="Delete Series"
-                                                    Click="OnDeleteSeriesClick">
+                                                    Click="OnDeleteSeriesClick"
+                                                    IsEnabled="{Binding !Locked}">
                                                 <TextBlock Text="🗑" FontSize="10"/>
                                             </Button>
                                         </StackPanel>
@@ -107,6 +108,15 @@
                             </DataTemplate>
                         </ItemsControl.ItemTemplate>
                     </ItemsControl>
+                    
+                    <!-- Add Series button in header -->
+                    <Button Content="+"
+                            Width="30" Height="30"
+                            Padding="0"
+                            Margin="4,0"
+                            VerticalAlignment="Center"
+                            ToolTip.Tip="Add new curve series"
+                            Command="{Binding AddSeriesCommand}"/>
                 </StackPanel>
             </ScrollViewer>
         </Border>
@@ -138,21 +148,8 @@
             </DataGrid.Columns>
         </DataGrid>
         
-        <!-- Footer Row with Add Series button only -->
-        <Border Grid.Row="2" 
-                BorderBrush="{DynamicResource SystemControlBackgroundBaseMediumBrush}"
-                BorderThickness="0,1,0,0"
-                Padding="4"
-                IsVisible="{Binding SelectedVoltage, Converter={x:Static ObjectConverters.IsNotNull}}">
-            <Button Content="+ Add Series"
-                    HorizontalAlignment="Left"
-                    Padding="8,4"
-                    Command="{Binding AddSeriesCommand}"
-                    ToolTip.Tip="Add new curve series"/>
-        </Border>
-        
         <!-- Empty state -->
-        <StackPanel Grid.Row="0" Grid.RowSpan="3"
+        <StackPanel Grid.Row="0" Grid.RowSpan="2"
                     VerticalAlignment="Center"
                     HorizontalAlignment="Center"
                     IsVisible="{Binding SelectedVoltage, Converter={x:Static ObjectConverters.IsNull}}">

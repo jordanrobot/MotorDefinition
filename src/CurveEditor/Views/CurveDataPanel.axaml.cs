@@ -267,6 +267,13 @@ public partial class CurveDataPanel : UserControl
         {
             if (DataContext is MainWindowViewModel viewModel && viewModel.SelectedVoltage is not null)
             {
+                // Check if series is locked - prevent deletion of locked series
+                if (series.Locked)
+                {
+                    viewModel.StatusMessage = "Cannot delete a locked series. Unlock it first.";
+                    return;
+                }
+
                 // Show confirmation dialog
                 var dialog = new MessageDialog
                 {
@@ -281,14 +288,7 @@ public partial class CurveDataPanel : UserControl
 
                 if (!dialog.IsConfirmed) return;
 
-                // Check if this is the last series
-                if (viewModel.SelectedVoltage.Series.Count <= 1)
-                {
-                    viewModel.StatusMessage = "Cannot remove the last series.";
-                    return;
-                }
-
-                // Remove the series from the voltage configuration
+                // Remove the series from the voltage configuration (allow removing last series)
                 var seriesName = series.Name;
                 viewModel.SelectedVoltage.Series.Remove(series);
                 viewModel.RefreshAvailableSeriesPublic();

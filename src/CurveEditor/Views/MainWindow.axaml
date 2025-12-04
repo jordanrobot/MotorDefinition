@@ -153,7 +153,7 @@
             <GridSplitter Grid.Column="1" Width="4" ResizeDirection="Columns"/>
 
             <!-- Center: Chart Area and Collapsible Data Panel -->
-            <Grid Grid.Column="2" RowDefinitions="2*,Auto,Auto">
+            <Grid Grid.Column="2" RowDefinitions="*,Auto,Auto">
                 <!-- Chart Area -->
                 <Border Grid.Row="0"
                         Margin="4"
@@ -222,8 +222,9 @@
                             </StackPanel>
                         </ToggleButton>
                         
-                        <!-- Data Content -->
+                        <!-- Data Content - max height to take about half window -->
                         <Border Grid.Row="1" 
+                                MaxHeight="300"
                                 IsVisible="{Binding IsCurveDataExpanded}">
                             <views:CurveDataPanel DataContext="{Binding}"/>
                         </Border>

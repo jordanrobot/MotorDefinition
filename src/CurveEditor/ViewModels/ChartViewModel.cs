@@ -209,6 +209,7 @@ public partial class ChartViewModel : ViewModelBase
         if (_currentVoltage is null) return;
 
         // Use the maximum of Motor Max Speed and Drive (voltage) Max Speed for the x-axis
+        // Do NOT round the x-axis maximum - use the exact value
         var maxRpm = Math.Max(MotorMaxSpeed, _currentVoltage.MaxSpeed);
         if (maxRpm <= 0)
         {
@@ -221,11 +222,10 @@ public partial class ChartViewModel : ViewModelBase
             .DefaultIfEmpty(0)
             .Max();
 
-        // Round up to nice values
-        var xMax = RoundToNiceValue(maxRpm, true);
+        // Use exact max RPM (no rounding), but round torque for nice Y-axis
         var yMax = RoundToNiceValue(maxTorque * 1.1, true); // Add 10% margin
 
-        XAxes = CreateXAxes(xMax);
+        XAxes = CreateXAxes(maxRpm);
         YAxes = CreateYAxes(yMax);
     }
 
