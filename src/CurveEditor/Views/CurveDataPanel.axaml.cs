@@ -25,6 +25,7 @@ public partial class CurveDataPanel : UserControl
     }
 
     private MainWindowViewModel? _subscribedViewModel;
+    private bool _isRebuildingColumns;
 
     private void OnUnloaded(object? sender, Avalonia.Interactivity.RoutedEventArgs e)
     {
@@ -63,12 +64,26 @@ public partial class CurveDataPanel : UserControl
 
     private void OnAvailableSeriesCollectionChanged(object? sender, System.Collections.Specialized.NotifyCollectionChangedEventArgs e)
     {
+        // Skip if we're already in the middle of rebuilding columns
+        // This prevents race conditions when RefreshAvailableSeries() clears and repopulates the collection
+        if (_isRebuildingColumns) return;
+        
+        // Only rebuild on Add action, not on Reset (Clear) which would cause empty columns
+        // The columns will be properly rebuilt when all items are added
+        if (e.Action == System.Collections.Specialized.NotifyCollectionChangedAction.Reset)
+        {
+            return;
+        }
+        
         // Rebuild columns when series are added or removed
         RebuildDataGridColumns();
     }
 
     private void OnCurveDataTablePropertyChanged(object? sender, System.ComponentModel.PropertyChangedEventArgs e)
     {
+        // Skip if we're already in the middle of rebuilding columns
+        if (_isRebuildingColumns) return;
+        
         if (e.PropertyName == nameof(CurveDataTableViewModel.SeriesColumns) ||
             e.PropertyName == nameof(CurveDataTableViewModel.CurrentVoltage))
         {
@@ -80,63 +95,72 @@ public partial class CurveDataPanel : UserControl
     {
         if (DataContext is not MainWindowViewModel vm) return;
         if (DataTable is null) return;
+        if (_isRebuildingColumns) return;
 
-        // Remove all columns except the first two (% and RPM)
-        while (DataTable.Columns.Count > 2)
+        _isRebuildingColumns = true;
+        try
         {
-            DataTable.Columns.RemoveAt(DataTable.Columns.Count - 1);
-        }
-
-        // Add a column for each series
-        foreach (var series in vm.AvailableSeries)
-        {
-            var column = new DataGridTemplateColumn
+            // Remove all columns except the first two (% and RPM)
+            while (DataTable.Columns.Count > 2)
             {
-                Header = series.Name,
-                Width = new DataGridLength(80),
-                IsReadOnly = series.Locked
-            };
-
-            // Create cell template
-            var cellTemplate = new FuncDataTemplate<CurveDataRow>((row, _) =>
-            {
-                var textBlock = new TextBlock
-                {
-                    VerticalAlignment = Avalonia.Layout.VerticalAlignment.Center,
-                    Margin = new Avalonia.Thickness(4, 2)
-                };
-                textBlock.Bind(TextBlock.TextProperty, 
-                    new Avalonia.Data.Binding($"[{series.Name}]") 
-                    { 
-                        Mode = Avalonia.Data.BindingMode.OneWay,
-                        StringFormat = "N2"
-                    });
-                return textBlock;
-            });
-            column.CellTemplate = cellTemplate;
-
-            // Create editing template
-            if (!series.Locked)
-            {
-                var editingTemplate = new FuncDataTemplate<CurveDataRow>((row, _) =>
-                {
-                    var textBox = new TextBox
-                    {
-                        VerticalAlignment = Avalonia.Layout.VerticalAlignment.Center,
-                        Margin = new Avalonia.Thickness(2)
-                    };
-                    textBox.Bind(TextBox.TextProperty,
-                        new Avalonia.Data.Binding($"[{series.Name}]")
-                        {
-                            Mode = Avalonia.Data.BindingMode.TwoWay,
-                            StringFormat = "N2"
-                        });
-                    return textBox;
-                });
-                column.CellEditingTemplate = editingTemplate;
+                DataTable.Columns.RemoveAt(DataTable.Columns.Count - 1);
             }
 
-            DataTable.Columns.Add(column);
+            // Add a column for each series
+            foreach (var series in vm.AvailableSeries)
+            {
+                var column = new DataGridTemplateColumn
+                {
+                    Header = series.Name,
+                    Width = new DataGridLength(80),
+                    IsReadOnly = series.Locked
+                };
+
+                // Create cell template
+                var cellTemplate = new FuncDataTemplate<CurveDataRow>((row, _) =>
+                {
+                    var textBlock = new TextBlock
+                    {
+                        VerticalAlignment = Avalonia.Layout.VerticalAlignment.Center,
+                        Margin = new Avalonia.Thickness(4, 2)
+                    };
+                    textBlock.Bind(TextBlock.TextProperty, 
+                        new Avalonia.Data.Binding($"[{series.Name}]") 
+                        { 
+                            Mode = Avalonia.Data.BindingMode.OneWay,
+                            StringFormat = "N2"
+                        });
+                    return textBlock;
+                });
+                column.CellTemplate = cellTemplate;
+
+                // Create editing template
+                if (!series.Locked)
+                {
+                    var editingTemplate = new FuncDataTemplate<CurveDataRow>((row, _) =>
+                    {
+                        var textBox = new TextBox
+                        {
+                            VerticalAlignment = Avalonia.Layout.VerticalAlignment.Center,
+                            Margin = new Avalonia.Thickness(2)
+                        };
+                        textBox.Bind(TextBox.TextProperty,
+                            new Avalonia.Data.Binding($"[{series.Name}]")
+                            {
+                                Mode = Avalonia.Data.BindingMode.TwoWay,
+                                StringFormat = "N2"
+                            });
+                        return textBox;
+                    });
+                    column.CellEditingTemplate = editingTemplate;
+                }
+
+                DataTable.Columns.Add(column);
+            }
+        }
+        finally
+        {
+            _isRebuildingColumns = false;
         }
     }
 
