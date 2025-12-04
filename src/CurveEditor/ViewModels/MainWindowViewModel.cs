@@ -789,8 +789,10 @@ public partial class MainWindowViewModel : ViewModelBase
             series.IsVisible = result.IsVisible;
             series.Locked = result.IsLocked;
             
-            RefreshAvailableSeries();
+            // IMPORTANT: RefreshData BEFORE RefreshAvailableSeries to prevent DataGrid column sync issues
+            // The column rebuild is triggered by AvailableSeries collection change, so data must be ready first
             CurveDataTableViewModel.RefreshData();
+            RefreshAvailableSeries();
             SelectedSeries = series;
             ChartViewModel.RefreshChart();
             MarkDirty();

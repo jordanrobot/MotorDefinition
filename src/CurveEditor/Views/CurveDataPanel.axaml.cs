@@ -291,8 +291,10 @@ public partial class CurveDataPanel : UserControl
                 // Remove the series from the voltage configuration (allow removing last series)
                 var seriesName = series.Name;
                 viewModel.SelectedVoltage.Series.Remove(series);
-                viewModel.RefreshAvailableSeriesPublic();
+                // IMPORTANT: RefreshData BEFORE RefreshAvailableSeriesPublic to prevent DataGrid column sync issues
+                // The column rebuild is triggered by AvailableSeries collection change, so data must be ready first
                 viewModel.CurveDataTableViewModel.RefreshData();
+                viewModel.RefreshAvailableSeriesPublic();
                 viewModel.SelectedSeries = viewModel.SelectedVoltage.Series.FirstOrDefault();
                 viewModel.ChartViewModel.RefreshChart();
                 viewModel.MarkDirty();
