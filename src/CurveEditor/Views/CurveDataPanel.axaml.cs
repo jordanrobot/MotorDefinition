@@ -24,6 +24,7 @@ public partial class CurveDataPanel : UserControl
     private bool _isDragging;
     private CellPosition? _dragStartCell;
     private readonly Dictionary<CellPosition, Border> _cellBorders = [];
+    private bool _eventHandlersRegistered;
 
     /// <summary>
     /// Creates a new CurveDataPanel instance.
@@ -33,6 +34,22 @@ public partial class CurveDataPanel : UserControl
         InitializeComponent();
         DataContextChanged += OnDataContextChanged;
         Unloaded += OnUnloaded;
+        
+        // Use tunnel routing to capture pointer and key events before the DataGrid handles them
+        // This is necessary because DataGrid intercepts these events for its own selection handling
+        Loaded += OnLoaded;
+    }
+
+    private void OnLoaded(object? sender, RoutedEventArgs e)
+    {
+        // Prevent duplicate event handler registrations
+        if (_eventHandlersRegistered || DataTable is null) return;
+        
+        DataTable.AddHandler(PointerPressedEvent, DataTable_PointerPressed, Avalonia.Interactivity.RoutingStrategies.Tunnel);
+        DataTable.AddHandler(PointerMovedEvent, DataTable_PointerMoved, Avalonia.Interactivity.RoutingStrategies.Tunnel);
+        DataTable.AddHandler(PointerReleasedEvent, DataTable_PointerReleased, Avalonia.Interactivity.RoutingStrategies.Tunnel);
+        DataTable.AddHandler(KeyDownEvent, DataTable_KeyDown, Avalonia.Interactivity.RoutingStrategies.Tunnel);
+        _eventHandlersRegistered = true;
     }
 
     private void OnUnloaded(object? sender, RoutedEventArgs e)
@@ -44,6 +61,16 @@ public partial class CurveDataPanel : UserControl
             _subscribedViewModel.CurveDataTableViewModel.SelectionChanged -= OnSelectionChanged;
             _subscribedViewModel.AvailableSeries.CollectionChanged -= OnAvailableSeriesCollectionChanged;
             _subscribedViewModel = null;
+        }
+        
+        // Remove event handlers when unloaded
+        if (_eventHandlersRegistered && DataTable is not null)
+        {
+            DataTable.RemoveHandler(PointerPressedEvent, DataTable_PointerPressed);
+            DataTable.RemoveHandler(PointerMovedEvent, DataTable_PointerMoved);
+            DataTable.RemoveHandler(PointerReleasedEvent, DataTable_PointerReleased);
+            DataTable.RemoveHandler(KeyDownEvent, DataTable_KeyDown);
+            _eventHandlersRegistered = false;
         }
     }
 
@@ -262,22 +289,23 @@ public partial class CurveDataPanel : UserControl
         if (DataContext is not MainWindowViewModel vm) return null;
         if (DataTable is null) return null;
 
-        // Get the row index from the Y position
         var rowIndex = -1;
         var columnIndex = -1;
 
-        // Find the visual element at the point
+        // Try to find elements at the point using visual tree traversal
+        // First, try InputHitTest which is the standard approach
         var hitElement = DataTable.InputHitTest(point);
-        if (hitElement is null) return null;
-
+        
         // Walk up the visual tree to find the DataGridCell and DataGridRow
+        // We capture the first (innermost) cell found as we traverse upward
         var element = hitElement as Visual;
         DataGridRow? row = null;
         DataGridCell? cell = null;
 
         while (element is not null)
         {
-            if (element is DataGridCell foundCell)
+            // Capture the first DataGridCell encountered (closest to hit point)
+            if (element is DataGridCell foundCell && cell is null)
             {
                 cell = foundCell;
             }
@@ -289,9 +317,29 @@ public partial class CurveDataPanel : UserControl
             element = element.GetVisualParent();
         }
 
+        // If we didn't find a row via InputHitTest, try alternative approach using GetVisualsAt
+        // This can help when the click is on the border/padding between cells
+        if (row is null)
+        {
+            var visualsAtPoint = DataTable.GetVisualsAt(point).ToList();
+            foreach (var visual in visualsAtPoint)
+            {
+                // Only look for cell if we haven't found one yet
+                if (visual is DataGridCell foundCell && cell is null)
+                {
+                    cell = foundCell;
+                }
+                if (visual is DataGridRow foundRow)
+                {
+                    row = foundRow;
+                    break; // Found a row, stop searching
+                }
+            }
+        }
+
         if (row is null) return null;
 
-        // Get the row index
+        // Get the row index from the data context
         if (row.DataContext is CurveDataRow dataRow)
         {
             rowIndex = dataRow.RowIndex;
@@ -301,11 +349,10 @@ public partial class CurveDataPanel : UserControl
             return null;
         }
 
-        // Get the column index
+        // Get the column index from the cell if we found one
         if (cell is not null)
         {
-            // In Avalonia, DataGridCell doesn't have a Column property like WPF
-            // We need to find the column index by looking at the cell's position in the row
+            // Find the column index by looking at the cell's position in the row
             var cellsPresenter = row.GetVisualDescendants().OfType<DataGridCellsPresenter>().FirstOrDefault();
             if (cellsPresenter is not null)
             {
@@ -314,14 +361,16 @@ public partial class CurveDataPanel : UserControl
             }
         }
         
+        // Fallback: calculate column from X position if cell wasn't found or IndexOf failed
         if (columnIndex < 0)
         {
-            // If we can't find the cell, calculate column from X position
             var x = point.X;
             var accumulatedWidth = 0.0;
             for (var i = 0; i < DataTable.Columns.Count; i++)
             {
                 var colWidth = DataTable.Columns[i].ActualWidth;
+                if (colWidth <= 0) colWidth = 80; // Default width
+                
                 if (x >= accumulatedWidth && x < accumulatedWidth + colWidth)
                 {
                     columnIndex = i;
@@ -342,6 +391,7 @@ public partial class CurveDataPanel : UserControl
     private void DataTable_PointerPressed(object? sender, PointerPressedEventArgs e)
     {
         if (DataContext is not MainWindowViewModel vm) return;
+        if (DataTable is null) return;
         
         var point = e.GetPosition(DataTable);
         var cellPos = GetCellPositionFromPoint(point);
@@ -355,20 +405,23 @@ public partial class CurveDataPanel : UserControl
         {
             if (e.KeyModifiers.HasFlag(KeyModifiers.Control))
             {
-                // Ctrl+click: Toggle selection
+                // Ctrl+click: Toggle selection without clearing existing selection
                 vm.CurveDataTableViewModel.ToggleCellSelection(pos.RowIndex, pos.ColumnIndex);
             }
             else if (e.KeyModifiers.HasFlag(KeyModifiers.Shift))
             {
-                // Shift+click: Select range
+                // Shift+click: Select range from anchor to clicked cell
                 vm.CurveDataTableViewModel.SelectRange(pos.RowIndex, pos.ColumnIndex);
             }
             else
             {
-                // Normal click: Start new selection and potentially start drag
+                // Normal click: Start new selection and begin drag tracking
                 vm.CurveDataTableViewModel.SelectCell(pos.RowIndex, pos.ColumnIndex);
                 _isDragging = true;
                 _dragStartCell = pos;
+                
+                // Capture pointer for reliable drag tracking
+                e.Pointer.Capture(DataTable);
             }
             
             e.Handled = true;
@@ -397,6 +450,12 @@ public partial class CurveDataPanel : UserControl
     /// </summary>
     private void DataTable_PointerReleased(object? sender, PointerReleasedEventArgs e)
     {
+        if (_isDragging)
+        {
+            // Release pointer capture
+            e.Pointer.Capture(null);
+        }
+        
         _isDragging = false;
         _dragStartCell = null;
     }

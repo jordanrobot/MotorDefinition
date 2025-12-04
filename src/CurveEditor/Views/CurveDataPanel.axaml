@@ -158,11 +158,7 @@
                   HeadersVisibility="None"
                   SelectionMode="Single"
                   IsVisible="{Binding SelectedVoltage, Converter={x:Static ObjectConverters.IsNotNull}}"
-                  CellEditEnded="DataGrid_CellEditEnded"
-                  KeyDown="DataTable_KeyDown"
-                  PointerPressed="DataTable_PointerPressed"
-                  PointerMoved="DataTable_PointerMoved"
-                  PointerReleased="DataTable_PointerReleased">
+                  CellEditEnded="DataGrid_CellEditEnded">
             <DataGrid.Columns>
                 <DataGridTextColumn Header="%" 
                                     Binding="{Binding Percent}" 
