@@ -534,9 +534,15 @@ public partial class MainWindowViewModel : ViewModelBase
                 CurrentMotor.RatedContinuousTorque,
                 CurrentMotor.Power);
 
-            if (Application.Current?.ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop)
+            if (Application.Current?.ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop &&
+                desktop.MainWindow is not null)
             {
-                await dialog.ShowDialog(desktop.MainWindow!);
+                await dialog.ShowDialog(desktop.MainWindow);
+            }
+            else
+            {
+                StatusMessage = "Cannot show dialog - no main window available";
+                return;
             }
 
             if (dialog.Result is null) return;
@@ -567,10 +573,10 @@ public partial class MainWindowViewModel : ViewModelBase
             voltage.Series.Add(peakSeries);
             voltage.Series.Add(continuousSeries);
 
-            // Refresh the drive list in UI
-            RefreshAvailableDrives();
+            // Add the new drive directly to the collection (don't clear/refresh)
+            AvailableDrives.Add(drive);
             
-            // Select the new drive and update chart
+            // Select the new drive - this will trigger OnSelectedDriveChanged which updates voltages
             SelectedDrive = drive;
             
             // Explicitly refresh chart to ensure axes are updated with new max speed
@@ -752,12 +758,25 @@ public partial class MainWindowViewModel : ViewModelBase
                 SelectedVoltage.RatedContinuousTorque,
                 SelectedVoltage.Power);
 
-            if (Application.Current?.ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop)
+            if (Application.Current?.ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop &&
+                desktop.MainWindow is not null)
             {
-                await dialog.ShowDialog(desktop.MainWindow!);
+                await dialog.ShowDialog(desktop.MainWindow);
+            }
+            else
+            {
+                StatusMessage = "Cannot show dialog - no main window available";
+                return;
             }
 
             if (dialog.Result is null) return;
+
+            // Re-check SelectedVoltage in case it changed during async operation
+            if (SelectedVoltage is null)
+            {
+                StatusMessage = "No voltage selected";
+                return;
+            }
 
             var result = dialog.Result;
             var seriesName = GenerateUniqueName(
