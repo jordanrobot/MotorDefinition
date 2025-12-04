@@ -100,6 +100,12 @@ public partial class CurveDataPanel : UserControl
         _isRebuildingColumns = true;
         try
         {
+            // Critical fix: Temporarily disconnect ItemsSource to prevent layout issues
+            // The DataGrid can crash when columns are modified while it's trying to layout
+            // existing rows that expect a different column count
+            var savedItemsSource = DataTable.ItemsSource;
+            DataTable.ItemsSource = null;
+            
             // Remove all columns except the first two (% and RPM)
             while (DataTable.Columns.Count > 2)
             {
@@ -157,6 +163,9 @@ public partial class CurveDataPanel : UserControl
 
                 DataTable.Columns.Add(column);
             }
+            
+            // Restore ItemsSource after columns are rebuilt
+            DataTable.ItemsSource = savedItemsSource;
         }
         finally
         {
