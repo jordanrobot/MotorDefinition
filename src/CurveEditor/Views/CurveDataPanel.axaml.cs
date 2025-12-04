@@ -269,7 +269,17 @@ public partial class CurveDataPanel : UserControl
                             BorderBrush = Brushes.White
                         };
                         
-                        // Handle text changes to update the underlying data
+                        // Select all text when the TextBox is attached to visual tree (edit mode starts)
+                        textBox.AttachedToVisualTree += (sender, e) =>
+                        {
+                            if (sender is TextBox tb)
+                            {
+                                tb.SelectAll();
+                                tb.Focus();
+                            }
+                        };
+                        
+                        // Handle text changes to update the underlying data and refresh chart
                         textBox.LostFocus += (sender, e) =>
                         {
                             if (sender is TextBox tb && row is not null)
@@ -277,6 +287,13 @@ public partial class CurveDataPanel : UserControl
                                 if (double.TryParse(tb.Text, out var newValue))
                                 {
                                     row.SetTorque(seriesName, newValue);
+                                    
+                                    // Update chart and mark dirty when focus is lost
+                                    if (DataContext is MainWindowViewModel viewModel)
+                                    {
+                                        viewModel.MarkDirty();
+                                        viewModel.ChartViewModel.RefreshChart();
+                                    }
                                 }
                             }
                         };
@@ -432,8 +449,8 @@ public partial class CurveDataPanel : UserControl
                 // Select the cell in our tracking
                 vm.CurveDataTableViewModel.SelectCell(pos.RowIndex, pos.ColumnIndex);
                 
-                // Select the row in the DataGrid to enable editing
-                SelectDataGridRow(pos.RowIndex);
+                // Select the row and column in the DataGrid to enable editing the correct cell
+                SelectDataGridCell(pos.RowIndex, pos.ColumnIndex);
                 
                 // DON'T set e.Handled = true - let the DataGrid handle the double-click
                 // for its native edit mode functionality
@@ -511,6 +528,10 @@ public partial class CurveDataPanel : UserControl
             viewModel.MarkDirty();
             viewModel.ChartViewModel.RefreshChart();
         }
+        
+        // Update cell selection visuals after edit ends
+        // This ensures the white border is properly cleared/updated
+        UpdateCellSelectionVisuals();
     }
 
     /// <summary>
@@ -732,12 +753,12 @@ public partial class CurveDataPanel : UserControl
         // Handle F2 to enter edit mode
         if (e.Key == Key.F2)
         {
-            // Select the row in the DataGrid to enable editing
+            // Select the row and column in the DataGrid to enable editing the correct cell
             var selectedCells = vm.CurveDataTableViewModel.SelectedCells;
             if (selectedCells.Count > 0)
             {
                 var firstCell = selectedCells.First();
-                SelectDataGridRow(firstCell.RowIndex);
+                SelectDataGridCell(firstCell.RowIndex, firstCell.ColumnIndex);
                 // DON'T set e.Handled = true - let the DataGrid's native F2 handler work
                 // The BeginEdit() call doesn't work properly when using tunnel routing
             }
@@ -813,6 +834,28 @@ public partial class CurveDataPanel : UserControl
         {
             var row = vm.CurveDataTableViewModel.Rows[firstSelected.RowIndex];
             dataGrid.ScrollIntoView(row, null);
+        }
+    }
+
+    /// <summary>
+    /// Selects a row and column in the DataGrid to enable editing operations.
+    /// </summary>
+    private void SelectDataGridCell(int rowIndex, int columnIndex)
+    {
+        if (DataContext is not MainWindowViewModel vm || DataTable is null) return;
+        
+        if (rowIndex >= 0 && rowIndex < vm.CurveDataTableViewModel.Rows.Count)
+        {
+            var row = vm.CurveDataTableViewModel.Rows[rowIndex];
+            DataTable.SelectedItem = row;
+            
+            // Set the current column if within bounds
+            if (columnIndex >= 0 && columnIndex < DataTable.Columns.Count)
+            {
+                DataTable.CurrentColumn = DataTable.Columns[columnIndex];
+            }
+            
+            DataTable.ScrollIntoView(row, DataTable.CurrentColumn);
         }
     }
 
