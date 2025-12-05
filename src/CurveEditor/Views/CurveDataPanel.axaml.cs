@@ -775,17 +775,31 @@ public partial class CurveDataPanel : UserControl
                         // If all text deleted, exit Override Mode and restore original values
                         _isInOverrideMode = false;
                         RestoreOriginalValues();
+                        ForceDataGridRefresh(dataGrid);
                     }
                     else
                     {
                         // Update cell displays with remaining text
                         UpdateOverrideModeDisplay();
+                        ForceDataGridRefresh(dataGrid);
                     }
                 }
                 e.Handled = true;
                 return;
             }
-            // Let TextInput handle other keys for typing
+            
+            // Handle character input while in Override Mode
+            var charInOverride = GetCharacterFromKey(e.Key, e.KeyModifiers);
+            if (charInOverride is not null)
+            {
+                _overrideText += charInOverride;
+                UpdateOverrideModeDisplay();
+                ForceDataGridRefresh(dataGrid);
+                e.Handled = true;
+                return;
+            }
+            
+            // Ignore other keys while in Override Mode
             return;
         }
 
@@ -895,8 +909,8 @@ public partial class CurveDataPanel : UserControl
             }
         }
         
-        // Handle character input for Override Mode
-        // If the key is a digit, minus, or decimal point, enter/continue Override Mode
+        // Handle character input for Override Mode (start new override)
+        // If the key is a digit, minus, or decimal point, enter Override Mode
         var character = GetCharacterFromKey(e.Key, e.KeyModifiers);
         if (character is not null && vm.CurveDataTableViewModel.SelectedCells.Count > 0)
         {
@@ -910,6 +924,7 @@ public partial class CurveDataPanel : UserControl
             
             // Update cell displays immediately as user types
             UpdateOverrideModeDisplay();
+            ForceDataGridRefresh(dataGrid);
             
             e.Handled = true;
         }
@@ -1334,5 +1349,22 @@ public partial class CurveDataPanel : UserControl
 
         vm.MarkDirty();
         vm.ChartViewModel.RefreshChart();
+    }
+    
+    /// <summary>
+    /// Forces the DataGrid to refresh its visual display.
+    /// This is needed because virtualized cells don't always update when data changes.
+    /// </summary>
+    private static void ForceDataGridRefresh(DataGrid dataGrid)
+    {
+        // Force visual refresh by invalidating the visual
+        dataGrid.InvalidateVisual();
+        
+        // Force re-measure and re-arrange which causes cells to re-render
+        dataGrid.InvalidateMeasure();
+        dataGrid.InvalidateArrange();
+        
+        // Update layout immediately
+        dataGrid.UpdateLayout();
     }
 }
