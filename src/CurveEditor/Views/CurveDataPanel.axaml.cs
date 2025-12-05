@@ -30,6 +30,7 @@ public partial class CurveDataPanel : UserControl
     // the typed value replaces the existing values of all selected cells
     private bool _isInOverrideMode;
     private string _overrideText = "";
+    private readonly Dictionary<CellPosition, double> _originalValues = [];
 
     /// <summary>
     /// Creates a new CurveDataPanel instance.
@@ -771,8 +772,14 @@ public partial class CurveDataPanel : UserControl
                     _overrideText = _overrideText[..^1];
                     if (_overrideText.Length == 0)
                     {
-                        // If all text deleted, exit Override Mode
+                        // If all text deleted, exit Override Mode and restore original values
                         _isInOverrideMode = false;
+                        RestoreOriginalValues();
+                    }
+                    else
+                    {
+                        // Update cell displays with remaining text
+                        UpdateOverrideModeDisplay();
                     }
                 }
                 e.Handled = true;
@@ -900,6 +907,10 @@ public partial class CurveDataPanel : UserControl
             }
             
             _overrideText += character;
+            
+            // Update cell displays immediately as user types
+            UpdateOverrideModeDisplay();
+            
             e.Handled = true;
         }
     }
@@ -1180,7 +1191,7 @@ public partial class CurveDataPanel : UserControl
 
     /// <summary>
     /// Commits the Override Mode text to all selected cells and exits Override Mode.
-    /// If the text cannot be parsed as a number, the changes are silently discarded.
+    /// If the text cannot be parsed as a number, the original values are restored.
     /// </summary>
     private void CommitOverrideMode()
     {
@@ -1190,21 +1201,108 @@ public partial class CurveDataPanel : UserControl
         // Try to parse the accumulated text as a number
         if (double.TryParse(_overrideText, out var value))
         {
-            ApplyValueToSelectedCells(value);
+            // Values are already applied via UpdateOverrideModeDisplay, just mark dirty
+            vm.MarkDirty();
+        }
+        else
+        {
+            // If parsing failed, restore original values
+            RestoreOriginalValues();
         }
         
-        // Exit Override Mode
+        // Exit Override Mode and clean up
         _isInOverrideMode = false;
         _overrideText = "";
+        _originalValues.Clear();
     }
 
     /// <summary>
-    /// Cancels Override Mode without applying changes.
+    /// Cancels Override Mode without applying changes and restores original values.
     /// </summary>
     private void CancelOverrideMode()
     {
+        RestoreOriginalValues();
         _isInOverrideMode = false;
         _overrideText = "";
+        _originalValues.Clear();
+    }
+
+    /// <summary>
+    /// Updates the display of all selected cells to show the current override text.
+    /// This provides real-time visual feedback as the user types.
+    /// </summary>
+    private void UpdateOverrideModeDisplay()
+    {
+        if (DataContext is not MainWindowViewModel vm) return;
+
+        var selectedCells = vm.CurveDataTableViewModel.SelectedCells;
+        if (selectedCells.Count == 0) return;
+
+        // Store original values on first character entry
+        if (_overrideText.Length == 1)
+        {
+            _originalValues.Clear();
+            foreach (var cellPos in selectedCells)
+            {
+                if (cellPos.ColumnIndex < 2) continue;
+                
+                var seriesName = vm.CurveDataTableViewModel.GetSeriesNameForColumn(cellPos.ColumnIndex);
+                if (seriesName is null) continue;
+                if (vm.CurveDataTableViewModel.IsSeriesLocked(seriesName)) continue;
+                
+                if (cellPos.RowIndex >= 0 && cellPos.RowIndex < vm.CurveDataTableViewModel.Rows.Count)
+                {
+                    var originalValue = vm.CurveDataTableViewModel.Rows[cellPos.RowIndex].GetTorque(seriesName);
+                    _originalValues[cellPos] = originalValue;
+                }
+            }
+        }
+
+        // Update all selected cells with the current typed text (or 0 if not parseable)
+        if (double.TryParse(_overrideText, out var value))
+        {
+            foreach (var cellPos in selectedCells)
+            {
+                if (cellPos.ColumnIndex < 2) continue;
+                
+                var seriesName = vm.CurveDataTableViewModel.GetSeriesNameForColumn(cellPos.ColumnIndex);
+                if (seriesName is null) continue;
+                if (vm.CurveDataTableViewModel.IsSeriesLocked(seriesName)) continue;
+                
+                if (cellPos.RowIndex >= 0 && cellPos.RowIndex < vm.CurveDataTableViewModel.Rows.Count)
+                {
+                    vm.CurveDataTableViewModel.Rows[cellPos.RowIndex].SetTorque(seriesName, value);
+                }
+            }
+            
+            // Refresh chart to show updated values
+            vm.ChartViewModel.RefreshChart();
+        }
+    }
+
+    /// <summary>
+    /// Restores the original values that were stored when Override Mode started.
+    /// </summary>
+    private void RestoreOriginalValues()
+    {
+        if (DataContext is not MainWindowViewModel vm) return;
+        
+        foreach (var kvp in _originalValues)
+        {
+            var cellPos = kvp.Key;
+            var originalValue = kvp.Value;
+            
+            var seriesName = vm.CurveDataTableViewModel.GetSeriesNameForColumn(cellPos.ColumnIndex);
+            if (seriesName is null) continue;
+            
+            if (cellPos.RowIndex >= 0 && cellPos.RowIndex < vm.CurveDataTableViewModel.Rows.Count)
+            {
+                vm.CurveDataTableViewModel.Rows[cellPos.RowIndex].SetTorque(seriesName, originalValue);
+            }
+        }
+        
+        // Refresh chart to show restored values
+        vm.ChartViewModel.RefreshChart();
     }
 
     /// <summary>
