@@ -117,10 +117,9 @@ public partial class CurveDataPanel : UserControl
     {
         if (DataContext is not MainWindowViewModel vm) return;
 
-        // First, reset all registered borders to unselected state
-        // This handles cases where a border was selected but is no longer in the selection
         var bordersToRemove = new List<CellPosition>();
         
+        // First pass: Reset ALL borders to unselected state and clean up stale entries
         foreach (var kvp in _cellBorders)
         {
             // Check if the border is still valid (has a visual parent)
@@ -131,14 +130,25 @@ public partial class CurveDataPanel : UserControl
                 continue;
             }
             
-            var isSelected = vm.CurveDataTableViewModel.IsCellSelected(kvp.Key.RowIndex, kvp.Key.ColumnIndex);
-            UpdateCellBorderVisual(kvp.Value, isSelected);
+            // Reset ALL borders to unselected state first
+            // This ensures that when selection changes (e.g., after edit mode or arrow keys),
+            // previously selected borders are properly cleared
+            UpdateCellBorderVisual(kvp.Value, false);
         }
         
         // Clean up stale entries
         foreach (var pos in bordersToRemove)
         {
             _cellBorders.Remove(pos);
+        }
+        
+        // Second pass: Apply selected state only to currently selected cells
+        foreach (var cellPos in vm.CurveDataTableViewModel.SelectedCells)
+        {
+            if (_cellBorders.TryGetValue(cellPos, out var border))
+            {
+                UpdateCellBorderVisual(border, true);
+            }
         }
     }
 
@@ -1198,6 +1208,12 @@ public partial class CurveDataPanel : UserControl
             if (cellPos.RowIndex >= 0 && cellPos.RowIndex < vm.CurveDataTableViewModel.Rows.Count)
             {
                 vm.CurveDataTableViewModel.Rows[cellPos.RowIndex].SetTorque(seriesName, 0);
+                
+                // Directly update the TextBlock in the cell for immediate visual feedback
+                if (_cellBorders.TryGetValue(cellPos, out var border) && border.Child is TextBlock textBlock)
+                {
+                    textBlock.Text = "0.00";
+                }
             }
         }
 
