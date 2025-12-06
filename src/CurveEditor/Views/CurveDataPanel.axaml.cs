@@ -890,16 +890,23 @@ public partial class CurveDataPanel : UserControl
         {
             if (e.Key == Key.Enter)
             {
-                // Commit override but keep selection fixed while in override mode.
+                // Commit override and move selection down one row, matching
+                // the normal Enter navigation behavior from non-override mode.
                 CommitOverrideMode();
+                vm.CurveDataTableViewModel.MoveSelection(1, 0);
+                ScrollToSelection(dataGrid);
                 UpdateCellSelectionVisuals();
                 e.Handled = true;
                 return;
             }
             else if (e.Key == Key.Tab)
             {
-                // Commit override but do not move selection while in override mode.
+                // Commit override and move selection horizontally, honoring
+                // Shift for reverse tab navigation, consistent with edit mode.
                 CommitOverrideMode();
+                var deltaCol = e.KeyModifiers.HasFlag(KeyModifiers.Shift) ? -1 : 1;
+                vm.CurveDataTableViewModel.MoveSelection(0, deltaCol);
+                ScrollToSelection(dataGrid);
                 UpdateCellSelectionVisuals();
                 e.Handled = true;
                 return;
@@ -934,10 +941,29 @@ public partial class CurveDataPanel : UserControl
                 e.Handled = true;
                 return;
             }
-            // Arrow keys: commit override but keep selection fixed while in override mode
+            // Arrow keys: commit override and move selection in the arrow
+            // direction, restoring the original single-press behavior.
             else if (e.Key is Key.Up or Key.Down or Key.Left or Key.Right)
             {
                 CommitOverrideMode();
+
+                switch (e.Key)
+                {
+                    case Key.Up:
+                        vm.CurveDataTableViewModel.MoveSelection(-1, 0);
+                        break;
+                    case Key.Down:
+                        vm.CurveDataTableViewModel.MoveSelection(1, 0);
+                        break;
+                    case Key.Left:
+                        vm.CurveDataTableViewModel.MoveSelection(0, -1);
+                        break;
+                    case Key.Right:
+                        vm.CurveDataTableViewModel.MoveSelection(0, 1);
+                        break;
+                }
+
+                ScrollToSelection(dataGrid);
                 UpdateCellSelectionVisuals();
                 e.Handled = true;
                 return;
@@ -1348,8 +1374,35 @@ public partial class CurveDataPanel : UserControl
 
     private void CutSelectedCells(DataGrid dataGrid)
     {
+        if (DataContext is not MainWindowViewModel vm)
+        {
+            return;
+        }
+
+        // Copy first so clipboard reflects the pre-cut values
         CopySelectedCells(dataGrid);
-        ClearSelectedCells(dataGrid);
+
+        // Then clear the cells through the view-model helper
+        vm.CurveDataTableViewModel.ClearSelectedTorqueCells();
+        vm.MarkDirty();
+        vm.ChartViewModel.RefreshChart();
+
+        // Immediately update visible cells to reflect cleared values (0.00)
+        foreach (var cellPos in vm.CurveDataTableViewModel.SelectedCells)
+        {
+            if (cellPos.ColumnIndex < 2)
+            {
+                continue;
+            }
+
+            if (_cellBorders.TryGetValue(cellPos, out var border) && border.Child is TextBlock textBlock)
+            {
+                textBlock.Text = "0.00";
+            }
+        }
+
+        // Ensure any virtualized rows/columns are also refreshed
+        ForceDataGridRefresh(dataGrid);
     }
 
     private void ClearSelectedCells(DataGrid dataGrid)
@@ -1458,20 +1511,38 @@ public partial class CurveDataPanel : UserControl
         // Update all selected cells with the current typed text (or 0 if not parseable)
         if (double.TryParse(_overrideText, out var value))
         {
+            // Delegate mutation rules to the view model helper, then update
+            // visible cells for immediate feedback.
+            vm.CurveDataTableViewModel.ApplyOverrideValue(value);
+
             foreach (var cellPos in selectedCells)
             {
-                if (!vm.CurveDataTableViewModel.TrySetTorqueAtCell(cellPos, value))
+                if (cellPos.ColumnIndex < 2)
                 {
                     continue;
                 }
 
-                // Directly update the TextBlock in the cell for immediate visual feedback
+                var seriesName = vm.CurveDataTableViewModel.GetSeriesNameForColumn(cellPos.ColumnIndex);
+                if (seriesName is null)
+                {
+                    continue;
+                }
+
+                var rowIndex = cellPos.RowIndex;
+                if (rowIndex < 0 || rowIndex >= vm.CurveDataTableViewModel.Rows.Count)
+                {
+                    continue;
+                }
+
+                var row = vm.CurveDataTableViewModel.Rows[rowIndex];
+                var torque = row.GetTorque(seriesName);
+
                 if (_cellBorders.TryGetValue(cellPos, out var border) && border.Child is TextBlock textBlock)
                 {
-                    textBlock.Text = value.ToString("N2");
+                    textBlock.Text = torque.ToString("N2");
                 }
             }
-            
+
             // Refresh chart to show updated values
             vm.ChartViewModel.RefreshChart();
         }

@@ -501,6 +501,16 @@ public partial class CurveDataTableViewModel : ViewModelBase
     }
 
     /// <summary>
+    /// Applies the provided torque value to all currently selected cells and
+    /// raises <see cref="DataChanged"/> if any value changes.
+    /// </summary>
+    /// <param name="value">The torque value to apply.</param>
+    public void ApplyOverrideValue(double value)
+    {
+        ApplyTorqueToSelectedCells(value);
+    }
+
+    /// <summary>
     /// Clears torque values for all currently selected cells by setting them to zero.
     /// </summary>
     public void ClearSelectedTorqueCells()
