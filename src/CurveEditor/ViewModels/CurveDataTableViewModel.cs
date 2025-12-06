@@ -146,6 +146,13 @@ public partial class CurveDataTableViewModel : ViewModelBase
     public event EventHandler? SelectionChanged;
 
     /// <summary>
+    /// Event raised when an invalid clipboard paste is attempted.
+    /// The string parameter contains a human-readable error message
+    /// that can be surfaced by the UI layer.
+    /// </summary>
+    public event EventHandler<string>? ClipboardError;
+
+    /// <summary>
     /// Gets or sets the current voltage configuration.
     /// </summary>
     public VoltageConfiguration? CurrentVoltage
@@ -158,6 +165,20 @@ public partial class CurveDataTableViewModel : ViewModelBase
             OnPropertyChanged();
             RefreshData();
         }
+    }
+
+    /// <summary>
+    /// Applies a scalar torque value to all currently selected cells.
+    /// </summary>
+    /// <param name="value">The torque value to apply.</param>
+    public void ApplyTorqueToSelectedCells(double value)
+    {
+        if (SelectedCells.Count == 0)
+        {
+            return;
+        }
+
+        ApplyTorqueToCells(SelectedCells, value);
     }
 
     /// <summary>
@@ -477,6 +498,109 @@ public partial class CurveDataTableViewModel : ViewModelBase
         {
             DataChanged?.Invoke(this, EventArgs.Empty);
         }
+    }
+
+    /// <summary>
+    /// Clears torque values for all currently selected cells by setting them to zero.
+    /// </summary>
+    public void ClearSelectedTorqueCells()
+    {
+        if (SelectedCells.Count == 0)
+        {
+            return;
+        }
+
+        ApplyTorqueToCells(SelectedCells, 0);
+    }
+
+    /// <summary>
+    /// Attempts to paste clipboard text into the table starting at the current
+    /// selection. Returns true if any torque value is updated. Clipboard shape
+    /// validation and error reporting are handled here so the view only needs
+    /// to provide raw text.
+    /// </summary>
+    /// <param name="clipboardText">Clipboard text containing tab/newline-delimited values.</param>
+    /// <returns>True if at least one cell was updated; otherwise false.</returns>
+    public bool TryPasteClipboard(string clipboardText)
+    {
+        if (string.IsNullOrWhiteSpace(clipboardText))
+        {
+            return false;
+        }
+
+        if (SelectedCells.Count == 0)
+        {
+            return false;
+        }
+
+        if (_currentVoltage is null || Rows.Count == 0 || SeriesColumns.Count == 0)
+        {
+            return false;
+        }
+
+        var selectedCellsSnapshot = SelectedCells.ToList();
+
+        // Normalize clipboard text into lines and values
+        var lines = clipboardText
+            .Split(['\r', '\n'], StringSplitOptions.RemoveEmptyEntries);
+
+        if (lines.Length == 0)
+        {
+            return false;
+        }
+
+        // Special case: single scalar replicated across all selected cells
+        if (lines.Length == 1)
+        {
+            var parts = lines[0].Split('\t', StringSplitOptions.RemoveEmptyEntries);
+            if (parts.Length == 1 && double.TryParse(parts[0], out var scalar))
+            {
+                ApplyTorqueToCells(selectedCellsSnapshot, scalar);
+                return true;
+            }
+        }
+
+        // General rectangular paste starting from the top-left selected cell
+        var minRow = selectedCellsSnapshot.Min(c => c.RowIndex);
+        var minCol = selectedCellsSnapshot.Min(c => c.ColumnIndex);
+
+        var anyChanged = false;
+
+        for (var lineIndex = 0; lineIndex < lines.Length; lineIndex++)
+        {
+            var values = lines[lineIndex].Split('\t');
+            var rowIndex = minRow + lineIndex;
+
+            if (rowIndex >= Rows.Count)
+            {
+                break;
+            }
+
+            for (var valueIndex = 0; valueIndex < values.Length; valueIndex++)
+            {
+                var colIndex = minCol + valueIndex;
+                var raw = values[valueIndex];
+
+                if (!double.TryParse(raw, out var value))
+                {
+                    continue;
+                }
+
+                var cellPos = new CellPosition(rowIndex, colIndex);
+                if (TrySetTorqueAtCell(cellPos, value))
+                {
+                    anyChanged = true;
+                }
+            }
+        }
+
+        if (!anyChanged)
+        {
+            return false;
+        }
+
+        DataChanged?.Invoke(this, EventArgs.Empty);
+        return true;
     }
 
     /// <summary>

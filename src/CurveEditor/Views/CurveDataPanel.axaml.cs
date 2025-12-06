@@ -31,6 +31,34 @@ public partial class CurveDataPanel : UserControl
     private bool _isInOverrideMode;
     private string _overrideText = "";
     private readonly Dictionary<CellPosition, double> _originalValues = [];
+    private CellPosition? _editCell;
+    private double? _editOriginalTorque;
+
+    /// <summary>
+    /// Captures the original torque values for the provided cells so they can be restored later.
+    /// Used by both Override Mode and edit-mode Esc behavior.
+    /// </summary>
+    private void SnapshotOriginalValues(IEnumerable<CellPosition> cells)
+    {
+        if (DataContext is not MainWindowViewModel vm) return;
+
+        _originalValues.Clear();
+
+        foreach (var cellPos in cells)
+        {
+            if (cellPos.ColumnIndex < 2) continue;
+
+            var seriesName = vm.CurveDataTableViewModel.GetSeriesNameForColumn(cellPos.ColumnIndex);
+            if (seriesName is null) continue;
+            if (vm.CurveDataTableViewModel.IsSeriesLocked(seriesName)) continue;
+
+            if (cellPos.RowIndex >= 0 && cellPos.RowIndex < vm.CurveDataTableViewModel.Rows.Count)
+            {
+                var originalValue = vm.CurveDataTableViewModel.Rows[cellPos.RowIndex].GetTorque(seriesName);
+                _originalValues[cellPos] = originalValue;
+            }
+        }
+    }
 
     /// <summary>
     /// Creates a new CurveDataPanel instance.
@@ -51,6 +79,7 @@ public partial class CurveDataPanel : UserControl
         // Prevent duplicate event handler registrations
         if (_eventHandlersRegistered || DataTable is null) return;
         
+        DataTable.BeginningEdit += DataTable_BeginningEdit;
         DataTable.AddHandler(PointerPressedEvent, DataTable_PointerPressed, Avalonia.Interactivity.RoutingStrategies.Tunnel);
         DataTable.AddHandler(PointerMovedEvent, DataTable_PointerMoved, Avalonia.Interactivity.RoutingStrategies.Tunnel);
         DataTable.AddHandler(PointerReleasedEvent, DataTable_PointerReleased, Avalonia.Interactivity.RoutingStrategies.Tunnel);
@@ -73,6 +102,7 @@ public partial class CurveDataPanel : UserControl
         // Remove event handlers when unloaded
         if (_eventHandlersRegistered && DataTable is not null)
         {
+            DataTable.BeginningEdit -= DataTable_BeginningEdit;
             DataTable.RemoveHandler(PointerPressedEvent, DataTable_PointerPressed);
             DataTable.RemoveHandler(PointerMovedEvent, DataTable_PointerMoved);
             DataTable.RemoveHandler(PointerReleasedEvent, DataTable_PointerReleased);
@@ -111,6 +141,37 @@ public partial class CurveDataPanel : UserControl
     private void OnSelectionChanged(object? sender, EventArgs e)
     {
         UpdateCellSelectionVisuals();
+    }
+
+    private void DataTable_BeginningEdit(object? sender, DataGridBeginningEditEventArgs e)
+    {
+        if (DataContext is not MainWindowViewModel vm) return;
+        if (DataTable is null) return;
+        if (e.Row.DataContext is not CurveDataRow dataRow)
+        {
+            _editCell = null;
+            _editOriginalTorque = null;
+            return;
+        }
+
+        var rowIndex = dataRow.RowIndex;
+        var columnIndex = e.Column.DisplayIndex;
+
+        var cellPos = new CellPosition(rowIndex, columnIndex);
+        _editCell = cellPos;
+
+        _editOriginalTorque = null;
+
+        // Only snapshot torque cells (columns >= 2)
+        if (columnIndex >= 2 && rowIndex >= 0 && rowIndex < vm.CurveDataTableViewModel.Rows.Count)
+        {
+            var seriesName = vm.CurveDataTableViewModel.GetSeriesNameForColumn(columnIndex);
+            if (seriesName is not null)
+            {
+                var row = vm.CurveDataTableViewModel.Rows[rowIndex];
+                _editOriginalTorque = row.GetTorque(seriesName);
+            }
+        }
     }
 
     private void UpdateCellSelectionVisuals()
@@ -460,7 +521,7 @@ public partial class CurveDataPanel : UserControl
         var pos = cellPos.Value;
         var properties = e.GetCurrentPoint(DataTable).Properties;
 
-        if (properties.IsLeftButtonPressed)
+            if (properties.IsLeftButtonPressed)
         {
             // If a TextBox editor currently has focus inside the DataGrid, commit
             // its edit before we change the selection via mouse. This keeps the
@@ -470,8 +531,8 @@ public partial class CurveDataPanel : UserControl
                 DataTable.CommitEdit();
             }
 
-            // Check for double-click to enter edit mode
-            // Let the event bubble through to DataGrid for native edit mode handling
+                // Check for double-click to enter edit mode
+                // Let the event bubble through to DataGrid for native edit mode handling
             if (e.ClickCount >= 2)
             {
                 // Cancel any ongoing drag operation
@@ -480,6 +541,9 @@ public partial class CurveDataPanel : UserControl
                 
                 // Select the cell in our tracking
                 vm.CurveDataTableViewModel.SelectCell(pos.RowIndex, pos.ColumnIndex);
+                // Snapshot the original value for this cell for potential Esc revert
+                SnapshotOriginalValues(new[] { pos });
+                _editCell = pos;
                 // Ensure visuals are in sync before DataGrid enters edit mode
                 UpdateCellSelectionVisuals();
                 
@@ -738,10 +802,28 @@ public partial class CurveDataPanel : UserControl
             switch (e.Key)
             {
                 case Key.Escape:
+                    // Revert the edited cell to its original value and exit edit mode
+                    if (DataContext is MainWindowViewModel vmEsc && _editCell is CellPosition editCell && _editOriginalTorque is not null)
+                    {
+                        var originalValue = _editOriginalTorque.Value;
+
+                        if (vmEsc.CurveDataTableViewModel.TrySetTorqueAtCell(editCell, originalValue))
+                        {
+                            if (_cellBorders.TryGetValue(editCell, out var border) && border.Child is TextBlock textBlock)
+                            {
+                                textBlock.Text = originalValue.ToString("N2");
+                            }
+
+                            vmEsc.ChartViewModel.RefreshChart();
+                        }
+                    }
+
                     dataGrid.CancelEdit();
                     // Do not move selection; just refresh visuals to clear edit artifacts
                     UpdateCellSelectionVisuals();
                     e.Handled = true;
+                    _editCell = null;
+                    _editOriginalTorque = null;
                     return;
 
                 case Key.Enter:
@@ -750,6 +832,7 @@ public partial class CurveDataPanel : UserControl
                     ScrollToSelection(dataGrid);
                     UpdateCellSelectionVisuals();
                     e.Handled = true;
+                    _editCell = null;
                     return;
 
                 case Key.Tab:
@@ -761,6 +844,7 @@ public partial class CurveDataPanel : UserControl
                     ScrollToSelection(dataGrid);
                     UpdateCellSelectionVisuals();
                     e.Handled = true;
+                    _editCell = null;
                     return;
                 }
 
@@ -806,28 +890,16 @@ public partial class CurveDataPanel : UserControl
         {
             if (e.Key == Key.Enter)
             {
-                // Commit override and move selection down
+                // Commit override but keep selection fixed while in override mode.
                 CommitOverrideMode();
-                vm.CurveDataTableViewModel.MoveSelection(1, 0);
-                ScrollToSelection(dataGrid);
                 UpdateCellSelectionVisuals();
                 e.Handled = true;
                 return;
             }
             else if (e.Key == Key.Tab)
             {
-                // Commit override and move selection right (or left with Shift)
+                // Commit override but do not move selection while in override mode.
                 CommitOverrideMode();
-                if (e.KeyModifiers.HasFlag(KeyModifiers.Shift))
-                {
-                    vm.CurveDataTableViewModel.MoveSelection(0, -1);
-                }
-                else
-                {
-                    vm.CurveDataTableViewModel.MoveSelection(0, 1);
-                }
-                ScrollToSelection(dataGrid);
-                // Keep selection border visuals in sync after tab navigation
                 UpdateCellSelectionVisuals();
                 e.Handled = true;
                 return;
@@ -862,6 +934,14 @@ public partial class CurveDataPanel : UserControl
                 e.Handled = true;
                 return;
             }
+            // Arrow keys: commit override but keep selection fixed while in override mode
+            else if (e.Key is Key.Up or Key.Down or Key.Left or Key.Right)
+            {
+                CommitOverrideMode();
+                UpdateCellSelectionVisuals();
+                e.Handled = true;
+                return;
+            }
             
             // Handle character input while in Override Mode
             var charInOverride = GetCharacterFromKey(e.Key, e.KeyModifiers);
@@ -874,17 +954,7 @@ public partial class CurveDataPanel : UserControl
                 return;
             }
 
-            // While in Override Mode, ignore navigation keys so we don't
-            // create a second visual selection that disagrees with the
-            // active override selection. The user can finish or cancel
-            // the override before moving.
-            if (e.Key is Key.Left or Key.Right or Key.Up or Key.Down)
-            {
-                e.Handled = true;
-                return;
-            }
-
-            // Ignore other keys while in Override Mode
+            // Ignore all other keys while in Override Mode
             return;
         }
 
@@ -1147,10 +1217,16 @@ public partial class CurveDataPanel : UserControl
 
     private void CopySelectedCells(DataGrid dataGrid)
     {
-        if (DataContext is not MainWindowViewModel vm) return;
+        if (DataContext is not MainWindowViewModel vm)
+        {
+            return;
+        }
 
         var selectedCells = vm.CurveDataTableViewModel.SelectedCells;
-        if (selectedCells.Count == 0) return;
+        if (selectedCells.Count == 0)
+        {
+            return;
+        }
 
         // Get unique rows and columns
         var rows = selectedCells.Select(c => c.RowIndex).Distinct().OrderBy(r => r).ToList();
@@ -1164,14 +1240,14 @@ public partial class CurveDataPanel : UserControl
             {
                 if (!selectedCells.Contains(new CellPosition(rowIndex, colIndex)))
                 {
-                    values.Add("");
+                    values.Add(string.Empty);
                     continue;
                 }
 
                 var row = vm.CurveDataTableViewModel.Rows.ElementAtOrDefault(rowIndex);
                 if (row is null)
                 {
-                    values.Add("");
+                    values.Add(string.Empty);
                     continue;
                 }
 
@@ -1193,10 +1269,11 @@ public partial class CurveDataPanel : UserControl
                     }
                     else
                     {
-                        values.Add("");
+                        values.Add(string.Empty);
                     }
                 }
             }
+
             lines.Add(string.Join("\t", values));
         }
 
@@ -1207,83 +1284,66 @@ public partial class CurveDataPanel : UserControl
     private async void PasteToSelectedCells(DataGrid dataGrid)
     {
         var clipboard = TopLevel.GetTopLevel(this)?.Clipboard;
-        if (clipboard is null) return;
+        if (clipboard is null)
+        {
+            return;
+        }
 
 #pragma warning disable CS0618 // GetTextAsync is obsolete
         var text = await clipboard.GetTextAsync();
 #pragma warning restore CS0618
-        if (string.IsNullOrEmpty(text)) return;
-
-        if (DataContext is not MainWindowViewModel vm) return;
-
-        var selectedCells = vm.CurveDataTableViewModel.SelectedCells;
-        if (selectedCells.Count == 0) return;
-
-        // Normalize clipboard into lines/values
-        var lines = text.Split(['\r', '\n'], StringSplitOptions.RemoveEmptyEntries);
-
-        // Special case: single scalar value should be replicated to all selected cells
-        if (lines.Length == 1)
+        if (string.IsNullOrWhiteSpace(text))
         {
-            var parts = lines[0].Split('\t', StringSplitOptions.RemoveEmptyEntries);
-            if (parts.Length == 1 && double.TryParse(parts[0], out var scalar))
-            {
-                foreach (var cellPos in selectedCells)
-                {
-                    if (!vm.CurveDataTableViewModel.TrySetTorqueAtCell(cellPos, scalar))
-                    {
-                        continue;
-                    }
-
-                    if (_cellBorders.TryGetValue(cellPos, out var border) && border.Child is TextBlock textBlock)
-                    {
-                        textBlock.Text = scalar.ToString("N2");
-                    }
-                }
-
-                vm.MarkDirty();
-                vm.ChartViewModel.RefreshChart();
-                return;
-            }
+            return;
         }
 
-        // General rectangular paste starting from top-left selected cell
-        var minRow = selectedCells.Min(c => c.RowIndex);
-        var minCol = selectedCells.Min(c => c.ColumnIndex);
-
-        for (var lineIndex = 0; lineIndex < lines.Length; lineIndex++)
+        if (DataContext is not MainWindowViewModel vm)
         {
-            var values = lines[lineIndex].Split('\t');
-            var rowIndex = minRow + lineIndex;
-
-            if (rowIndex >= vm.CurveDataTableViewModel.Rows.Count) break;
-
-            var row = vm.CurveDataTableViewModel.Rows[rowIndex];
-
-            for (var valueIndex = 0; valueIndex < values.Length; valueIndex++)
-            {
-                var colIndex = minCol + valueIndex;
-
-                if (double.TryParse(values[valueIndex], out var value))
-                {
-                    var cellPos = new CellPosition(rowIndex, colIndex);
-
-                    if (!vm.CurveDataTableViewModel.TrySetTorqueAtCell(cellPos, value))
-                    {
-                        continue;
-                    }
-
-                    // Directly update the TextBlock in the cell for immediate visual feedback
-                    if (_cellBorders.TryGetValue(cellPos, out var border) && border.Child is TextBlock textBlock)
-                    {
-                        textBlock.Text = value.ToString("N2");
-                    }
-                }
-            }
+            return;
         }
 
+        if (!vm.CurveDataTableViewModel.TryPasteClipboard(text))
+        {
+            return;
+        }
+
+        // When the view-model accepts the paste, mark the document dirty and
+        // refresh the chart.
         vm.MarkDirty();
         vm.ChartViewModel.RefreshChart();
+
+        // Immediately update visible cells for the current selection so users
+        // see pasted values without needing to scroll.
+        foreach (var cellPos in vm.CurveDataTableViewModel.SelectedCells)
+        {
+            if (cellPos.ColumnIndex < 2)
+            {
+                continue;
+            }
+
+            var seriesName = vm.CurveDataTableViewModel.GetSeriesNameForColumn(cellPos.ColumnIndex);
+            if (seriesName is null)
+            {
+                continue;
+            }
+
+            var rowIndex = cellPos.RowIndex;
+            if (rowIndex < 0 || rowIndex >= vm.CurveDataTableViewModel.Rows.Count)
+            {
+                continue;
+            }
+
+            var row = vm.CurveDataTableViewModel.Rows[rowIndex];
+            var value = row.GetTorque(seriesName);
+
+            if (_cellBorders.TryGetValue(cellPos, out var border) && border.Child is TextBlock textBlock)
+            {
+                textBlock.Text = value.ToString("N2");
+            }
+        }
+
+        // As a fallback for virtualized rows/columns, force a grid refresh.
+        ForceDataGridRefresh(dataGrid);
     }
 
     private void CutSelectedCells(DataGrid dataGrid)
@@ -1294,27 +1354,17 @@ public partial class CurveDataPanel : UserControl
 
     private void ClearSelectedCells(DataGrid dataGrid)
     {
-        if (DataContext is not MainWindowViewModel vm) return;
-
-        var selectedCells = vm.CurveDataTableViewModel.SelectedCells;
-        if (selectedCells.Count == 0) return;
-
-        foreach (var cellPos in selectedCells)
+        if (DataContext is not MainWindowViewModel vm)
         {
-            if (!vm.CurveDataTableViewModel.TrySetTorqueAtCell(cellPos, 0))
-            {
-                continue;
-            }
-
-            // Directly update the TextBlock in the cell for immediate visual feedback
-            if (_cellBorders.TryGetValue(cellPos, out var border) && border.Child is TextBlock textBlock)
-            {
-                textBlock.Text = "0.00";
-            }
+            return;
         }
 
+        vm.CurveDataTableViewModel.ClearSelectedTorqueCells();
         vm.MarkDirty();
         vm.ChartViewModel.RefreshChart();
+
+        // Keep the visual representation in sync after clearing cells.
+        ForceDataGridRefresh(dataGrid);
     }
 
     /// <summary>
@@ -1402,21 +1452,7 @@ public partial class CurveDataPanel : UserControl
         // Store original values on first character entry
         if (_overrideText.Length == 1)
         {
-            _originalValues.Clear();
-            foreach (var cellPos in selectedCells)
-            {
-                if (cellPos.ColumnIndex < 2) continue;
-                
-                var seriesName = vm.CurveDataTableViewModel.GetSeriesNameForColumn(cellPos.ColumnIndex);
-                if (seriesName is null) continue;
-                if (vm.CurveDataTableViewModel.IsSeriesLocked(seriesName)) continue;
-                
-                if (cellPos.RowIndex >= 0 && cellPos.RowIndex < vm.CurveDataTableViewModel.Rows.Count)
-                {
-                    var originalValue = vm.CurveDataTableViewModel.Rows[cellPos.RowIndex].GetTorque(seriesName);
-                    _originalValues[cellPos] = originalValue;
-                }
-            }
+            SnapshotOriginalValues(selectedCells);
         }
 
         // Update all selected cells with the current typed text (or 0 if not parseable)

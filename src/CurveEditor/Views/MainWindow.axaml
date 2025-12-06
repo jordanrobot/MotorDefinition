@@ -216,9 +216,6 @@
                                 <TextBlock Text="▼" FontSize="10" VerticalAlignment="Center"
                                            IsVisible="{Binding IsCurveDataExpanded}"/>
                                 <TextBlock Text="Curve Data" FontWeight="Bold" FontSize="12"/>
-                                <TextBlock Text="{Binding SelectedSeries.Name, StringFormat='- {0}'}"
-                                           FontSize="11" Foreground="Gray"
-                                           IsVisible="{Binding SelectedSeries, Converter={x:Static ObjectConverters.IsNotNull}}"/>
                             </StackPanel>
                         </ToggleButton>
                         
