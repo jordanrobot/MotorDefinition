@@ -151,6 +151,20 @@ Point-and-drag curve editing similar to audio equalizer interfaces.
 ### Background Image Overlay
 A reference image displayed behind the chart for curve verification against manufacturer data.
 
+--
+
+## Data Cell Editing Concepts
+
+### Override Mode
+A mode where typing directly overwrites the value of the selected cell(s) in the data table. The user does not need to enter Edit Mode first.
+
+### Edit Mode
+A mode where the user can "enter" the cell to directly edit the value within the cell. Works on one cell at a time in a data table. Activated by double-clicking a cell or pressing F2. The user may exit Edit Mode in a variety of ways:
+- by pressing Enter
+- or clicking outside the cell,
+- or pressing Escape (cancels changes).
+- or pressing Tab (moves to next cell)
+
 ---
 
 ## Units

@@ -1,11 +1,27 @@
 using CommunityToolkit.Mvvm.ComponentModel;
 using CurveEditor.Models;
 using System;
+using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Linq;
 
 namespace CurveEditor.ViewModels;
+
+/// <summary>
+/// Represents a cell position in the data table grid.
+/// </summary>
+public readonly record struct CellPosition(int RowIndex, int ColumnIndex)
+{
+    /// <summary>
+    /// Compares two cell positions for ordering.
+    /// </summary>
+    public static int Compare(CellPosition a, CellPosition b)
+    {
+        var rowCompare = a.RowIndex.CompareTo(b.RowIndex);
+        return rowCompare != 0 ? rowCompare : a.ColumnIndex.CompareTo(b.ColumnIndex);
+    }
+}
 
 /// <summary>
 /// Represents a single row in the curve data table, containing speed info and torque values for all series.
@@ -94,6 +110,7 @@ public class CurveDataRow : INotifyPropertyChanged
 public partial class CurveDataTableViewModel : ViewModelBase
 {
     private VoltageConfiguration? _currentVoltage;
+    private CellPosition? _anchorCell;
 
     [ObservableProperty]
     private ObservableCollection<CurveDataRow> _rows = [];
@@ -114,9 +131,26 @@ public partial class CurveDataTableViewModel : ViewModelBase
     private string? _selectedSeriesName;
 
     /// <summary>
+    /// Collection of currently selected cells.
+    /// </summary>
+    public HashSet<CellPosition> SelectedCells { get; } = [];
+
+    /// <summary>
     /// Event raised when data changes.
     /// </summary>
     public event EventHandler? DataChanged;
+
+    /// <summary>
+    /// Event raised when cell selection changes.
+    /// </summary>
+    public event EventHandler? SelectionChanged;
+
+    /// <summary>
+    /// Event raised when an invalid clipboard paste is attempted.
+    /// The string parameter contains a human-readable error message
+    /// that can be surfaced by the UI layer.
+    /// </summary>
+    public event EventHandler<string>? ClipboardError;
 
     /// <summary>
     /// Gets or sets the current voltage configuration.
@@ -131,6 +165,20 @@ public partial class CurveDataTableViewModel : ViewModelBase
             OnPropertyChanged();
             RefreshData();
         }
+    }
+
+    /// <summary>
+    /// Applies a scalar torque value to all currently selected cells.
+    /// </summary>
+    /// <param name="value">The torque value to apply.</param>
+    public void ApplyTorqueToSelectedCells(double value)
+    {
+        if (SelectedCells.Count == 0)
+        {
+            return;
+        }
+
+        ApplyTorqueToCells(SelectedCells, value);
     }
 
     /// <summary>
@@ -193,5 +241,657 @@ public partial class CurveDataTableViewModel : ViewModelBase
     {
         var series = _currentVoltage?.Series.FirstOrDefault(s => s.Name == seriesName);
         return series?.Locked ?? false;
+    }
+
+    /// <summary>
+    /// Gets the number of columns in the data table (% + RPM + series columns).
+    /// </summary>
+    public int ColumnCount => 2 + SeriesColumns.Count;
+
+    /// <summary>
+    /// Gets the anchor cell for range selections.
+    /// </summary>
+    public CellPosition? AnchorCell => _anchorCell;
+
+    /// <summary>
+    /// Checks if a cell at the specified position is selected.
+    /// </summary>
+    public bool IsCellSelected(int rowIndex, int columnIndex)
+    {
+        return SelectedCells.Contains(new CellPosition(rowIndex, columnIndex));
+    }
+
+    /// <summary>
+    /// Clears all selected cells.
+    /// </summary>
+    public void ClearSelection()
+    {
+        SelectedCells.Clear();
+        _anchorCell = null;
+        SelectionChanged?.Invoke(this, EventArgs.Empty);
+    }
+
+    /// <summary>
+    /// Selects a single cell, clearing any previous selection.
+    /// </summary>
+    public void SelectCell(int rowIndex, int columnIndex)
+    {
+        SelectedCells.Clear();
+        var cell = new CellPosition(rowIndex, columnIndex);
+        SelectedCells.Add(cell);
+        _anchorCell = cell;
+        SelectedRowIndex = rowIndex;
+        SelectionChanged?.Invoke(this, EventArgs.Empty);
+    }
+
+    /// <summary>
+    /// Toggles selection of a cell (for Ctrl+click behavior).
+    /// </summary>
+    public void ToggleCellSelection(int rowIndex, int columnIndex)
+    {
+        var cell = new CellPosition(rowIndex, columnIndex);
+        if (SelectedCells.Contains(cell))
+        {
+            SelectedCells.Remove(cell);
+        }
+        else
+        {
+            SelectedCells.Add(cell);
+            _anchorCell = cell;
+        }
+        SelectionChanged?.Invoke(this, EventArgs.Empty);
+    }
+
+    /// <summary>
+    /// Selects a range of cells from the anchor cell to the specified cell (for Shift+click).
+    /// </summary>
+    public void SelectRange(int rowIndex, int columnIndex)
+    {
+        if (_anchorCell is null)
+        {
+            SelectCell(rowIndex, columnIndex);
+            return;
+        }
+
+        var anchor = _anchorCell.Value;
+        var minRow = Math.Min(anchor.RowIndex, rowIndex);
+        var maxRow = Math.Max(anchor.RowIndex, rowIndex);
+        var minCol = Math.Min(anchor.ColumnIndex, columnIndex);
+        var maxCol = Math.Max(anchor.ColumnIndex, columnIndex);
+
+        SelectedCells.Clear();
+        for (var row = minRow; row <= maxRow; row++)
+        {
+            for (var col = minCol; col <= maxCol; col++)
+            {
+                SelectedCells.Add(new CellPosition(row, col));
+            }
+        }
+        SelectionChanged?.Invoke(this, EventArgs.Empty);
+    }
+
+    /// <summary>
+    /// Adds cells to selection (for drag selection).
+    /// </summary>
+    public void AddToSelection(int rowIndex, int columnIndex)
+    {
+        var cell = new CellPosition(rowIndex, columnIndex);
+        if (!SelectedCells.Contains(cell))
+        {
+            SelectedCells.Add(cell);
+        }
+        SelectionChanged?.Invoke(this, EventArgs.Empty);
+    }
+
+    /// <summary>
+    /// Selects a rectangular range from startCell to endCell (for rubber-band selection).
+    /// </summary>
+    public void SelectRectangularRange(CellPosition startCell, CellPosition endCell)
+    {
+        var minRow = Math.Min(startCell.RowIndex, endCell.RowIndex);
+        var maxRow = Math.Max(startCell.RowIndex, endCell.RowIndex);
+        var minCol = Math.Min(startCell.ColumnIndex, endCell.ColumnIndex);
+        var maxCol = Math.Max(startCell.ColumnIndex, endCell.ColumnIndex);
+
+        SelectedCells.Clear();
+        for (var row = minRow; row <= maxRow; row++)
+        {
+            for (var col = minCol; col <= maxCol; col++)
+            {
+                SelectedCells.Add(new CellPosition(row, col));
+            }
+        }
+        _anchorCell = startCell;
+        SelectionChanged?.Invoke(this, EventArgs.Empty);
+    }
+
+    /// <summary>
+    /// Extends selection in a direction (for Shift+Arrow keys).
+    /// </summary>
+    public void ExtendSelection(int rowDelta, int columnDelta)
+    {
+        if (SelectedCells.Count == 0) return;
+
+        // Find the current bounds of the selection
+        var minRow = SelectedCells.Min(c => c.RowIndex);
+        var maxRow = SelectedCells.Max(c => c.RowIndex);
+        var minCol = SelectedCells.Min(c => c.ColumnIndex);
+        var maxCol = SelectedCells.Max(c => c.ColumnIndex);
+
+        // Extend in the specified direction
+        if (rowDelta < 0 && minRow > 0)
+        {
+            // Extend upward
+            for (var col = minCol; col <= maxCol; col++)
+            {
+                SelectedCells.Add(new CellPosition(minRow - 1, col));
+            }
+        }
+        else if (rowDelta > 0 && maxRow < Rows.Count - 1)
+        {
+            // Extend downward
+            for (var col = minCol; col <= maxCol; col++)
+            {
+                SelectedCells.Add(new CellPosition(maxRow + 1, col));
+            }
+        }
+        else if (columnDelta < 0 && minCol > 0)
+        {
+            // Extend left
+            for (var row = minRow; row <= maxRow; row++)
+            {
+                SelectedCells.Add(new CellPosition(row, minCol - 1));
+            }
+        }
+        else if (columnDelta > 0 && maxCol < ColumnCount - 1)
+        {
+            // Extend right
+            for (var row = minRow; row <= maxRow; row++)
+            {
+                SelectedCells.Add(new CellPosition(row, maxCol + 1));
+            }
+        }
+
+        SelectionChanged?.Invoke(this, EventArgs.Empty);
+    }
+
+    /// <summary>
+    /// Moves the selection in a direction (for Arrow keys without Shift).
+    /// </summary>
+    public void MoveSelection(int rowDelta, int columnDelta)
+    {
+        if (SelectedCells.Count == 0)
+        {
+            // If no selection, select the first cell
+            if (Rows.Count > 0 && ColumnCount > 0)
+            {
+                SelectCell(0, 0);
+            }
+            return;
+        }
+
+        // Use the anchor cell or the first selected cell
+        var referenceCell = _anchorCell ?? SelectedCells.First();
+        var newRow = Math.Clamp(referenceCell.RowIndex + rowDelta, 0, Math.Max(0, Rows.Count - 1));
+        var newCol = Math.Clamp(referenceCell.ColumnIndex + columnDelta, 0, Math.Max(0, ColumnCount - 1));
+
+        SelectCell(newRow, newCol);
+    }
+
+    /// <summary>
+    /// Gets the series name for a given column index.
+    /// Returns null for non-series columns (% and RPM).
+    /// </summary>
+    public string? GetSeriesNameForColumn(int columnIndex)
+    {
+        // First two columns are % and RPM
+        if (columnIndex < 2) return null;
+        var seriesIndex = columnIndex - 2;
+        if (seriesIndex >= 0 && seriesIndex < SeriesColumns.Count)
+        {
+            return SeriesColumns[seriesIndex].Name;
+        }
+        return null;
+    }
+
+    /// <summary>
+    /// Gets the column index for a given series name.
+    /// Returns -1 if the series is not found.
+    /// </summary>
+    public int GetColumnIndexForSeries(string seriesName)
+    {
+        for (var i = 0; i < SeriesColumns.Count; i++)
+        {
+            if (SeriesColumns[i].Name == seriesName)
+            {
+                return i + 2; // Add 2 for % and RPM columns
+            }
+        }
+        return -1;
+    }
+
+    /// <summary>
+    /// Applies a torque value to the specified cell positions.
+    /// Respects fixed columns (% and RPM) and locked series, and raises DataChanged
+    /// if at least one torque value is updated.
+    /// </summary>
+    public void ApplyTorqueToCells(IEnumerable<CellPosition> cells, double value)
+    {
+        ArgumentNullException.ThrowIfNull(cells);
+
+        if (_currentVoltage is null || Rows.Count == 0 || SeriesColumns.Count == 0)
+        {
+            return;
+        }
+
+        var anyChanged = false;
+
+        foreach (var cell in cells)
+        {
+            if (TrySetTorqueAtCell(cell, value))
+            {
+                anyChanged = true;
+            }
+        }
+
+        if (anyChanged)
+        {
+            DataChanged?.Invoke(this, EventArgs.Empty);
+        }
+    }
+
+    /// <summary>
+    /// Applies the provided torque value to all currently selected cells and
+    /// raises <see cref="DataChanged"/> if any value changes.
+    /// </summary>
+    /// <param name="value">The torque value to apply.</param>
+    public void ApplyOverrideValue(double value)
+    {
+        ApplyTorqueToSelectedCells(value);
+    }
+
+    /// <summary>
+    /// Clears torque values for all currently selected cells by setting them to zero.
+    /// </summary>
+    public void ClearSelectedTorqueCells()
+    {
+        if (SelectedCells.Count == 0)
+        {
+            return;
+        }
+
+        ApplyTorqueToCells(SelectedCells, 0);
+    }
+
+    /// <summary>
+    /// Attempts to paste clipboard text into the table starting at the current
+    /// selection. Returns true if any torque value is updated. Clipboard shape
+    /// validation and error reporting are handled here so the view only needs
+    /// to provide raw text.
+    /// </summary>
+    /// <param name="clipboardText">Clipboard text containing tab/newline-delimited values.</param>
+    /// <returns>True if at least one cell was updated; otherwise false.</returns>
+    public bool TryPasteClipboard(string clipboardText)
+    {
+        if (string.IsNullOrWhiteSpace(clipboardText))
+        {
+            return false;
+        }
+
+        if (SelectedCells.Count == 0)
+        {
+            return false;
+        }
+
+        if (_currentVoltage is null || Rows.Count == 0 || SeriesColumns.Count == 0)
+        {
+            return false;
+        }
+
+        var selectedCellsSnapshot = SelectedCells.ToList();
+
+        // Normalize clipboard text into lines and values
+        var lines = clipboardText
+            .Split(['\r', '\n'], StringSplitOptions.RemoveEmptyEntries);
+
+        if (lines.Length == 0)
+        {
+            return false;
+        }
+
+        // Special case: single scalar replicated across all selected cells
+        if (lines.Length == 1)
+        {
+            var parts = lines[0].Split('\t', StringSplitOptions.RemoveEmptyEntries);
+            if (parts.Length == 1 && double.TryParse(parts[0], out var scalar))
+            {
+                ApplyTorqueToCells(selectedCellsSnapshot, scalar);
+                return true;
+            }
+        }
+
+        // General rectangular paste starting from the top-left selected cell
+        var minRow = selectedCellsSnapshot.Min(c => c.RowIndex);
+        var minCol = selectedCellsSnapshot.Min(c => c.ColumnIndex);
+
+        var anyChanged = false;
+
+        for (var lineIndex = 0; lineIndex < lines.Length; lineIndex++)
+        {
+            var values = lines[lineIndex].Split('\t');
+            var rowIndex = minRow + lineIndex;
+
+            if (rowIndex >= Rows.Count)
+            {
+                break;
+            }
+
+            for (var valueIndex = 0; valueIndex < values.Length; valueIndex++)
+            {
+                var colIndex = minCol + valueIndex;
+                var raw = values[valueIndex];
+
+                if (!double.TryParse(raw, out var value))
+                {
+                    continue;
+                }
+
+                var cellPos = new CellPosition(rowIndex, colIndex);
+                if (TrySetTorqueAtCell(cellPos, value))
+                {
+                    anyChanged = true;
+                }
+            }
+        }
+
+        if (!anyChanged)
+        {
+            return false;
+        }
+
+        DataChanged?.Invoke(this, EventArgs.Empty);
+        return true;
+    }
+
+    /// <summary>
+    /// Attempts to set the torque value at a specific cell.
+    /// </summary>
+    /// <remarks>
+    /// This method centralizes all per-cell mutation rules for the curve table and is the
+    /// preferred way for views or higher-level helpers to change a single torque value.
+    /// It performs the following checks before updating any data:
+    /// <list type="bullet">
+    /// <item><description>Validates that a current voltage, rows, and series columns are available.</description></item>
+    /// <item><description>Ensures the row index is within the bounds of <see cref="Rows"/>.</description></item>
+    /// <item><description>Rejects writes to the fixed % and RPM columns (column indices 0 and 1).</description></item>
+    /// <item><description>Maps the column to a series and aborts if no matching series exists.</description></item>
+    /// <item><description>Honors <see cref="IsSeriesLocked(string)"/> and will not modify locked series.</description></item>
+    /// <item><description>Skips updates when the new value is numerically equal to the current value.</description></item>
+    /// </list>
+    /// Callers that need to update multiple cells (for example, override mode, clipboard
+    /// paste, or delete/backspace clearing) should either:
+    /// <list type="number">
+    /// <item><description>Use <see cref="ApplyTorqueToCells(System.Collections.Generic.IEnumerable{CurveEditor.ViewModels.CellPosition}, double)"/> to apply a single value to many cells and raise <see cref="DataChanged"/> once, or</description></item>
+    /// <item><description>Invoke <see cref="TrySetTorqueAtCell(CurveEditor.ViewModels.CellPosition, double)"/> in a loop and handle any additional UI updates (such as text rendering) on success.</description></item>
+    /// </list>
+    /// The method returns <see langword="true"/> only when a torque value was actually changed;
+    /// otherwise it returns <see langword="false"/> and leaves the model untouched.
+    /// </remarks>
+    public bool TrySetTorqueAtCell(CellPosition cell, double value)
+    {
+        if (_currentVoltage is null || Rows.Count == 0 || SeriesColumns.Count == 0)
+        {
+            return false;
+        }
+
+        // Skip invalid rows
+        if (cell.RowIndex < 0 || cell.RowIndex >= Rows.Count)
+        {
+            return false;
+        }
+
+        // Skip % and RPM columns (read-only)
+        if (cell.ColumnIndex < 2)
+        {
+            return false;
+        }
+
+        var seriesName = GetSeriesNameForColumn(cell.ColumnIndex);
+        if (string.IsNullOrEmpty(seriesName))
+        {
+            return false;
+        }
+
+        // Respect locked series
+        if (IsSeriesLocked(seriesName))
+        {
+            return false;
+        }
+
+        var row = Rows[cell.RowIndex];
+        var current = row.GetTorque(seriesName);
+        if (Math.Abs(current - value) <= double.Epsilon)
+        {
+            return false;
+        }
+
+        row.SetTorque(seriesName, value);
+        return true;
+    }
+
+    /// <summary>
+    /// Extends selection to the end of the row or column in the specified direction (for Ctrl+Shift+Arrow keys).
+    /// </summary>
+    public void ExtendSelectionToEnd(int rowDelta, int columnDelta)
+    {
+        if (SelectedCells.Count == 0) return;
+
+        // Find the current bounds of the selection
+        var minRow = SelectedCells.Min(c => c.RowIndex);
+        var maxRow = SelectedCells.Max(c => c.RowIndex);
+        var minCol = SelectedCells.Min(c => c.ColumnIndex);
+        var maxCol = SelectedCells.Max(c => c.ColumnIndex);
+
+        // Extend to the end in the specified direction
+        if (rowDelta < 0)
+        {
+            // Extend upward to row 0
+            for (var row = minRow - 1; row >= 0; row--)
+            {
+                for (var col = minCol; col <= maxCol; col++)
+                {
+                    SelectedCells.Add(new CellPosition(row, col));
+                }
+            }
+        }
+        else if (rowDelta > 0)
+        {
+            // Extend downward to last row
+            for (var row = maxRow + 1; row < Rows.Count; row++)
+            {
+                for (var col = minCol; col <= maxCol; col++)
+                {
+                    SelectedCells.Add(new CellPosition(row, col));
+                }
+            }
+        }
+        else if (columnDelta < 0)
+        {
+            // Extend left to first column
+            for (var col = minCol - 1; col >= 0; col--)
+            {
+                for (var row = minRow; row <= maxRow; row++)
+                {
+                    SelectedCells.Add(new CellPosition(row, col));
+                }
+            }
+        }
+        else if (columnDelta > 0)
+        {
+            // Extend right to last column
+            for (var col = maxCol + 1; col < ColumnCount; col++)
+            {
+                for (var row = minRow; row <= maxRow; row++)
+                {
+                    SelectedCells.Add(new CellPosition(row, col));
+                }
+            }
+        }
+
+        SelectionChanged?.Invoke(this, EventArgs.Empty);
+    }
+
+    /// <summary>
+    /// Builds a tab/newline-separated clipboard representation of the given selected cells.
+    /// The shape is rectangular, defined by the min/max row and column indices in the set.
+    /// </summary>
+    public string BuildClipboardText(IReadOnlyCollection<CellPosition> selectedCells)
+    {
+        ArgumentNullException.ThrowIfNull(selectedCells);
+        if (selectedCells.Count == 0)
+        {
+            return string.Empty;
+        }
+
+        var minRow = selectedCells.Min(c => c.RowIndex);
+        var maxRow = selectedCells.Max(c => c.RowIndex);
+        var minCol = selectedCells.Min(c => c.ColumnIndex);
+        var maxCol = selectedCells.Max(c => c.ColumnIndex);
+
+        var lines = new List<string>();
+        for (var rowIndex = minRow; rowIndex <= maxRow; rowIndex++)
+        {
+            var values = new List<string>();
+            for (var colIndex = minCol; colIndex <= maxCol; colIndex++)
+            {
+                var cell = new CellPosition(rowIndex, colIndex);
+                if (!selectedCells.Contains(cell))
+                {
+                    values.Add(string.Empty);
+                    continue;
+                }
+
+                if (rowIndex < 0 || rowIndex >= Rows.Count)
+                {
+                    values.Add(string.Empty);
+                    continue;
+                }
+
+                var row = Rows[rowIndex];
+
+                if (colIndex == 0)
+                {
+                    values.Add(row.Percent.ToString());
+                }
+                else if (colIndex == 1)
+                {
+                    values.Add(row.DisplayRpm.ToString());
+                }
+                else
+                {
+                    var seriesName = GetSeriesNameForColumn(colIndex);
+                    if (seriesName is not null)
+                    {
+                        values.Add(row.GetTorque(seriesName).ToString("F2"));
+                    }
+                    else
+                    {
+                        values.Add(string.Empty);
+                    }
+                }
+            }
+            lines.Add(string.Join("\t", values));
+        }
+
+        return string.Join(Environment.NewLine, lines);
+    }
+
+    /// <summary>
+    /// Applies clipboard text to the table starting at the specified top-left cell.
+    /// Respects fixed columns and locked series. Returns false and does not modify
+    /// data if the clipboard shape does not fit within the table.
+    /// </summary>
+    public bool TryApplyClipboardText(CellPosition topLeft, string clipboardText)
+    {
+        if (string.IsNullOrWhiteSpace(clipboardText))
+        {
+            return false;
+        }
+
+        var lines = clipboardText
+            .Split(new[] { '\r', '\n' }, StringSplitOptions.RemoveEmptyEntries);
+
+        if (lines.Length == 0)
+        {
+            return false;
+        }
+
+        var parsed = lines
+            .Select(line => line.Split('\t'))
+            .ToArray();
+
+        var rowCount = parsed.Length;
+        var colCount = parsed.Max(v => v.Length);
+
+        // Ensure the rectangle fits inside the table
+        if (topLeft.RowIndex < 0 || topLeft.ColumnIndex < 0)
+        {
+            return false;
+        }
+
+        if (topLeft.RowIndex + rowCount > Rows.Count ||
+            topLeft.ColumnIndex + colCount > ColumnCount)
+        {
+            return false;
+        }
+
+        var anyChanged = false;
+
+        for (var r = 0; r < rowCount; r++)
+        {
+            var values = parsed[r];
+            for (var c = 0; c < values.Length; c++)
+            {
+                var targetRow = topLeft.RowIndex + r;
+                var targetCol = topLeft.ColumnIndex + c;
+
+                // Skip % and RPM columns
+                if (targetCol < 2)
+                {
+                    continue;
+                }
+
+                var seriesName = GetSeriesNameForColumn(targetCol);
+                if (seriesName is null)
+                {
+                    continue;
+                }
+
+                if (IsSeriesLocked(seriesName))
+                {
+                    continue;
+                }
+
+                if (!double.TryParse(values[c], out var torque))
+                {
+                    continue;
+                }
+
+                var row = Rows[targetRow];
+                var current = row.GetTorque(seriesName);
+                if (Math.Abs(current - torque) > double.Epsilon)
+                {
+                    row.SetTorque(seriesName, torque);
+                    anyChanged = true;
+                }
+            }
+        }
+
+        if (anyChanged)
+        {
+            DataChanged?.Invoke(this, EventArgs.Empty);
+        }
+
+        return anyChanged;
     }
 }

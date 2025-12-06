@@ -187,6 +187,61 @@ public class ChartViewModelTests
         Assert.Contains("lbf-in", viewModel.YAxes[0].Name);
     }
 
+    [Fact]
+    public void UpdateAxes_UsesZeroAsXAxisMinimum()
+    {
+        // Arrange
+        var viewModel = new ChartViewModel
+        {
+            MotorMaxSpeed = 6500
+        };
+        viewModel.CurrentVoltage = CreateTestVoltageConfiguration();
+
+        // Act
+        var xAxis = viewModel.XAxes[0];
+
+        // Assert
+        Assert.Equal(0, xAxis.MinLimit);
+    }
+
+    [Fact]
+    public void UpdateAxes_UsesMaxOfMotorAndDriveMaxSpeedAsXAxisMaximum()
+    {
+        // Arrange
+        var viewModel = new ChartViewModel
+        {
+            MotorMaxSpeed = 6500
+        };
+        var voltage = CreateTestVoltageConfiguration();
+        voltage.MaxSpeed = 4800;
+
+        // Act
+        viewModel.CurrentVoltage = voltage;
+        var xAxis = viewModel.XAxes[0];
+
+        // Assert - exact max, no rounding
+        Assert.Equal(6500, xAxis.MaxLimit);
+    }
+
+    [Fact]
+    public void UpdateAxes_UsesDriveMaxSpeedWhenGreaterThanMotorMaxSpeed()
+    {
+        // Arrange
+        var viewModel = new ChartViewModel
+        {
+            MotorMaxSpeed = 4000
+        };
+        var voltage = CreateTestVoltageConfiguration();
+        voltage.MaxSpeed = 7200;
+
+        // Act
+        viewModel.CurrentVoltage = voltage;
+        var xAxis = viewModel.XAxes[0];
+
+        // Assert - exact max, no rounding
+        Assert.Equal(7200, xAxis.MaxLimit);
+    }
+
     private static VoltageConfiguration CreateTestVoltageConfiguration()
     {
         var voltage = new VoltageConfiguration(220)

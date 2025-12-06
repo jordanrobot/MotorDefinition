@@ -19,8 +19,8 @@
             <Setter Property="Background" Value="Transparent"/>
         </Style>
         <Style Selector="TextBox.Cell:focus">
-            <Setter Property="BorderThickness" Value="1"/>
-            <Setter Property="BorderBrush" Value="{DynamicResource SystemAccentColor}"/>
+            <Setter Property="BorderThickness" Value="2"/>
+            <Setter Property="BorderBrush" Value="White"/>
         </Style>
         <Style Selector="TextBlock.Cell">
             <Setter Property="FontSize" Value="11"/>
@@ -32,6 +32,27 @@
             <Setter Property="FontWeight" Value="SemiBold"/>
             <Setter Property="Padding" Value="4,2"/>
             <Setter Property="VerticalAlignment" Value="Center"/>
+        </Style>
+        <!-- Selected cell container style -->
+        <Style Selector="Border.CellContainer">
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="BorderBrush" Value="Transparent"/>
+            <Setter Property="Background" Value="Transparent"/>
+        </Style>
+        <Style Selector="Border.CellContainer.Selected">
+            <Setter Property="BorderThickness" Value="2"/>
+            <Setter Property="BorderBrush" Value="White"/>
+            <Setter Property="Background" Value="#33FFFFFF"/>
+        </Style>
+        <!-- DataGrid row selection override for cell-level selection -->
+        <Style Selector="DataGridRow">
+            <Setter Property="Background" Value="Transparent"/>
+        </Style>
+        <Style Selector="DataGridRow:selected">
+            <Setter Property="Background" Value="Transparent"/>
+        </Style>
+        <Style Selector="DataGridRow:selected /template/ Rectangle#BackgroundRectangle">
+            <Setter Property="Fill" Value="Transparent"/>
         </Style>
     </UserControl.Styles>
     
@@ -135,10 +156,9 @@
                   IsReadOnly="False"
                   GridLinesVisibility="Horizontal"
                   HeadersVisibility="None"
-                  SelectionMode="Extended"
+                  SelectionMode="Single"
                   IsVisible="{Binding SelectedVoltage, Converter={x:Static ObjectConverters.IsNotNull}}"
-                  CellEditEnded="DataGrid_CellEditEnded"
-                  KeyDown="DataTable_KeyDown">
+                  CellEditEnded="DataGrid_CellEditEnded">
             <DataGrid.Columns>
                 <DataGridTextColumn Header="%" 
                                     Binding="{Binding Percent}" 
