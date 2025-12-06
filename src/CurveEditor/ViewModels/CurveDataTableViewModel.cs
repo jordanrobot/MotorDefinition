@@ -450,6 +450,63 @@ public partial class CurveDataTableViewModel : ViewModelBase
     }
 
     /// <summary>
+    /// Applies a torque value to the specified cell positions.
+    /// Respects fixed columns (% and RPM) and locked series, and raises DataChanged
+    /// if at least one torque value is updated.
+    /// </summary>
+    public void ApplyTorqueToCells(IEnumerable<CellPosition> cells, double value)
+    {
+        ArgumentNullException.ThrowIfNull(cells);
+
+        if (_currentVoltage is null || Rows.Count == 0 || SeriesColumns.Count == 0)
+        {
+            return;
+        }
+
+        var anyChanged = false;
+
+        foreach (var cell in cells)
+        {
+            // Skip invalid rows
+            if (cell.RowIndex < 0 || cell.RowIndex >= Rows.Count)
+            {
+                continue;
+            }
+
+            // Skip % and RPM columns (read-only)
+            if (cell.ColumnIndex < 2)
+            {
+                continue;
+            }
+
+            var seriesName = GetSeriesNameForColumn(cell.ColumnIndex);
+            if (string.IsNullOrEmpty(seriesName))
+            {
+                continue;
+            }
+
+            // Respect locked series
+            if (IsSeriesLocked(seriesName))
+            {
+                continue;
+            }
+
+            var row = Rows[cell.RowIndex];
+            var current = row.GetTorque(seriesName);
+            if (Math.Abs(current - value) > double.Epsilon)
+            {
+                row.SetTorque(seriesName, value);
+                anyChanged = true;
+            }
+        }
+
+        if (anyChanged)
+        {
+            DataChanged?.Invoke(this, EventArgs.Empty);
+        }
+    }
+
+    /// <summary>
     /// Extends selection to the end of the row or column in the specified direction (for Ctrl+Shift+Arrow keys).
     /// </summary>
     public void ExtendSelectionToEnd(int rowDelta, int columnDelta)
