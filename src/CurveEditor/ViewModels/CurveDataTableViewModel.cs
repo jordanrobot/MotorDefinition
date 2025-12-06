@@ -467,35 +467,8 @@ public partial class CurveDataTableViewModel : ViewModelBase
 
         foreach (var cell in cells)
         {
-            // Skip invalid rows
-            if (cell.RowIndex < 0 || cell.RowIndex >= Rows.Count)
+            if (TrySetTorqueAtCell(cell, value))
             {
-                continue;
-            }
-
-            // Skip % and RPM columns (read-only)
-            if (cell.ColumnIndex < 2)
-            {
-                continue;
-            }
-
-            var seriesName = GetSeriesNameForColumn(cell.ColumnIndex);
-            if (string.IsNullOrEmpty(seriesName))
-            {
-                continue;
-            }
-
-            // Respect locked series
-            if (IsSeriesLocked(seriesName))
-            {
-                continue;
-            }
-
-            var row = Rows[cell.RowIndex];
-            var current = row.GetTorque(seriesName);
-            if (Math.Abs(current - value) > double.Epsilon)
-            {
-                row.SetTorque(seriesName, value);
                 anyChanged = true;
             }
         }
@@ -504,6 +477,53 @@ public partial class CurveDataTableViewModel : ViewModelBase
         {
             DataChanged?.Invoke(this, EventArgs.Empty);
         }
+    }
+
+    /// <summary>
+    /// Attempts to set the torque value at a specific cell.
+    /// Returns true if the value was changed; otherwise false.
+    /// Respects table bounds, read-only columns, and locked series.
+    /// </summary>
+    public bool TrySetTorqueAtCell(CellPosition cell, double value)
+    {
+        if (_currentVoltage is null || Rows.Count == 0 || SeriesColumns.Count == 0)
+        {
+            return false;
+        }
+
+        // Skip invalid rows
+        if (cell.RowIndex < 0 || cell.RowIndex >= Rows.Count)
+        {
+            return false;
+        }
+
+        // Skip % and RPM columns (read-only)
+        if (cell.ColumnIndex < 2)
+        {
+            return false;
+        }
+
+        var seriesName = GetSeriesNameForColumn(cell.ColumnIndex);
+        if (string.IsNullOrEmpty(seriesName))
+        {
+            return false;
+        }
+
+        // Respect locked series
+        if (IsSeriesLocked(seriesName))
+        {
+            return false;
+        }
+
+        var row = Rows[cell.RowIndex];
+        var current = row.GetTorque(seriesName);
+        if (Math.Abs(current - value) <= double.Epsilon)
+        {
+            return false;
+        }
+
+        row.SetTorque(seriesName, value);
+        return true;
     }
 
     /// <summary>
