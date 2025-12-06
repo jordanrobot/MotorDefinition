@@ -1,0 +1,126 @@
+using System.Collections.ObjectModel;
+using CurveEditor.Models;
+using CurveEditor.Services;
+using CurveEditor.ViewModels;
+using Moq;
+using Xunit;
+
+namespace CurveEditor.Tests.ViewModels;
+
+public class MainWindowViewModelTests
+{
+    private static (MainWindowViewModel vm, MotorDefinition motor) CreateViewModelWithMotor()
+    {
+        var fileServiceMock = new Mock<IFileService>();
+        var curveGeneratorMock = new Mock<ICurveGeneratorService>();
+
+        var motor = new MotorDefinition
+        {
+            MotorName = "Test Motor",
+            MaxSpeed = 5000,
+            Units = new UnitSettings { Torque = "Nm" },
+            Drives = new ObservableCollection<DriveConfiguration>
+            {
+                new()
+                {
+                    Name = "Drive A",
+                    Voltages = new ObservableCollection<VoltageConfiguration>
+                    {
+                        new()
+                        {
+                            Voltage = 208,
+                            MaxSpeed = 4000,
+                            Series = new ObservableCollection<CurveSeries>()
+                        },
+                        new()
+                        {
+                            Voltage = 400,
+                            MaxSpeed = 4500,
+                            Series = new ObservableCollection<CurveSeries>()
+                        }
+                    }
+                },
+                new()
+                {
+                    Name = "Drive B",
+                    Voltages = new ObservableCollection<VoltageConfiguration>
+                    {
+                        new()
+                        {
+                            Voltage = 120,
+                            MaxSpeed = 3500,
+                            Series = new ObservableCollection<CurveSeries>()
+                        }
+                    }
+                }
+            }
+        };
+
+        var vm = new MainWindowViewModel(fileServiceMock.Object, curveGeneratorMock.Object)
+        {
+            CurrentMotor = motor
+        };
+
+        return (vm, motor);
+    }
+
+    [Fact]
+    public void SettingCurrentMotor_SelectsFirstDriveByDefault()
+    {
+        var (vm, motor) = CreateViewModelWithMotor();
+
+        Assert.Same(motor.Drives[0], vm.SelectedDrive);
+    }
+
+    [Fact]
+    public void ChangingSelectedDrive_RefreshesAvailableVoltagesAndSelectsPreferred208V()
+    {
+        var (vm, motor) = CreateViewModelWithMotor();
+
+        vm.SelectedDrive = motor.Drives[0];
+
+        Assert.Equal(2, vm.AvailableVoltages.Count);
+        Assert.Equal(208, vm.SelectedVoltage?.Voltage);
+    }
+
+    [Fact]
+    public void ChangingSelectedDrive_UsesFirstVoltageWhen208NotAvailable()
+    {
+        var (vm, motor) = CreateViewModelWithMotor();
+
+        vm.SelectedDrive = motor.Drives[1];
+
+        Assert.Single(vm.AvailableVoltages);
+        Assert.Same(motor.Drives[1].Voltages[0], vm.SelectedVoltage);
+    }
+
+    [Fact]
+    public void ChangingSelectedVoltage_RefreshesAvailableSeriesAndUpdatesChartAndTable()
+    {
+        var (vm, motor) = CreateViewModelWithMotor();
+        var drive = motor.Drives[0];
+        var voltage = drive.Voltages[0];
+        voltage.Series.Add(new CurveSeries { Name = "Peak" });
+        voltage.Series.Add(new CurveSeries { Name = "Continuous" });
+
+        vm.SelectedDrive = drive;
+        vm.SelectedVoltage = voltage;
+
+        Assert.Equal(2, vm.AvailableSeries.Count);
+        Assert.Equal(voltage, vm.ChartViewModel.CurrentVoltage);
+        Assert.Equal(voltage, vm.CurveDataTableViewModel.CurrentVoltage);
+        Assert.Same(voltage.Series[0], vm.SelectedSeries);
+        Assert.Equal(motor.MaxSpeed, vm.ChartViewModel.MotorMaxSpeed);
+    }
+
+    [Fact]
+    public void OnSelectedDriveChanged_ClearsSelectedVoltageWhenDriveIsNull()
+    {
+        var (vm, _) = CreateViewModelWithMotor();
+
+        vm.SelectedDrive = null;
+
+        Assert.Null(vm.SelectedVoltage);
+        Assert.Empty(vm.AvailableVoltages);
+    }
+}
