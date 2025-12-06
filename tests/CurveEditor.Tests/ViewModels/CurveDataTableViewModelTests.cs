@@ -641,6 +641,79 @@ public class CurveDataTableViewModelTests
     }
 
     [Fact]
+    public void OverrideMode_ApplyTorqueToSelectedCells_UpdatesAllEditableTorqueCells()
+    {
+        // Arrange
+        var viewModel = CreateViewModelWithData();
+        var selected = new HashSet<CellPosition>
+        {
+            new(0, 2), // Peak row 0
+            new(0, 3), // Continuous row 0
+            new(1, 2)  // Peak row 1
+        };
+
+        // Act - simulate override mode committing value 7.5 to selected cells
+        viewModel.ApplyTorqueToCells(selected, 7.5);
+
+        // Assert
+        Assert.Equal(7.5, viewModel.GetTorque(0, "Peak"));
+        Assert.Equal(7.5, viewModel.GetTorque(0, "Continuous"));
+        Assert.Equal(7.5, viewModel.GetTorque(1, "Peak"));
+    }
+
+    [Fact]
+    public void OverrideMode_DoesNotModifyLockedSeries()
+    {
+        // Arrange
+        var viewModel = CreateViewModelWithData();
+        var peakSeries = viewModel.SeriesColumns.First(s => s.Name == "Peak");
+        peakSeries.Locked = true;
+        var originalPeak0 = viewModel.GetTorque(0, "Peak");
+        var originalPeak1 = viewModel.GetTorque(1, "Peak");
+        var selected = new HashSet<CellPosition>
+        {
+            new(0, 2),
+            new(1, 2)
+        };
+
+        // Act
+        viewModel.ApplyTorqueToCells(selected, 9.9);
+
+        // Assert - locked series should remain unchanged
+        Assert.Equal(originalPeak0, viewModel.GetTorque(0, "Peak"));
+        Assert.Equal(originalPeak1, viewModel.GetTorque(1, "Peak"));
+    }
+
+    [Fact]
+    public void ClearSelectedCells_EquivalentToApplyingZeroToSelectedTorqueCells()
+    {
+        // Arrange
+        var viewModel = CreateViewModelWithData();
+        var selected = new HashSet<CellPosition>
+        {
+            new(0, 2),
+            new(0, 3),
+            new(1, 2)
+        };
+
+        // Capture original non-zero values to ensure they change
+        var originalPeak0 = viewModel.GetTorque(0, "Peak");
+        var originalCont0 = viewModel.GetTorque(0, "Continuous");
+        var originalPeak1 = viewModel.GetTorque(1, "Peak");
+
+        // Act - logical equivalent of delete/backspace behavior
+        viewModel.ApplyTorqueToCells(selected, 0.0);
+
+        // Assert - selected torque cells are cleared to zero
+        Assert.NotEqual(originalPeak0, viewModel.GetTorque(0, "Peak"));
+        Assert.NotEqual(originalCont0, viewModel.GetTorque(0, "Continuous"));
+        Assert.NotEqual(originalPeak1, viewModel.GetTorque(1, "Peak"));
+        Assert.Equal(0.0, viewModel.GetTorque(0, "Peak"));
+        Assert.Equal(0.0, viewModel.GetTorque(0, "Continuous"));
+        Assert.Equal(0.0, viewModel.GetTorque(1, "Peak"));
+    }
+
+    [Fact]
     public void SelectionChanged_RaisedWhenToggling()
     {
         // Arrange
