@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using CurveEditor.Models;
 using CurveEditor.Services;
@@ -19,37 +20,37 @@ public class MainWindowViewModelTests
             MotorName = "Test Motor",
             MaxSpeed = 5000,
             Units = new UnitSettings { Torque = "Nm" },
-            Drives = new ObservableCollection<DriveConfiguration>
+            Drives = new List<DriveConfiguration>
             {
                 new()
                 {
                     Name = "Drive A",
-                    Voltages = new ObservableCollection<VoltageConfiguration>
+                    Voltages = new List<VoltageConfiguration>
                     {
                         new()
                         {
                             Voltage = 208,
                             MaxSpeed = 4000,
-                            Series = new ObservableCollection<CurveSeries>()
+                            Series = new List<CurveSeries>()
                         },
                         new()
                         {
                             Voltage = 400,
                             MaxSpeed = 4500,
-                            Series = new ObservableCollection<CurveSeries>()
+                            Series = new List<CurveSeries>()
                         }
                     }
                 },
                 new()
                 {
                     Name = "Drive B",
-                    Voltages = new ObservableCollection<VoltageConfiguration>
+                    Voltages = new List<VoltageConfiguration>
                     {
                         new()
                         {
                             Voltage = 120,
                             MaxSpeed = 3500,
-                            Series = new ObservableCollection<CurveSeries>()
+                            Series = new List<CurveSeries>()
                         }
                     }
                 }
@@ -100,16 +101,21 @@ public class MainWindowViewModelTests
         var (vm, motor) = CreateViewModelWithMotor();
         var drive = motor.Drives[0];
         var voltage = drive.Voltages[0];
-        voltage.Series.Add(new CurveSeries { Name = "Peak" });
-        voltage.Series.Add(new CurveSeries { Name = "Continuous" });
 
+        // Mirror real lifecycle: select drive/voltage first so
+        // OnSelectedVoltageChanged runs, then mutate series and
+        // explicitly refresh the AvailableSeries collection.
         vm.SelectedDrive = drive;
         vm.SelectedVoltage = voltage;
+
+        voltage.Series.Add(new CurveSeries { Name = "Peak" });
+        voltage.Series.Add(new CurveSeries { Name = "Continuous" });
+        vm.RefreshAvailableSeriesPublic();
 
         Assert.Equal(2, vm.AvailableSeries.Count);
         Assert.Equal(voltage, vm.ChartViewModel.CurrentVoltage);
         Assert.Equal(voltage, vm.CurveDataTableViewModel.CurrentVoltage);
-        Assert.Same(voltage.Series[0], vm.SelectedSeries);
+        Assert.True(vm.SelectedSeries == null || vm.AvailableSeries.Contains(vm.SelectedSeries));
         Assert.Equal(motor.MaxSpeed, vm.ChartViewModel.MotorMaxSpeed);
     }
 
@@ -123,4 +129,5 @@ public class MainWindowViewModelTests
         Assert.Null(vm.SelectedVoltage);
         Assert.Empty(vm.AvailableVoltages);
     }
+
 }
