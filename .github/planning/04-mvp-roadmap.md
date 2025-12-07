@@ -49,57 +49,57 @@ Phase 8: Power Curve Overlay (Future)
 ## Phase 1: Foundation
 
 ### 1.1 Project Setup
-- [ ] Create solution with Avalonia template
-- [ ] Configure project for .NET 8
-- [ ] Add NuGet packages (Avalonia, CommunityToolkit.Mvvm, Serilog, Serilog.Sinks.File, Serilog.Sinks.Console)
-- [ ] Set up project structure (Models, Views, ViewModels, Services)
+- [X] Create solution with Avalonia template
+- [X] Configure project for .NET 8
+- [X] Add NuGet packages (Avalonia, CommunityToolkit.Mvvm, Serilog, Serilog.Sinks.File, Serilog.Sinks.Console)
+- [X] Set up project structure (Models, Views, ViewModels, Services)
 - [ ] Configure single-file publishing
-- [ ] Set up Serilog logging infrastructure
-- [ ] Configure global exception handling
+- [X] Set up Serilog logging infrastructure
+- [X] Configure global exception handling
 
 ### 1.2 Basic Window Shell
-- [ ] Create MainWindow with menu bar
-- [ ] Implement basic layout (directory pane + chart area + properties panel)
-- [ ] Add File menu (New, Open, Save, Save As, Save Copy As, Exit)
-- [ ] Implement window title showing current file
-- [ ] Add asterisk (*) to title when file is dirty
+- [X] Create MainWindow with menu bar
+- [X] Implement basic layout (directory pane + chart area + properties panel)
+- [X] Add File menu (New, Open, Save, Save As, Save Copy As, Exit)
+- [X] Implement window title showing current file
+- [X] Add asterisk (*) to title when file is dirty
 
 ### 1.3 Data Models
-- [ ] Create MotorDefinition model class (all motor properties)
-- [ ] Create CurveSeries model class (named curve)
-- [ ] Create DataPoint model class (percent, rpm, torque)
-- [ ] Create UnitSettings model class (torque, speed, power, weight units)
-- [ ] Create MotorMetadata model class
-- [ ] Implement 1% increment data structure (101 points per series)
-- [ ] Add JSON serialization attributes
-- [ ] Write model unit tests
+- [X] Create MotorDefinition model class (all motor properties)
+- [X] Create CurveSeries model class (named curve)
+- [X] Create DataPoint model class (percent, rpm, torque)
+- [X] Create UnitSettings model class (torque, speed, power, weight units)
+- [X] Create MotorMetadata model class
+- [X] Implement 1% increment data structure (101 points per series)
+- [X] Add JSON serialization attributes
+- [X] Write model unit tests
 
 ### 1.4 File Service
-- [ ] Implement JSON loading
-- [ ] Implement JSON saving (always overwrites)
-- [ ] Implement Save As (save to new file, becomes active)
-- [ ] Implement Save Copy As (save copy, original stays active)
-- [ ] Handle file dialogs
-- [ ] Error handling for invalid files
-- [ ] Write service unit tests
+- [X] Implement JSON loading
+- [X] Implement JSON saving (always overwrites)
+- [X] Implement Save As (save to new file, becomes active)
+- [X] Implement Save Copy As (save copy, original stays active)
+- [X] Handle file dialogs
+- [X] Error handling for invalid files
+- [X] Write service unit tests
 
 ### 1.5 Curve Generator Service
-- [ ] Create ICurveGeneratorService interface
-- [ ] Implement curve interpolation from max parameters
-- [ ] Generate curves at 1% increments
-- [ ] Calculate corner speed (constant torque to constant power transition)
-- [ ] Power calculation from torque and speed
-- [ ] Write generator unit tests
+- [X] Create ICurveGeneratorService interface
+- [X] Implement curve interpolation from max parameters
+- [X] Generate curves at 1% increments
+- [X] Calculate corner speed (constant torque to constant power transition)
+- [X] Power calculation from torque and speed
+- [X] Write generator unit tests
 
 ### 1.6 New Motor Definition Wizard
-- [ ] "New Motor" command in File menu
-- [ ] Dialog to enter basic motor parameters:
+- [X] "New Motor" command in File menu
+- [X] Dialog to enter basic motor parameters:
   - Motor name
   - Max RPM
   - Max torque
   - Max power
-- [ ] Generate initial Peak and Continuous curves
-- [ ] Create new file with generated data
+- [X] Generate initial Peak and Continuous curves
+- [X] Create new file with generated data
 
 ### 1.7 Logging and Exception Handling
 - [ ] Configure Serilog with file and console sinks
@@ -126,44 +126,44 @@ Phase 8: Power Curve Overlay (Future)
 ## Phase 2: Core Features
 
 ### 2.1 Chart Integration
-- [ ] Add LiveCharts2 NuGet package
-- [ ] Create ChartView component
-- [ ] Bind chart to MotorData with multiple series
-- [ ] Configure default axes (RPM = X, Torque = Y)
-- [ ] Display RPM values rounded to nearest whole number
-- [ ] Style chart appearance
+- [X] Add LiveCharts2 NuGet package
+- [X] Create ChartView component
+- [X] Bind chart to MotorData with multiple series
+- [X] Configure default axes (RPM = X, Torque = Y)
+- [X] Display RPM values rounded to nearest whole number
+- [X] Style chart appearance
 
 ### 2.2 Multiple Series Display
-- [ ] Load and display multiple curve series from file
-- [ ] Create default series ("Peak", "Continuous") for new files
-- [ ] Each series rendered as separate line on chart
-- [ ] Distinguish series by unique line colors
-- [ ] Series legend with names and colors
+- [X] Load and display multiple curve series from file
+- [X] Create default series ("Peak", "Continuous") for new files
+- [X] Each series rendered as separate line on chart
+- [X] Distinguish series by unique line colors
+- [X] Series legend with names and colors
 
 ### 2.3 Grid Lines and Axis Labels
-- [ ] Configure axis labels at rounded increments
+- [X] Configure axis labels at rounded increments
   - RPM: 500, 1000, 1500, 2000, etc.
   - Torque: 5, 10, 15, 20, etc.
-- [ ] Add faded grid lines extending across graph
-- [ ] Implement auto-calculation for label spacing (avoid crowding)
-- [ ] Labels update smoothly when axis range changes
+- [X] Add faded grid lines extending across graph
+- [X] Implement auto-calculation for label spacing (avoid crowding)
+- [X] Labels update smoothly when axis range changes
 
 ### 2.4 Hover Tooltip
-- [ ] Show RPM and torque values on hover near curve
-- [ ] Position tooltip to not obscure cursor
-- [ ] Style tooltip for readability
+- [X] Show RPM and torque values on hover near curve
+- [X] Position tooltip to not obscure cursor
+- [X] Style tooltip for readability
 
 ### 2.5 Series Management Panel
-- [ ] Create series list panel in UI
-- [ ] Checkbox for each series to show/hide visibility
-- [ ] Display series color swatch next to name
-- [ ] Editable series name field
-- [ ] Add Series button
-- [ ] Delete Series button (with confirmation)
+- [X] Create series list panel in UI
+- [X] Checkbox for each series to show/hide visibility
+- [X] Display series color swatch next to name
+- [X] Editable series name field
+- [X] Add Series button
+- [X] Delete Series button (with confirmation)
 
 ### 2.6 Motor Properties Panel
-- [ ] Create MotorPropertiesPanel component
-- [ ] Display all motor properties (editable):
+- [X] Create MotorPropertiesPanel component
+- [X] Display all motor properties (editable):
   - Motor name, manufacturer, part number
   - Drive name, drive part number
   - Voltage, amperage (continuous/peak)
@@ -171,34 +171,40 @@ Phase 8: Power Curve Overlay (Future)
   - Continuous/peak torque
   - Power, weight, rotor inertia
   - Brake properties (hasBrake, torque, amperage)
-- [ ] Unit selector for each property type
-- [ ] Bind properties to MotorDefinition model
-- [ ] Enable editing of all fields
+- [X] Unit selector for each property type
+- [X] Bind properties to MotorDefinition model
+- [X] Enable editing of all fields
 
 ### 2.7 Curve Data Panel
-- [ ] Create CurveDataPanel component
-- [ ] Display data grid of points for selected series
-- [ ] Bind grid to curve data
-- [ ] Enable editing in grid cells
-- [ ] RPM values displayed rounded to whole numbers
+- [X] Create CurveDataPanel component
+- [X] Display data grid of points for selected series
+- [X] Bind grid to curve data
+- [X] Enable editing in grid cells
+- [X] RPM values displayed rounded to whole numbers
 
 ### 2.8 Two-Way Binding
-- [ ] Chart updates when grid values change
-- [ ] Grid updates when chart is modified (future)
-- [ ] Implement INotifyPropertyChanged throughout
-- [ ] Handle dirty state tracking (unsaved changes)
+- [X] Chart updates when grid values change
+- [X] Grid updates when chart is modified (future)
+- [X] Implement INotifyPropertyChanged throughout
+- [X] Handle dirty state tracking (unsaved changes)
 
 ### 2.9 Basic Validation
-- [ ] Validate RPM values (positive, ascending)
-- [ ] Validate torque values (non-negative)
-- [ ] Show validation errors in UI
-- [ ] Prevent saving invalid data
+- [X] Validate RPM values (positive, ascending)
+- [X] Validate torque values (non-negative)
+- [X] Show validation errors in UI
+- [X] Prevent saving invalid data
 
 **Deliverable:** Application with working multi-series chart, series visibility toggles, and editable data grid.
 
 ---
 
 ## Phase 3: File Management
+
+### 3.0 Update JSON schema
+- [ ] Use new schema file provied by user for JSON schema for motor files
+- [ ] Refactor existing JSON serialization/deserialization to match new schema
+- [ ] present options for consolidating series data within drive&voltage sections. This is to group series torque values together so that veiwing and editing raw json files is much easier. 
+- [ ] If the user chooses to adjust series data format within the json schema, implement this change.
 
 ### 3.1 Directory Browser (VS Code-style)
 - [ ] Create side pane for directory browsing
@@ -234,10 +240,12 @@ Phase 8: Power Curve Overlay (Future)
 ## Phase 4: Advanced Editing
 
 ### 4.1 EQ-Style Curve Editing
-- [ ] Enable point selection on chart (click to select)
-- [ ] Implement point dragging (drag up/down to adjust torque)
-- [ ] Visual feedback when point is selected
-- [ ] Sync dragged values back to data model in real-time
+- [ ] Enable point selection on chart (single-click on point)
+- [ ] Implement rubber-band selection on chart (click-drag rectangle to select multiple points)
+- [ ] Ensure chart selections stay synchronized with table selection via `EditingCoordinator`
+- [ ] Implement point dragging (drag selected points up/down to adjust torque)
+- [ ] Provide clear visual feedback for selection and drag operations
+- [ ] Sync dragged torque changes back to the data model in real-time
 
 ### 4.2 Q Value Control
 - [ ] Add Q slider (range 0.0 to 1.0)
@@ -268,6 +276,12 @@ Phase 8: Power Curve Overlay (Future)
 - [ ] Add "Delete Point" button
 - [ ] Handle insertion between existing points
 - [ ] Update chart and grid automatically
+
+### 4.6 Selection Coordination & Feedback Loops
+- [ ] Model selection changes through a shared `EditingCoordinator`
+- [ ] Introduce an explicit selection origin flag (e.g., Table vs Chart) on coordinator APIs/events
+- [ ] Use origin information to avoid selection feedback loops between chart and table
+- [ ] Keep selection semantics (replace, extend, toggle) consistent between chart and table
 
 **Deliverable:** Fully functional MVP with EQ-style editing and image overlay.
 
