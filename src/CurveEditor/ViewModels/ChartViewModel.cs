@@ -64,6 +64,35 @@ public partial class ChartViewModel : ViewModelBase
     private double _brakeTorque;
 
     /// <summary>
+    /// Optional editing coordinator used to share selection state with other views.
+    /// </summary>
+    public EditingCoordinator? EditingCoordinator
+    {
+        get => _editingCoordinator;
+        set
+        {
+            if (ReferenceEquals(_editingCoordinator, value))
+            {
+                return;
+            }
+
+            if (_editingCoordinator is not null)
+            {
+                _editingCoordinator.SelectionChanged -= OnCoordinatorSelectionChanged;
+            }
+
+            _editingCoordinator = value;
+
+            if (_editingCoordinator is not null)
+            {
+                _editingCoordinator.SelectionChanged += OnCoordinatorSelectionChanged;
+            }
+        }
+    }
+
+    private EditingCoordinator? _editingCoordinator;
+
+    /// <summary>
     /// Called when MotorMaxSpeed changes to update the chart axes.
     /// </summary>
     partial void OnMotorMaxSpeedChanged(double value)
@@ -179,6 +208,13 @@ public partial class ChartViewModel : ViewModelBase
     public void RefreshChart()
     {
         UpdateChart();
+    }
+
+    private void OnCoordinatorSelectionChanged(object? sender, EventArgs e)
+    {
+        // Hook for future graph-point highlighting driven by shared selection.
+        // No-op for now to avoid changing UI behavior while still centralizing
+        // selection orchestration through EditingCoordinator.
     }
 
     private void UpdateChart()

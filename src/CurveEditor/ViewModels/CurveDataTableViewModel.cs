@@ -131,6 +131,12 @@ public partial class CurveDataTableViewModel : ViewModelBase
     private string? _selectedSeriesName;
 
     /// <summary>
+    /// Optional editing coordinator used to share logical point selection
+    /// with other views such as the chart.
+    /// </summary>
+    public EditingCoordinator? EditingCoordinator { get; set; }
+
+    /// <summary>
     /// Collection of currently selected cells.
     /// </summary>
     public HashSet<CellPosition> SelectedCells { get; } = [];
@@ -269,6 +275,7 @@ public partial class CurveDataTableViewModel : ViewModelBase
         SelectedCells.Clear();
         _anchorCell = null;
         SelectionChanged?.Invoke(this, EventArgs.Empty);
+        PushSelectionToCoordinator();
     }
 
     /// <summary>
@@ -282,6 +289,7 @@ public partial class CurveDataTableViewModel : ViewModelBase
         _anchorCell = cell;
         SelectedRowIndex = rowIndex;
         SelectionChanged?.Invoke(this, EventArgs.Empty);
+        PushSelectionToCoordinator();
     }
 
     /// <summary>
@@ -300,6 +308,7 @@ public partial class CurveDataTableViewModel : ViewModelBase
             _anchorCell = cell;
         }
         SelectionChanged?.Invoke(this, EventArgs.Empty);
+        PushSelectionToCoordinator();
     }
 
     /// <summary>
@@ -328,6 +337,7 @@ public partial class CurveDataTableViewModel : ViewModelBase
             }
         }
         SelectionChanged?.Invoke(this, EventArgs.Empty);
+        PushSelectionToCoordinator();
     }
 
     /// <summary>
@@ -341,6 +351,7 @@ public partial class CurveDataTableViewModel : ViewModelBase
             SelectedCells.Add(cell);
         }
         SelectionChanged?.Invoke(this, EventArgs.Empty);
+        PushSelectionToCoordinator();
     }
 
     /// <summary>
@@ -363,6 +374,7 @@ public partial class CurveDataTableViewModel : ViewModelBase
         }
         _anchorCell = startCell;
         SelectionChanged?.Invoke(this, EventArgs.Empty);
+        PushSelectionToCoordinator();
     }
 
     /// <summary>
@@ -413,6 +425,7 @@ public partial class CurveDataTableViewModel : ViewModelBase
         }
 
         SelectionChanged?.Invoke(this, EventArgs.Empty);
+        PushSelectionToCoordinator();
     }
 
     /// <summary>
@@ -436,6 +449,75 @@ public partial class CurveDataTableViewModel : ViewModelBase
         var newCol = Math.Clamp(referenceCell.ColumnIndex + columnDelta, 0, Math.Max(0, ColumnCount - 1));
 
         SelectCell(newRow, newCol);
+    }
+
+    /// <summary>
+    /// Pushes the current cell selection to the shared editing coordinator as
+    /// logical series/index pairs, when available. Non-series columns (%/RPM)
+    /// are ignored.
+    /// </summary>
+    private void PushSelectionToCoordinator()
+    {
+        if (EditingCoordinator is null)
+        {
+            return;
+        }
+
+        if (_currentVoltage is null || SeriesColumns.Count == 0)
+        {
+            EditingCoordinator.ClearSelection();
+            return;
+        }
+
+        if (SelectedCells.Count == 0)
+        {
+            EditingCoordinator.ClearSelection();
+            return;
+        }
+
+        var selections = new List<EditingCoordinator.PointSelection>();
+
+        foreach (var cell in SelectedCells)
+        {
+            // Skip non-series columns
+            if (cell.ColumnIndex < 2)
+            {
+                continue;
+            }
+
+            if (cell.RowIndex < 0)
+            {
+                continue;
+            }
+
+            var seriesName = GetSeriesNameForColumn(cell.ColumnIndex);
+            if (seriesName is null)
+            {
+                continue;
+            }
+
+            var series = _currentVoltage.Series.FirstOrDefault(s => s.Name == seriesName);
+            if (series is null)
+            {
+                continue;
+            }
+
+            if (cell.RowIndex >= series.Data.Count)
+            {
+                continue;
+            }
+
+            selections.Add(new EditingCoordinator.PointSelection(series, cell.RowIndex));
+        }
+
+        if (selections.Count == 0)
+        {
+            EditingCoordinator.ClearSelection();
+        }
+        else
+        {
+            EditingCoordinator.SetSelection(selections);
+        }
     }
 
     /// <summary>

@@ -65,16 +65,22 @@ public partial class MainWindowViewModel : ViewModelBase
     private CurveSeries? _selectedSeries;
 
     /// <summary>
+    /// Coordinates editing and selection between chart and data table.
+    /// </summary>
+    [ObservableProperty]
+    private EditingCoordinator _editingCoordinator = new();
+
+    /// <summary>
     /// ViewModel for the chart component.
     /// </summary>
     [ObservableProperty]
-    private ChartViewModel _chartViewModel = new();
+    private ChartViewModel _chartViewModel;
 
     /// <summary>
     /// ViewModel for the curve data table.
     /// </summary>
     [ObservableProperty]
-    private CurveDataTableViewModel _curveDataTableViewModel = new();
+    private CurveDataTableViewModel _curveDataTableViewModel;
 
     /// <summary>
     /// Whether the units section is expanded.
@@ -161,8 +167,9 @@ public partial class MainWindowViewModel : ViewModelBase
         _curveGeneratorService = new CurveGeneratorService();
         _fileService = new FileService(_curveGeneratorService);
         _validationService = new ValidationService();
-        ChartViewModel.DataChanged += OnChartDataChanged;
-        CurveDataTableViewModel.DataChanged += OnDataTableDataChanged;
+        _chartViewModel = new ChartViewModel();
+        _curveDataTableViewModel = new CurveDataTableViewModel();
+        WireEditingCoordinator();
     }
 
     public MainWindowViewModel(IFileService fileService, ICurveGeneratorService curveGeneratorService)
@@ -170,6 +177,17 @@ public partial class MainWindowViewModel : ViewModelBase
         _fileService = fileService ?? throw new ArgumentNullException(nameof(fileService));
         _curveGeneratorService = curveGeneratorService ?? throw new ArgumentNullException(nameof(curveGeneratorService));
         _validationService = new ValidationService();
+        _chartViewModel = new ChartViewModel();
+        _curveDataTableViewModel = new CurveDataTableViewModel();
+        WireEditingCoordinator();
+    }
+
+    private void WireEditingCoordinator()
+    {
+        ChartViewModel.DataChanged += OnChartDataChanged;
+        CurveDataTableViewModel.DataChanged += OnDataTableDataChanged;
+        ChartViewModel.EditingCoordinator = EditingCoordinator;
+        CurveDataTableViewModel.EditingCoordinator = EditingCoordinator;
     }
 
     public string WindowTitle
