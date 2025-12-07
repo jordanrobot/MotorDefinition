@@ -53,7 +53,7 @@ Phase 8: Power Curve Overlay (Future)
 - [X] Configure project for .NET 8
 - [X] Add NuGet packages (Avalonia, CommunityToolkit.Mvvm, Serilog, Serilog.Sinks.File, Serilog.Sinks.Console)
 - [X] Set up project structure (Models, Views, ViewModels, Services)
-- [ ] Configure single-file publishing
+- [X] Configure single-file publishing
 - [X] Set up Serilog logging infrastructure
 - [X] Configure global exception handling
 
