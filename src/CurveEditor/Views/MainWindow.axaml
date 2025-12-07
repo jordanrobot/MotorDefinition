@@ -97,6 +97,8 @@
                 <MenuItem Header="Show _Hover Tooltip" IsEnabled="False"/>
             </MenuItem>
             <MenuItem Header="_Help">
+                <MenuItem Header="Open _Logs Folder" Command="{Binding OpenLogsFolderCommand}"/>
+                <Separator/>
                 <MenuItem Header="_About" IsEnabled="False"/>
             </MenuItem>
         </Menu>

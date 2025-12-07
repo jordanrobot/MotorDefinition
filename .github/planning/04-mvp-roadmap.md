@@ -102,12 +102,12 @@ Phase 8: Power Curve Overlay (Future)
 - [X] Create new file with generated data
 
 ### 1.7 Logging and Exception Handling
-- [ ] Configure Serilog with file and console sinks
-- [ ] Add structured logging throughout services
-- [ ] Implement global unhandled exception handler
-- [ ] Create user-friendly error dialogs for exceptions
-- [ ] Log file location in user's AppData folder
-- [ ] Include context (file path, operation) in log entries
+- [x] Configure Serilog with file and console sinks
+- [x] Add structured logging throughout services
+- [x] Implement global unhandled exception handler
+- [x] Create user-friendly error dialogs for exceptions
+- [x] Log file location in user's AppData folder
+- [x] Include context (file path, operation) in log entries
 
 ### 1.8 Undo/Redo Infrastructure
 - [ ] Implement IUndoableCommand interface

@@ -18,6 +18,9 @@ sealed class Program
         try
         {
             Log.Information("Starting CurveEditor application");
+            Log.Information("Log files are written to {LogDirectory}", GetLogDirectory());
+
+            AppDomain.CurrentDomain.UnhandledException += OnUnhandledAppDomainException;
             BuildAvaloniaApp().StartWithClassicDesktopLifetime(args);
         }
         catch (Exception ex)
@@ -34,9 +37,7 @@ sealed class Program
     private static void ConfigureLogging()
     {
         var logPath = Path.Combine(
-            Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData),
-            "CurveEditor",
-            "logs",
+            GetLogDirectory(),
             "curveeditor-.log");
 
         // Ensure directory exists
@@ -57,6 +58,26 @@ sealed class Program
                 retainedFileCountLimit: 7,
                 outputTemplate: "{Timestamp:yyyy-MM-dd HH:mm:ss.fff zzz} [{Level:u3}] {Message:lj}{NewLine}{Exception}")
             .CreateLogger();
+    }
+
+    private static string GetLogDirectory()
+    {
+        return Path.Combine(
+            Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData),
+            "CurveEditor",
+            "logs");
+    }
+
+    private static void OnUnhandledAppDomainException(object sender, UnhandledExceptionEventArgs e)
+    {
+        if (e.ExceptionObject is Exception exception)
+        {
+            Log.Fatal(exception, "Unhandled AppDomain exception. IsTerminating={IsTerminating}", e.IsTerminating);
+        }
+        else
+        {
+            Log.Fatal("Unhandled AppDomain exception of type {ExceptionType}. IsTerminating={IsTerminating}", e.ExceptionObject.GetType(), e.IsTerminating);
+        }
     }
 
     // Avalonia configuration, don't remove; also used by visual designer.

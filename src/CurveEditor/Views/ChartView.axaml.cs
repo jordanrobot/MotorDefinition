@@ -80,8 +80,13 @@ public partial class ChartView : UserControl
             return;
         }
 
+        if (lineSeries.Values is null)
+        {
+            return;
+        }
+
         var values = lineSeries.Values as IEnumerable<ObservablePoint> ??
-                 lineSeries.Values.OfType<ObservablePoint>();
+                     lineSeries.Values.OfType<ObservablePoint>();
         var index = values
             .Select((p, i) => new { Point = p, Index = i })
             .FirstOrDefault(x => ReferenceEquals(x.Point, observablePoint))?.Index ?? -1;

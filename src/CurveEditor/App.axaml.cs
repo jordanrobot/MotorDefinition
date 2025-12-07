@@ -1,10 +1,13 @@
 using Avalonia;
 using Avalonia.Controls.ApplicationLifetimes;
+using Avalonia.Threading;
 using Avalonia.Data.Core;
 using Avalonia.Data.Core.Plugins;
 using Avalonia.Markup.Xaml;
 using CurveEditor.ViewModels;
 using CurveEditor.Views;
+using Serilog;
+using System;
 using System.Linq;
 
 namespace CurveEditor;
@@ -30,6 +33,39 @@ public partial class App : Application
         }
 
         base.OnFrameworkInitializationCompleted();
+    }
+
+    private static async void OnUnhandledDesktopException(object? sender, DispatcherUnhandledExceptionEventArgs e)
+    {
+        Log.Error(e.Exception, "Unhandled UI exception");
+
+        var message =
+            "An unexpected error occurred and was logged. " +
+            "You can find log files under %APPDATA%/CurveEditor/logs.\n\n" +
+            $"Error: {e.Exception.Message}";
+
+        try
+        {
+            if (Current?.ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop &&
+                desktop.MainWindow is not null)
+            {
+                var dialog = new MessageDialog
+                {
+                    Title = "Unexpected Error",
+                    Message = message,
+                    OkButtonText = "Close",
+                    ShowCancelButton = false
+                };
+
+                await dialog.ShowDialog(desktop.MainWindow);
+            }
+        }
+        catch (Exception dialogEx)
+        {
+            Log.Error(dialogEx, "Failed to show unhandled exception dialog");
+        }
+
+        e.Handled = true;
     }
 
     private void DisableAvaloniaDataAnnotationValidation()

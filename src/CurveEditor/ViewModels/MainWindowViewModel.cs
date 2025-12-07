@@ -164,6 +164,44 @@ public partial class MainWindowViewModel : ViewModelBase
     /// </summary>
     public static string[] BacklashUnits => UnitSettings.SupportedBacklashUnits;
 
+    /// <summary>
+    /// Opens the folder where application log files are stored.
+    /// </summary>
+    [RelayCommand]
+    private void OpenLogsFolder()
+    {
+        try
+        {
+            var logDirectory = Path.Combine(
+                Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData),
+                "CurveEditor",
+                "logs");
+
+            if (!Directory.Exists(logDirectory))
+            {
+                Directory.CreateDirectory(logDirectory);
+            }
+
+            Log.Information("Opening logs folder at {LogDirectory}", logDirectory);
+
+            using var process = new System.Diagnostics.Process
+            {
+                StartInfo = new System.Diagnostics.ProcessStartInfo
+                {
+                    FileName = logDirectory,
+                    UseShellExecute = true
+                }
+            };
+
+            process.Start();
+        }
+        catch (Exception ex)
+        {
+            Log.Error(ex, "Failed to open logs folder");
+            StatusMessage = "Failed to open logs folder. See log for details.";
+        }
+    }
+
     public MainWindowViewModel()
     {
         _curveGeneratorService = new CurveGeneratorService();
@@ -963,6 +1001,20 @@ public partial class MainWindowViewModel : ViewModelBase
         }
 
         var errors = _validationService.ValidateMotorDefinition(CurrentMotor);
+
+        if (errors.Count > 0)
+        {
+            Log.Information("Validation failed for motor {MotorName} with {ErrorCount} errors", CurrentMotor.MotorName, errors.Count);
+            foreach (var error in errors)
+            {
+                Log.Debug("Validation error for motor {MotorName}: {ErrorMessage}", CurrentMotor.MotorName, error);
+            }
+        }
+        else
+        {
+            Log.Debug("Validation succeeded for motor {MotorName}", CurrentMotor.MotorName);
+        }
+
         HasValidationErrors = errors.Count > 0;
         ValidationErrors = errors.Count > 0
             ? string.Join("\n", errors)
