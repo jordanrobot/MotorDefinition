@@ -7,19 +7,28 @@ This document establishes consistent terminology for the motor torque curve edit
 ## Core Concepts
 
 ### Motor Definition
-The entirety of information contained in a motor definition file. Refers to a single motor combined with a specific drive and voltage configuration, along with all resulting performance data (curves, specifications, metadata).
+The root domain object for this application. Represents the entirety of information contained in a motor definition file: a single motor with all base properties, unit settings, drive configurations, voltage configurations, curve series, and metadata.
 
 ### Motor Definition File
-The JSON file that describes a motor definition. Contains all motor properties, drive configuration, multiple curves, and metadata.
+The JSON file on disk that serializes a `MotorDefinition`. It contains motor properties, unit settings, one or more drive configurations, each with one or more voltage configurations, each of which contains multiple curve series and data points.
 
 ### Curve (or Curve Series)
-A single series of motor torque/speed data points. Each curve represents a specific operating condition (e.g., "Peak" or "Continuous") and is stored as data points at 1% increments of motor max speed.
+A `CurveSeries` describes a single named series of motor torque/speed data points for a specific drive and voltage configuration. Each curve represents a specific operating condition (e.g., "Peak" or "Continuous") and is stored as data points at 1% increments of motor max speed.
 
 ### Data Point
 A single point on a curve, consisting of:
 - **Percent**: 0-100%, representing position along the speed range
 - **RPM**: Rotational speed at that percentage point
 - **Torque**: Torque value at that speed
+
+### Drive Configuration
+A `DriveConfiguration` groups curve data by servo drive. Each drive has a name, optional drive-specific properties, and a collection of voltage configurations.
+
+### Voltage Configuration
+A `VoltageConfiguration` represents all curve series for a specific operating voltage of a given drive. It includes the numeric voltage value and a collection of `CurveSeries` objects.
+
+### Motor Metadata
+`MotorMetadata` tracks file-related and descriptive metadata for a motor definition (for example, author, creation and modification timestamps, and notes). It is updated automatically when structure-changing operations occur.
 
 ---
 
@@ -72,6 +81,9 @@ The maximum current draw during peak torque operation.
 ### Power
 The power output of the motor (typically in Watts, kW, or HP).
 
+### Feedback PPR (Pulses Per Revolution)
+The resolution of the motor feedback device (encoder or resolver), expressed as pulses per revolution. Used for motion control tuning and position accuracy calculations.
+
 ---
 
 ## Mechanical Properties
@@ -90,6 +102,9 @@ The holding torque of the integral brake (if present).
 
 ### Brake Amperage
 The current draw of the brake (if present).
+
+### Brake Voltage
+The operating voltage of the integral brake (if present).
 
 ---
 
@@ -120,6 +135,12 @@ The graphical display showing curves as line graphs with axes, grid lines, and l
 ### Directory Browser
 The side pane showing the file system for navigating and selecting motor definition files.
 
+### Editing Coordinator
+An internal coordination object shared between the chart and data table views. It tracks the currently selected curve points and ensures that selections and highlights stay in sync between visual and tabular editing surfaces.
+
+### Chart Zoom and Pan
+The chart is currently configured as a static view without interactive zoom or pan. Axes ranges are computed from the current motor definition and voltage configuration.
+
 ---
 
 ## File Operations
@@ -135,6 +156,9 @@ Write the current motor definition to a new file; the new file becomes the activ
 
 ### Save Copy As
 Write a copy of the current motor definition to a new file; the original file remains active.
+
+### Validation Errors
+Problems detected in the current motor definition by the `ValidationService` (for example, missing drives, voltages, or invalid numeric ranges). When validation errors are present, the UI indicates them in a status area and disables the primary Save command.
 
 ---
 
@@ -187,6 +211,25 @@ A mode where the user can "enter" the cell to directly edit the value within the
 - **kg**: Kilograms
 - **lbs**: Pounds
 - **g**: Grams
+
+### Voltage Units
+- **V**: Volts
+- **kV**: Kilovolts
+
+### Current Units
+- **A**: Amperes
+- **mA**: Milliamperes
+
+### Inertia Units
+- **kg-m^2**: Kilogram square meters (SI inertia unit)
+- **g-cm^2**: Gram square centimeters (metric inertia unit)
+
+### Torque Constant Units
+- **Nm/A**: Newton-meters per ampere
+
+### Backlash Units
+- **arcmin**: Arc minutes
+- **arcsec**: Arc seconds
 
 ---
 
