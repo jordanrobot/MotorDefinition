@@ -134,7 +134,31 @@ public partial class CurveDataTableViewModel : ViewModelBase
     /// Optional editing coordinator used to share logical point selection
     /// with other views such as the chart.
     /// </summary>
-    public EditingCoordinator? EditingCoordinator { get; set; }
+    public EditingCoordinator? EditingCoordinator
+    {
+        get => _editingCoordinator;
+        set
+        {
+            if (ReferenceEquals(_editingCoordinator, value))
+            {
+                return;
+            }
+
+            if (_editingCoordinator is not null)
+            {
+                _editingCoordinator.SelectionChanged -= OnCoordinatorSelectionChanged;
+            }
+
+            _editingCoordinator = value;
+
+            if (_editingCoordinator is not null)
+            {
+                _editingCoordinator.SelectionChanged += OnCoordinatorSelectionChanged;
+            }
+        }
+    }
+
+    private EditingCoordinator? _editingCoordinator;
 
     /// <summary>
     /// Collection of currently selected cells.
@@ -156,7 +180,11 @@ public partial class CurveDataTableViewModel : ViewModelBase
     /// The string parameter contains a human-readable error message
     /// that can be surfaced by the UI layer.
     /// </summary>
-    public event EventHandler<string>? ClipboardError;
+    public event EventHandler<string>? ClipboardError
+    {
+        add { }
+        remove { }
+    }
 
     /// <summary>
     /// Gets or sets the current voltage configuration.
@@ -518,6 +546,47 @@ public partial class CurveDataTableViewModel : ViewModelBase
         {
             EditingCoordinator.SetSelection(selections);
         }
+    }
+
+    /// <summary>
+    /// Responds to selection changes coming from the shared editing
+    /// coordinator (e.g., graph-driven selection) by updating
+    /// <see cref="SelectedCells"/>. This keeps table selection in sync
+    /// with graph interactions.
+    /// </summary>
+    private void OnCoordinatorSelectionChanged(object? sender, EventArgs e)
+    {
+        if (_editingCoordinator is null || _currentVoltage is null)
+        {
+            return;
+        }
+
+        // Rebuild SelectedCells from the coordinator's logical selection.
+        SelectedCells.Clear();
+
+        foreach (var point in _editingCoordinator.SelectedPoints)
+        {
+            var seriesIndex = SeriesColumns.IndexOf(point.Series);
+            if (seriesIndex < 0)
+            {
+                continue;
+            }
+
+            var rowIndex = point.Index;
+            if (rowIndex < 0 || rowIndex >= Rows.Count)
+            {
+                continue;
+            }
+
+            var columnIndex = 2 + seriesIndex; // offset for % and RPM columns
+            SelectedCells.Add(new CellPosition(rowIndex, columnIndex));
+        }
+
+        // When selection is driven externally, reset the anchor to the first
+        // selected cell for predictable Shift+Arrow behavior.
+        _anchorCell = SelectedCells.FirstOrDefault();
+
+        SelectionChanged?.Invoke(this, EventArgs.Empty);
     }
 
     /// <summary>

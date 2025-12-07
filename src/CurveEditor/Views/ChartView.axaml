@@ -21,7 +21,7 @@
             YAxes="{Binding YAxes}"
             TooltipPosition="Top"
             ZoomMode="None"
-            AnimationsSpeed="00:00:00.200">
+            AnimationsSpeed="00:00:00.000">
             <lvc:CartesianChart.TooltipBackgroundPaint>
                 <lvc:SolidColorPaint Color="#F5F5F5" />
             </lvc:CartesianChart.TooltipBackgroundPaint>

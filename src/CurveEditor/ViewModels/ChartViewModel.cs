@@ -263,6 +263,43 @@ public partial class ChartViewModel : ViewModelBase
                && indices.Contains(index);
     }
 
+    /// <summary>
+    /// Handles a chart point click coming from the view. Uses modifier keys
+    /// to decide whether to replace, extend, or toggle the shared selection
+    /// via the EditingCoordinator.
+    /// </summary>
+    public void HandleChartPointClick(string seriesName, int index, Avalonia.Input.KeyModifiers modifiers)
+    {
+        if (_editingCoordinator is null || _currentVoltage is null)
+        {
+            return;
+        }
+
+        var series = _currentVoltage.Series.FirstOrDefault(s => s.Name == seriesName);
+        if (series is null || index < 0 || index >= series.Data.Count)
+        {
+            return;
+        }
+
+        var point = new EditingCoordinator.PointSelection(series, index);
+
+        if (modifiers.HasFlag(Avalonia.Input.KeyModifiers.Control))
+        {
+            // Ctrl+click toggles the point in the selection.
+            _editingCoordinator.ToggleSelection(point);
+        }
+        else if (modifiers.HasFlag(Avalonia.Input.KeyModifiers.Shift))
+        {
+            // Shift+click extends the selection by adding this point.
+            _editingCoordinator.AddToSelection(new[] { point });
+        }
+        else
+        {
+            // No modifiers: replace selection with this single point.
+            _editingCoordinator.SetSelection(new[] { point });
+        }
+    }
+
     private void UpdateChart()
     {
         Series.Clear();
@@ -396,7 +433,8 @@ public partial class ChartViewModel : ViewModelBase
     private void AddBrakeTorqueLine()
     {
         // Use the maximum of Motor Max Speed and Drive (voltage) Max Speed for line width
-        var maxRpm = Math.Max(MotorMaxSpeed, _currentVoltage?.MaxSpeed ?? 0);
+        var currentVoltageMaxSpeed = _currentVoltage is null ? 0 : _currentVoltage.MaxSpeed;
+        var maxRpm = Math.Max(MotorMaxSpeed, currentVoltageMaxSpeed);
         if (maxRpm <= 0)
         {
             maxRpm = 6000; // Default fallback

@@ -5,8 +5,8 @@
 - **Steps**:
   - [ ] Add hit-testing support in `ChartView` to detect clicks on (or near) chart points.
   - [ ] Map clicked points to `(CurveSeries series, int index)` using the existing `_seriesDataCache`/`CurrentVoltage` in `ChartViewModel`.
-  - [ ] On click, update `EditingCoordinator.SelectedPoints` (e.g., replace selection; support Ctrl-click to toggle / add points).
-  - [ ] Extend `CurveDataTableViewModel` to listen to `EditingCoordinator.SelectionChanged` and project `PointSelection`s back into `SelectedCells`.
+  - [ ] On click, update the coordinator using `SetSelection`, `AddToSelection`, or `ToggleSelection` based on modifier keys.
+  - [x] Extend `CurveDataTableViewModel` to listen to `EditingCoordinator.SelectionChanged` and project `PointSelection`s back into `SelectedCells`.
   - [ ] Ensure selection sync is two-way but avoids feedback loops (e.g., ignore coordinator events when the change originated from the table itself).
 
 ### 2. Rubber-Band Selection on Graph
@@ -34,7 +34,7 @@
 - **Steps**:
   - [ ] Define a small set of selection behaviors (replace, extend, toggle) based on modifier keys (none, Shift, Ctrl) and document them.
   - [ ] Apply the same semantics to graph clicks and rubber-band selection as already used in the table (e.g., Ctrl-click toggles, Shift-click extends from last anchor).
-  - [ ] Expose helper methods on `EditingCoordinator` such as `SetSelection`, `AddToSelection`, `ToggleSelection` to keep this logic centralized.
+  - [x] Expose helper methods on `EditingCoordinator` such as `SetSelection`, `AddToSelection`, `ToggleSelection` to keep this logic centralized.
   - [ ] Add unit tests for `EditingCoordinator` to validate selection operations independently from UI.
 
 ### 5. Performance & UX Considerations

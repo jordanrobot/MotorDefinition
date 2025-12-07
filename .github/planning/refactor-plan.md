@@ -55,15 +55,19 @@ We don't want to loose functionality, but I'd like to tidy up if we can.
   - Reduced duplication of torque mutation rules between view and view model.
   - Lower risk when adding new clipboard or override-mode behaviors, since they plug into centralized APIs.
 
-### 4. Strengthen Graph/Table Linking (partially completed)
+### 4. Strengthen Graph/Table Linking (substantially completed)
 - **Goal**: Lay groundwork for Phase 3+ features that tie graph point selection to table selection and vice versa.
 - **Current state**:
   - Selection is now represented in a model-level structure (`EditingCoordinator.PointSelection` as `(series, index)` pairs) understood by both `ChartViewModel` and `CurveDataTableViewModel`.
-  - Table → Graph is implemented:
-    - `CurveDataTableViewModel` translates its `SelectedCells` into `PointSelection`s and updates the coordinator.
-    - `ChartViewModel` listens to the coordinator and builds lightweight overlay series that highlight only the selected points (including multi-cell selection and Ctrl+Shift+arrow range selection).
+  - Table  Graph is implemented:
+    - `CurveDataTableViewModel` translates its `SelectedCells` into `PointSelection`s and updates the coordinator (including drag and Ctrl/Shift/Ctrl+Shift arrow selection).
+    - `ChartViewModel` listens to the coordinator and builds lightweight overlay series that highlight only the selected points.
+  - Graph  Table (click selection) is implemented:
+    - `ChartView` uses LiveCharts hit-testing to find the nearest point under the cursor.
+    - `ChartViewModel.HandleChartPointClick` updates the coordinator using `SetSelection`, `AddToSelection`, or `ToggleSelection` based on modifier keys.
+    - `CurveDataTableViewModel` listens to `EditingCoordinator.SelectionChanged` and mirrors `SelectedPoints` back into `SelectedCells`, so graph clicks update the table selection.
 - **Planned (Phase 3)**:
-  - Graph → Table: add hit-testing and rubber-band selection on the chart that update the coordinator, and have `CurveDataTableViewModel` respond to coordinator changes by updating its `SelectedCells`.
+  - Rubber-band graph selection and drag-to-edit behaviors that build on the same coordinator and view-model APIs.
   - Use the existing centralized torque mutation APIs (`TrySetTorqueAtCell` / `ApplyTorqueToCells`) as the single path for graph-drag multi-point torque edits.
 - **Benefits**:
   - Clear, testable selection model shared between graph and table.

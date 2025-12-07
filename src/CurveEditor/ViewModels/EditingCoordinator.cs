@@ -52,4 +52,45 @@ public class EditingCoordinator
         _selectedPoints.AddRange(points);
         SelectionChanged?.Invoke(this, EventArgs.Empty);
     }
+
+    /// <summary>
+    /// Adds the specified points to the current selection, avoiding duplicates.
+    /// </summary>
+    public void AddToSelection(IEnumerable<PointSelection> points)
+    {
+        ArgumentNullException.ThrowIfNull(points);
+
+        var changed = false;
+        foreach (var point in points)
+        {
+            if (!_selectedPoints.Contains(point))
+            {
+                _selectedPoints.Add(point);
+                changed = true;
+            }
+        }
+
+        if (changed)
+        {
+            SelectionChanged?.Invoke(this, EventArgs.Empty);
+        }
+    }
+
+    /// <summary>
+    /// Toggles the presence of the specified point in the selection.
+    /// </summary>
+    public void ToggleSelection(PointSelection point)
+    {
+        var index = _selectedPoints.IndexOf(point);
+        if (index >= 0)
+        {
+            _selectedPoints.RemoveAt(index);
+        }
+        else
+        {
+            _selectedPoints.Add(point);
+        }
+
+        SelectionChanged?.Invoke(this, EventArgs.Empty);
+    }
 }
