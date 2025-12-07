@@ -546,62 +546,7 @@ public partial class MainWindowViewModel : ViewModelBase
     [RelayCommand]
     private async Task AddDriveAsync()
     {
-        if (CurrentMotor is null) return;
-
-        try
-        {
-            var dialog = new Views.AddDriveVoltageDialog();
-            dialog.Initialize(
-                CurrentMotor.MaxSpeed,
-                CurrentMotor.RatedPeakTorque,
-                CurrentMotor.RatedContinuousTorque,
-                CurrentMotor.Power);
-
-            if (Application.Current?.ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop &&
-                desktop.MainWindow is not null)
-            {
-                await dialog.ShowDialog(desktop.MainWindow);
-            }
-            else
-            {
-                StatusMessage = "Cannot show dialog - no main window available";
-                return;
-            }
-
-            if (dialog.Result is null) return;
-
-            var result = dialog.Result;
-
-            var (drive, voltage) = _driveVoltageSeriesService.CreateDriveWithVoltage(
-                CurrentMotor,
-                result.Name,
-                result.PartNumber,
-                result.Manufacturer,
-                result.Voltage,
-                result.MaxSpeed,
-                result.Power,
-                result.PeakTorque,
-                result.ContinuousTorque,
-                result.ContinuousCurrent,
-                result.PeakCurrent);
-
-            // Add the new drive directly to the collection (don't clear/refresh)
-            AvailableDrives.Add(drive);
-            
-            // Select the new drive - this will trigger OnSelectedDriveChanged which updates voltages
-            SelectedDrive = drive;
-            
-            // Explicitly refresh chart to ensure axes are updated with new max speed
-            ChartViewModel.RefreshChart();
-            
-            MarkDirty();
-            StatusMessage = $"Added drive: {drive.Name}";
-        }
-        catch (Exception ex)
-        {
-            Log.Error(ex, "Failed to add drive");
-            StatusMessage = $"Error adding drive: {ex.Message}";
-        }
+        await AddDriveInternalAsync();
     }
 
     [RelayCommand]
@@ -654,59 +599,7 @@ public partial class MainWindowViewModel : ViewModelBase
     [RelayCommand]
     private async Task AddVoltageAsync()
     {
-        if (SelectedDrive is null) return;
-
-        try
-        {
-            var dialog = new Views.AddDriveVoltageDialog();
-            dialog.Title = "Add New Voltage Configuration";
-            dialog.Initialize(
-                CurrentMotor?.MaxSpeed ?? 5000,
-                CurrentMotor?.RatedPeakTorque ?? 50,
-                CurrentMotor?.RatedContinuousTorque ?? 40,
-                CurrentMotor?.Power ?? 1500);
-
-            if (Application.Current?.ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop)
-            {
-                await dialog.ShowDialog(desktop.MainWindow!);
-            }
-
-            if (dialog.Result is null) return;
-
-            var result = dialog.Result;
-
-            // Check if voltage already exists
-            if (SelectedDrive.Voltages.Any(v => Math.Abs(v.Voltage - result.Voltage) < DriveConfiguration.DefaultVoltageTolerance))
-            {
-                StatusMessage = $"Voltage {result.Voltage}V already exists for this drive.";
-                return;
-            }
-
-            var voltage = _driveVoltageSeriesService.CreateVoltageWithSeries(
-                SelectedDrive,
-                result.Voltage,
-                result.MaxSpeed,
-                result.Power,
-                result.PeakTorque,
-                result.ContinuousTorque,
-                result.ContinuousCurrent,
-                result.PeakCurrent);
-
-            // Refresh the available voltages and select the new one
-            RefreshAvailableVoltages();
-            SelectedVoltage = voltage;
-            
-            // Force chart refresh to update axes based on new max speed
-            ChartViewModel.RefreshChart();
-            
-            MarkDirty();
-            StatusMessage = $"Added voltage: {result.Voltage}V";
-        }
-        catch (Exception ex)
-        {
-            Log.Error(ex, "Failed to add voltage");
-            StatusMessage = $"Error adding voltage: {ex.Message}";
-        }
+        await AddVoltageInternalAsync();
     }
 
     [RelayCommand]
@@ -754,7 +647,157 @@ public partial class MainWindowViewModel : ViewModelBase
     [RelayCommand]
     private async Task AddSeriesAsync()
     {
-        if (SelectedVoltage is null) return;
+        await AddSeriesInternalAsync();
+    }
+
+    /// <summary>
+    /// Core workflow for adding a new drive with an initial voltage configuration.
+    /// Kept internal to simplify future extraction into a dedicated workflow service.
+    /// </summary>
+    private async Task AddDriveInternalAsync()
+    {
+        if (CurrentMotor is null)
+        {
+            return;
+        }
+
+        try
+        {
+            var dialog = new Views.AddDriveVoltageDialog();
+            dialog.Initialize(
+                CurrentMotor.MaxSpeed,
+                CurrentMotor.RatedPeakTorque,
+                CurrentMotor.RatedContinuousTorque,
+                CurrentMotor.Power);
+
+            if (Application.Current?.ApplicationLifetime is not IClassicDesktopStyleApplicationLifetime desktop ||
+                desktop.MainWindow is null)
+            {
+                StatusMessage = "Cannot show dialog - no main window available";
+                return;
+            }
+
+            await dialog.ShowDialog(desktop.MainWindow);
+            if (dialog.Result is null)
+            {
+                return;
+            }
+
+            var result = dialog.Result;
+
+            var (drive, _) = _driveVoltageSeriesService.CreateDriveWithVoltage(
+                CurrentMotor,
+                result.Name,
+                result.PartNumber,
+                result.Manufacturer,
+                result.Voltage,
+                result.MaxSpeed,
+                result.Power,
+                result.PeakTorque,
+                result.ContinuousTorque,
+                result.ContinuousCurrent,
+                result.PeakCurrent);
+
+            // Add the new drive directly to the collection (don't clear/refresh)
+            AvailableDrives.Add(drive);
+
+            // Select the new drive - this will trigger OnSelectedDriveChanged which updates voltages
+            SelectedDrive = drive;
+
+            // Explicitly refresh chart to ensure axes are updated with new max speed
+            ChartViewModel.RefreshChart();
+
+            MarkDirty();
+            StatusMessage = $"Added drive: {drive.Name}";
+        }
+        catch (Exception ex)
+        {
+            Log.Error(ex, "Failed to add drive");
+            StatusMessage = $"Error adding drive: {ex.Message}";
+        }
+    }
+
+    /// <summary>
+    /// Core workflow for adding a new voltage configuration to the selected drive.
+    /// </summary>
+    private async Task AddVoltageInternalAsync()
+    {
+        if (SelectedDrive is null)
+        {
+            return;
+        }
+
+        try
+        {
+            var dialog = new Views.AddDriveVoltageDialog
+            {
+                Title = "Add New Voltage Configuration"
+            };
+
+            dialog.Initialize(
+                CurrentMotor?.MaxSpeed ?? 5000,
+                CurrentMotor?.RatedPeakTorque ?? 50,
+                CurrentMotor?.RatedContinuousTorque ?? 40,
+                CurrentMotor?.Power ?? 1500);
+
+            if (Application.Current?.ApplicationLifetime is not IClassicDesktopStyleApplicationLifetime desktop ||
+                desktop.MainWindow is null)
+            {
+                StatusMessage = "Cannot show dialog - no main window available";
+                return;
+            }
+
+            await dialog.ShowDialog(desktop.MainWindow);
+            if (dialog.Result is null)
+            {
+                return;
+            }
+
+            var result = dialog.Result;
+
+            // Check if voltage already exists
+            if (SelectedDrive.Voltages.Any(v => Math.Abs(v.Voltage - result.Voltage) < DriveConfiguration.DefaultVoltageTolerance))
+            {
+                StatusMessage = $"Voltage {result.Voltage}V already exists for this drive.";
+                return;
+            }
+
+            var voltage = _driveVoltageSeriesService.CreateVoltageWithSeries(
+                SelectedDrive,
+                result.Voltage,
+                result.MaxSpeed,
+                result.Power,
+                result.PeakTorque,
+                result.ContinuousTorque,
+                result.ContinuousCurrent,
+                result.PeakCurrent);
+
+            // Refresh the available voltages and select the new one
+            RefreshAvailableVoltages();
+            SelectedVoltage = voltage;
+
+            // Force chart refresh to update axes based on new max speed
+            ChartViewModel.RefreshChart();
+
+            MarkDirty();
+            StatusMessage = $"Added voltage: {result.Voltage}V";
+        }
+        catch (Exception ex)
+        {
+            Log.Error(ex, "Failed to add voltage");
+            StatusMessage = $"Error adding voltage: {ex.Message}";
+        }
+    }
+
+    /// <summary>
+    /// Core workflow for adding a new curve series to the selected voltage.
+    /// </summary>
+    private async Task AddSeriesInternalAsync()
+    {
+        if (SelectedVoltage is null)
+        {
+            return;
+        }
 
         try
         {
@@ -764,18 +807,18 @@ public partial class MainWindowViewModel : ViewModelBase
                 SelectedVoltage.RatedContinuousTorque,
                 SelectedVoltage.Power);
 
-            if (Application.Current?.ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop &&
-                desktop.MainWindow is not null)
-            {
-                await dialog.ShowDialog(desktop.MainWindow);
-            }
-            else
+            if (Application.Current?.ApplicationLifetime is not IClassicDesktopStyleApplicationLifetime desktop ||
+                desktop.MainWindow is null)
             {
                 StatusMessage = "Cannot show dialog - no main window available";
                 return;
             }
 
-            if (dialog.Result is null) return;
+            await dialog.ShowDialog(desktop.MainWindow);
+            if (dialog.Result is null)
+            {
+                return;
+            }
 
             // Re-check SelectedVoltage in case it changed during async operation
             if (SelectedVoltage is null)
@@ -788,11 +831,11 @@ public partial class MainWindowViewModel : ViewModelBase
             var seriesName = _driveVoltageSeriesService.GenerateUniqueName(
                 SelectedVoltage.Series.Select(s => s.Name),
                 result.Name);
-            
+
             var series = SelectedVoltage.AddSeries(seriesName, result.BaseTorque);
             series.IsVisible = result.IsVisible;
             series.Locked = result.IsLocked;
-            
+
             // IMPORTANT: RefreshData BEFORE RefreshAvailableSeries to prevent DataGrid column sync issues
             // The column rebuild is triggered by AvailableSeries collection change, so data must be ready first
             CurveDataTableViewModel.RefreshData();
