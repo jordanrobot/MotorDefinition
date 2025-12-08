@@ -40,9 +40,9 @@
 
 See ADR-0003 (`.github/adr/adr-0003-motor-property-undo-design.md`) for the specific command-driven pattern adopted for motor-level text properties.
 
-**Future refinement for motor text properties:**
+**Motor text properties implementation and lessons learned:**
 
-Integration experiments with attached `TextBox` behaviors showed that trying to retrofit undoable motor text edits on top of fully active two-way bindings is brittle: by the time a command runs, the underlying `MotorDefinition` has often already been updated, so the command cannot reliably capture the true "old" value. The agreed direction is to introduce a dedicated, command-driven editing path for motor-level text properties (e.g., Motor Name, Manufacturer, Part Number) instead of relying on behaviors. See ADR-0003 (`.github/adr/adr-0003-motor-property-undo-design.md`) for details.
+Early attempts to bolt motor text property undo onto existing two-way `TextBox` bindings via attached behaviors proved fragile: bindings were mutating `MotorDefinition` before commands could reliably capture the old value, and Ctrl+Z handling oscillated between per-textbox and global behavior. We have now implemented the ADR-0003 pattern in production: motor text boxes bind to simple editor properties on the view model, `TextBox`-local undo is disabled, and explicit edit methods (e.g., `EditMotorName`) construct `EditMotorPropertyCommand` instances with old/new values that are pushed to the shared `UndoStack`. This yields predictable, whole-field undo/redo steps that align with chart and grid edits.
 
 #### 2.4 Wiring Undo/Redo to UI and Dirty State
 #### 2.4 Wiring Undo/Redo to UI and Dirty State
@@ -66,44 +66,47 @@ Integration experiments with attached `TextBox` behaviors showed that trying to 
 - [x] All items under `1.8 Undo/Redo Infrastructure` are satisfied by the implemented undo/redo system.
 - [x] New logging and undo/redo behavior does not break existing tests; new tests are added where appropriate to cover the new infrastructure.
 
-### 4. Future Work: Motor Property Undo via Dedicated Command Path
+### 4. Motor Property Undo via Dedicated Command Path (completed)
 
-Although the core undo/redo infrastructure is in place, motor-level text properties are still using direct two-way bindings to `MotorDefinition`. To bring these fields fully under the undo/redo system in a maintainable way, a future agent should implement the following plan (guided by ADR-0003):
+- [x] Introduce explicit edit methods on the view model
+  - [x] Add methods on `MainWindowViewModel` (or a dedicated `MotorPropertiesViewModel`) such as:
+    - `EditMotorName(string newName)`
+    - `EditMotorManufacturer(string newManufacturer)`
+    - `EditMotorPartNumber(string newPartNumber)`
+  - [x] For each method:
+    - [x] Read the current value from `CurrentMotor`.
+    - [x] Early-out if the value is unchanged.
+    - [x] Construct an `IUndoableCommand` containing both old and new values.
+    - [x] Push and execute the command through the existing `UndoStack`, ensuring dirty state is updated.
 
-1. **Introduce explicit edit methods on the view model**
-   - On `MainWindowViewModel` (or a dedicated `MotorPropertiesViewModel`), add methods such as:
-     - `EditMotorName(string newName)`
-     - `EditMotorManufacturer(string newManufacturer)`
-     - `EditMotorPartNumber(string newPartNumber)`
-   - Each method should:
-     - Read the current value from `CurrentMotor`.
-     - Early-out if the value is unchanged.
-     - Construct an `IUndoableCommand` containing both old and new values.
-     - Push and execute the command through the existing `UndoStack`, ensuring dirty state is updated.
+- [x] Refactor bindings for key motor text fields
+  - [x] In `MainWindow.axaml`, replace direct bindings like `Text="{Binding CurrentMotor.MotorName}"` with bindings to simple VM properties (e.g., `MotorNameEditor`) and, on focus loss, use code-behind to call `EditMotorName(MotorNameEditor)`.
+  - [x] Set `TextBox.IsUndoEnabled` to `False` for these fields so that Ctrl+Z / Ctrl+Y always route to the window-level undo/redo commands.
+  - [x] Ensure the underlying `MotorDefinition` is mutated only via the command path, not by the bindings themselves.
 
-2. **Refactor bindings for key motor text fields**
-   - In `MainWindow.axaml`, replace direct bindings like `Text="{Binding CurrentMotor.MotorName}"` with a pattern that routes edits through the view model, for example:
-     - Bind `TextBox.Text` to a simple VM property (e.g., `MotorNameEditor`) and, on commit (Enter key or focus loss), invoke `EditMotorName(MotorNameEditor)`.
-     - Or use a command-based input pattern where the new text is passed as a command parameter to `EditMotorName`.
-   - Ensure the underlying `MotorDefinition` is mutated **only** via the command path, not by the binding itself.
+- [x] Update or extend the motor property command type
+  - [x] Refactor `EditMotorPropertyCommand` to accept both `oldValue` and `newValue` in its constructor.
+  - [x] Store `oldValue` and `newValue` explicitly within the command.
+  - [x] Set the property to `newValue` in `Execute()` and back to `oldValue` in `Undo()`.
+  - [x] Avoid inferring `oldValue` from the model at execution time.
 
-3. **Update or extend the motor property command type**
-   - Either refactor `EditMotorPropertyCommand` to accept both `oldValue` and `newValue` in its constructor, or add a new command type that:
-     - Stores `oldValue` and `newValue` explicitly.
-     - Sets the property to `newValue` in `Execute()` and back to `oldValue` in `Undo()`.
-   - The command should not attempt to infer `oldValue` from the model at execution time.
+- [x] Keep keyboard shortcuts at the window level
+  - [x] Leave the existing Ctrl+Z / Ctrl+Y key bindings on `MainWindow` bound to `UndoCommand` / `RedoCommand`.
+  - [x] Ensure motor property edits participate in the global undo/redo history without additional per-control key handling.
 
-4. **Keep keyboard shortcuts at the window level**
-   - Leave the existing Ctrl+Z / Ctrl+Y key bindings on `MainWindow` bound to `UndoCommand` / `RedoCommand`.
-   - Once motor property edits are command-driven, they will naturally participate in the global undo/redo history without additional per-control key handling.
-
-5. **Add focused tests**
-   - Add tests that:
-     - Create a view model with a `MotorDefinition`.
-     - Invoke `EditMotorName("New Name")` and assert the model changes.
-     - Call `Undo()` and verify the original name is restored.
-     - Call `Redo()` and verify the new name is applied again.
+- [x] Add focused tests
+  - [x] Add tests that:
+    - [x] Create a view model with a `MotorDefinition`.
+    - [x] Invoke `EditMotorName("New Name")` and assert the model changes.
+    - [x] Call `Undo()` and verify the original name is restored.
+    - [x] Call `Redo()` and verify the new name is applied again.
 
 This plan avoids the fragility observed with attached behaviors and tightly couples motor property edits to the undo/redo infrastructure in a clear, testable way.
 
-This future work is governed by ADR-0003 (`.github/adr/adr-0003-motor-property-undo-design.md`), which documents the rationale, decision, and migration steps.
+This work is governed by ADR-0003 (`.github/adr/adr-0003-motor-property-undo-design.md`), which documents the rationale, decision, and migration steps.
+
+### 5. Follow-on Work and TODOs
+
+- [ ] Implement the dedicated command-driven editing path for all remaining motor properties (including numeric scalars and metadata), ensuring they participate in the same undo/redo history.
+- [ ] Apply the same command-driven pattern to curve data table cells so that grid edits are always performed via undoable commands rather than direct model mutation.
+- [ ] Add support for in-cell undo for data table edits, duplicating Avalonia's default per-TextBox undo behavior semantics (per-commit, not per-character) while routing all undo/redo operations through the shared global undo mechanism instead of control-local stacks.

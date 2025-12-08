@@ -12,42 +12,23 @@
 
 The Curve Editor uses a command-based undo/redo infrastructure (`IUndoableCommand`, `UndoStack`) that already covers chart edits (`EditPointCommand`), series metadata (`EditSeriesCommand`), and some motor-level operations (`EditMotorPropertyCommand`).
 
-During Phase 2, we attempted to extend undo/redo to text-based motor properties (e.g., `MotorName`, `Manufacturer`, `PartNumber`) so that:
+During Phase 2, we extended undo/redo to text-based motor properties (e.g., `MotorName`, `Manufacturer`, `PartNumber`) with the following goals:
 
 - Ctrl+Z / Ctrl+Y act at the document level, not just within a single `TextBox`.
 - Each edit to a motor property is a whole-field undo step (old value → new value), not per-character.
 - Undo/redo across text boxes behaves consistently with chart/grid edits.
 
-An attached behavior (`UndoableTextBox`) was introduced to sit on top of Avalonia's normal two-way bindings. The behavior tried to:
+Early experiments used an attached behavior (`UndoableTextBox`) layered on top of Avalonia's normal two-way bindings. That approach was rejected after we observed in practice that:
 
-- Capture the original text on focus (`GotFocus`).
-- On `LostFocus`, compare the original and new text and, if changed, create an `EditMotorPropertyCommand` and push it to the `UndoStack`.
-- Intercept Ctrl+Z/Ctrl+Y at the `TextBox` level and route them to the global undo/redo commands.
+- By the time a command executed, the underlying `MotorDefinition` had often already been updated by the existing two-way binding, so commands could not reliably capture the true old value.
+- `EditMotorPropertyCommand` frequently saw `old` and `new` as the same value, making undo a no-op.
+- Ctrl+Z/Ctrl+Y routing was subtle and depended on whether focus was in a textbox or elsewhere, leading to inconsistent behavior between per-textbox undo and document-level undo.
 
-Extensive Serilog logging showed that:
-
-- The behavior *did* see focus, lost focus, and text changes correctly.
-- The behavior *did* push a command when a motor property changed.
-- However, by the time the command executed, the underlying `MotorDefinition` had already been updated by the **existing Avalonia two-way binding**.
-
-As a result:
-
-- `EditMotorPropertyCommand` observed `Old` and `New` values as the **same** (the already-updated value), even after attempts to capture the old value earlier.
-- Undo operations simply re-applied the same value and had no visible effect.
-- Ctrl+Z from another textbox (e.g., `Manufacturer`) often reached the window-level `UndoCommand` before the per-textbox behavior, so the behavior could not reliably own key routing either.
-
-This aligns with the broader roadmap intent in `04-mvp-roadmap.md` and `phase-2-plan.md` that:
-
-- All user-visible edits (including motor properties) should participate in the same undo/redo infrastructure (Phase 1.8).
-- Motor properties are part of the “Core Features” (Phase 2) and must behave consistently with chart and grid edits.
-
-Conclusion: trying to layer command-based undo on top of fully active two-way bindings for motor properties is fragile. The binding pipeline is already mutating the model before the command can capture the true "old" value, and focus/key routing order is subtle. This approach introduces hidden coupling to Avalonia internals and is difficult to reason about and maintain.
+Those lessons confirmed the roadmap intent in `04-mvp-roadmap.md` and `phase-2-plan.md`: motor property edits must participate in the same command-driven infrastructure as chart and grid edits, and the command path must own all mutations for these properties.
 
 ### Decision
 
-We will **not** rely on an attached `TextBox` behavior to bolt undoable motor-property edits onto the existing two-way bindings.
-
-Instead, for motor-level text properties we will introduce a **dedicated, command-driven editing path** that owns the mutation and participates in undo/redo by design.
+For motor-level text properties we will use a **dedicated, command-driven editing path** that owns the mutation and participates in undo/redo by design. We will not rely on attached behaviors that sit on top of fully active two-way bindings.
 
 Key aspects of the chosen direction:
 

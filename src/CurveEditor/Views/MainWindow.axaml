@@ -258,19 +258,31 @@
                         <!-- Motor Name -->
                         <Grid Classes="PropertyRow" ColumnDefinitions="Auto,*">
                             <TextBlock Grid.Column="0" Text="Motor Name" Classes="PropertyLabel"/>
-                            <TextBox Grid.Column="1" Text="{Binding CurrentMotor.MotorName}" Classes="PropertyInput"/>
+                            <TextBox Grid.Column="1"
+                                     Classes="PropertyInput"
+                                     Text="{Binding MotorNameEditor, Mode=TwoWay, UpdateSourceTrigger=LostFocus}"
+                                     IsUndoEnabled="False"
+                                     LostFocus="OnMotorNameLostFocus"/>
                         </Grid>
                         
                         <!-- Manufacturer -->
                         <Grid Classes="PropertyRow" ColumnDefinitions="Auto,*">
                             <TextBlock Grid.Column="0" Text="Manufacturer" Classes="PropertyLabel"/>
-                            <TextBox Grid.Column="1" Text="{Binding CurrentMotor.Manufacturer}" Classes="PropertyInput"/>
+                            <TextBox Grid.Column="1"
+                                     Classes="PropertyInput"
+                                     Text="{Binding ManufacturerEditor, Mode=TwoWay, UpdateSourceTrigger=LostFocus}"
+                                     IsUndoEnabled="False"
+                                     LostFocus="OnManufacturerLostFocus"/>
                         </Grid>
                         
                         <!-- Part Number -->
                         <Grid Classes="PropertyRow" ColumnDefinitions="Auto,*">
                             <TextBlock Grid.Column="0" Text="Part Number" Classes="PropertyLabel"/>
-                            <TextBox Grid.Column="1" Text="{Binding CurrentMotor.PartNumber}" Classes="PropertyInput"/>
+                            <TextBox Grid.Column="1"
+                                     Classes="PropertyInput"
+                                     Text="{Binding PartNumberEditor, Mode=TwoWay, UpdateSourceTrigger=LostFocus}"
+                                     IsUndoEnabled="False"
+                                     LostFocus="OnPartNumberLostFocus"/>
                         </Grid>
                         
                         <!-- Max Speed -->

@@ -12,12 +12,12 @@ public sealed class EditMotorPropertyCommand : IUndoableCommand
     private readonly MotorDefinition _motor;
     private readonly PropertyInfo _property;
     private readonly object? _newValue;
-    private object? _oldValue;
+    private readonly object? _oldValue;
 
     /// <summary>
     /// Creates a new <see cref="EditMotorPropertyCommand"/>.
     /// </summary>
-    public EditMotorPropertyCommand(MotorDefinition motor, string propertyName, object? newValue)
+    public EditMotorPropertyCommand(MotorDefinition motor, string propertyName, object? oldValue, object? newValue)
     {
         _motor = motor ?? throw new ArgumentNullException(nameof(motor));
 
@@ -29,6 +29,7 @@ public sealed class EditMotorPropertyCommand : IUndoableCommand
             throw new ArgumentException($"Property '{propertyName}' must be readable and writable.", nameof(propertyName));
         }
 
+        _oldValue = oldValue;
         _newValue = newValue;
     }
 
@@ -38,7 +39,6 @@ public sealed class EditMotorPropertyCommand : IUndoableCommand
     /// <inheritdoc />
     public void Execute()
     {
-        _oldValue = _property.GetValue(_motor);
         _property.SetValue(_motor, _newValue);
     }
 

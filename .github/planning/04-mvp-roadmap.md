@@ -127,7 +127,7 @@ See ADR-0003 (`.github/adr/adr-0003-motor-property-undo-design.md`) for the arch
 
 **Note on Motor Properties:**
 
-During integration work for motor-level text properties (e.g., Motor Name, Manufacturer), we discovered that layering command-based undo on top of existing two-way `TextBox` bindings is fragile: the bindings update `MotorDefinition` before commands can reliably capture the "old" value. A future enhancement will refactor these bindings to use a dedicated, command-driven edit path rather than attached behaviors. See ADR-0003 (`.github/adr/adr-0003-motor-property-undo-design.md`) for the chosen architectural direction and implementation guidance.
+Motor-level text properties (e.g., Motor Name, Manufacturer, Part Number) are now wired through explicit view-model edit methods and `EditMotorPropertyCommand` instances that store old and new values up front. The motor text boxes bind to simple editor properties (e.g., `MotorNameEditor`) and commit changes via these methods on focus loss, with `TextBox`-local undo disabled. Ctrl+Z / Ctrl+Y are handled at the window level and operate on the shared per-document `UndoStack`, so motor property edits participate in the same undo/redo history as chart and grid edits. See ADR-0003 (`.github/adr/adr-0003-motor-property-undo-design.md`) for the finalized design and rationale.
 
 **Future Refinements Using ADR-0003 Pattern:**
 
@@ -195,7 +195,7 @@ These refinements should be evaluated against the current codebase when planning
 - [X] Bind properties to MotorDefinition model
 - [X] Enable editing of all fields
 
-Note: Motor text property edits (e.g., name, manufacturer, part number) will ultimately be routed through explicit view-model edit methods and undoable commands as described in ADR-0003 (`.github/adr/adr-0003-motor-property-undo-design.md`).
+Note: Motor text property edits (e.g., name, manufacturer, part number) are routed through explicit view-model edit methods and undoable commands as described in ADR-0003 (`.github/adr/adr-0003-motor-property-undo-design.md`).
 
 ### 2.7 Curve Data Panel
 - [X] Create CurveDataPanel component

@@ -14,7 +14,7 @@ public class EditMotorPropertyCommandTests
             MaxSpeed = 3000
         };
 
-        var command = new EditMotorPropertyCommand(motor, nameof(MotorDefinition.MaxSpeed), 3500d);
+        var command = new EditMotorPropertyCommand(motor, nameof(MotorDefinition.MaxSpeed), 3000d, 3500d);
 
         command.Execute();
 
@@ -29,7 +29,7 @@ public class EditMotorPropertyCommandTests
             MaxSpeed = 3000
         };
 
-        var command = new EditMotorPropertyCommand(motor, nameof(MotorDefinition.MaxSpeed), 3500d);
+        var command = new EditMotorPropertyCommand(motor, nameof(MotorDefinition.MaxSpeed), 3000d, 3500d);
 
         command.Execute();
         command.Undo();

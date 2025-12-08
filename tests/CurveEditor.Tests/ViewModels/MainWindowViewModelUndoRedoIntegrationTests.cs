@@ -10,6 +10,47 @@ namespace CurveEditor.Tests.ViewModels;
 public class MainWindowViewModelUndoRedoIntegrationTests
 {
     [Fact]
+    public void EditMotorName_ThenUndoRedo_RevertsAndReappliesChange()
+    {
+        var fileServiceMock = new Mock<IFileService>();
+        var curveGeneratorMock = new Mock<ICurveGeneratorService>();
+
+        fileServiceMock.SetupGet(f => f.IsDirty).Returns(false);
+
+        var vm = new MainWindowViewModel(fileServiceMock.Object, curveGeneratorMock.Object);
+
+        var motor = new MotorDefinition
+        {
+            MotorName = "Original Name",
+            Drives = new List<DriveConfiguration>
+            {
+                new()
+            }
+        };
+
+        vm.CurrentMotor = motor;
+
+        Assert.Equal("Original Name", vm.CurrentMotor.MotorName);
+        Assert.Equal("Original Name", vm.MotorNameEditor);
+
+        vm.EditMotorName("New Name");
+
+        Assert.Equal("New Name", vm.CurrentMotor.MotorName);
+        Assert.Equal("New Name", vm.MotorNameEditor);
+        Assert.True(vm.CanUndo);
+
+        vm.UndoCommand.Execute(null);
+
+        Assert.Equal("Original Name", vm.CurrentMotor.MotorName);
+        Assert.Equal("Original Name", vm.MotorNameEditor);
+
+        vm.RedoCommand.Execute(null);
+
+        Assert.Equal("New Name", vm.CurrentMotor.MotorName);
+        Assert.Equal("New Name", vm.MotorNameEditor);
+    }
+
+    [Fact]
     public void UndoRedo_ThroughDataTable_ChangesAreReversibleAndAffectDirtyState()
     {
         var fileServiceMock = new Mock<IFileService>();

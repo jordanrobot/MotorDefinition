@@ -15,6 +15,30 @@ public partial class MainWindow : Window
         InitializeComponent();
     }
 
+    private void OnMotorNameLostFocus(object? sender, RoutedEventArgs e)
+    {
+        if (DataContext is MainWindowViewModel viewModel)
+        {
+            viewModel.EditMotorName(viewModel.MotorNameEditor);
+        }
+    }
+
+    private void OnManufacturerLostFocus(object? sender, RoutedEventArgs e)
+    {
+        if (DataContext is MainWindowViewModel viewModel)
+        {
+            viewModel.EditMotorManufacturer(viewModel.ManufacturerEditor);
+        }
+    }
+
+    private void OnPartNumberLostFocus(object? sender, RoutedEventArgs e)
+    {
+        if (DataContext is MainWindowViewModel viewModel)
+        {
+            viewModel.EditMotorPartNumber(viewModel.PartNumberEditor);
+        }
+    }
+
     /// <summary>
     /// Handles the drive max speed field losing focus to show confirmation dialog and refresh chart.
     /// </summary>

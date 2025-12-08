@@ -98,6 +98,16 @@ public partial class MainWindowViewModel : ViewModelBase
     [ObservableProperty]
     private bool _isCurveDataExpanded;
 
+    // Motor text editor buffers used to drive command-based edits.
+    [ObservableProperty]
+    private string _motorNameEditor = string.Empty;
+
+    [ObservableProperty]
+    private string _manufacturerEditor = string.Empty;
+
+    [ObservableProperty]
+    private string _partNumberEditor = string.Empty;
+
     /// <summary>
     /// Cached list of available voltages for the selected drive.
     /// </summary>
@@ -329,6 +339,100 @@ public partial class MainWindowViewModel : ViewModelBase
         }
     }
 
+    private void RefreshMotorEditorsFromCurrentMotor()
+    {
+        if (CurrentMotor is null)
+        {
+            MotorNameEditor = string.Empty;
+            ManufacturerEditor = string.Empty;
+            PartNumberEditor = string.Empty;
+            return;
+        }
+
+        MotorNameEditor = CurrentMotor.MotorName ?? string.Empty;
+        ManufacturerEditor = CurrentMotor.Manufacturer ?? string.Empty;
+        PartNumberEditor = CurrentMotor.PartNumber ?? string.Empty;
+    }
+
+    /// <summary>
+    /// Edits the motor name via an undoable command.
+    /// </summary>
+    /// <param name="newName">The new motor name.</param>
+    public void EditMotorName(string newName)
+    {
+        if (CurrentMotor is null)
+        {
+            return;
+        }
+
+        var oldName = CurrentMotor.MotorName ?? string.Empty;
+        var newNameValue = newName ?? string.Empty;
+
+        if (string.Equals(oldName, newNameValue, StringComparison.Ordinal))
+        {
+            return;
+        }
+
+        var command = new EditMotorPropertyCommand(CurrentMotor, nameof(MotorDefinition.MotorName), oldName, newNameValue);
+        _undoStack.PushAndExecute(command);
+        UpdateDirtyFromUndoDepth();
+        MotorNameEditor = CurrentMotor.MotorName;
+        OnPropertyChanged(nameof(WindowTitle));
+    }
+
+    /// <summary>
+    /// Edits the motor manufacturer via an undoable command.
+    /// </summary>
+    /// <param name="newManufacturer">The new manufacturer.</param>
+    public void EditMotorManufacturer(string newManufacturer)
+    {
+        if (CurrentMotor is null)
+        {
+            return;
+        }
+
+        var oldManufacturer = CurrentMotor.Manufacturer ?? string.Empty;
+        var newManufacturerValue = newManufacturer ?? string.Empty;
+
+        if (string.Equals(oldManufacturer, newManufacturerValue, StringComparison.Ordinal))
+        {
+            return;
+        }
+
+        var command = new EditMotorPropertyCommand(CurrentMotor, nameof(MotorDefinition.Manufacturer), oldManufacturer, newManufacturerValue);
+        _undoStack.PushAndExecute(command);
+        UpdateDirtyFromUndoDepth();
+        ManufacturerEditor = CurrentMotor.Manufacturer;
+    }
+
+    /// <summary>
+    /// Edits the motor part number via an undoable command.
+    /// </summary>
+    /// <param name="newPartNumber">The new part number.</param>
+    public void EditMotorPartNumber(string newPartNumber)
+    {
+        if (CurrentMotor is null)
+        {
+            return;
+        }
+
+        var oldPartNumber = CurrentMotor.PartNumber ?? string.Empty;
+        var newPartNumberValue = newPartNumber ?? string.Empty;
+        Log.Debug("EditMotorPartNumber requested: old='{OldPartNumber}', new='{NewPartNumber}'", oldPartNumber, newPartNumberValue);
+
+        if (string.Equals(oldPartNumber, newPartNumberValue, StringComparison.Ordinal))
+        {
+            Log.Debug("EditMotorPartNumber no-op: values are equal; command not pushed.");
+            return;
+        }
+
+        var command = new EditMotorPropertyCommand(CurrentMotor, nameof(MotorDefinition.PartNumber), oldPartNumber, newPartNumberValue);
+        Log.Debug("Pushing EditMotorPropertyCommand for PartNumber onto undo stack.");
+        _undoStack.PushAndExecute(command);
+        UpdateDirtyFromUndoDepth();
+        PartNumberEditor = CurrentMotor.PartNumber;
+    }
+
     /// <summary>
     /// Refreshes the available drives collection from the current motor.
     /// </summary>
@@ -389,6 +493,13 @@ public partial class MainWindowViewModel : ViewModelBase
         
         // When motor changes, select the first drive
         SelectedDrive = value?.Drives.FirstOrDefault();
+
+        // Update motor text editor buffers from the current motor so that
+        // the UI reflects the active document while ensuring that
+        // subsequent edits flow through the command-based path.
+        MotorNameEditor = value?.MotorName ?? string.Empty;
+        ManufacturerEditor = value?.Manufacturer ?? string.Empty;
+        PartNumberEditor = value?.PartNumber ?? string.Empty;
     }
 
     partial void OnSelectedDriveChanged(DriveConfiguration? value)
@@ -444,6 +555,7 @@ public partial class MainWindowViewModel : ViewModelBase
     private void Undo()
     {
         _undoStack.Undo();
+        RefreshMotorEditorsFromCurrentMotor();
         ChartViewModel.RefreshChart();
         CurveDataTableViewModel.RefreshData();
     }
@@ -455,6 +567,7 @@ public partial class MainWindowViewModel : ViewModelBase
     private void Redo()
     {
         _undoStack.Redo();
+        RefreshMotorEditorsFromCurrentMotor();
         ChartViewModel.RefreshChart();
         CurveDataTableViewModel.RefreshData();
     }
