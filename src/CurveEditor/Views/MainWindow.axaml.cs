@@ -40,12 +40,17 @@ public partial class MainWindow : Window
     }
 
     /// <summary>
-    /// Handles the drive max speed field losing focus to show confirmation dialog and refresh chart.
+    /// Handles the drive max speed field losing focus to commit via command,
+    /// optionally show confirmation dialog, and refresh the chart.
     /// </summary>
     private async void OnMaxSpeedLostFocus(object? sender, RoutedEventArgs e)
     {
         if (DataContext is MainWindowViewModel viewModel && viewModel.SelectedVoltage is not null)
         {
+            // First, commit the edit through the undoable command path so it
+            // participates consistently in undo/redo just like other fields.
+            viewModel.EditSelectedVoltageMaxSpeed();
+
             var currentMaxSpeed = viewModel.SelectedVoltage.MaxSpeed;
             
             // Only show dialog if max speed actually changed
@@ -55,49 +60,183 @@ public partial class MainWindow : Window
             }
             
             _previousMaxSpeed = currentMaxSpeed;
-            
+
             // Refresh the chart to update the x-axis
             viewModel.ChartViewModel.RefreshChart();
         }
     }
 
     /// <summary>
-    /// Handles the motor max speed field losing focus to refresh chart.
+    /// Handles the motor max speed field losing focus to commit via command and refresh chart.
     /// </summary>
     private void OnMotorMaxSpeedLostFocus(object? sender, RoutedEventArgs e)
     {
-        if (DataContext is MainWindowViewModel viewModel && viewModel.CurrentMotor is not null)
+        if (DataContext is MainWindowViewModel viewModel)
         {
-            // Update the motor max speed in the chart view model (triggers OnMotorMaxSpeedChanged which updates axes)
-            viewModel.ChartViewModel.MotorMaxSpeed = viewModel.CurrentMotor.MaxSpeed;
-            viewModel.MarkDirty();
+            viewModel.EditMotorMaxSpeed();
+            viewModel.ChartViewModel.RefreshChart();
         }
     }
 
-    /// <summary>
-    /// Handles when the HasBrake checkbox changes to update the brake torque line on the chart.
-    /// </summary>
     private void OnHasBrakeChanged(object? sender, RoutedEventArgs e)
     {
-        if (DataContext is MainWindowViewModel viewModel && viewModel.CurrentMotor is not null)
+        if (DataContext is MainWindowViewModel viewModel)
         {
-            viewModel.ChartViewModel.HasBrake = viewModel.CurrentMotor.HasBrake;
-            viewModel.ChartViewModel.BrakeTorque = viewModel.CurrentMotor.BrakeTorque;
+            viewModel.EditMotorHasBrake();
             viewModel.ChartViewModel.RefreshChart();
-            viewModel.MarkDirty();
         }
     }
 
-    /// <summary>
-    /// Handles when the BrakeTorque field loses focus to update the brake torque line on the chart.
-    /// </summary>
     private void OnBrakeTorqueLostFocus(object? sender, RoutedEventArgs e)
     {
-        if (DataContext is MainWindowViewModel viewModel && viewModel.CurrentMotor is not null)
+        if (DataContext is MainWindowViewModel viewModel)
         {
-            viewModel.ChartViewModel.BrakeTorque = viewModel.CurrentMotor.BrakeTorque;
+            viewModel.EditMotorBrakeTorque();
             viewModel.ChartViewModel.RefreshChart();
-            viewModel.MarkDirty();
+        }
+    }
+
+    private void OnRatedSpeedLostFocus(object? sender, RoutedEventArgs e)
+    {
+        if (DataContext is MainWindowViewModel viewModel)
+        {
+            viewModel.EditMotorRatedSpeed();
+        }
+    }
+
+    private void OnRatedPeakTorqueLostFocus(object? sender, RoutedEventArgs e)
+    {
+        if (DataContext is MainWindowViewModel viewModel)
+        {
+            viewModel.EditMotorRatedPeakTorque();
+        }
+    }
+
+    private void OnRatedContinuousTorqueLostFocus(object? sender, RoutedEventArgs e)
+    {
+        if (DataContext is MainWindowViewModel viewModel)
+        {
+            viewModel.EditMotorRatedContinuousTorque();
+        }
+    }
+
+    private void OnPowerLostFocus(object? sender, RoutedEventArgs e)
+    {
+        if (DataContext is MainWindowViewModel viewModel)
+        {
+            viewModel.EditMotorPower();
+        }
+    }
+
+    private void OnWeightLostFocus(object? sender, RoutedEventArgs e)
+    {
+        if (DataContext is MainWindowViewModel viewModel)
+        {
+            viewModel.EditMotorWeight();
+        }
+    }
+
+    private void OnRotorInertiaLostFocus(object? sender, RoutedEventArgs e)
+    {
+        if (DataContext is MainWindowViewModel viewModel)
+        {
+            viewModel.EditMotorRotorInertia();
+        }
+    }
+
+    private void OnFeedbackPprLostFocus(object? sender, RoutedEventArgs e)
+    {
+        if (DataContext is MainWindowViewModel viewModel)
+        {
+            viewModel.EditMotorFeedbackPpr();
+        }
+    }
+
+    private void OnBrakeAmperageLostFocus(object? sender, RoutedEventArgs e)
+    {
+        if (DataContext is MainWindowViewModel viewModel)
+        {
+            viewModel.EditMotorBrakeAmperage();
+        }
+    }
+
+    private void OnBrakeVoltageLostFocus(object? sender, RoutedEventArgs e)
+    {
+        if (DataContext is MainWindowViewModel viewModel)
+        {
+            viewModel.EditMotorBrakeVoltage();
+        }
+    }
+
+    private void OnDriveNameLostFocus(object? sender, RoutedEventArgs e)
+    {
+        if (DataContext is MainWindowViewModel viewModel)
+        {
+            viewModel.EditDriveName();
+        }
+    }
+
+    private void OnDrivePartNumberLostFocus(object? sender, RoutedEventArgs e)
+    {
+        if (DataContext is MainWindowViewModel viewModel)
+        {
+            viewModel.EditDrivePartNumber();
+        }
+    }
+
+    private void OnDriveManufacturerLostFocus(object? sender, RoutedEventArgs e)
+    {
+        if (DataContext is MainWindowViewModel viewModel)
+        {
+            viewModel.EditDriveManufacturer();
+        }
+    }
+
+    private void OnVoltageValueLostFocus(object? sender, RoutedEventArgs e)
+    {
+        if (DataContext is MainWindowViewModel viewModel)
+        {
+            viewModel.EditSelectedVoltageValue();
+        }
+    }
+
+    private void OnVoltagePowerLostFocus(object? sender, RoutedEventArgs e)
+    {
+        if (DataContext is MainWindowViewModel viewModel)
+        {
+            viewModel.EditSelectedVoltagePower();
+        }
+    }
+
+    private void OnVoltagePeakTorqueLostFocus(object? sender, RoutedEventArgs e)
+    {
+        if (DataContext is MainWindowViewModel viewModel)
+        {
+            viewModel.EditSelectedVoltagePeakTorque();
+        }
+    }
+
+    private void OnVoltageContinuousTorqueLostFocus(object? sender, RoutedEventArgs e)
+    {
+        if (DataContext is MainWindowViewModel viewModel)
+        {
+            viewModel.EditSelectedVoltageContinuousTorque();
+        }
+    }
+
+    private void OnVoltageContinuousAmpsLostFocus(object? sender, RoutedEventArgs e)
+    {
+        if (DataContext is MainWindowViewModel viewModel)
+        {
+            viewModel.EditSelectedVoltageContinuousAmps();
+        }
+    }
+
+    private void OnVoltagePeakAmpsLostFocus(object? sender, RoutedEventArgs e)
+    {
+        if (DataContext is MainWindowViewModel viewModel)
+        {
+            viewModel.EditSelectedVoltagePeakAmps();
         }
     }
 }

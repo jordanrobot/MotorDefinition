@@ -37,6 +37,7 @@ public sealed class UndoStack
     /// </summary>
     public void Clear()
     {
+        Log.Debug("UndoStack.Clear called. Previous undo depth={UndoDepth}, redo depth={RedoDepth}", _undoStack.Count, _redoStack.Count);
         _undoStack.Clear();
         _redoStack.Clear();
         OnUndoStackChanged();
@@ -53,6 +54,7 @@ public sealed class UndoStack
 
         try
         {
+            Log.Debug("UndoStack: Executing and pushing command '{Description}'", command.Description);
             command.Execute();
             _undoStack.Push(command);
             _redoStack.Clear();
@@ -72,6 +74,7 @@ public sealed class UndoStack
     {
         if (!CanUndo)
         {
+            Log.Debug("UndoStack.Undo called but CanUndo is false.");
             return;
         }
 
@@ -79,6 +82,7 @@ public sealed class UndoStack
 
         try
         {
+            Log.Debug("UndoStack: Undoing command '{Description}'", command.Description);
             command.Undo();
             _redoStack.Push(command);
             OnUndoStackChanged();
@@ -98,6 +102,7 @@ public sealed class UndoStack
     {
         if (!CanRedo)
         {
+            Log.Debug("UndoStack.Redo called but CanRedo is false.");
             return;
         }
 
@@ -105,6 +110,7 @@ public sealed class UndoStack
 
         try
         {
+            Log.Debug("UndoStack: Redoing command '{Description}'", command.Description);
             command.Execute();
             _undoStack.Push(command);
             OnUndoStackChanged();

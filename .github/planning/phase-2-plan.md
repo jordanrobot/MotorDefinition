@@ -3,6 +3,7 @@
 **Related ADRs**
 
 - ADR-0003 Motor Property Undo Design (`.github/adr/adr-0003-motor-property-undo-design.md`)
+- ADR-000X Voltage Property Undo Design (`.github/adr/adr-000X-voltage-property-undo-design.md`)
 
 ### 2. Undo/Redo Infrastructure (Phase 1.8 follow-through)
 - **Goal**: Provide robust undo/redo for common editing actions and ensure it integrates with dirty-state tracking.
@@ -39,6 +40,8 @@
   - Direct property edits from the UI go through helper methods that create and push commands rather than mutating models directly.
 
 See ADR-0003 (`.github/adr/adr-0003-motor-property-undo-design.md`) for the specific command-driven pattern adopted for motor-level text properties.
+
+See ADR-000X (`.github/adr/adr-000X-voltage-property-undo-design.md`) for the extension of this pattern to drive and selected-voltage properties, including scalar values and series-related fields on `VoltageConfiguration`.
 
 **Motor text properties implementation and lessons learned:**
 
@@ -105,8 +108,16 @@ This plan avoids the fragility observed with attached behaviors and tightly coup
 
 This work is governed by ADR-0003 (`.github/adr/adr-0003-motor-property-undo-design.md`), which documents the rationale, decision, and migration steps.
 
+The same principles now govern drive and voltage property edits as captured in ADR-000X (`.github/adr/adr-000X-voltage-property-undo-design.md`), which describes:
+
+- The `EditDrivePropertyCommand` and `EditVoltagePropertyCommand` types;
+- The use of editor buffers (e.g., `DriveNameEditor`, `VoltagePowerEditor`, `VoltagePeakTorqueEditor`);
+- LostFocus-based commit methods (e.g., `EditDriveName`, `EditSelectedVoltagePower`) that push commands onto the shared `UndoStack`;
+- Centralized editor refresh (`RefreshMotorEditorsFromCurrentMotor`) that keeps property textboxes, chart, and grid synchronized after undo/redo.
+
 ### 5. Follow-on Work and TODOs
 
-- [ ] Implement the dedicated command-driven editing path for all remaining motor properties (including numeric scalars and metadata), ensuring they participate in the same undo/redo history.
-- [ ] Apply the same command-driven pattern to curve data table cells so that grid edits are always performed via undoable commands rather than direct model mutation.
+- [ ] Implement the dedicated command-driven editing path for any remaining motor and drive metadata not yet covered by `EditMotorPropertyCommand` / `EditDrivePropertyCommand`, ensuring they participate in the same undo/redo history.
+- [ ] Apply the same command-driven pattern (per ADR-0003 and ADR-000X) to curve data table cells so that grid edits are always performed via undoable commands rather than direct model mutation.
 - [ ] Add support for in-cell undo for data table edits, duplicating Avalonia's default per-TextBox undo behavior semantics (per-commit, not per-character) while routing all undo/redo operations through the shared global undo mechanism instead of control-local stacks.
+- [ ] When adding new configuration panels or property groups, introduce editor buffers, an appropriate `Edit*PropertyCommand`, and LostFocus commit methods that push commands and refresh dependent views, rather than relying on direct two-way bindings to domain models.

@@ -3,6 +3,7 @@
 **Related ADRs**
 
 - ADR-0003 Motor Property Undo Design (`.github/adr/adr-0003-motor-property-undo-design.md`)
+- ADR-000X Voltage Property Undo Design (`.github/adr/adr-000X-voltage-property-undo-design.md`)
 
 ## Technology Stack Decision
 
@@ -125,15 +126,22 @@ Phase 8: Power Curve Overlay (Future)
 
 See ADR-0003 (`.github/adr/adr-0003-motor-property-undo-design.md`) for the architectural decision and migration plan for bringing motor-level text properties under the undo/redo system via a dedicated command-driven editing path.
 
-**Note on Motor Properties:**
+See ADR-000X (`.github/adr/adr-000X-voltage-property-undo-design.md`) for the analogous design applied to drive/voltage properties, including the use of editor buffers, `EditVoltagePropertyCommand`, and LostFocus-based commit methods so that selected-voltage fields (scalars and series-related) participate in the same global undo/redo history.
 
-Motor-level text properties (e.g., Motor Name, Manufacturer, Part Number) are now wired through explicit view-model edit methods and `EditMotorPropertyCommand` instances that store old and new values up front. The motor text boxes bind to simple editor properties (e.g., `MotorNameEditor`) and commit changes via these methods on focus loss, with `TextBox`-local undo disabled. Ctrl+Z / Ctrl+Y are handled at the window level and operate on the shared per-document `UndoStack`, so motor property edits participate in the same undo/redo history as chart and grid edits. See ADR-0003 (`.github/adr/adr-0003-motor-property-undo-design.md`) for the finalized design and rationale.
+**Note on Motor, Drive, and Voltage Properties:**
 
-**Future Refinements Using ADR-0003 Pattern:**
+Motor-level text properties (e.g., Motor Name, Manufacturer, Part Number) are wired through explicit view-model edit methods and `EditMotorPropertyCommand` instances that store old and new values up front. The motor text boxes bind to simple editor properties (e.g., `MotorNameEditor`) and commit changes via these methods on focus loss, with `TextBox`-local undo disabled. Ctrl+Z / Ctrl+Y are handled at the window level and operate on the shared per-document `UndoStack`, so motor property edits participate in the same undo/redo history as chart and grid edits. See ADR-0003 (`.github/adr/adr-0003-motor-property-undo-design.md`) for the finalized design and rationale.
 
-To keep the codebase cohesive and efficient, a future agent should consider how ADR-0003's command-driven edit pattern can be applied more broadly:
+Drive and selected-voltage properties (scalars and series-related) follow the same pattern using `EditDrivePropertyCommand` and `EditVoltagePropertyCommand`, plus editor buffers such as `DriveNameEditor`, `VoltagePowerEditor`, and `VoltagePeakTorqueEditor`. TextBoxes bind to these editor properties with `IsUndoEnabled = false` and commit on LostFocus via view-model methods (e.g., `EditDriveName`, `EditSelectedVoltagePower`) that push commands onto the shared `UndoStack`. See ADR-000X (`.github/adr/adr-000X-voltage-property-undo-design.md`) for details.
 
-- **Motor text and scalar properties:** Route all edits (name, manufacturer, part number, numeric specs) through explicit view-model edit methods that create undoable commands, instead of direct two-way bindings to `MotorDefinition`.
+On undo/redo, the main view model calls back into a central refresh method (e.g., `RefreshMotorEditorsFromCurrentMotor`) and then refreshes the chart and data table so that all property textboxes, the chart axes, and the grid stay synchronized with the current undo state.
+
+**Future Refinements Using ADR-0003 and ADR-000X Patterns:**
+
+To keep the codebase cohesive and efficient, a future agent should consider how the command-driven edit patterns from ADR-0003 and ADR-000X can be applied more broadly:
+
+- **Motor and drive scalar properties:** Route all edits (name, manufacturer, part number, numeric specs) through explicit view-model edit methods that create undoable commands, instead of direct two-way bindings to domain models.
+- **Additional configuration panels:** When adding new groups of scalar properties (e.g., future drive metadata, per-series configuration), add editor buffers, an `Edit*PropertyCommand`, and LostFocus commit methods that push commands and refresh dependent views.
 - **Curve data table and chart edits:** Ensure grid cell edits and (future) chart drag edits both go through shared edit methods (e.g., `EditPointTorque`) that push `EditPointCommand`s, rather than letting the UI mutate `DataPoint` instances directly.
 - **Selection and coordination logic:** Centralize selection changes (from chart and table) through coordinator/view-model APIs that record origin and avoid feedback loops, making it easier to reason about and test selection behavior.
 
