@@ -1,7 +1,6 @@
 using CommunityToolkit.Mvvm.ComponentModel;
 using CurveEditor.Models;
 using CurveEditor.Services;
-using Serilog;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
@@ -727,7 +726,6 @@ public partial class CurveDataTableViewModel : ViewModelBase
         // versions, even though the operation will not be undoable.
         if (_undoStack is null)
         {
-            Log.Debug("CurveDataTableViewModel.TryCommitOverrideWithUndo: no undo stack; applying override directly to {CellCount} cells", originalValues.Count);
             ApplyTorqueToCells(originalValues.Keys, newValue);
             return true;
         }
@@ -791,7 +789,6 @@ public partial class CurveDataTableViewModel : ViewModelBase
         }
 
         var command = new OverrideTorqueCellsCommand(targets);
-        Log.Debug("CurveDataTableViewModel.TryCommitOverrideWithUndo: executing override command for {TargetCount} cells", targets.Count);
         _undoStack.PushAndExecute(command);
         DataChanged?.Invoke(this, EventArgs.Empty);
         return true;
@@ -806,10 +803,6 @@ public partial class CurveDataTableViewModel : ViewModelBase
         {
             return;
         }
-
-        Log.Debug("CurveDataTableViewModel.ClearSelectedTorqueCells: count={CellCount}, hasUndoStack={HasUndo}",
-            SelectedCells.Count,
-            _undoStack is not null);
 
         // When an undo stack is available, route per-cell edits through
         // undoable commands so delete/backspace operations participate in
@@ -834,7 +827,6 @@ public partial class CurveDataTableViewModel : ViewModelBase
 
         if (anyChanged)
         {
-            Log.Debug("CurveDataTableViewModel.ClearSelectedTorqueCells: torque cleared for selected cells");
             DataChanged?.Invoke(this, EventArgs.Empty);
         }
     }
@@ -875,11 +867,6 @@ public partial class CurveDataTableViewModel : ViewModelBase
             return false;
         }
 
-        Log.Debug("CurveDataTableViewModel.TryPasteClipboard: lines={LineCount}, selectedCells={CellCount}, hasUndoStack={HasUndo}",
-            lines.Length,
-            selectedCellsSnapshot.Count,
-            _undoStack is not null);
-
         // When no undo stack is present, use the existing direct-mutation
         // path for backward compatibility.
         if (_undoStack is null)
@@ -890,7 +877,6 @@ public partial class CurveDataTableViewModel : ViewModelBase
                 var parts = lines[0].Split('\t', StringSplitOptions.RemoveEmptyEntries);
                 if (parts.Length == 1 && double.TryParse(parts[0], out var scalar))
                 {
-                    Log.Debug("CurveDataTableViewModel.TryPasteClipboard: scalar paste without undo, value={Scalar}", scalar);
                     ApplyTorqueToCells(selectedCellsSnapshot, scalar);
                     return true;
                 }
@@ -935,7 +921,6 @@ public partial class CurveDataTableViewModel : ViewModelBase
                 return false;
             }
 
-            Log.Debug("CurveDataTableViewModel.TryPasteClipboard: rectangular paste without undo updated one or more cells");
             DataChanged?.Invoke(this, EventArgs.Empty);
             return true;
         }
@@ -947,12 +932,10 @@ public partial class CurveDataTableViewModel : ViewModelBase
         // Special case: single scalar replicated across all selected cells
         if (lines.Length == 1)
         {
-            var parts = lines[0].Split('\t', StringSplitOptions.RemoveEmptyEntries);
-            if (parts.Length == 1 && double.TryParse(parts[0], out var scalar))
-            {
+                var parts = lines[0].Split('\t', StringSplitOptions.RemoveEmptyEntries);
+                if (parts.Length == 1 && double.TryParse(parts[0], out var scalar))
+                {
                     var anyScalarChanged = false;
-
-                    Log.Debug("CurveDataTableViewModel.TryPasteClipboard: scalar paste with undo, value={Scalar}", scalar);
 
                 foreach (var cell in selectedCellsSnapshot)
                 {
@@ -967,7 +950,6 @@ public partial class CurveDataTableViewModel : ViewModelBase
                     return false;
                 }
 
-                Log.Debug("CurveDataTableViewModel.TryPasteClipboard: scalar paste with undo updated one or more cells");
                 DataChanged?.Invoke(this, EventArgs.Empty);
                 return true;
             }
@@ -1012,7 +994,6 @@ public partial class CurveDataTableViewModel : ViewModelBase
             return false;
         }
 
-        Log.Debug("CurveDataTableViewModel.TryPasteClipboard: rectangular paste with undo updated one or more cells");
         DataChanged?.Invoke(this, EventArgs.Empty);
         return true;
     }
@@ -1161,24 +1142,12 @@ public partial class CurveDataTableViewModel : ViewModelBase
         if (_undoStack is null)
         {
             row.SetTorque(seriesName, value);
-            Log.Debug("CurveDataTableViewModel.TryApplyTorqueWithUndo: updated without undo at row={Row}, column={Column}, series={Series}, old={Old}, new={New}",
-                cell.RowIndex,
-                cell.ColumnIndex,
-                seriesName,
-                current,
-                value);
             return true;
         }
 
         var rpm = series.Data[dataIndex].Rpm;
         var command = new EditPointCommand(series, dataIndex, rpm, value);
         _undoStack.PushAndExecute(command);
-        Log.Debug("CurveDataTableViewModel.TryApplyTorqueWithUndo: executed undoable edit at row={Row}, column={Column}, series={Series}, old={Old}, new={New}",
-            cell.RowIndex,
-            cell.ColumnIndex,
-            seriesName,
-            current,
-            value);
         return true;
     }
 

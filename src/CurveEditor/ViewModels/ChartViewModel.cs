@@ -409,20 +409,21 @@ public partial class ChartViewModel : ViewModelBase
             }
         }
 
-        if (_currentVoltage is null || _highlightedIndices.Count == 0)
+        var voltage = _currentVoltage;
+        if (voltage is null || _highlightedIndices.Count == 0)
         {
             OnPropertyChanged(nameof(Series));
             return;
         }
 
-        foreach (var series in _currentVoltage.Series)
+        foreach (var series in voltage.Series)
         {
             if (!_highlightedIndices.TryGetValue(series.Name, out var indices) || indices.Count == 0)
             {
                 continue;
             }
 
-            var color = SeriesColors[_currentVoltage.Series.IndexOf(series) % SeriesColors.Length];
+            var color = SeriesColors[voltage.Series.IndexOf(series) % SeriesColors.Length];
 
             // Build an overlay points collection containing only the
             // highlighted indices for this series.

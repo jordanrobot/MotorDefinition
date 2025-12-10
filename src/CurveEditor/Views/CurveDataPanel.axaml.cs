@@ -11,7 +11,6 @@ using Avalonia.Media;
 using Avalonia.VisualTree;
 using CurveEditor.Models;
 using CurveEditor.ViewModels;
-using Serilog;
 
 namespace CurveEditor.Views;
 
@@ -386,11 +385,6 @@ public partial class CurveDataPanel : UserControl
                             var rowIndex = row.RowIndex;
                             var cellPos = new CellPosition(rowIndex, currentColumnIndex);
 
-                            Log.Debug("CurveDataPanel: LostFocus commit for row={Row}, column={Column}, value={Value}",
-                                rowIndex,
-                                currentColumnIndex,
-                                newValue);
-
                             if (viewModel.CurveDataTableViewModel.TryApplyTorqueWithUndoForView(cellPos, newValue))
                             {
                                 viewModel.MarkDirty();
@@ -747,15 +741,25 @@ public partial class CurveDataPanel : UserControl
     }
 
     /// <summary>
-    /// Handles lock toggle button click.
+    /// Handles lock toggle button click. Delegates to the
+    /// MainWindowViewModel's ToggleSeriesLock command so that
+    /// the operation participates in the shared undo/redo stack.
     /// </summary>
     private void OnSeriesLockToggleClick(object? sender, RoutedEventArgs e)
     {
-        if (DataContext is MainWindowViewModel viewModel)
+        if (sender is not ToggleButton toggleButton || toggleButton.DataContext is not CurveSeries series)
         {
-            viewModel.MarkDirty();
-            // Rebuild columns to update read-only state
-            RebuildDataGridColumns();
+            return;
+        }
+
+        if (DataContext is not MainWindowViewModel viewModel)
+        {
+            return;
+        }
+
+        if (viewModel.ToggleSeriesLockCommand.CanExecute(series))
+        {
+            viewModel.ToggleSeriesLockCommand.Execute(series);
         }
     }
 
@@ -1466,8 +1470,6 @@ public partial class CurveDataPanel : UserControl
         // Try to parse the accumulated text as a number
         if (double.TryParse(_overrideText, out var value))
         {
-            Log.Debug("CurveDataPanel: CommitOverrideMode with value={Value}, originalCount={Count}", value, _originalValues.Count);
-
             var committedViaUndo = false;
 
             if (_originalValues.Count > 0)

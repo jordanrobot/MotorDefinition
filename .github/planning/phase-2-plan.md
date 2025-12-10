@@ -118,7 +118,7 @@ The same principles now govern drive and voltage property edits as captured in A
 ### 5. Follow-on Work and TODOs
 
 - [ ] Implement the dedicated command-driven editing path for any remaining motor and drive metadata not yet covered by `EditMotorPropertyCommand` / `EditDrivePropertyCommand`, ensuring they participate in the same undo/redo history.
-- [ ] Apply the same command-driven pattern (per ADR-0003 and ADR-000X) to curve data table cells so that grid edits are always performed via undoable commands rather than direct model mutation.
+- [x] Apply the same command-driven pattern (per ADR-0003 and ADR-000X) to curve data table cells so that grid edits are always performed via undoable commands rather than direct model mutation.
 - [ ] Add support for in-cell undo for data table edits, duplicating Avalonia's default per-TextBox undo behavior semantics (per-commit, not per-character) while routing all undo/redo operations through the shared global undo mechanism instead of control-local stacks.
 - [ ] When adding new configuration panels or property groups, introduce editor buffers, an appropriate `Edit*PropertyCommand`, and LostFocus commit methods that push commands and refresh dependent views, rather than relying on direct two-way bindings to domain models.
  - [ ] When implementing any new undoable operation, follow ADR-000Y (Generalized Undo/Redo Command Pattern) as the primary checklist: add a single edit method on the view model, route all UI mutations through it, and ensure it constructs and pushes an `IUndoableCommand` onto the shared `UndoStack`.

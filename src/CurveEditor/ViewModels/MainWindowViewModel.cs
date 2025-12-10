@@ -492,7 +492,7 @@ public partial class MainWindowViewModel : ViewModelBase
         var command = new EditMotorPropertyCommand(CurrentMotor, nameof(MotorDefinition.MotorName), oldName, newNameValue);
         _undoStack.PushAndExecute(command);
         UpdateDirtyFromUndoDepth();
-        MotorNameEditor = CurrentMotor.MotorName;
+        MotorNameEditor = CurrentMotor.MotorName ?? string.Empty;
         OnPropertyChanged(nameof(WindowTitle));
     }
 
@@ -518,7 +518,7 @@ public partial class MainWindowViewModel : ViewModelBase
         var command = new EditMotorPropertyCommand(CurrentMotor, nameof(MotorDefinition.Manufacturer), oldManufacturer, newManufacturerValue);
         _undoStack.PushAndExecute(command);
         UpdateDirtyFromUndoDepth();
-        ManufacturerEditor = CurrentMotor.Manufacturer;
+        ManufacturerEditor = CurrentMotor.Manufacturer ?? string.Empty;
     }
 
     /// <summary>
@@ -571,7 +571,7 @@ public partial class MainWindowViewModel : ViewModelBase
         var command = new EditMotorPropertyCommand(CurrentMotor, nameof(MotorDefinition.PartNumber), oldPartNumber, newPartNumberValue);
         _undoStack.PushAndExecute(command);
         UpdateDirtyFromUndoDepth();
-        PartNumberEditor = CurrentMotor.PartNumber;
+        PartNumberEditor = CurrentMotor.PartNumber ?? string.Empty;
     }
 
     private static bool TryParseDouble(string text, double currentValue, out double parsed)
@@ -1308,7 +1308,6 @@ public partial class MainWindowViewModel : ViewModelBase
     [RelayCommand(CanExecute = nameof(CanUndo))]
     private void Undo()
     {
-        Log.Debug("Undo requested. CanUndo={CanUndo}, UndoDepth={UndoDepth}", _undoStack.CanUndo, _undoStack.UndoDepth);
         _undoStack.Undo();
         RefreshMotorEditorsFromCurrentMotor();
         ChartViewModel.RefreshChart();
@@ -1321,7 +1320,6 @@ public partial class MainWindowViewModel : ViewModelBase
     [RelayCommand(CanExecute = nameof(CanRedo))]
     private void Redo()
     {
-        Log.Debug("Redo requested. CanRedo={CanRedo}, UndoDepth={UndoDepth}", _undoStack.CanRedo, _undoStack.UndoDepth);
         _undoStack.Redo();
         RefreshMotorEditorsFromCurrentMotor();
         ChartViewModel.RefreshChart();
@@ -1889,12 +1887,24 @@ public partial class MainWindowViewModel : ViewModelBase
     [RelayCommand]
     private void ToggleSeriesLock(CurveSeries? series)
     {
-        if (series is null) return;
+        if (series is null)
+        {
+            return;
+        }
 
-        series.Locked = !series.Locked;
-        OnPropertyChanged(nameof(AvailableSeries));
-        MarkDirty();
-        StatusMessage = series.Locked
+        var newLocked = !series.Locked;
+
+        var command = new EditSeriesCommand(series, newLocked: newLocked);
+        _undoStack.PushAndExecute(command);
+        UpdateDirtyFromUndoDepth();
+
+        // Refresh the curve data table so that the DataGrid columns
+        // are rebuilt with the correct read-only state for the
+        // affected series. This keeps the editor behavior and
+        // header lock icon in sync with the model state.
+        CurveDataTableViewModel.RefreshData();
+
+        StatusMessage = newLocked
             ? $"Locked series: {series.Name}"
             : $"Unlocked series: {series.Name}";
     }

@@ -105,7 +105,7 @@
                                                       Padding="0"
                                                       MinWidth="0"/>
                                             <!-- Lock button -->
-                                            <ToggleButton IsChecked="{Binding Locked, Mode=TwoWay}"
+                                            <ToggleButton IsChecked="{Binding Locked, Mode=OneWay}"
                                                           Width="20" Height="20"
                                                           Padding="0"
                                                           ToolTip.Tip="Toggle Lock"

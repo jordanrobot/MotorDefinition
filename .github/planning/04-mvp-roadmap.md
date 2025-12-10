@@ -558,7 +558,7 @@ The sample above shows 10% increments for brevity.
 - [ ] Can save to JSON file with all motor properties
 - [ ] Runs as portable executable
 - [ ] Works on Windows 11
-- [ ] Undo/redo support (Ctrl+Z / Ctrl+Y)
+ - [x] Undo/redo support (Ctrl+Z / Ctrl+Y)
 - [ ] Structured logging with Serilog
 - [ ] Global exception handling with user-friendly error dialogs
 

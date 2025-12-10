@@ -173,4 +173,63 @@ public class MainWindowViewModelUndoRedoIntegrationTests
 
         Assert.Equal(2.0, motor.Drives[0].Voltages[0].Series[0].Data[1].Torque);
     }
+
+    [Fact]
+    public void ToggleSeriesLock_ThenUndoRedo_RevertsLockedState()
+    {
+        var fileServiceMock = new Mock<IFileService>();
+        var curveGeneratorMock = new Mock<ICurveGeneratorService>();
+
+        fileServiceMock.SetupGet(f => f.IsDirty).Returns(false);
+
+        var vm = new MainWindowViewModel(fileServiceMock.Object, curveGeneratorMock.Object);
+
+        var motor = new MotorDefinition
+        {
+            MotorName = "Test Motor",
+            Drives = new List<DriveConfiguration>
+            {
+                new()
+                {
+                    Name = "Drive A",
+                    Voltages = new List<VoltageConfiguration>
+                    {
+                        new()
+                        {
+                            Voltage = 208,
+                            Series = new List<CurveSeries>
+                            {
+                                new()
+                                {
+                                    Name = "Peak",
+                                    Locked = false
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        };
+
+        vm.CurrentMotor = motor;
+        vm.SelectedDrive = motor.Drives[0];
+        vm.SelectedVoltage = motor.Drives[0].Voltages[0];
+
+        var series = motor.Drives[0].Voltages[0].Series[0];
+
+        Assert.False(series.Locked);
+
+        vm.ToggleSeriesLockCommand.Execute(series);
+
+        Assert.True(series.Locked);
+        Assert.True(vm.CanUndo);
+
+        vm.UndoCommand.Execute(null);
+
+        Assert.False(series.Locked);
+
+        vm.RedoCommand.Execute(null);
+
+        Assert.True(series.Locked);
+    }
 }
