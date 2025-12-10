@@ -98,6 +98,45 @@ public partial class MainWindowViewModel : ViewModelBase
     [ObservableProperty]
     private bool _isCurveDataExpanded;
 
+    /// <summary>
+    /// Whether the directory browser panel is expanded.
+    /// </summary>
+    [ObservableProperty]
+    private bool _isBrowserPanelExpanded = true;
+
+    /// <summary>
+    /// Whether the properties panel is expanded.
+    /// </summary>
+    [ObservableProperty]
+    private bool _isPropertiesPanelExpanded = true;
+
+    /// <summary>
+    /// Toggles the browser panel visibility.
+    /// </summary>
+    [RelayCommand]
+    private void ToggleBrowserPanel()
+    {
+        IsBrowserPanelExpanded = !IsBrowserPanelExpanded;
+    }
+
+    /// <summary>
+    /// Toggles the properties panel visibility.
+    /// </summary>
+    [RelayCommand]
+    private void TogglePropertiesPanel()
+    {
+        IsPropertiesPanelExpanded = !IsPropertiesPanelExpanded;
+    }
+
+    /// <summary>
+    /// Toggles the curve data panel visibility.
+    /// </summary>
+    [RelayCommand]
+    private void ToggleCurveDataPanel()
+    {
+        IsCurveDataExpanded = !IsCurveDataExpanded;
+    }
+
     // Motor text editor buffers used to drive command-based edits.
     [ObservableProperty]
     private string _motorNameEditor = string.Empty;

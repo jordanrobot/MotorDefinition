@@ -93,7 +93,7 @@ The resulting EXE is self-contained and should run on a Windows 10/11 x64 machin
 CurveEditor/
 ├── src/
 │   └── CurveEditor/
-│       ├── Models/           # Data models (MotorDefinition, DriveConfiguration, VoltageConfiguration, CurveSeries, DataPoint)
+│       ├── Models/           # Data models
 │       ├── ViewModels/       # MVVM view models
 │       ├── Views/            # Avalonia UI views
 │       ├── Services/         # File and curve generation services

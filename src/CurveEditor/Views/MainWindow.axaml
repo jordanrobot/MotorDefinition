@@ -24,6 +24,9 @@
         <KeyBinding Gesture="Ctrl+Shift+S" Command="{Binding SaveAsCommand}"/>
         <KeyBinding Gesture="Ctrl+Z" Command="{Binding UndoCommand}"/>
         <KeyBinding Gesture="Ctrl+Y" Command="{Binding RedoCommand}"/>
+        <KeyBinding Gesture="Ctrl+B" Command="{Binding ToggleBrowserPanelCommand}"/>
+        <KeyBinding Gesture="Ctrl+R" Command="{Binding TogglePropertiesPanelCommand}"/>
+        <KeyBinding Gesture="Ctrl+G" Command="{Binding ToggleCurveDataPanelCommand}"/>
     </Window.KeyBindings>
     
     <Window.Styles>
@@ -101,8 +104,12 @@
                           InputGesture="Ctrl+Y"/>
             </MenuItem>
             <MenuItem Header="_View">
-                <MenuItem Header="Show _Grid Lines" IsEnabled="False"/>
-                <MenuItem Header="Show _Hover Tooltip" IsEnabled="False"/>
+                <MenuItem Header="Show _Directory Browser"
+                          IsChecked="{Binding IsBrowserPanelExpanded}"
+                          Command="{Binding ToggleBrowserPanelCommand}"/>
+                <MenuItem Header="Show _Properties Panel"
+                          IsChecked="{Binding IsPropertiesPanelExpanded}"
+                          Command="{Binding TogglePropertiesPanelCommand}"/>
             </MenuItem>
             <MenuItem Header="_Help">
                 <MenuItem Header="Open _Logs Folder" Command="{Binding OpenLogsFolderCommand}"/>
@@ -138,10 +145,11 @@
         </Border>
 
         <!-- Main Content Area with resizable panels -->
-        <Grid ColumnDefinitions="200,4,*,4,280">
+        <Grid x:Name="MainLayoutGrid" ColumnDefinitions="200,4,*,4,280">
             
             <!-- Left: Directory Browser (placeholder) -->
             <Border Grid.Column="0" 
+                IsVisible="{Binding IsBrowserPanelExpanded}"
                     BorderBrush="{DynamicResource SystemControlBackgroundBaseMediumBrush}"
                     BorderThickness="0,0,1,0"
                     Padding="8">
@@ -160,10 +168,10 @@
             </Border>
             
             <!-- Left GridSplitter -->
-            <GridSplitter Grid.Column="1" Width="4" ResizeDirection="Columns"/>
+            <GridSplitter x:Name="LeftSplitter" Grid.Column="1" Width="4" ResizeDirection="Columns"/>
 
             <!-- Center: Chart Area and Collapsible Data Panel -->
-            <Grid Grid.Column="2" RowDefinitions="*,Auto,Auto">
+            <Grid x:Name="CenterGrid" Grid.Column="2" RowDefinitions="*,Auto,Auto">
                 <!-- Chart Area -->
                 <Border Grid.Row="0"
                         Margin="4"
@@ -240,10 +248,11 @@
             </Grid>
             
             <!-- Right GridSplitter -->
-            <GridSplitter Grid.Column="3" Width="4" ResizeDirection="Columns"/>
+            <GridSplitter x:Name="RightSplitter" Grid.Column="3" Width="4" ResizeDirection="Columns"/>
 
-            <!-- Right: Properties Panel -->
-            <Border Grid.Column="4" 
+                <!-- Right: Properties Panel -->
+                <Border Grid.Column="4" 
+                    IsVisible="{Binding IsPropertiesPanelExpanded}"
                     BorderBrush="{DynamicResource SystemControlBackgroundBaseMediumBrush}"
                     BorderThickness="1,0,0,0">
                 <ScrollViewer>
