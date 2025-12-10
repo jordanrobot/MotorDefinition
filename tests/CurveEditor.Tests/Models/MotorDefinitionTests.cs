@@ -27,12 +27,12 @@ public class MotorDefinitionTests
     }
 
     [Fact]
-    public void SchemaVersion_DefaultsTo2_0()
+    public void SchemaVersion_DefaultsTo1_0_0()
     {
         var motor = new MotorDefinition();
 
         Assert.Equal(MotorDefinition.CurrentSchemaVersion, motor.SchemaVersion);
-        Assert.Equal("2.0", motor.SchemaVersion);
+        Assert.Equal("1.0.0", motor.SchemaVersion);
     }
 
     [Fact]

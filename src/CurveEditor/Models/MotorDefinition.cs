@@ -14,7 +14,7 @@ public class MotorDefinition
     /// <summary>
     /// The current schema version for motor definition files.
     /// </summary>
-    public const string CurrentSchemaVersion = "2.0";
+    public const string CurrentSchemaVersion = "1.0.0";
 
     /// <summary>
     /// Schema version for JSON compatibility.

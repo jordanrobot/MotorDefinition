@@ -1,0 +1,267 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/jordanrobot/curve/schema/motor-schema-v1.0.0.json",
+  "title": "Motor Definition File (v1.0.0)",
+  "description": "JSON schema for motor definition files used by the CurveEditor application.",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "schemaVersion": {
+      "type": "string",
+      "description": "Schema version for JSON compatibility.",
+      "pattern": "^1\\.0\\.0$"
+    },
+    "motorName": {
+      "type": "string",
+      "description": "The model name or identifier for the motor."
+    },
+    "manufacturer": {
+      "type": "string",
+      "description": "The company that manufactures the motor."
+    },
+    "partNumber": {
+      "type": "string",
+      "description": "The manufacturer's part number for the motor."
+    },
+    "power": {
+      "type": "number",
+      "description": "The theoretical maximum power output of the motor.",
+      "minimum": 0
+    },
+    "maxSpeed": {
+      "type": "number",
+      "description": "The theoretical maximum rotational speed of the motor (RPM).",
+      "minimum": 0
+    },
+    "ratedSpeed": {
+      "type": "number",
+      "description": "The rated continuous operating speed of the motor (RPM).",
+      "minimum": 0
+    },
+    "ratedContinuousTorque": {
+      "type": "number",
+      "description": "The theoretical maximum torque the motor can produce continuously without overheating.",
+      "minimum": 0
+    },
+    "ratedPeakTorque": {
+      "type": "number",
+      "description": "The theoretical maximum torque the motor can produce for short periods.",
+      "minimum": 0
+    },
+    "weight": {
+      "type": "number",
+      "description": "The mass of the motor.",
+      "minimum": 0
+    },
+    "rotorInertia": {
+      "type": "number",
+      "description": "The moment of inertia of the motor's rotor.",
+      "minimum": 0
+    },
+    "feedbackPpr": {
+      "type": "integer",
+      "description": "Feedback device pulses per revolution (PPR).",
+      "minimum": 0
+    },
+    "hasBrake": {
+      "type": "boolean",
+      "description": "Indicates whether the motor includes an integral holding brake."
+    },
+    "brakeTorque": {
+      "type": "number",
+      "description": "The holding torque of the integral brake (if present).",
+      "minimum": 0
+    },
+    "brakeAmperage": {
+      "type": "number",
+      "description": "The current draw of the brake (A).",
+      "minimum": 0
+    },
+    "brakeVoltage": {
+      "type": "number",
+      "description": "The voltage requirement of the brake (V).",
+      "minimum": 0
+    },
+    "units": {
+      "type": "object",
+      "description": "Unit settings for torque, speed, power, and weight.",
+      "additionalProperties": false,
+      "properties": {
+        "torque": { "type": "string" },
+        "speed": { "type": "string" },
+        "power": { "type": "string" },
+        "weight": { "type": "string" }
+      },
+      "required": ["torque", "speed", "power", "weight"]
+    },
+    "drives": {
+      "type": "array",
+      "description": "Collection of drive configurations for this motor.",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "name": {
+            "type": "string",
+            "description": "Name of the drive configuration."
+          },
+          "partNumber": {
+            "type": "string",
+            "description": "Manufacturer part number of the drive."
+          },
+          "manufacturer": {
+            "type": "string",
+            "description": "Drive manufacturer name."
+          },
+          "voltages": {
+            "type": "array",
+            "description": "Voltage configurations for this drive.",
+            "items": {
+              "type": "object",
+              "additionalProperties": false,
+              "properties": {
+                "voltage": {
+                  "type": "number",
+                  "description": "Nominal bus voltage for this configuration.",
+                  "minimum": 0
+                },
+                "power": {
+                  "type": "number",
+                  "description": "Maximum power for this voltage configuration.",
+                  "minimum": 0
+                },
+                "maxSpeed": {
+                  "type": "number",
+                  "description": "Maximum speed for this voltage configuration (RPM).",
+                  "minimum": 0
+                },
+                "ratedSpeed": {
+                  "type": "number",
+                  "description": "Rated continuous operating speed (RPM).",
+                  "minimum": 0
+                },
+                "ratedContinuousTorque": {
+                  "type": "number",
+                  "description": "Rated continuous torque for this configuration.",
+                  "minimum": 0
+                },
+                "ratedPeakTorque": {
+                  "type": "number",
+                  "description": "Rated peak torque for this configuration.",
+                  "minimum": 0
+                },
+                "continuousAmperage": {
+                  "type": "number",
+                  "description": "Continuous current draw (A).",
+                  "minimum": 0
+                },
+                "peakAmperage": {
+                  "type": "number",
+                  "description": "Peak current draw (A).",
+                  "minimum": 0
+                },
+                "series": {
+                  "type": "array",
+                  "description": "Torque/speed curve series for this voltage configuration.",
+                  "items": {
+                    "type": "object",
+                    "additionalProperties": false,
+                    "properties": {
+                      "name": {
+                        "type": "string",
+                        "description": "Series name (e.g., Peak, Continuous)."
+                      },
+                      "notes": {
+                        "type": "string",
+                        "description": "Optional notes about this curve series."
+                      },
+                      "locked": {
+                        "type": "boolean",
+                        "description": "Indicates whether the series is locked for editing."
+                      },
+                      "data": {
+                        "type": "array",
+                        "description": "Data points for this torque/speed curve.",
+                        "items": {
+                          "type": "object",
+                          "additionalProperties": false,
+                          "properties": {
+                            "percent": {
+                              "type": "number",
+                              "description": "Percent of base speed (0-100).",
+                              "minimum": 0,
+                              "maximum": 100
+                            },
+                            "rpm": {
+                              "type": "number",
+                              "description": "Speed in RPM at this data point.",
+                              "minimum": 0
+                            },
+                            "torque": {
+                              "type": "number",
+                              "description": "Torque value at this data point.",
+                              "minimum": 0
+                            }
+                          },
+                          "required": ["percent", "rpm", "torque"]
+                        }
+                      }
+                    },
+                    "required": ["name", "locked", "data"]
+                  }
+                }
+              },
+              "required": [
+                "voltage",
+                "power",
+                "maxSpeed",
+                "ratedSpeed",
+                "ratedContinuousTorque",
+                "ratedPeakTorque",
+                "continuousAmperage",
+                "peakAmperage",
+                "series"
+              ]
+            }
+          }
+        },
+        "required": ["name", "voltages"]
+      }
+    },
+    "metadata": {
+      "type": "object",
+      "description": "Metadata about this motor definition file.",
+      "additionalProperties": false,
+      "properties": {
+        "created": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Creation timestamp in ISO 8601 format."
+        },
+        "modified": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Last modification timestamp in ISO 8601 format."
+        },
+        "notes": {
+          "type": "string",
+          "description": "Free-form notes about this motor definition."
+        }
+      }
+    }
+  },
+  "required": [
+    "schemaVersion",
+    "motorName",
+    "manufacturer",
+    "partNumber",
+    "power",
+    "maxSpeed",
+    "ratedSpeed",
+    "ratedContinuousTorque",
+    "ratedPeakTorque",
+    "units",
+    "drives",
+    "metadata"
+  ]
+}

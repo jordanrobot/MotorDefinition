@@ -1,0 +1,38 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "CurveEditor Motor Schema Index",
+  "description": "Index of motor definition JSON schema versions used by the CurveEditor application.",
+  "type": "object",
+  "additionalProperties": true,
+  "properties": {
+    "currentVersion": {
+      "type": "integer",
+      "description": "The currently supported motor schema version."
+    },
+    "schemas": {
+      "type": "object",
+      "description": "Map of schema versions to schema file metadata.",
+      "additionalProperties": true,
+      "properties": {
+        "1.0.0": {
+          "type": "object",
+          "additionalProperties": true,
+          "properties": {
+            "file": {
+              "type": "string",
+              "description": "Relative path to the JSON Schema file for this version.",
+              "pattern": "^motor-schema-v[0-9]+\\.[0-9]+\\.[0-9]+\\.json$"
+            },
+            "description": {
+              "type": "string",
+              "description": "Description of this schema version."
+            }
+          },
+          "required": ["file", "description"]
+        }
+      },
+      "required": ["1"]
+    }
+  },
+  "required": ["currentVersion", "schemas"]
+}

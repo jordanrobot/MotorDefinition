@@ -118,7 +118,7 @@ This structure reflects the real-world relationship where:
 
 ```json
 {
-  "schemaVersion": "2.0",
+  "schemaVersion": "1.0.0",
   "motorName": "High Torque Servo Motor",
   "manufacturer": "Acme Motors",
   "partNumber": "M-1234-HT",
