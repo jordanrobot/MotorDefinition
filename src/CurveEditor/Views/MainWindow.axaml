@@ -106,10 +106,16 @@
             <MenuItem Header="_View">
                 <MenuItem Header="Show _Directory Browser"
                           IsChecked="{Binding IsBrowserPanelExpanded}"
-                          Command="{Binding ToggleBrowserPanelCommand}"/>
+                          Command="{Binding ToggleBrowserPanelCommand}"
+                          InputGesture="Ctrl+B"/>
                 <MenuItem Header="Show _Properties Panel"
                           IsChecked="{Binding IsPropertiesPanelExpanded}"
-                          Command="{Binding TogglePropertiesPanelCommand}"/>
+                          Command="{Binding TogglePropertiesPanelCommand}"
+                          InputGesture="Ctrl+R"/>
+                <MenuItem Header="Show _Curve Data Panel"
+                          IsChecked="{Binding IsCurveDataExpanded}"
+                          Command="{Binding ToggleCurveDataPanelCommand}"
+                          InputGesture="Ctrl+G"/>
             </MenuItem>
             <MenuItem Header="_Help">
                 <MenuItem Header="Open _Logs Folder" Command="{Binding OpenLogsFolderCommand}"/>
