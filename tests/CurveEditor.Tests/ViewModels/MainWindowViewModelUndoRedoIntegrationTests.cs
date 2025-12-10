@@ -116,4 +116,61 @@ public class MainWindowViewModelUndoRedoIntegrationTests
 
         Assert.Equal(2.0, motor.Drives[0].Voltages[0].Series[0].Data[1].Torque);
     }
+
+    [Fact]
+    public void ClearSelectedTorqueCells_WithUndoStack_IsUndoable()
+    {
+        var fileServiceMock = new Mock<IFileService>();
+        var curveGeneratorMock = new Mock<ICurveGeneratorService>();
+
+        fileServiceMock.SetupGet(f => f.IsDirty).Returns(false);
+
+        var vm = new MainWindowViewModel(fileServiceMock.Object, curveGeneratorMock.Object);
+
+        var motor = new MotorDefinition
+        {
+            MotorName = "Test Motor",
+            Drives = new List<DriveConfiguration>
+            {
+                new()
+                {
+                    Name = "Drive A",
+                    Voltages = new List<VoltageConfiguration>
+                    {
+                        new()
+                        {
+                            Voltage = 208,
+                            Series = new List<CurveSeries>
+                            {
+                                new()
+                                {
+                                    Name = "Peak",
+                                    Data = new List<DataPoint>
+                                    {
+                                        new() { Rpm = 1000, Torque = 1.0 },
+                                        new() { Rpm = 2000, Torque = 2.0 }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        };
+
+        vm.CurrentMotor = motor;
+        vm.SelectedDrive = motor.Drives[0];
+        vm.SelectedVoltage = motor.Drives[0].Voltages[0];
+
+        // Select the second row, first series torque cell
+        vm.CurveDataTableViewModel.SelectCell(1, 2);
+        vm.CurveDataTableViewModel.ClearSelectedTorqueCells();
+
+        Assert.Equal(0.0, motor.Drives[0].Voltages[0].Series[0].Data[1].Torque);
+        Assert.True(vm.CanUndo);
+
+        vm.UndoCommand.Execute(null);
+
+        Assert.Equal(2.0, motor.Drives[0].Voltages[0].Series[0].Data[1].Torque);
+    }
 }

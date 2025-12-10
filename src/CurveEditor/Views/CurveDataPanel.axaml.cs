@@ -11,6 +11,7 @@ using Avalonia.Media;
 using Avalonia.VisualTree;
 using CurveEditor.Models;
 using CurveEditor.ViewModels;
+using Serilog;
 
 namespace CurveEditor.Views;
 
@@ -345,7 +346,11 @@ public partial class CurveDataPanel : UserControl
                             Margin = new Thickness(2),
                             Text = row?.GetTorque(seriesName).ToString("N2") ?? "0.00",
                             BorderThickness = new Thickness(2),
-                            BorderBrush = Brushes.White
+                            BorderBrush = Brushes.White,
+                            // Disable Avalonia's per-TextBox undo stack so that
+                            // Ctrl+Z / Ctrl+Y bubble up to the window-level
+                            // undo/redo commands backed by the shared UndoStack.
+                            IsUndoEnabled = false
                         };
                         
                         // Select all text when the TextBox is attached to visual tree (edit mode starts)
@@ -358,22 +363,38 @@ public partial class CurveDataPanel : UserControl
                             }
                         };
                         
-                        // Handle text changes to update the underlying data and refresh chart
+                        // Commit edits via the view-model helper so that changes
+                        // participate in the shared undo/redo history when an
+                        // UndoStack is available.
                         textBox.LostFocus += (sender, e) =>
                         {
-                            if (sender is TextBox tb && row is not null)
+                            if (sender is not TextBox tb || row is null)
                             {
-                                if (double.TryParse(tb.Text, out var newValue))
-                                {
-                                    row.SetTorque(seriesName, newValue);
-                                    
-                                    // Update chart and mark dirty when focus is lost
-                                    if (DataContext is MainWindowViewModel viewModel)
-                                    {
-                                        viewModel.MarkDirty();
-                                        viewModel.ChartViewModel.RefreshChart();
-                                    }
-                                }
+                                return;
+                            }
+
+                            if (!double.TryParse(tb.Text, out var newValue))
+                            {
+                                return;
+                            }
+
+                            if (DataContext is not MainWindowViewModel viewModel)
+                            {
+                                return;
+                            }
+
+                            var rowIndex = row.RowIndex;
+                            var cellPos = new CellPosition(rowIndex, currentColumnIndex);
+
+                            Log.Debug("CurveDataPanel: LostFocus commit for row={Row}, column={Column}, value={Value}",
+                                rowIndex,
+                                currentColumnIndex,
+                                newValue);
+
+                            if (viewModel.CurveDataTableViewModel.TryApplyTorqueWithUndoForView(cellPos, newValue))
+                            {
+                                viewModel.MarkDirty();
+                                viewModel.ChartViewModel.RefreshChart();
                             }
                         };
                         
@@ -1445,8 +1466,23 @@ public partial class CurveDataPanel : UserControl
         // Try to parse the accumulated text as a number
         if (double.TryParse(_overrideText, out var value))
         {
-            // Values are already applied via UpdateOverrideModeDisplay, just mark dirty
-            vm.MarkDirty();
+            Log.Debug("CurveDataPanel: CommitOverrideMode with value={Value}, originalCount={Count}", value, _originalValues.Count);
+
+            var committedViaUndo = false;
+
+            if (_originalValues.Count > 0)
+            {
+                committedViaUndo = vm.CurveDataTableViewModel.TryCommitOverrideWithUndo(_originalValues, value);
+            }
+
+            // If the view-model did not route through the undo stack (for
+            // example, in environments without an UndoStack), fall back to
+            // simply marking the document dirty so validation and UI state
+            // stay consistent with prior behavior.
+            if (!committedViaUndo)
+            {
+                vm.MarkDirty();
+            }
         }
         else
         {
