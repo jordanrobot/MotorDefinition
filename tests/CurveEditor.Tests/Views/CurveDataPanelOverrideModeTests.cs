@@ -11,7 +11,7 @@ namespace CurveEditor.Tests.Views;
 public class CurveDataPanelOverrideModeTests
 {
     [Fact]
-    public void ArrowKeys_DoNotMoveSelectionWhileInOverrideMode()
+    public void ArrowKeys_CommitOverrideAndMoveSelection()
     {
         var motor = new MotorDefinition
         {
@@ -61,8 +61,8 @@ public class CurveDataPanelOverrideModeTests
         vm.CurveDataTableViewModel.SelectCell(0, 2);
         var initialCell = vm.CurveDataTableViewModel.SelectedCells.Single();
 
-        // Directly put the panel into override mode by simulating
-        // the internal state change, then send a Down arrow key.
+        // Start override mode by simulating a numeric key press,
+        // then send a Down arrow key.
         var keyEvent = new KeyEventArgs
         {
             Key = Key.D1,
@@ -77,7 +77,8 @@ public class CurveDataPanelOverrideModeTests
 
         keyDownMethod!.Invoke(panel, new object?[] { dataGrid, keyEvent });
 
-        // Now press Down arrow while in override mode
+        // Now press Down arrow while in override mode, which should
+        // commit the override and move the selection.
         var downEvent = new KeyEventArgs
         {
             Key = Key.Down,
@@ -86,9 +87,9 @@ public class CurveDataPanelOverrideModeTests
         };
         keyDownMethod.Invoke(panel, new object?[] { dataGrid, downEvent });
 
-        // Selection should not have moved while override mode is active
+        // Selection should have moved to the next row
         var afterDown = vm.CurveDataTableViewModel.SelectedCells.Single();
-        Assert.Equal(initialCell, afterDown);
+        Assert.NotEqual(initialCell, afterDown);
     }
 
     [Fact]

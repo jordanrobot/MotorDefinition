@@ -966,10 +966,31 @@ public partial class CurveDataPanel : UserControl
                 e.Handled = true;
                 return;
             }
-            // Arrow keys: while in Override Mode, do not move selection.
-            // The user can use Enter/Tab to commit and navigate instead.
+            // Arrow keys: commit the current override and then move the
+            // selection in the corresponding direction, matching the
+            // normal navigation behavior for non-override mode.
             else if (e.Key is Key.Up or Key.Down or Key.Left or Key.Right)
             {
+                CommitOverrideMode();
+
+                switch (e.Key)
+                {
+                    case Key.Up:
+                        vm.CurveDataTableViewModel.MoveSelection(-1, 0);
+                        break;
+                    case Key.Down:
+                        vm.CurveDataTableViewModel.MoveSelection(1, 0);
+                        break;
+                    case Key.Left:
+                        vm.CurveDataTableViewModel.MoveSelection(0, -1);
+                        break;
+                    case Key.Right:
+                        vm.CurveDataTableViewModel.MoveSelection(0, 1);
+                        break;
+                }
+
+                ScrollToSelection(dataGrid);
+                UpdateCellSelectionVisuals();
                 e.Handled = true;
                 return;
             }
