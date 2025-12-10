@@ -1,6 +1,7 @@
 using System;
 using Avalonia.Controls;
 using Avalonia.Interactivity;
+using CurveEditor.Behaviors;
 using CurveEditor.ViewModels;
 
 namespace CurveEditor.Views;
@@ -13,6 +14,7 @@ public partial class MainWindow : Window
     public MainWindow()
     {
         InitializeComponent();
+        WindowBoundsPersistence.Attach(this, "MainWindow");
     }
 
     private void OnMotorNameLostFocus(object? sender, RoutedEventArgs e)
