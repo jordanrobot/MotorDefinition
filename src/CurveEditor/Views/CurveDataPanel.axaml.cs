@@ -999,6 +999,20 @@ public partial class CurveDataPanel : UserControl
             var charInOverride = GetCharacterFromKey(e.Key, e.KeyModifiers);
             if (charInOverride is not null)
             {
+                // Enforce a single leading minus sign and a single
+                // decimal separator within the override text.
+                if (charInOverride == '-' && _overrideText.Length > 0)
+                {
+                    e.Handled = true;
+                    return;
+                }
+
+                if (charInOverride == '.' && _overrideText.Contains('.'))
+                {
+                    e.Handled = true;
+                    return;
+                }
+
                 _overrideText += charInOverride;
                 UpdateOverrideModeDisplay();
                 ForceDataGridRefresh(dataGrid);
@@ -1163,6 +1177,20 @@ public partial class CurveDataPanel : UserControl
                 _overrideText = "";
             }
             
+            // Enforce a single leading minus sign and a single decimal
+            // separator even when starting a new override via key down.
+            if (character == '-' && _overrideText.Length > 0)
+            {
+                e.Handled = true;
+                return;
+            }
+
+            if (character == '.' && _overrideText.Contains('.'))
+            {
+                e.Handled = true;
+                return;
+            }
+
             _overrideText += character;
             
             // Update cell displays immediately as user types
@@ -1458,22 +1486,55 @@ public partial class CurveDataPanel : UserControl
         var isInEditMode = e.Source is TextBox;
         if (isInEditMode) return;
         
+        // If we're already in Override Mode, rely on key handling for
+        // additional characters so we don't double-append input.
+        if (_isInOverrideMode) return;
+        
         // Don't handle if no cells selected
         var selectedCells = vm.CurveDataTableViewModel.SelectedCells;
         if (selectedCells.Count == 0) return;
         
-        // Accept any text input - validation happens on commit
         var text = e.Text;
         if (string.IsNullOrEmpty(text)) return;
-        
-        // Enter Override Mode and accumulate typed text
-        if (!_isInOverrideMode)
+
+        // Only start Override Mode for numeric-like characters: digits,
+        // a single leading minus sign, or a decimal separator. This
+        // ensures users cannot write arbitrary non-numeric text into
+        // torque cells when beginning an override.
+        if (text.Length != 1)
         {
-            _isInOverrideMode = true;
-            _overrideText = "";
+            return;
+        }
+
+        var ch = text[0];
+        var isDigit = char.IsDigit(ch);
+        var isMinus = ch == '-';
+        var isDecimal = ch == '.';
+        if (!isDigit && !isMinus && !isDecimal)
+        {
+            // Let non-numeric first characters fall through so they are
+            // not written into the cells at all.
+            return;
         }
         
-        _overrideText += text;
+        // Enter Override Mode and accumulate typed text
+        _isInOverrideMode = true;
+        _overrideText = text;
+
+        // Immediately update the display so the user sees exactly what
+        // they typed, even if it is not a valid number. Validation and
+        // potential revert happen when Override Mode is committed or
+        // cancelled.
+        UpdateOverrideModeDisplay();
+
+        if (sender is DataGrid grid)
+        {
+            ForceDataGridRefresh(grid);
+        }
+        else if (DataTable is not null)
+        {
+            ForceDataGridRefresh(DataTable);
+        }
         
         // Prevent the event from reaching the DataGrid
         e.Handled = true;
@@ -1547,7 +1608,10 @@ public partial class CurveDataPanel : UserControl
             SnapshotOriginalValues(selectedCells);
         }
 
-        // Update all selected cells with the current typed text (or 0 if not parseable)
+        // If the text parses, update the underlying torque values and show
+        // the formatted numeric value. Otherwise, leave the model unchanged
+        // but show the raw typed text so the user sees exactly what they
+        // entered; validation and revert happen when Override Mode exits.
         if (double.TryParse(_overrideText, out var value))
         {
             // Delegate mutation rules to the view model helper, then update
@@ -1584,6 +1648,21 @@ public partial class CurveDataPanel : UserControl
 
             // Refresh chart to show updated values
             vm.ChartViewModel.RefreshChart();
+        }
+        else
+        {
+            foreach (var cellPos in selectedCells)
+            {
+                if (cellPos.ColumnIndex < 2)
+                {
+                    continue;
+                }
+
+                if (_cellBorders.TryGetValue(cellPos, out var border) && border.Child is TextBlock textBlock)
+                {
+                    textBlock.Text = _overrideText;
+                }
+            }
         }
     }
 

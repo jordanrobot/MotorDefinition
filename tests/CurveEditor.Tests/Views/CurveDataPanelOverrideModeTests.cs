@@ -181,4 +181,69 @@ public class CurveDataPanelOverrideModeTests
         // After undo, the torque should return to its original value
         Assert.Equal(originalTorque, voltage.Series[0].Data[0].Torque, 3);
     }
+
+    [Fact]
+    public void OverrideMode_DoesNotStartOnNonNumericFirstCharacter()
+    {
+        var motor = new MotorDefinition
+        {
+            MaxSpeed = 5000,
+            Units = new UnitSettings { Torque = "Nm" }
+        };
+
+        var voltage = new VoltageConfiguration(220)
+        {
+            MaxSpeed = 5000,
+            RatedPeakTorque = 50,
+            RatedContinuousTorque = 40
+        };
+
+        var peak = new CurveSeries("Peak");
+        peak.InitializeData(5000, 50);
+        voltage.Series.Add(peak);
+        motor.Drives.Add(new DriveConfiguration
+        {
+            Name = "Drive",
+            Voltages = { voltage }
+        });
+
+        var vm = new MainWindowViewModel
+        {
+            CurrentMotor = motor,
+            SelectedDrive = motor.Drives[0],
+            SelectedVoltage = voltage
+        };
+
+        var panel = new CurveDataPanel
+        {
+            DataContext = vm
+        };
+
+        panel.Measure(new Avalonia.Size(800, 600));
+        panel.Arrange(new Avalonia.Rect(0, 0, 800, 600));
+
+        var dataGrid = panel.FindControl<DataGrid>("DataTable");
+        Assert.NotNull(dataGrid);
+
+        // Select a single torque cell and capture its original value
+        vm.CurveDataTableViewModel.SelectCell(0, 2);
+        var originalTorque = voltage.Series[0].Data[0].Torque;
+
+        // Get access to the internal TextInput handler
+        var textInputMethod = typeof(CurveDataPanel)
+            .GetMethod("DataTable_TextInput", System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic);
+        Assert.NotNull(textInputMethod);
+
+        // Simulate a non-numeric first character text input (e.g., "A").
+        // This should NOT start override mode and must not change the
+        // underlying torque value for the selected cell.
+        var textArgs = (TextInputEventArgs)Activator.CreateInstance(typeof(TextInputEventArgs), nonPublic: true)!;
+        textArgs.Text = "A";
+        textArgs.Source = dataGrid;
+        textArgs.RoutedEvent = InputElement.TextInputEvent;
+
+        textInputMethod!.Invoke(panel, new object?[] { dataGrid, textArgs });
+
+        Assert.Equal(originalTorque, voltage.Series[0].Data[0].Torque, 3);
+    }
 }
