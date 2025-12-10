@@ -231,8 +231,8 @@ Note: Motor text property edits (e.g., name, manufacturer, part number) are rout
 ## Phase 3: File Management
 
 ### 3.0 Update JSON schema
-- [ ] Use new schema file provied by user for JSON schema for motor files
-- [ ] Refactor existing JSON serialization/deserialization to match new schema
+- [X] Use new schema file provided by user for JSON schema for motor files
+- [X] Refactor existing JSON serialization/deserialization to match new schema
 - [ ] present options for consolidating series data within drive&voltage sections. This is to group series torque values together so that veiwing and editing raw json files is much easier. 
 - [ ] If the user chooses to adjust series data format within the json schema, implement this change.
 
@@ -245,10 +245,10 @@ Note: Motor text property edits (e.g., name, manufacturer, part number) are rout
 - [ ] Show current directory path
 
 ### 3.2 Dirty State Tracking
-- [ ] Track unsaved changes per file
-- [ ] Mark file dirty when any edit is made
-- [ ] Clear dirty state when file is saved
-- [ ] Show asterisk (*) in window title when dirty
+- [X] Track unsaved changes per file
+- [X] Mark file dirty when any edit is made
+- [X] Clear dirty state when file is saved
+- [X] Show asterisk (*) in window title when dirty
 - [ ] Visual indicator in directory list for dirty files
 
 ### 3.3 Save Prompts
@@ -258,16 +258,21 @@ Note: Motor text property edits (e.g., name, manufacturer, part number) are rout
 - [ ] Handle Cancel to abort the close/open operation
 
 ### 3.4 Save Commands
-- [ ] Save command overwrites current file
-- [ ] Save As: save to new file, new file becomes active
-- [ ] Save Copy As: save copy to new file, original stays active
-- [ ] All saves overwrite (no append mode)
+- [X] Save command overwrites current file
+- [X] Save As: save to new file, new file becomes active
+- [X] Save Copy As: save copy to new file, original stays active
+- [X] All saves overwrite (no append mode)
 
 **Deliverable:** Full file management with directory browser and save prompts.
 
 ---
 
 ## Phase 4: Advanced Editing
+
+### 4.0 Series Data Adjustment
+- [ ] Transpose the series data so that each series is represented as a row instead of a column
+- [ ] Ensure all related UI components and data bindings are updated accordingly
+- [ ] Ensure header labels and checkboxes (lock, visibility) are placed at the left-hand of each series row.
 
 ### 4.1 EQ-Style Curve Editing
 - [ ] Enable point selection on chart (single-click on point)
@@ -329,14 +334,14 @@ Note: Motor text property edits (e.g., name, manufacturer, part number) are rout
 
 ### 5.2 UI Polish
 - [ ] Add toolbar with common actions
-- [ ] Implement keyboard shortcuts
-- [ ] Add status bar
-- [ ] Add application icon
+- [X] Implement keyboard shortcuts
+- [X] Add status bar
+- [X] Add application icon
 
 ### 5.3 Unsaved Changes Handling
 - [ ] Prompt to save on close
 - [ ] Prompt to save on open new file
-- [ ] Show asterisk (*) in title for unsaved changes
+- [X] Show asterisk (*) in title for unsaved changes
 
 **Deliverable:** Polished application with user preferences.
 
