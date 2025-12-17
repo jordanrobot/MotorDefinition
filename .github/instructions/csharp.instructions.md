@@ -9,6 +9,10 @@ applyTo: '**/*.cs'
 - Always use the latest version C#, currently C# 14 features.
 - Write clear and concise comments for each function.
 
+## Planning and Workflow
+
+- For any non-trivial feature, refactor, or phase-related work, consult the Copilot development workflow in `.github/planning/copilot-development-workflow.md` before making code changes. Follow the phase requirements, plans, and ADRs referenced there when designing and implementing changes.
+
 ## General Instructions
 - Make only high confidence suggestions when reviewing code changes.
 - Write code with good maintainability practices, including comments on why certain design decisions were made.

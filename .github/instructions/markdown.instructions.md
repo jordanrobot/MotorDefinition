@@ -50,3 +50,7 @@ Ensure compliance with the following validation requirements:
 - **Content Rules**: Ensure that the content follows the markdown content rules specified above.
 - **Formatting**: Ensure that the content is properly formatted and structured according to the guidelines.
 - **Validation**: Run the validation tools to check for compliance with the rules and guidelines.
+
+## Project Planning References
+
+- When creating or updating project planning documents (roadmaps, phase requirements, plans, ADRs), consult `.github/planning/copilot-development-workflow.md` to follow the agreed workflow for how Copilot agents should use these artifacts.
