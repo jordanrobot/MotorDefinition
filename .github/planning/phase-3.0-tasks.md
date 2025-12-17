@@ -20,6 +20,7 @@
 - Panel descriptors:
   - `PanelId` (stable)
   - `DisplayName`
+  - `PanelBarLabel` (text shown in the Panel Bar)
   - `EnableIcon`
   - `EnableCollapse`
   - `Zone` (Left/Right/Bottom/Center)
@@ -28,7 +29,10 @@
   - `MinSize` (double?)
 - Runtime state:
   - `PanelBarDockSide` (Left/Right)
-  - `ActivePanelBarPanelId` (nullable)
+  - per-zone active panel ids:
+    - `LeftZoneActivePanelId` (nullable)
+    - `RightZoneActivePanelId` (nullable)
+    - `BottomZoneActivePanelId` (nullable)
 - Persistence:
   - per-panel `Zone`
   - per-panel last non-zero expanded width
@@ -37,21 +41,26 @@
 Notes:
 - Panel Bar dock side is independent of panel zones (zones do not "follow" the Panel Bar).
 - Phase 3.0 does not require expand/collapse animations.
-- Phase 3.0 does not require true icons; Panel Bar items may use text labels and/or a glyph font character.
+- Phase 3.0 uses rotated text labels (no icons/glyphs).
 
 Notes:
 - Curve Graph: `EnableIcon=false`, `EnableCollapse=false`, `Zone=Center`.
-- Panel Bar exclusivity applies only to `EnableIcon=true` panels.
+- Zone exclusivity applies only within a zone.
 - Zone non-overlap rule must exist even if Phase 3.0 has one panel per zone.
+
+Defaults (first run / no persisted state):
+- Directory Browser expanded.
+- Motor Properties expanded.
+- Curve Data collapsed.
 
 ### Agent Notes (Migration Guidance)
 - Current implementation already has per-panel booleans and persistence wiring (e.g., `IsBrowserPanelExpanded`, `IsPropertiesPanelExpanded`, `IsCurveDataExpanded`) and related commands/keybindings.
-- Phase 3.0 should migrate behavior to a single source of truth: `ActivePanelBarPanelId`.
+- Phase 3.0 should migrate behavior to a single source of truth: per-zone active panel ids.
   - Do not attempt to keep both systems “authoritative” at the same time.
-  - During migration, it’s OK for the old booleans to temporarily remain in the view model for menu checkmarks and backwards compatibility, but they should be derived from `ActivePanelBarPanelId` (or removed once all panels are converted).
+  - During migration, it’s OK for the old booleans to temporarily remain in the view model for menu checkmarks and backwards compatibility, but they should be derived from the per-zone active panel ids (or removed once all panels are converted).
 - Command migration pattern (recommended):
   - Keep existing commands (`ToggleBrowserPanelCommand`, `TogglePropertiesPanelCommand`, `ToggleCurveDataPanelCommand`) so shortcuts and menus don’t churn.
-  - Re-implement their handlers to set/clear `ActivePanelBarPanelId` rather than flipping booleans.
+  - Re-implement their handlers to set/clear the appropriate zone's active panel id rather than flipping booleans.
   - Keep the keyboard shortcut policy in [docs/adr/adr-0005-keyboard-shortcuts-and-input-routing.md](docs/adr/adr-0005-keyboard-shortcuts-and-input-routing.md): shortcuts remain defined on `MainWindow`.
 - Persistence migration pattern (recommended):
   - Preserve the view-driven persistence approach from [docs/adr/adr-0004-layout-and-panel-persistence.md](docs/adr/adr-0004-layout-and-panel-persistence.md).
@@ -86,7 +95,9 @@ Notes:
 - [ ] Add a panel descriptor model and an initial registry list (4 panels).
 - [ ] Add persisted settings fields:
   - [ ] `MainWindow.PanelBarDockSide`
-  - [ ] `MainWindow.ActivePanelBarPanelId`
+  - [ ] `MainWindow.LeftZone.ActivePanelId`
+  - [ ] `MainWindow.RightZone.ActivePanelId`
+  - [ ] `MainWindow.BottomZone.ActivePanelId`
   - [ ] `MainWindow.<PanelId>.Zone`
 -  - [ ] `MainWindow.<PanelId>.Width` (last non-zero expanded width)
 -  - [ ] `MainWindow.<PanelId>.Height` (last non-zero expanded height)
@@ -117,10 +128,18 @@ Notes:
 
 ### Tasks
 - [ ] Add the fixed-width Panel Bar to `MainWindow`.
-- [ ] Bind Panel Bar icons to descriptors where `EnableIcon=true`.
-- [ ] Implement click -> set/clear `ActivePanelBarPanelId`.
+- [ ] Bind Panel Bar label buttons to descriptors where `EnableIcon=true`.
+- [ ] Ensure Panel Bar uses text labels (not icons/glyphs) with exact strings:
+  - [ ] Motor Properties = "Properties"
+  - [ ] Curve Data = "Data"
+  - [ ] Directory Browser = "Browser"
+- [ ] Ensure Panel Bar text is oriented sideways (rotated) and does not wrap.
+- [ ] Ensure Panel Bar background color matches panel header background.
+- [ ] Ensure Panel Bar label text highlights when the corresponding panel is expanded.
+- [ ] Ensure Panel Bar label text is not highlighted when the corresponding panel is collapsed.
+- [ ] Ensure highlight state is independent per label (each label reflects only its own panel expanded/collapsed state).
+- [ ] Implement click -> toggle the appropriate zone active panel id.
 - [ ] Implement left/right docking based on `PanelBarDockSide`.
-- [ ] Ensure Panel Bar uses text labels and/or glyph characters (no icon dependency in Phase 3.0).
 - [ ] Ensure Panel Bar dock side changes do not change panel zones.
 
 ### Done when
@@ -144,8 +163,10 @@ Notes:
 ### Tasks
 - [ ] Implement zone-level single-expanded-panel rule in the panel system:
   - [ ] Expanding a panel into a zone collapses any currently expanded panel in that same zone first.
-- [ ] Ensure the rule is expressed in code even if Phase 3.0 ships with one panel per collapsible zone.
+- [ ] Ensure expanding a panel does not collapse panels in other zones.
 - [ ] Ensure the zone collapse shrinks space (0 width/height).
+- [ ] When a zone has no expanded panel, disable that zone's splitter.
+- [ ] When a zone has an expanded panel, enable that zone's splitter.
 - [ ] Apply persisted per-panel `Zone` at runtime by routing each panel into the correct zone host (AC 3.0.5).
 
 ### Done when
@@ -167,13 +188,14 @@ Notes:
 ### Tasks
 - [ ] Convert left zone behavior to be driven by the new panel system (not `IsBrowserPanelExpanded`).
 - [ ] Persist/restore last non-zero width for the Directory Browser panel.
-- [ ] Ensure it can default to collapsed (important for Phase 3.1 startup expectations).
+- [ ] Ensure it defaults to expanded on first run (no persisted state) for Phase 3.0 placeholder behavior.
+- [ ] Ensure Phase 3.1 can override startup behavior to start collapsed by default once directory browsing is implemented.
 - [ ] Ensure header exists with correct panel name.
 
 ### Done when
 - Clicking the Directory Browser icon toggles the panel.
 - Resizing persists across restart (AC 3.0.1, AC 3.0.10).
-- Expanding it collapses any other Panel Bar panel (AC 3.0.7).
+- Expanding it collapses any other panel already expanded in the left zone (AC 3.0.7).
 
 ### Files
 - [src/CurveEditor/Views/MainWindow.axaml](src/CurveEditor/Views/MainWindow.axaml)
@@ -211,20 +233,22 @@ Notes:
 ## PR 6: Convert Curve Data panel
 
 ### Tasks
-- [ ] Convert bottom zone behavior to be driven by the new panel system (not `IsCurveDataExpanded`).
-- [ ] Persist/restore last non-zero height.
+- [ ] Locate Curve Data in the left zone (not bottom).
+- [ ] Convert left zone behavior to be driven by the new panel system (not `IsCurveDataExpanded`).
+- [ ] Persist/restore last non-zero width.
 - [ ] Add panel header consistent with the new header rule.
+- [ ] Ensure the Curve Data Grid occupies the entirety of the Curve Data Panel and resizes with it.
 
 ### Done when
 - Curve Data toggles via Panel Bar.
-- Expanding Curve Data collapses Directory Browser / Motor Properties if they were expanded (AC 3.0.7).
-- Height persists across restart (AC 3.0.1, AC 3.0.10).
+- Expanding Curve Data collapses Directory Browser if it was expanded (same zone), and does not collapse Motor Properties (other zone) (AC 3.0.7).
+- Width persists across restart (AC 3.0.1, AC 3.0.10).
 
 ### Quick manual test
 1. Load a motor.
 2. Toggle Curve Data panel.
-3. Resize its height.
-4. Restart -> verify height restores when expanded.
+3. Resize its width.
+4. Restart -> verify width restores when expanded.
 
 ---
 
@@ -248,8 +272,8 @@ Notes:
 ## PR 8: Wire menus and shortcuts to the new panel system
 
 ### Tasks
-- [ ] Update View menu toggles to reflect and control `ActivePanelBarPanelId`.
-- [ ] Update existing keybindings (Ctrl+B, Ctrl+R, Ctrl+G) to set/clear `ActivePanelBarPanelId`.
+- [ ] Update View menu toggles to reflect and control the per-zone active panel ids.
+- [ ] Update existing keybindings (Ctrl+B, Ctrl+R, Ctrl+G) to toggle the appropriate zone active panel id.
 - [ ] Ensure menu checkmarks accurately reflect expanded state.
 
 ### Done when
@@ -273,10 +297,12 @@ Notes:
 
 ### Final manual validation script (AC-driven)
 1. Dock side: verify Panel Bar left/right and persistence (AC 3.0.1, AC 3.0.6).
-2. Exclusivity: expand Browser then Properties then Curve Data; verify only one is open (AC 3.0.7).
+2. Zone behavior: expand Browser and Properties; verify both can stay expanded (different zones) (AC 3.0.7).
+3. Zone behavior: expand Browser then Data; verify only one is open in the left zone (AC 3.0.7).
 3. Zone shrink: collapse an open panel and ensure no blank gutter remains (AC 3.0.9).
 4. Size persistence: set widths/heights, restart, verify restore (AC 3.0.1, AC 3.0.10).
 5. Zone persistence: (dev-only) alter persisted zone values, restart, verify restore/fallback (AC 3.0.5).
 6. Curve Graph: confirm always visible and not in Panel Bar (AC 3.0.8).
 7. Undo/redo: perform document edits, toggle panels, confirm undo stack only affects document edits (AC 3.0.4).
 8. Performance: toggle panels repeatedly; confirm the UI remains responsive (AC 3.0.2).
+9. Panel Bar highlight: verify each label highlights only when its panel is expanded.

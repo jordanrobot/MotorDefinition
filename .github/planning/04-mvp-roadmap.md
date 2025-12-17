@@ -1,4 +1,4 @@
-# Motor Torque Curve Editor - MVP Roadmap
+## Motor Torque Curve Editor - MVP Roadmap
 
 **Related ADRs**
 
@@ -247,12 +247,25 @@ See ADR-0006 (`../../docs/adr/adr-0006-motor-file-schema-and-versioning.md`) for
 ### 3.0 Generic Panel Expand/Collapse
 - [ ] Implement generic expand/collapse mechanism for existing panels. Use relevant ADRs as reference, but do not be constrained by these ADRs as this functionality is not yet implemented. If we need to adjust ADRs to better fit the implementation, we can do so, please just let me know.
   - [ ] Implement new panel system to meet the functional requirements detailed in `Phase 3.0 Functional Requirements: Generic Panel Expand/Collapse` in `.github/planning/phase-3-0-requirements.md`
-  - [ ] Add vertical bar with panel icons to control expansion/collapse
+  - [ ] Add vertical Panel Bar with rotated text labels to control expansion/collapse
+  - [ ] Ensure Panel Bar labels are text-only (no icons/glyphs) and use exact strings:
+    - [ ] Motor Properties = "Properties"
+    - [ ] Curve Data = "Data"
+    - [ ] Directory Browser = "Browser"
+  - [ ] Ensure Panel Bar background color matches panel header background
   - [ ] Convert existing panels to use the new expand/collapse mechanism, but convert the panels one-at-a-time to ensure stability. Order:
   - [ ] Directory Browser (empty panel, contents will be be implemented in Phase 3.1)
   - [ ] Motor Properties
   - [ ] Curve Data
   - [ ] Curve Graph
+  - [ ] Locate Curve Data panel in the left zone (remove it from the bottom zone)
+  - [ ] Ensure expanding a panel collapses only panels in the same zone (panels in other zones stay expanded)
+  - [ ] Disable a zone's resize splitter when that zone has no expanded panel
+  - [ ] Enable and apply splitters normally when the zone has an expanded panel
+  - [ ] Default panel states (first run / no persisted state):
+    - [ ] Directory Browser expanded
+    - [ ] Motor Properties expanded
+    - [ ] Curve Data collapsed
   - Note: after each conversion, we will do a full round of UI/Ux testing to ensure nothing is broken.
 
 

@@ -3,7 +3,7 @@
 ### Scope (Phase 3.0)
 
 - Introduce a generic, reusable expand/collapse mechanism for all major panels in the main CurveEditor window.
-- Provide a VS Code–style vertical bar for panel icons and quick toggling.
+- Provide a VS Code–style vertical Panel Bar for quick toggling.
 - Persist panel visibility and per-panel size settings across sessions via user settings.
 
 ### Non-goals (Phase 3.0)
@@ -34,19 +34,25 @@
 
 - [ ] Collapsed panels should be fully hidden from view (including any per-panel header area), except for their representation in the Panel Bar.
 
-- [ ] The CurveEditor application should have a vertical bar that shows an icon for each collapsible panel. Call this the Panel Bar.
-- [ ] Phase 3.0 does not require true icons. For now, each Panel Bar item may use a short text label and/or a glyph font character.
+- [ ] The CurveEditor application should have a vertical bar that shows a text label button for each collapsible panel. Call this the Panel Bar.
+- [ ] Phase 3.0 uses text labels (not icons or glyphs) for Panel Bar items.
+- [ ] Panel Bar text labels must use the following text (exactly):
+  - [ ] Motor Properties = "Properties"
+  - [ ] Curve Data = "Data"
+  - [ ] Directory Browser = "Browser"
+- [ ] Clicking a Panel Bar text label expands/collapses the corresponding panel.
+- [ ] Panel Bar "link" text should be highlighted when the corresponding panel is expanded.
+- [ ] Panel Bar "link" text should not be highlighted when the corresponding panel is collapsed.
+- [ ] Panel Bar "link" text highlighting should be independent of each other (each Panel Bar item highlights based only on its own panel expanded/collapsed state).
+- [ ] Panel Bar text must be oriented sideways (rotated) so it fits without wrapping.
+- [ ] Panel Bar background color must match the panel header background color.
 - [ ] This vertical bar with icons should be docked to one side of the main window.
 - [ ] The vertical bar should not overlap with the main content area of the application.
 - [ ] This vertical bar should be docked to the left side of the application window by default, but users should be able to change its position to the right side via user settings.
 - [ ] Changing the Panel Bar dock side should not change panel zones. Panel zones are independent of Panel Bar position.
 - [ ] This vertical bar should always be visible.
-- [ ] Clicking on a panel icon in the vertical bar should expand that panel, and collapse any other expanded panels represented in the vertical bar.
-  - [ ] This "collapse any other expanded panels" behavior applies only to panels with `EnableCollapse = true`.
-  - [ ] Initially, `EnableCollapse = true` for Directory Browser, Motor Properties, and Curve Data.
-  - [ ] Initially, `EnableCollapse = false` for Curve Graph.
-  - [ ] See ### Panel Behavior in Overall Window Layout below for more details related to zones and collapse/expand behavior.
-- [ ] If the clicked panel is already expanded, clicking its icon should collapse it.
+- [ ] Expanding a panel must not collapse panels in other zones.
+- [ ] If the clicked panel is already expanded, clicking its label should collapse it.
 - [ ] The size of the vertical bar should be fixed, and should not change when panels are expanded or collapsed.
 - [ ] Any collapsed panel should be hidden from view, except for its icon in the vertical bar.
   
@@ -62,6 +68,7 @@
 - [ ] When a panel is expanded, it should occupy its designated zone in the window layout.
 - [ ] When a panel is expanded into a zone, it should not overlap with other expanded panels in that zone.
 - [ ] When a panel is expanded into a zone, it should collapse any other expanded panels in that zone.
+- [ ] Curve Data panel must be located in the left zone for Phase 3.0 (not the bottom zone).
 - [ ] When a panel is collapsed from a zone, the zone should adjust to minimize unused space.
 
 ### Persistence and Responsiveness
@@ -72,6 +79,13 @@
   - [ ] Persisted expanded height (when docked bottom).
   - [ ] Persisted sizes must never "learn" a zero size when a panel is collapsed.
 - [ ] Users should be able to resize expanded panels via splitters (right edge for left zone, left edge for right zone, top edge for bottom zone).
+- [ ] When a zone has no expanded panel, that zone's resize splitter must be disabled (it should not resize an empty zone).
+- [ ] When a zone has an expanded panel, that zone's resize splitter must be enabled and resize the zone normally.
+- [ ] Defaults (first run / no persisted state):
+  - [ ] Directory Browser defaults to expanded.
+  - [ ] Motor Properties defaults to expanded.
+  - [ ] Curve Data defaults to collapsed.
+- [ ] Phase 3.1 override: once the Directory Browser feature is implemented, the startup default for the Directory Browser panel is controlled by the Phase 3.1 requirements (including "starts collapsed" when no prior state is restored).
 - [ ] The expand/collapse mechanism should be implemented in a way that allows for easy addition of new panels in the future.
 - [ ] The expand/collapse mechanism should be responsive and should not cause any noticeable lag or delay when expanding or collapsing panels.
 - [ ] Phase 3.0 does not require smooth animations for expand/collapse.
@@ -86,10 +100,11 @@
 
 - AC 3.0.5: After restarting the application, each panel's persisted `Zone` value is restored (and if a persisted zone is invalid/unknown, the app falls back to the default zone without user-facing errors).
 - AC 3.0.6: The Panel Bar is always visible, fixed-width, and never overlaps the main content (verified for both left-docked and right-docked configurations).
-- AC 3.0.7: Panel Bar exclusivity is enforced: expanding any Panel Bar panel collapses any other currently expanded Panel Bar panel (including when the panels belong to different zones).
+- AC 3.0.7: Zone exclusivity is enforced: expanding a panel collapses any other expanded panel in the same zone, and does not collapse panels in other zones.
 - AC 3.0.8: The Curve Graph panel is not represented in the Panel Bar (`EnableIcon = false`), and the Curve Graph remains visible in the center zone at all times.
 - AC 3.0.9: Collapsing a panel shrinks its zone to minimize unused space (no persistent blank gutter/stripe beyond the Panel Bar itself).
 - AC 3.0.10: Collapsing and re-expanding a panel restores the last non-zero size for that panel (collapse does not permanently "learn" a zero size).
+- AC 3.0.11: When a zone has no expanded panel, its splitter is disabled; when a zone has an expanded panel, its splitter is enabled and resizes the zone.
 
 
 
@@ -136,7 +151,6 @@ Note: In this example, you'll notice that `motor profile 1.json` and `motor prof
 ### Directory Browser: Behavior
 
 - [ ] When the program starts, automatically open the last opened file in the curve editor.
-- [ ] By default, the directory browser should be collapsed when the program starts.
 - [ ] When the user opens a directory, automatically expand the directory tree to show the opened directory.
 - [ ] Implement a "Close Directory" button to close the currently opened directory in the directory browser.
 - [ ] When the command "Close Directory" is executed, collapse the directory tree to hide the closed directory.
@@ -172,6 +186,10 @@ Note: In this example, you'll notice that `motor profile 1.json` and `motor prof
 ## Phase 3.2 Functional Requirements: Curve Data Panel
 
 These requirements will be added in a future update.
+
+### Curve Data Panel: Layout
+
+- [ ] Curve Data Grid should occupy the entirety of the Curve Data Panel, and resize as the panel is resized.
 
 ### Open Questions (Phase 3.2)
 
