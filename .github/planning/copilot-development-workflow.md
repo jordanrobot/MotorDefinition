@@ -17,6 +17,7 @@ Before making non-trivial code or XAML changes, Copilot agents should load and r
 - Overall roadmap: `.github/planning/04-mvp-roadmap.md`.
 - Relevant phase requirements: `.github/planning/phase-N-requirements.md` for the active phase.
 - Relevant phase plan: `.github/planning/phase-N-plan.md` (if present).
+- Relevant phase tasks checklist: `.github/planning/phase-N-tasks.md` (if present).
 - Phase-specific bug/notes log: `.github/planning/phase-N-bugs-and-notes.md` (if present).
 - Terms and definitions: `.github/planning/00-terms-and-definitions.md`.
 - Related ADRs referenced by the roadmap or phase docs (for example, motor property undo design, panel layout, file schema).
@@ -48,14 +49,21 @@ For any new feature or phase-level work:
      - Record any test strategy or tooling considerations.
    - Keep the plan focused on how we will meet the requirements, not on re-specifying behavior.
 
-5. **Track bugs and follow-ups per phase**
+5. **Create or update a phase tasks checklist as needed**
+    - For implementation work that will be executed in multiple PR-sized slices, create or update `.github/planning/phase-N-tasks.md` to:
+       - Provide a detailed, PR-sliceable checklist for agents.
+       - List expected file touch points and “done when” criteria.
+       - Include an “Agent Notes” section for migrations/refactors that may be error-prone.
+       - Include a manual validation script that maps back to acceptance criteria (e.g., `AC 3.0.1`).
+
+6. **Track bugs and follow-ups per phase**
    - Use `.github/planning/phase-N-bugs-and-notes.md` to log:
      - Known defects or regressions.
      - Questions about ambiguous requirements.
      - Future enhancements discovered during implementation.
    - Reference ADR IDs and any relevant acceptance criteria or question labels whenever possible.
 
-6. **Keep terms consistent**
+7. **Keep terms consistent**
    - When introducing new UI labels or domain concepts, update `.github/planning/00-terms-and-definitions.md` so future agents and humans share the same vocabulary.
 
 ## When Requirements Are Missing or Ambiguous
@@ -71,7 +79,7 @@ If the active phase requirements do not clearly specify behavior:
 - Use ADRs to capture cross-cutting or high-impact decisions (architecture, layout strategy, undo/redo model, schema changes, keyboard routing).
 - For new decisions:
   - Add a new ADR under `.github/adr/adr-XXXX-some-title.md`.
-  - Reference the ADR from the roadmap and from any affected `phase-N-requirements.md` or `phase-N-plan.md` documents.
+   - Reference the ADR from the roadmap and from any affected `phase-N-requirements.md`, `phase-N-plan.md`, or `phase-N-tasks.md` documents.
 - When implementing code governed by an ADR, avoid re-deciding the same question in code; if a change is necessary, propose an ADR update instead.
 
 ## Templates for Phase Requirements

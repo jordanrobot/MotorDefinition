@@ -4,13 +4,14 @@
 
 - Introduce a generic, reusable expand/collapse mechanism for all major panels in the main CurveEditor window.
 - Provide a VS Code–style vertical bar for panel icons and quick toggling.
-- Persist panel visibility and width settings across sessions via user settings.
+- Persist panel visibility and per-panel size settings across sessions via user settings.
 
 ### Non-goals (Phase 3.0)
 
 - Do not redesign the internal content of individual panels (Directory Browser, Curve Data, etc.).
 - Do not introduce per-document layout variants; panel expand/collapse is global per user/settings, not per file.
 - Do not introduce undo/redo for layout changes (panel layout changes are not part of the command history).
+- Do not require smooth expand/collapse animations in Phase 3.0.
 
 ### CurveEditor Panel Expand/Collapse Mechanism
 
@@ -31,10 +32,14 @@
 
 - [ ] All window panels within the CurveEditor application should have a header at the top of each panel. This panel header should contain the name of the panel, using terminology defined in 00-terms-and-definitions.
 
+- [ ] Collapsed panels should be fully hidden from view (including any per-panel header area), except for their representation in the Panel Bar.
+
 - [ ] The CurveEditor application should have a vertical bar that shows an icon for each collapsible panel. Call this the Panel Bar.
+- [ ] Phase 3.0 does not require true icons. For now, each Panel Bar item may use a short text label and/or a glyph font character.
 - [ ] This vertical bar with icons should be docked to one side of the main window.
 - [ ] The vertical bar should not overlap with the main content area of the application.
 - [ ] This vertical bar should be docked to the left side of the application window by default, but users should be able to change its position to the right side via user settings.
+- [ ] Changing the Panel Bar dock side should not change panel zones. Panel zones are independent of Panel Bar position.
 - [ ] This vertical bar should always be visible.
 - [ ] Clicking on a panel icon in the vertical bar should expand that panel, and collapse any other expanded panels represented in the vertical bar.
   - [ ] This "collapse any other expanded panels" behavior applies only to panels with `EnableCollapse = true`.
@@ -53,6 +58,7 @@
 ### Panel Behavior in Overall Window Layout
 - [ ] Collapsible panels should have a zone property that defines which zone of the window they dock to when expanded (e.g., left, right, bottom, center).
 - [ ] This zone property should persist across application restarts.
+- [ ] The application should apply the persisted zone at runtime by routing each panel's content to the appropriate zone host.
 - [ ] When a panel is expanded, it should occupy its designated zone in the window layout.
 - [ ] When a panel is expanded into a zone, it should not overlap with other expanded panels in that zone.
 - [ ] When a panel is expanded into a zone, it should collapse any other expanded panels in that zone.
@@ -61,15 +67,20 @@
 ### Persistence and Responsiveness
 
 - [ ] The expand/collapse state of each panel should persist across application restarts. If a panel is expanded when the application is closed, it should be expanded when the application is reopened.
-- [ ] Each expand/collapse panel should have a unique width that persists across application restarts. Users should be able to resize the width of each expanded panel by dragging its right edge.
+- [ ] Each expand/collapse panel should have persisted size values that survive restarts:
+  - [ ] Persisted expanded width (when docked left/right).
+  - [ ] Persisted expanded height (when docked bottom).
+  - [ ] Persisted sizes must never "learn" a zero size when a panel is collapsed.
+- [ ] Users should be able to resize expanded panels via splitters (right edge for left zone, left edge for right zone, top edge for bottom zone).
 - [ ] The expand/collapse mechanism should be implemented in a way that allows for easy addition of new panels in the future.
 - [ ] The expand/collapse mechanism should be responsive and should not cause any noticeable lag or delay when expanding or collapsing panels.
-- [ ] The expand/collapse mechanism should be visually appealing and should use smooth animations when expanding or collapsing panels.
+- [ ] Phase 3.0 does not require smooth animations for expand/collapse.
+- [ ] Persistence load/parse failures should be logged (once per failure) and recovered with safe defaults.
 
 ### Acceptance Criteria (Phase 3.0)
 
 - AC 3.0.1: After restarting the application, all panel visibility and widths match the last session for the same user profile/settings file.
-- AC 3.0.2: Expanding or collapsing any supported panel via the icon bar completes within a reasonable time on a typical development machine (exact performance target to be confirmed; e.g., under 150 ms for animation plus layout update).
+- AC 3.0.2: Expanding or collapsing any supported panel via the Panel Bar completes within a reasonable time on a typical development machine.
 - AC 3.0.3: Adding a new panel type requires only minimal configuration (e.g., registering a name, icon, and content) without changes to core layout logic.
 - AC 3.0.4: Layout changes (panel expand/collapse, width changes) do not participate in the undo/redo history.
 

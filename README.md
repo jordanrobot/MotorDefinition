@@ -202,7 +202,7 @@ Each curve series contains 101 data points at 1% increments from 0% to 100% of m
 
 - Overall roadmap: `.github/planning/04-mvp-roadmap.md`.
 - Phase-specific functional requirements: `.github/planning/phase-N-requirements.md`.
-- Phase plans and bug/notes docs: `.github/planning/phase-N-plan.md`, `.github/planning/phase-N-bugs-and-notes.md`.
+- Phase plans, tasks checklists, and bug/notes docs: `.github/planning/phase-N-plan.md`, `.github/planning/phase-N-tasks.md`, `.github/planning/phase-N-bugs-and-notes.md`.
 - Architecture Decision Records (ADRs): `.github/adr/adr-XXXX-*.md`.
 - Copilot development workflow (how agents should use these docs): `.github/planning/copilot-development-workflow.md`.
 

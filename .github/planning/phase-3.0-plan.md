@@ -11,6 +11,7 @@
 - Panel Bar:
   - Always visible, fixed size, docked left by default.
   - Dock side (left/right) is user-configurable and persisted.
+  - Dock side changes do not change panel zones.
   - Clicking an icon expands/collapses the panel.
   - Clicking an icon collapses any other expanded panels represented in the Panel Bar.
 - Overall layout uses zones; for Phase 3.0 each panel has a fixed zone, but the zone assignment is still persisted for forward compatibility.
@@ -19,6 +20,10 @@
   - Never fully collapses (but can shrink as other panels expand).
   - Does not participate in "collapse any other expanded panels" by default.
   - Is not represented in the Panel Bar (via a descriptor property such as `EnableIcon = false`).
+
+Clarifications for Phase 3.0:
+- Phase 3.0 does not require expand/collapse animations.
+- Phase 3.0 does not require true icons; Panel Bar items may use text labels and/or glyph font characters.
 
 ### Current Baseline
 - [Main window layout](src/CurveEditor/Views/MainWindow.axaml) already maps well to zones: left column (browser), center (chart + curve data row), right column (properties).
@@ -34,7 +39,8 @@ Introduce a lightweight descriptor model so adding a panel is "register config +
 - `EnableIcon` (false for Curve Graph)
 - `EnableCollapse` (false for Curve Graph by default)
 - `Zone` (left/right/bottom/center)
-- `DefaultSize` (width for left/right, height for bottom)
+- `DefaultWidth` (used when the panel is in a left/right zone)
+- `DefaultHeight` (used when the panel is in a bottom zone)
 - `MinSize` (optional; mostly relevant for ensuring the center graph never hits 0)
 
 Descriptor list (Phase 3.0 initial set):
@@ -53,6 +59,11 @@ Represent the window as four zones:
 Phase 3.0 constraint:
 - Zones are fixed per panel (no drag/drop or UI to reassign), but the descriptor still has `Zone` and it is persisted.
 
+AC 3.0.5 implementation intent (keep it simple, but future-ready):
+- Persist `Zone` per panel.
+- Apply persisted `Zone` at runtime by routing each panel's content to a zone host (Left/Right/Bottom/Center).
+- Do not add a user-facing UI to move panels between zones in Phase 3.0.
+
 Zone behavior:
 - When a panel in a zone is collapsed, the zone should shrink to minimize unused space (typically 0 width/height).
 - When a panel in a zone is expanded, it should occupy the zone and be resizable.
@@ -68,6 +79,9 @@ Panel Bar renders icons for panels where `EnableIcon = true`.
   - Click inactive icon: set `ActivePanelBarPanelId` to that panel.
   - Click active icon: clear `ActivePanelBarPanelId`.
 
+Panel Bar implementation note (Phase 3.0):
+- Use a short text label and/or a glyph font character for each Panel Bar entry.
+
 Notes:
 - This satisfies the spec line "collapse any other expanded panels represented in the vertical bar".
 - Curve Graph is not represented in the Panel Bar and therefore never participates in this toggle logic.
@@ -76,9 +90,12 @@ Notes:
 Persist the following values across restarts:
 - `MainWindow.PanelBarDockSide` (left/right)
 - `MainWindow.ActivePanelBarPanelId` (nullable)
-- Per-panel last expanded size:
+- Per-panel last expanded sizes (store both dimensions; apply based on current zone):
   - `MainWindow.DirectoryBrowser.Width`
+  - `MainWindow.DirectoryBrowser.Height`
   - `MainWindow.MotorProperties.Width`
+  - `MainWindow.MotorProperties.Height`
+  - `MainWindow.CurveData.Width`
   - `MainWindow.CurveData.Height`
 - Per-panel zone assignment:
   - `MainWindow.DirectoryBrowser.Zone`
@@ -89,11 +106,13 @@ Persist the following values across restarts:
 Implementation approach:
 - Keep persistence view-driven and continue to use the existing persistence JSON mechanism (ADR-0004) so we don’t introduce a second settings store.
 - Extend the persistence helper(s) only as needed to support string/enum values (dock side, active panel id, zone).
+- Add logging for persistence load/parse failures, and recover with safe defaults.
 
 ### 5) Animation
-Use smooth animations for expand/collapse:
-- Animate panel container `Width` (left/right) and `Height` (bottom) using Avalonia transitions.
-- Avoid animating `GridLength` directly; prefer animating control dimensions.
+Phase 3.0 does not require expand/collapse animations.
+
+Note:
+- We may revisit animations in a later phase once we have stable behavior with splitters and persistence.
 
 ### Implementation Steps (Incremental)
 
@@ -115,6 +134,7 @@ Acceptance checkpoint:
 - Add the fixed-width Panel Bar to the window layout.
 - Bind it to the descriptor list filtered by `EnableIcon = true`.
 - Implement click handling to update `ActivePanelBarPanelId`.
+- Implement Panel Bar dock side (left/right) without changing any zone assignments.
 
 Acceptance checkpoint:
 - Panel Bar appears and dock side can be swapped (via a setting toggle or temporary dev switch).
@@ -138,7 +158,6 @@ Acceptance checkpoint:
    - Ensure it shrinks naturally as other zones expand, with sensible minimum constraints.
 
 Acceptance checkpoint per conversion:
-- Expand/collapse animates smoothly.
 - Size persists across restart.
 - Panel Bar exclusivity works.
 
@@ -169,6 +188,13 @@ Additional acceptance criteria (capturing the zone and Panel Bar requirements):
 ### Logging and Error Handling
 - Log only persistence load/parse failures (and recover with defaults) per [ADR-0009](docs/adr/adr-0009-logging-and-error-handling-policy.md).
 - Avoid logging every toggle action.
+
+### ADR impacts
+- This plan supersedes the "Curve data panel uses an Auto when collapsed pattern" guidance in [ADR-0004](docs/adr/adr-0004-layout-and-panel-persistence.md) for Phase 3.0, because collapsed panels must be fully hidden except for the Panel Bar.
+- This plan supersedes any existing UI behavior that keeps collapsed panel headers visible.
+
+### Layout stability (implementation constraint)
+- Keep the existing `MainLayoutGrid` stable by nesting it inside a parent layout that hosts the Panel Bar docked left/right. This minimizes churn and reduces risk to current sizing/persistence behavior.
 
 ### Out of Scope
 - Phase 3.1 directory tree behavior and file validation.

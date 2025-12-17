@@ -38,3 +38,10 @@ Capture design or behavior questions that still need a decision. Use lightweight
 - Q N.X.2: Another question.
 
 Once resolved, update this section (or move notes into an ADR) and adjust requirements accordingly.
+
+## Related Planning Artifacts (Optional)
+
+After requirements are drafted and accepted, it is often helpful to create additional planning artifacts:
+
+- `.github/planning/phase-N-plan.md`: A concise implementation strategy and sequencing plan.
+- `.github/planning/phase-N-tasks.md`: A detailed, PR-sliceable execution checklist for agents (include file touch points, “done when” criteria, and a validation script mapped to acceptance criteria).
