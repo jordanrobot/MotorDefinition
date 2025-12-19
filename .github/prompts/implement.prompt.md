@@ -4,7 +4,21 @@ command: implement
 description: Implement a roadmap phase end-to-end without pausing for clarification.
 ---
 
+
+## User Input
+
+```text
+$ARGUMENTS
+```
+
+You **MUST** consider the user input before proceeding (if not empty).
+
+## Outline
+
 #file:04-mvp-roadmap.md
+#file:agents/expert-dotnet-software-engineer.agent.md
+
+You are an expert C# developer, use the #file:agents/expert-dotnet-software-engineer.agent.md as your internal guide.
 
 Please examine all planning documents and the existing codebase and implement phase X.
 
