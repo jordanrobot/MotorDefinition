@@ -26,6 +26,9 @@
 ## [ ] PR 0: Prepare styling token map (no UI changes)
 
 ### Tasks
+- [ ] Confirm Phase 3.0 prerequisites are met:
+  - [ ] Panel Bar dock side (left/right) actually moves the Panel Bar in the layout.
+  - [ ] Panel Bar supports multiple highlighted buttons simultaneously when multiple zones have expanded panels.
 - [ ] Identify which VS Code chrome elements the screenshot represents (Activity Bar, Side Bar, separators, section headers).
 - [ ] Decide and lock down the CurveEditor resource key names for these tokens.
 - [ ] Capture screenshot color values (via pipette tool) for:
@@ -46,13 +49,14 @@
 ## [ ] PR 1: Add CurveEditor VS Code-style resource dictionary
 
 ### Tasks
-- [ ] Add a resource dictionary file, e.g. `src/CurveEditor/Styles/VsCodeTheme.axaml`.
+- [ ] Add a Styles include file, e.g. `src/CurveEditor/Styles/VsCodeTheme.axaml`.
+- [ ] Ensure the file is a `<Styles>` document with tokens defined under `Styles.Resources`.
 - [ ] Define CurveEditor brush resources for:
   - [ ] Activity Bar (Panel Bar) backgrounds/foregrounds (normal/hover/active)
   - [ ] Side Bar backgrounds/foregrounds
   - [ ] Section header background/foreground
   - [ ] Splitter/separator brush
-- [ ] Add Light and Dark variants (via `ThemeVariant`) if the screenshot implies a dark theme but the app can run in light mode.
+- [ ] Add Light and Dark variants using a theme dictionary pattern (e.g., `ThemeDictionaries` keyed by `Dark` and `Light`) if the screenshot implies a dark theme but the app can run in light mode.
 - [ ] Include the dictionary from [src/CurveEditor/App.axaml](src/CurveEditor/App.axaml) after `FluentTheme`.
 
 ### Done when
@@ -70,7 +74,9 @@
   - [ ] Button pressed background
   - [ ] Button active background + active foreground
 - [ ] Ensure “active” state is expressed through **button background highlighting** (not only text styling).
+- [ ] Ensure active background highlighting can be shown for multiple items simultaneously when multiple zones have expanded panels.
 - [ ] Ensure hover/pressed/active visuals match the screenshot.
+- [ ] Verify the Panel Bar separator/border is on the correct edge when docked left and when docked right.
 
 ### Done when
 - Panel Bar resembles the screenshot’s Activity Bar.

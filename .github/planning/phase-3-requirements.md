@@ -44,11 +44,14 @@
 - [ ] Panel Bar button backgrounds should be highlighted when the corresponding panel is expanded.
 - [ ] Panel Bar button backgrounds should not be highlighted when the corresponding panel is collapsed.
 - [ ] Panel Bar button backgrounds should be independent of each other (each Panel Bar Button background highlights based only on its own panel expanded/collapsed state).
+- [ ] When multiple panels are expanded across multiple zones (e.g., Left + Right), the Panel Bar must show highlighted backgrounds for all expanded panels at the same time.
 - [x] Panel Bar text must be oriented sideways (rotated) so it fits without wrapping.
 - [x] This vertical bar with icons should be docked to one side of the main window.
 - [x] The vertical bar should not overlap with the main content area of the application.
 - [x] This vertical bar should be docked to the left side of the application window by default, but users should be able to change its position to the right side via user settings.
+- [x] When the Panel Bar dock side is changed, the Panel Bar actually moves to that side in the layout (and does not merely persist the setting).
 - [x] Changing the Panel Bar dock side should not change panel zones. Panel zones are independent of Panel Bar position.
+- [x] When docked left or right, the separator/border is drawn on the edge between the Panel Bar and the main content.
 - [x] This vertical bar should always be visible.
 - [x] Expanding a panel must not collapse panels in other zones.
 - [x] If the clicked panel is already expanded, clicking its label should collapse it.
@@ -132,6 +135,7 @@
   - [ ] Are highlighted when the corresponding panel is expanded.
   - [ ] Are not highlighted when the corresponding panel is collapsed.
   - [ ] Are independent per item.
+  - [ ] Support multiple highlighted buttons simultaneously when multiple zones have expanded panels.
 - [ ] Side panel backgrounds and borders should match the screenshot.
 - [ ] Panel headers/section headers should match the screenshot.
 - [ ] Splitters/separators should match the screenshot (subtle VS Code-like separators).
@@ -140,6 +144,7 @@
 ### Acceptance Criteria (Phase 3.0.5)
 
 - AC 3.0.5.1: Panel Bar visuals (background, hover, active background) match the screenshot closely.
+- AC 3.0.5.1a: If multiple zones have expanded panels, all corresponding Panel Bar buttons show active background highlighting simultaneously.
 - AC 3.0.5.2: Side panel visuals (background, header styling, borders) match the screenshot closely.
 - AC 3.0.5.3: Styling changes do not alter panel behavior, persistence, or undo/redo.
 

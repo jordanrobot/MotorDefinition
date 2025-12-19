@@ -88,6 +88,9 @@ Panel Bar renders label buttons for panels where `EnableIcon = true`.
 - Each Panel Bar item has an "active" (highlighted) visual state driven only by whether its corresponding panel is expanded.
   - The active visual state is represented via the Panel Bar button background (not only text styling).
 
+Important clarification (Phase 3.0):
+- Multiple zones may be expanded at the same time (e.g., Left + Right). The Panel Bar must be able to show multiple highlighted buttons simultaneously when multiple panels are expanded across zones.
+
 Panel Bar implementation note (Phase 3.0):
 - Use rotated text labels for each Panel Bar entry.
 
@@ -157,10 +160,15 @@ Acceptance checkpoint:
 - [x] Match Panel Bar background to panel header background.
 - [ ] Highlight each Panel Bar button background only when its panel is expanded.
 - [ ] Ensure Panel Bar button background highlighting is independent per item.
+- [ ] Ensure Panel Bar supports multiple highlighted buttons simultaneously when multiple zones have expanded panels.
+- [ ] Ensure right-docked Panel Bar uses the correct border edge (separator appears between Panel Bar and content).
 - [x] Render labels as rotated text (no wrapping).
 
 Acceptance checkpoint:
 - Panel Bar appears, dock side can be swapped (via a setting toggle or temporary dev switch), and Panel Bar button backgrounds correctly reflect expanded/collapsed state.
+
+Additional checkpoint detail:
+- If Left and Right zones both have expanded panels, both corresponding Panel Bar buttons are highlighted.
 
 ### [x] Step 3: Convert panels one-at-a-time (per roadmap order)
 

@@ -10,6 +10,11 @@ This is a styling-only phase. It should not change layout behavior, persistence 
 - No new settings UI unless required for styling parity.
 - No content redesign inside panels (Directory Browser placeholder, Curve Data grid, Properties fields).
 
+### Prerequisites (must be true before Phase 3.0.5 is “done”)
+- Phase 3.0 Panel Bar behavior is complete:
+  - Panel Bar can be docked left or right and actually moves in the layout.
+  - Panel Bar can show multiple highlighted buttons simultaneously when multiple zones have expanded panels (e.g., Browser + Properties).
+
 ### Current Baseline (observed)
 - App uses `FluentTheme` and relies on `SystemControl*` dynamic resources ([src/CurveEditor/App.axaml](src/CurveEditor/App.axaml)).
 - Panel Bar is a dedicated view ([src/CurveEditor/Views/PanelBar.axaml](src/CurveEditor/Views/PanelBar.axaml)) and already has pointerover/pressed/active style selectors.
@@ -69,13 +74,11 @@ Record these values in the plan’s follow-up PR description (or in the resource
 ### Implementation Strategy (PR-sliceable)
 
 #### PR A: Central theme resources (no layout changes)
-1. Add a resource dictionary, e.g.:
-   - `src/CurveEditor/Styles/VsCodeTheme.axaml`
-2. Define the CurveEditor resources listed above.
-3. Support both Light and Dark variants using `ThemeVariant` resources:
-   - `ThemeVariant="Dark"` dictionary
-   - `ThemeVariant="Light"` dictionary
-4. Include the dictionary from [src/CurveEditor/App.axaml](src/CurveEditor/App.axaml) after `FluentTheme` so overrides apply.
+1. Add a Styles include file, e.g.:
+  - `src/CurveEditor/Styles/VsCodeTheme.axaml`
+2. Implement it as a `<Styles>` file containing centralized brush resources (tokens) under `Styles.Resources`.
+3. Support both Dark and Light modes using a theme dictionary pattern (e.g., `ThemeDictionaries` keyed by `Dark` and `Light`).
+4. Include the Styles file from [src/CurveEditor/App.axaml](src/CurveEditor/App.axaml) after `FluentTheme` so overrides apply.
 
 **Done when**
 - App compiles.
@@ -88,6 +91,9 @@ Record these values in the plan’s follow-up PR description (or in the resource
    - Ensure hover/pressed backgrounds match screenshot.
    - Ensure default foreground and active foreground match screenshot.
 2. Verify that the Panel Bar background matches the panel header background where the requirements call for it.
+
+Docking detail:
+- Ensure the Panel Bar separator/border is drawn on the edge between the Panel Bar and the main content for both left-docked and right-docked configurations.
 
 **Done when**
 - Panel Bar background/hover/active visuals match the screenshot.

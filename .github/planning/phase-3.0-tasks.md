@@ -72,6 +72,15 @@ Defaults (first run / no persisted state):
   - If the current code relies on setting `GridLength` to 0 to “collapse”, switch to animating container `Width`/`Height` to satisfy the smooth animation requirement.
   - Avoid simultaneous animation + splitter updates fighting each other; prefer temporarily disabling splitters during animation if needed.
 
+### Implementation Notes (to avoid known pitfalls)
+- Panel Bar highlighting must support multiple expanded panels across zones.
+  - Do not model Panel Bar state as a single `ActivePanelId`.
+  - Prefer passing a collection/set of active panel IDs (e.g., `ActivePanelIds`) derived from per-zone state.
+  - Avoid logic like `ActiveRight ?? ActiveLeft` since it can only highlight one item.
+- Dock-side behavior must actually move the Panel Bar in the layout.
+  - Ensure the separator/border is drawn on the edge between the Panel Bar and the main content for both dock sides.
+  - If the Panel Bar view owns its border thickness, it likely needs a left/right variant (left-docked: right border; right-docked: left border).
+
 ---
 
 ## [x] PR 0: Preparation (no behavior change)
@@ -138,14 +147,17 @@ Defaults (first run / no persisted state):
 - [ ] Ensure Panel Bar button backgrounds are highlighted when the corresponding panel is expanded.
 - [ ] Ensure Panel Bar button backgrounds are not highlighted when the corresponding panel is collapsed.
 - [ ] Ensure highlight state is independent per label (each Panel Bar button background highlights based only on its own panel expanded/collapsed state).
+- [ ] Ensure Panel Bar supports multiple highlighted buttons simultaneously when multiple zones have expanded panels (e.g., Browser + Properties).
 - [x] Implement click -> toggle the appropriate zone active panel id.
 - [x] Implement left/right docking based on `PanelBarDockSide`.
 - [x] Ensure Panel Bar dock side changes do not change panel zones.
+- [ ] Ensure left/right docking actually moves the Panel Bar in the layout (not just persisted state), and the separator/border is on the edge between the Panel Bar and the main content.
 
 ### Done when
 - Panel Bar is always visible and fixed width.
 - Panel Bar button backgrounds highlight only when their panel is expanded (and never when collapsed).
 - Each Panel Bar button background highlight is independent of other items.
+- If multiple zones have expanded panels, all corresponding Panel Bar buttons are highlighted.
 - Dock side can be switched (via an existing settings mechanism, or a temporary debug mechanism if settings UI is not ready).
 - Meets AC 3.0.6.
 
@@ -156,8 +168,9 @@ Defaults (first run / no persisted state):
 ### Quick manual test
 1. Launch app.
 2. Verify Panel Bar appears and does not overlap content.
-3. Toggle Browser/Properties/Data and verify only the active panel's button background is highlighted.
-4. Toggle dock side (if available) and verify Panel Bar moves.
+3. Expand Browser and Properties at the same time; verify both labels have highlighted backgrounds.
+4. Toggle Browser/Properties/Data and verify each button's highlight reflects only its own expanded/collapsed state.
+5. Toggle dock side (if available) and verify Panel Bar moves and the separator remains between Panel Bar and content.
 
 ---
 
