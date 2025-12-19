@@ -14,8 +14,8 @@
   - Dock side changes do not change panel zones.
   - Uses rotated text labels (not icons/glyphs): "Browser", "Properties", "Data".
   - Clicking a label expands/collapses the corresponding panel.
-  - Each label highlights when its panel is expanded (and is not highlighted when collapsed).
-  - Label highlighting is independent per item.
+  - Each Panel Bar button background highlights when its panel is expanded (and is not highlighted when collapsed).
+  - Panel Bar button background highlighting is independent per item.
   - Expanding a panel collapses other panels only within the same zone.
 - Overall layout uses zones; for Phase 3.0 each panel has a fixed zone, but the zone assignment is still persisted for forward compatibility.
 - Curve Graph:
@@ -86,6 +86,7 @@ Panel Bar renders label buttons for panels where `EnableIcon = true`.
 - The Panel Bar must not collapse panels in other zones when a panel is expanded.
 - Expand/collapse state is tracked per zone (for Phase 3.0: Left and Right; Bottom may be unused).
 - Each Panel Bar item has an "active" (highlighted) visual state driven only by whether its corresponding panel is expanded.
+  - The active visual state is represented via the Panel Bar button background (not only text styling).
 
 Panel Bar implementation note (Phase 3.0):
 - Use rotated text labels for each Panel Bar entry.
@@ -148,16 +149,18 @@ Note:
 Acceptance checkpoint:
 - State can load/save and round-trip without UI changes.
 
-### [x] Step 2: Add Panel Bar UI (shell)
+### [ ] Step 2: Add Panel Bar UI (shell)
 - [x] Add the fixed-width Panel Bar to the window layout.
 - [x] Bind it to the descriptor list filtered by `EnableIcon = true`.
 - [x] Implement click handling to toggle the active panel within the clicked panel's zone (and only that zone).
 - [x] Implement Panel Bar dock side (left/right) without changing any zone assignments.
 - [x] Match Panel Bar background to panel header background.
+- [ ] Highlight each Panel Bar button background only when its panel is expanded.
+- [ ] Ensure Panel Bar button background highlighting is independent per item.
 - [x] Render labels as rotated text (no wrapping).
 
 Acceptance checkpoint:
-- Panel Bar appears and dock side can be swapped (via a setting toggle or temporary dev switch).
+- Panel Bar appears, dock side can be swapped (via a setting toggle or temporary dev switch), and Panel Bar button backgrounds correctly reflect expanded/collapsed state.
 
 ### [x] Step 3: Convert panels one-at-a-time (per roadmap order)
 
@@ -183,7 +186,7 @@ Acceptance checkpoint:
 Acceptance checkpoint per conversion:
 - Size persists across restart.
 - Zone exclusivity works.
-- Panel Bar highlight state matches expanded state.
+- Panel Bar button background highlight state matches expanded state.
 
 ### [x] Step 4: Wire menus/shortcuts to Panel Bar toggles
 - [x] Update existing view menu items and keybindings so they toggle the appropriate zone's active panel id.
@@ -191,7 +194,7 @@ Acceptance checkpoint per conversion:
 
 ### [x] Step 5: Acceptance criteria validation
 - [x] AC 3.0.1: restart restores Panel Bar dock side, expanded panel, and sizes.
-- [x] AC 3.0.2: toggles feel instant; animation ~150ms or less.
+- [x] AC 3.0.2: toggles feel instant; no animation required.
 - [x] AC 3.0.3: adding a panel is descriptor + content (no core layout rewrite).
 - [x] AC 3.0.4: layout changes do not affect undo/redo.
 

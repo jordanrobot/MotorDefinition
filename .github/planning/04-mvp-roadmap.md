@@ -269,6 +269,12 @@ See ADR-0006 (`../../docs/adr/adr-0006-motor-file-schema-and-versioning.md`) for
   - Note: after each conversion, we will do a full round of UI/Ux testing to ensure nothing is broken.
 
 
+### 3.0.5 VS Code UI Styling Pass
+- [ ] Adjust main-window UI colors and styling to match the screenshot in `.github/planning/vs-code-ui.png`.
+- [ ] Centralize VS Code-like styling into CurveEditor theme resources and reference them via `DynamicResource`.
+- [ ] Apply styling to Panel Bar, side panel chrome, panel headers, borders, and splitters without changing layout behavior.
+
+
 ### 3.1 Directory Browser (VS Code-style)
 - [ ] Create side pane for directory browsing
 - [ ] "Open Folder" command to select directory

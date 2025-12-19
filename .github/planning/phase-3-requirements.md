@@ -41,11 +41,10 @@
   - [x] Curve Data = "Data"
   - [x] Directory Browser = "Browser"
 - [x] Clicking a Panel Bar text label expands/collapses the corresponding panel.
-- [x] Panel Bar "link" text should be highlighted when the corresponding panel is expanded.
-- [x] Panel Bar "link" text should not be highlighted when the corresponding panel is collapsed.
-- [x] Panel Bar "link" text highlighting should be independent of each other (each Panel Bar item highlights based only on its own panel expanded/collapsed state).
+- [ ] Panel Bar button backgrounds should be highlighted when the corresponding panel is expanded.
+- [ ] Panel Bar button backgrounds should not be highlighted when the corresponding panel is collapsed.
+- [ ] Panel Bar button backgrounds should be independent of each other (each Panel Bar Button background highlights based only on its own panel expanded/collapsed state).
 - [x] Panel Bar text must be oriented sideways (rotated) so it fits without wrapping.
-- [x] Panel Bar background color must match the panel header background color.
 - [x] This vertical bar with icons should be docked to one side of the main window.
 - [x] The vertical bar should not overlap with the main content area of the application.
 - [x] This vertical bar should be docked to the left side of the application window by default, but users should be able to change its position to the right side via user settings.
@@ -105,6 +104,44 @@
 - [x] AC 3.0.9: Collapsing a panel shrinks its zone to minimize unused space (no persistent blank gutter/stripe beyond the Panel Bar itself).
 - [x] AC 3.0.10: Collapsing and re-expanding a panel restores the last non-zero size for that panel (collapse does not permanently "learn" a zero size).
 - [x] AC 3.0.11: When a zone has no expanded panel, its splitter is disabled; when a zone has an expanded panel, its splitter is enabled and resizes the zone.
+
+
+
+## Phase 3.0.5 Functional Requirements: VS Code UI Styling Pass
+
+### Scope (Phase 3.0.5)
+
+- Adjust CurveEditor UI colors and styling so it matches the screenshot: [.github/planning/vs-code-ui.png](.github/planning/vs-code-ui.png).
+- Focus on main window chrome:
+  - Panel Bar (VS Code Activity Bar equivalent)
+  - Side panels (VS Code Side Bar equivalent)
+  - Panel headers/section headers
+  - Splitters/separators/borders
+
+### Non-goals (Phase 3.0.5)
+
+- Do not change panel expand/collapse behavior or persistence behavior.
+- Do not redesign the content inside panels.
+- Do not introduce new UI features, animations, or navigation.
+
+### Requirements
+
+- [ ] The application should centralize VS Code-like colors into a single resource dictionary (CurveEditor-specific theme tokens) and reference them via `DynamicResource`.
+- [ ] The Panel Bar (Activity Bar) background and border should match the screenshot.
+- [ ] Panel Bar button backgrounds:
+  - [ ] Are highlighted when the corresponding panel is expanded.
+  - [ ] Are not highlighted when the corresponding panel is collapsed.
+  - [ ] Are independent per item.
+- [ ] Side panel backgrounds and borders should match the screenshot.
+- [ ] Panel headers/section headers should match the screenshot.
+- [ ] Splitters/separators should match the screenshot (subtle VS Code-like separators).
+- [ ] Styling must work correctly when the Panel Bar is docked left or right.
+
+### Acceptance Criteria (Phase 3.0.5)
+
+- AC 3.0.5.1: Panel Bar visuals (background, hover, active background) match the screenshot closely.
+- AC 3.0.5.2: Side panel visuals (background, header styling, borders) match the screenshot closely.
+- AC 3.0.5.3: Styling changes do not alter panel behavior, persistence, or undo/redo.
 
 
 

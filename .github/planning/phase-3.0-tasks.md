@@ -89,7 +89,7 @@ Defaults (first run / no persisted state):
 
 ---
 
-## [x] PR 1: Descriptor registry + persisted state plumbing
+## [ ] PR 1: Descriptor registry + persisted state plumbing
 
 ### Tasks
 - [x] Add a panel descriptor model and an initial registry list (4 panels).
@@ -99,8 +99,8 @@ Defaults (first run / no persisted state):
   - [x] `MainWindow.RightZone.ActivePanelId`
   - [x] `MainWindow.BottomZone.ActivePanelId`
   - [x] `MainWindow.<PanelId>.Zone`
--  - [ ] `MainWindow.<PanelId>.Width` (last non-zero expanded width)
--  - [ ] `MainWindow.<PanelId>.Height` (last non-zero expanded height)
+  - [ ] `MainWindow.<PanelId>.Width` (last non-zero expanded width)
+  - [ ] `MainWindow.<PanelId>.Height` (last non-zero expanded height)
 - [x] Extend `PanelLayoutPersistence` as needed to store/load string/enum values.
 - [x] Add logging for persistence load/parse failures (recover with defaults; log once per failure).
 - [x] Add safe fallbacks:
@@ -124,7 +124,7 @@ Defaults (first run / no persisted state):
 
 ---
 
-## [x] PR 2: Panel Bar UI shell (no panel conversions yet)
+## [ ] PR 2: Panel Bar UI shell (no panel conversions yet)
 
 ### Tasks
 - [x] Add the fixed-width Panel Bar to `MainWindow`.
@@ -135,15 +135,17 @@ Defaults (first run / no persisted state):
   - [x] Directory Browser = "Browser"
 - [x] Ensure Panel Bar text is oriented sideways (rotated) and does not wrap.
 - [x] Ensure Panel Bar background color matches panel header background.
-- [x] Ensure Panel Bar label text highlights when the corresponding panel is expanded.
-- [x] Ensure Panel Bar label text is not highlighted when the corresponding panel is collapsed.
-- [x] Ensure highlight state is independent per label (each label reflects only its own panel expanded/collapsed state).
+- [ ] Ensure Panel Bar button backgrounds are highlighted when the corresponding panel is expanded.
+- [ ] Ensure Panel Bar button backgrounds are not highlighted when the corresponding panel is collapsed.
+- [ ] Ensure highlight state is independent per label (each Panel Bar button background highlights based only on its own panel expanded/collapsed state).
 - [x] Implement click -> toggle the appropriate zone active panel id.
 - [x] Implement left/right docking based on `PanelBarDockSide`.
 - [x] Ensure Panel Bar dock side changes do not change panel zones.
 
 ### Done when
 - Panel Bar is always visible and fixed width.
+- Panel Bar button backgrounds highlight only when their panel is expanded (and never when collapsed).
+- Each Panel Bar button background highlight is independent of other items.
 - Dock side can be switched (via an existing settings mechanism, or a temporary debug mechanism if settings UI is not ready).
 - Meets AC 3.0.6.
 
@@ -154,7 +156,8 @@ Defaults (first run / no persisted state):
 ### Quick manual test
 1. Launch app.
 2. Verify Panel Bar appears and does not overlap content.
-3. Toggle dock side (if available) and verify Panel Bar moves.
+3. Toggle Browser/Properties/Data and verify only the active panel's button background is highlighted.
+4. Toggle dock side (if available) and verify Panel Bar moves.
 
 ---
 
@@ -282,7 +285,7 @@ Defaults (first run / no persisted state):
 
 ---
 
-## [x] PR 9: Hardening and final validation
+## [ ] PR 9: Hardening and final validation
 
 ### Tasks
 - [ ] Ensure persistence never “learns” zero sizes.
