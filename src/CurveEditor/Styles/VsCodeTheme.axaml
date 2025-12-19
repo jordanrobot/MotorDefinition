@@ -1,0 +1,56 @@
+<Styles xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+  <Styles.Resources>
+    <ResourceDictionary>
+      <ResourceDictionary.ThemeDictionaries>
+        <ResourceDictionary x:Key="Dark">
+          <!-- Activity Bar (Panel Bar) -->
+          <SolidColorBrush x:Key="CurveEditor.ActivityBar.BackgroundBrush" Color="#333333"/>
+          <SolidColorBrush x:Key="CurveEditor.ActivityBar.BorderBrush" Color="#2A2A2A"/>
+          <SolidColorBrush x:Key="CurveEditor.ActivityBar.Item.ForegroundBrush" Color="#CCCCCC"/>
+          <SolidColorBrush x:Key="CurveEditor.ActivityBar.Item.HoverBackgroundBrush" Color="#2A2D2E"/>
+          <SolidColorBrush x:Key="CurveEditor.ActivityBar.Item.PressedBackgroundBrush" Color="#3A3D41"/>
+          <SolidColorBrush x:Key="CurveEditor.ActivityBar.Item.ActiveBackgroundBrush" Color="#444444"/>
+          <SolidColorBrush x:Key="CurveEditor.ActivityBar.Item.ActiveForegroundBrush" Color="#FFFFFF"/>
+
+          <!-- Side Bar / Panels -->
+          <SolidColorBrush x:Key="CurveEditor.SideBar.BackgroundBrush" Color="#252526"/>
+          <SolidColorBrush x:Key="CurveEditor.SideBar.BorderBrush" Color="#2A2A2A"/>
+          <SolidColorBrush x:Key="CurveEditor.SideBar.SectionHeader.BackgroundBrush" Color="#333333"/>
+          <SolidColorBrush x:Key="CurveEditor.SideBar.SectionHeader.ForegroundBrush" Color="#CCCCCC"/>
+
+          <!-- Main editor (center) -->
+          <SolidColorBrush x:Key="CurveEditor.Editor.BackgroundBrush" Color="#1E1E1E"/>
+          <SolidColorBrush x:Key="CurveEditor.Editor.BorderBrush" Color="#2A2A2A"/>
+
+          <!-- Splitters / separators -->
+          <SolidColorBrush x:Key="CurveEditor.Splitter.Brush" Color="#2A2A2A"/>
+        </ResourceDictionary>
+
+        <ResourceDictionary x:Key="Light">
+          <!-- Activity Bar (Panel Bar) -->
+          <SolidColorBrush x:Key="CurveEditor.ActivityBar.BackgroundBrush" Color="#E7E7E7"/>
+          <SolidColorBrush x:Key="CurveEditor.ActivityBar.BorderBrush" Color="#E5E5E5"/>
+          <SolidColorBrush x:Key="CurveEditor.ActivityBar.Item.ForegroundBrush" Color="#444444"/>
+          <SolidColorBrush x:Key="CurveEditor.ActivityBar.Item.HoverBackgroundBrush" Color="#DCDCDC"/>
+          <SolidColorBrush x:Key="CurveEditor.ActivityBar.Item.PressedBackgroundBrush" Color="#D0D0D0"/>
+          <SolidColorBrush x:Key="CurveEditor.ActivityBar.Item.ActiveBackgroundBrush" Color="#CFCFCF"/>
+          <SolidColorBrush x:Key="CurveEditor.ActivityBar.Item.ActiveForegroundBrush" Color="#000000"/>
+
+          <!-- Side Bar / Panels -->
+          <SolidColorBrush x:Key="CurveEditor.SideBar.BackgroundBrush" Color="#F3F3F3"/>
+          <SolidColorBrush x:Key="CurveEditor.SideBar.BorderBrush" Color="#E5E5E5"/>
+          <SolidColorBrush x:Key="CurveEditor.SideBar.SectionHeader.BackgroundBrush" Color="#E7E7E7"/>
+          <SolidColorBrush x:Key="CurveEditor.SideBar.SectionHeader.ForegroundBrush" Color="#444444"/>
+
+          <!-- Main editor (center) -->
+          <SolidColorBrush x:Key="CurveEditor.Editor.BackgroundBrush" Color="#FFFFFF"/>
+          <SolidColorBrush x:Key="CurveEditor.Editor.BorderBrush" Color="#E5E5E5"/>
+
+          <!-- Splitters / separators -->
+          <SolidColorBrush x:Key="CurveEditor.Splitter.Brush" Color="#E5E5E5"/>
+        </ResourceDictionary>
+      </ResourceDictionary.ThemeDictionaries>
+    </ResourceDictionary>
+  </Styles.Resources>
+</Styles>

@@ -19,19 +19,20 @@
             <Setter Property="HorizontalContentAlignment" Value="Center"/>
             <Setter Property="VerticalContentAlignment" Value="Center"/>
             <Setter Property="Cursor" Value="Hand"/>
+            <Setter Property="Foreground" Value="{DynamicResource CurveEditor.ActivityBar.Item.ForegroundBrush}"/>
         </Style>
         
         <Style Selector="Button.PanelBarButton:pointerover">
-            <Setter Property="Background" Value="{DynamicResource SystemControlBackgroundBaseLowBrush}"/>
+            <Setter Property="Background" Value="{DynamicResource CurveEditor.ActivityBar.Item.HoverBackgroundBrush}"/>
         </Style>
         
         <Style Selector="Button.PanelBarButton:pressed">
-            <Setter Property="Background" Value="{DynamicResource SystemControlBackgroundBaseMediumLowBrush}"/>
+            <Setter Property="Background" Value="{DynamicResource CurveEditor.ActivityBar.Item.PressedBackgroundBrush}"/>
         </Style>
         
         <Style Selector="Button.PanelBarButton.Active">
-            <Setter Property="Background" Value="{DynamicResource SystemControlBackgroundAccentBrush}"/>
-            <Setter Property="Foreground" Value="{DynamicResource SystemControlForegroundBaseHighBrush}"/>
+            <Setter Property="Background" Value="{DynamicResource CurveEditor.ActivityBar.Item.ActiveBackgroundBrush}"/>
+            <Setter Property="Foreground" Value="{DynamicResource CurveEditor.ActivityBar.Item.ActiveForegroundBrush}"/>
         </Style>
         
         <Style Selector="TextBlock.PanelBarText">
@@ -46,8 +47,8 @@
     </UserControl.Styles>
     
     <Border x:Name="RootBorder"
-            Background="{DynamicResource SystemControlBackgroundBaseLowBrush}"
-            BorderBrush="{DynamicResource SystemControlBackgroundBaseMediumBrush}"
+            Background="{DynamicResource CurveEditor.ActivityBar.BackgroundBrush}"
+            BorderBrush="{DynamicResource CurveEditor.ActivityBar.BorderBrush}"
             BorderThickness="0,0,1,0">
         <ItemsControl x:Name="PanelItems">
             <ItemsControl.ItemTemplate>
