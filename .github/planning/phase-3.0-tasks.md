@@ -108,7 +108,7 @@ Defaults (first run / no persisted state):
   - [x] `MainWindow.RightZone.ActivePanelId`
   - [x] `MainWindow.BottomZone.ActivePanelId`
   - [x] `MainWindow.<PanelId>.Zone`
-  - [ ] `MainWindow.<PanelId>.Width` (last non-zero expanded width)
+  - [x] `MainWindow.<PanelId>.Width` (last non-zero expanded width)
   - [ ] `MainWindow.<PanelId>.Height` (last non-zero expanded height)
 - [x] Extend `PanelLayoutPersistence` as needed to store/load string/enum values.
 - [x] Add logging for persistence load/parse failures (recover with defaults; log once per failure).
@@ -133,7 +133,7 @@ Defaults (first run / no persisted state):
 
 ---
 
-## [ ] PR 2: Panel Bar UI shell (no panel conversions yet)
+## [x] PR 2: Panel Bar UI shell (no panel conversions yet)
 
 ### Tasks
 - [x] Add the fixed-width Panel Bar to `MainWindow`.
@@ -144,14 +144,14 @@ Defaults (first run / no persisted state):
   - [x] Directory Browser = "Browser"
 - [x] Ensure Panel Bar text is oriented sideways (rotated) and does not wrap.
 - [x] Ensure Panel Bar background color matches panel header background.
-- [ ] Ensure Panel Bar button backgrounds are highlighted when the corresponding panel is expanded.
-- [ ] Ensure Panel Bar button backgrounds are not highlighted when the corresponding panel is collapsed.
-- [ ] Ensure highlight state is independent per label (each Panel Bar button background highlights based only on its own panel expanded/collapsed state).
-- [ ] Ensure Panel Bar supports multiple highlighted buttons simultaneously when multiple zones have expanded panels (e.g., Browser + Properties).
+- [x] Ensure Panel Bar button backgrounds are highlighted when the corresponding panel is expanded.
+- [x] Ensure Panel Bar button backgrounds are not highlighted when the corresponding panel is collapsed.
+- [x] Ensure highlight state is independent per label (each Panel Bar button background highlights based only on its own panel expanded/collapsed state).
+- [x] Ensure Panel Bar supports multiple highlighted buttons simultaneously when multiple zones have expanded panels (e.g., Browser + Properties).
 - [x] Implement click -> toggle the appropriate zone active panel id.
 - [x] Implement left/right docking based on `PanelBarDockSide`.
 - [x] Ensure Panel Bar dock side changes do not change panel zones.
-- [ ] Ensure left/right docking actually moves the Panel Bar in the layout (not just persisted state), and the separator/border is on the edge between the Panel Bar and the main content.
+- [x] Ensure left/right docking actually moves the Panel Bar in the layout (not just persisted state), and the separator/border is on the edge between the Panel Bar and the main content.
 
 ### Done when
 - Panel Bar is always visible and fixed width.
@@ -298,10 +298,10 @@ Defaults (first run / no persisted state):
 
 ---
 
-## [ ] PR 9: Hardening and final validation
+## [x] PR 9: Hardening and final validation
 
 ### Tasks
-- [ ] Ensure persistence never “learns” zero sizes.
+- [x] Ensure persistence never “learns” zero sizes.
 - [x] Ensure invalid persisted values fail safely (no user-facing errors; log once).
 - [x] Ensure expand/collapse responsiveness feels instant.
 

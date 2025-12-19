@@ -152,16 +152,16 @@ Note:
 Acceptance checkpoint:
 - State can load/save and round-trip without UI changes.
 
-### [ ] Step 2: Add Panel Bar UI (shell)
+### [x] Step 2: Add Panel Bar UI (shell)
 - [x] Add the fixed-width Panel Bar to the window layout.
 - [x] Bind it to the descriptor list filtered by `EnableIcon = true`.
 - [x] Implement click handling to toggle the active panel within the clicked panel's zone (and only that zone).
 - [x] Implement Panel Bar dock side (left/right) without changing any zone assignments.
 - [x] Match Panel Bar background to panel header background.
-- [ ] Highlight each Panel Bar button background only when its panel is expanded.
-- [ ] Ensure Panel Bar button background highlighting is independent per item.
-- [ ] Ensure Panel Bar supports multiple highlighted buttons simultaneously when multiple zones have expanded panels.
-- [ ] Ensure right-docked Panel Bar uses the correct border edge (separator appears between Panel Bar and content).
+- [x] Highlight each Panel Bar button background only when its panel is expanded.
+- [x] Ensure Panel Bar button background highlighting is independent per item.
+- [x] Ensure Panel Bar supports multiple highlighted buttons simultaneously when multiple zones have expanded panels.
+- [x] Ensure right-docked Panel Bar uses the correct border edge (separator appears between Panel Bar and content).
 - [x] Render labels as rotated text (no wrapping).
 
 Acceptance checkpoint:

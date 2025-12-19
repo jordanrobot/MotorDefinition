@@ -17,7 +17,7 @@
 
 - [x] The CurveEditor application should have a generic expand/collapse mechanism for window panels. Currently there is an existing expand/collapse mechanism, but it is limited and will be replaced with the following mechanism. This new mechanism should allow users to expand or collapse individual panels within the application. This mechanism should be implemented similar to the way Visual Studio Code handles its side panels. Please refer to the Visual Studio Code codebase for an example of the rough functionality being targeted: https://github.com/microsoft/vscode/tree/main
 
-- [ ] Panels that should use this mechanism include:
+- [x] Panels that should use this mechanism include:
   - [x] Directory Browser panel
   - [x] Curve Data panel
   - [x] Any future panels that may be added to the application.
@@ -41,10 +41,10 @@
   - [x] Curve Data = "Data"
   - [x] Directory Browser = "Browser"
 - [x] Clicking a Panel Bar text label expands/collapses the corresponding panel.
-- [ ] Panel Bar button backgrounds should be highlighted when the corresponding panel is expanded.
-- [ ] Panel Bar button backgrounds should not be highlighted when the corresponding panel is collapsed.
-- [ ] Panel Bar button backgrounds should be independent of each other (each Panel Bar Button background highlights based only on its own panel expanded/collapsed state).
-- [ ] When multiple panels are expanded across multiple zones (e.g., Left + Right), the Panel Bar must show highlighted backgrounds for all expanded panels at the same time.
+- [x] Panel Bar button backgrounds should be highlighted when the corresponding panel is expanded.
+- [x] Panel Bar button backgrounds should not be highlighted when the corresponding panel is collapsed.
+- [x] Panel Bar button backgrounds should be independent of each other (each Panel Bar Button background highlights based only on its own panel expanded/collapsed state).
+- [x] When multiple panels are expanded across multiple zones (e.g., Left + Right), the Panel Bar must show highlighted backgrounds for all expanded panels at the same time.
 - [x] Panel Bar text must be oriented sideways (rotated) so it fits without wrapping.
 - [x] This vertical bar with icons should be docked to one side of the main window.
 - [x] The vertical bar should not overlap with the main content area of the application.
