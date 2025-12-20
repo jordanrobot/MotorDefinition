@@ -1,0 +1,62 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="using:CurveEditor.ViewModels"
+             xmlns:conv="using:CurveEditor.Converters"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             mc:Ignorable="d" d:DesignWidth="280" d:DesignHeight="600"
+             x:Class="CurveEditor.Views.DirectoryBrowserPanel"
+             x:DataType="vm:DirectoryBrowserViewModel">
+
+    <UserControl.Resources>
+        <conv:InverseBooleanConverter x:Key="InverseBooleanConverter"/>
+    </UserControl.Resources>
+
+    <Grid RowDefinitions="Auto,*" Margin="8" RowSpacing="6">
+        <!-- Explorer header: root path + refresh -->
+        <Grid Grid.Row="0" ColumnDefinitions="*,Auto" ColumnSpacing="6">
+            <TextBlock Grid.Column="0"
+                       Text="{Binding RootDirectoryPath}"
+                       TextWrapping="NoWrap"
+                       TextTrimming="CharacterEllipsis"
+                       VerticalAlignment="Center"
+                       FontFamily="{DynamicResource CurveEditor.Fonts.Monospace}"/>
+
+            <Button Grid.Column="1"
+                    Content="↻"
+                    ToolTip.Tip="Refresh Explorer"
+                    Command="{Binding RefreshCommand}"
+                    IsEnabled="{Binding RootDirectoryPath, Converter={x:Static ObjectConverters.IsNotNull}}"
+                    Padding="6,2"/>
+        </Grid>
+
+        <!-- Explorer tree placeholder (bound, can be empty in PR2) -->
+        <TreeView Grid.Row="1"
+                  x:Name="ExplorerTree"
+                  x:CompileBindings="False"
+                  ItemsSource="{Binding RootItems}"
+                  SelectedItem="{Binding SelectedNode, Mode=TwoWay}"
+                  FontFamily="{DynamicResource CurveEditor.Fonts.Monospace}"
+                  FontSize="{Binding FontSize}">
+            <TreeView.Styles>
+                <Style Selector="TreeViewItem" x:DataType="vm:ExplorerNodeViewModel">
+                    <Setter Property="IsExpanded" Value="{Binding IsExpanded, Mode=TwoWay}"/>
+                    <Setter Property="IsSelected" Value="{Binding IsSelected, Mode=TwoWay}"/>
+                </Style>
+
+                <!-- Hide the expander caret for the root node (always expanded). -->
+                <Style Selector="TreeViewItem ToggleButton">
+                    <Setter Property="IsVisible"
+                            Value="{Binding DataContext.IsRoot, RelativeSource={RelativeSource AncestorType=TreeViewItem}, Converter={StaticResource InverseBooleanConverter}}"/>
+                </Style>
+            </TreeView.Styles>
+            <TreeView.DataTemplates>
+                <TreeDataTemplate DataType="vm:ExplorerNodeViewModel" ItemsSource="{Binding Children}">
+                    <TextBlock Text="{Binding DisplayName}"
+                               TextWrapping="NoWrap"
+                               TextTrimming="CharacterEllipsis"/>
+                </TreeDataTemplate>
+            </TreeView.DataTemplates>
+        </TreeView>
+    </Grid>
+</UserControl>

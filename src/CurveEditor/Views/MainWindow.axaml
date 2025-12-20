@@ -27,6 +27,13 @@
         <KeyBinding Gesture="Ctrl+B" Command="{Binding ToggleBrowserPanelCommand}"/>
         <KeyBinding Gesture="Ctrl+R" Command="{Binding TogglePropertiesPanelCommand}"/>
         <KeyBinding Gesture="Ctrl+G" Command="{Binding ToggleCurveDataPanelCommand}"/>
+
+        <KeyBinding Gesture="F5" Command="{Binding DirectoryBrowser.RefreshCommand}"/>
+
+        <KeyBinding Gesture="Ctrl+Add" Command="{Binding DirectoryBrowser.IncreaseFontSizeCommand}"/>
+        <KeyBinding Gesture="Ctrl+OemPlus" Command="{Binding DirectoryBrowser.IncreaseFontSizeCommand}"/>
+        <KeyBinding Gesture="Ctrl+Subtract" Command="{Binding DirectoryBrowser.DecreaseFontSizeCommand}"/>
+        <KeyBinding Gesture="Ctrl+OemMinus" Command="{Binding DirectoryBrowser.DecreaseFontSizeCommand}"/>
     </Window.KeyBindings>
     
     <Window.Styles>
@@ -102,6 +109,7 @@
             <MenuItem Header="_File">
                 <MenuItem Header="_New" Command="{Binding NewMotorCommand}" InputGesture="Ctrl+N"/>
                 <MenuItem Header="_Open..." Command="{Binding OpenFileCommand}" InputGesture="Ctrl+O"/>
+                <MenuItem Header="Open _Folder..." Command="{Binding DirectoryBrowser.OpenFolderCommand}"/>
                 <Separator/>
                 <MenuItem Header="_Save" Command="{Binding SaveCommand}" InputGesture="Ctrl+S"/>
                 <MenuItem Header="Save _As..." Command="{Binding SaveAsCommand}" InputGesture="Ctrl+Shift+S"/>
@@ -139,6 +147,17 @@
                 <MenuItem Header="_About" IsEnabled="False"/>
             </MenuItem>
         </Menu>
+
+        <!-- Main Toolbar (minimal: Close Folder) -->
+        <Border DockPanel.Dock="Top"
+                Background="{DynamicResource SystemControlBackgroundBaseLowBrush}"
+                BorderBrush="{DynamicResource CurveEditor.SideBar.BorderBrush}"
+                BorderThickness="0,0,0,1"
+                Padding="8,6">
+            <StackPanel Orientation="Horizontal" Spacing="8">
+                <Button Content="Close Folder" Command="{Binding DirectoryBrowser.CloseFolderCommand}"/>
+            </StackPanel>
+        </Border>
 
         <!-- Status Bar -->
         <Border DockPanel.Dock="Bottom" 
@@ -194,15 +213,7 @@
                                        Classes="PanelHeader"/>
                         </Border>
 
-                        <StackPanel Grid.Row="1" Margin="8">
-                            <TextBlock Text="(Coming Soon)"
-                                       Foreground="{DynamicResource SystemControlForegroundBaseMediumBrush}"
-                                       FontStyle="Italic"/>
-                            <Button Content="Open Folder..."
-                                    Margin="0,8,0,0"
-                                    HorizontalAlignment="Stretch"
-                                    IsEnabled="False"/>
-                        </StackPanel>
+                        <views:DirectoryBrowserPanel Grid.Row="1" DataContext="{Binding DirectoryBrowser}"/>
                     </Grid>
                 </Border>
                 

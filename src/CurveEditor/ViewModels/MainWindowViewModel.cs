@@ -23,6 +23,7 @@ public partial class MainWindowViewModel : ViewModelBase
     private readonly IValidationService _validationService;
     private readonly IDriveVoltageSeriesService _driveVoltageSeriesService;
     private readonly IMotorConfigurationWorkflow _motorConfigurationWorkflow;
+    private readonly IUserSettingsStore _settingsStore;
     private readonly UndoStack _undoStack = new();
     private int _cleanCheckpoint;
 
@@ -85,6 +86,16 @@ public partial class MainWindowViewModel : ViewModelBase
     /// </summary>
     [ObservableProperty]
     private CurveDataTableViewModel _curveDataTableViewModel;
+
+    /// <summary>
+    /// ViewModel for the Directory Browser explorer panel.
+    /// </summary>
+    [ObservableProperty]
+    private DirectoryBrowserViewModel _directoryBrowser = new();
+
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(WindowTitle))]
+    private string? _currentFilePath;
 
     /// <summary>
     /// Whether the units section is expanded.
@@ -416,8 +427,10 @@ public partial class MainWindowViewModel : ViewModelBase
         _chartViewModel = new ChartViewModel();
         _curveDataTableViewModel = new CurveDataTableViewModel();
         _motorConfigurationWorkflow = new MotorConfigurationWorkflow(_driveVoltageSeriesService);
+        _settingsStore = new PanelLayoutUserSettingsStore();
         WireEditingCoordinator();
         WireUndoInfrastructure();
+        WireDirectoryBrowserIntegration();
     }
 
     public MainWindowViewModel(IFileService fileService, ICurveGeneratorService curveGeneratorService)
@@ -429,8 +442,10 @@ public partial class MainWindowViewModel : ViewModelBase
         _chartViewModel = new ChartViewModel();
         _curveDataTableViewModel = new CurveDataTableViewModel();
         _motorConfigurationWorkflow = new MotorConfigurationWorkflow(_driveVoltageSeriesService);
+        _settingsStore = new PanelLayoutUserSettingsStore();
         WireEditingCoordinator();
         WireUndoInfrastructure();
+        WireDirectoryBrowserIntegration();
     }
 
     /// <summary>
@@ -445,7 +460,8 @@ public partial class MainWindowViewModel : ViewModelBase
         IDriveVoltageSeriesService driveVoltageSeriesService,
         IMotorConfigurationWorkflow motorConfigurationWorkflow,
         ChartViewModel chartViewModel,
-        CurveDataTableViewModel curveDataTableViewModel)
+        CurveDataTableViewModel curveDataTableViewModel,
+        IUserSettingsStore? settingsStore = null)
     {
         _fileService = fileService ?? throw new ArgumentNullException(nameof(fileService));
         _curveGeneratorService = curveGeneratorService ?? throw new ArgumentNullException(nameof(curveGeneratorService));
@@ -454,9 +470,70 @@ public partial class MainWindowViewModel : ViewModelBase
         _motorConfigurationWorkflow = motorConfigurationWorkflow ?? throw new ArgumentNullException(nameof(motorConfigurationWorkflow));
         _chartViewModel = chartViewModel ?? throw new ArgumentNullException(nameof(chartViewModel));
         _curveDataTableViewModel = curveDataTableViewModel ?? throw new ArgumentNullException(nameof(curveDataTableViewModel));
+        _settingsStore = settingsStore ?? new PanelLayoutUserSettingsStore();
 
         WireEditingCoordinator();
         WireUndoInfrastructure();
+        WireDirectoryBrowserIntegration();
+    }
+
+    private void WireDirectoryBrowserIntegration()
+    {
+        DirectoryBrowser.FileOpenRequested -= HandleDirectoryBrowserFileOpenRequestedAsync;
+        DirectoryBrowser.FileOpenRequested += HandleDirectoryBrowserFileOpenRequestedAsync;
+
+        CurrentFilePath = _fileService.CurrentFilePath;
+    }
+
+    partial void OnDirectoryBrowserChanged(DirectoryBrowserViewModel value)
+    {
+        if (value is null)
+        {
+            return;
+        }
+
+        WireDirectoryBrowserIntegration();
+    }
+
+    private Task HandleDirectoryBrowserFileOpenRequestedAsync(string filePath)
+        => OpenMotorFileInternalAsync(filePath, updateExplorerSelection: false);
+
+    /// <summary>
+    /// Opens a motor definition by path and synchronizes Directory Browser selection when applicable.
+    /// </summary>
+    public Task OpenMotorFileByPathAsync(string filePath)
+        => OpenMotorFileInternalAsync(filePath, updateExplorerSelection: true);
+
+    private async Task OpenMotorFileInternalAsync(string filePath, bool updateExplorerSelection)
+    {
+        if (string.IsNullOrWhiteSpace(filePath))
+        {
+            return;
+        }
+
+        try
+        {
+            CurrentMotor = await _fileService.LoadAsync(filePath).ConfigureAwait(true);
+            _undoStack.Clear();
+            MarkCleanCheckpoint();
+            IsDirty = _fileService.IsDirty;
+            CurrentFilePath = _fileService.CurrentFilePath;
+
+            StatusMessage = $"Loaded: {Path.GetFileName(filePath)}";
+            OnPropertyChanged(nameof(WindowTitle));
+
+            _settingsStore.SaveString(DirectoryBrowserViewModel.LastOpenedMotorFileKey, filePath);
+
+            if (updateExplorerSelection)
+            {
+                await DirectoryBrowser.SyncSelectionToFilePathAsync(filePath).ConfigureAwait(true);
+            }
+        }
+        catch (Exception ex)
+        {
+            Log.Error(ex, "Failed to open file {FilePath}", filePath);
+            StatusMessage = $"Error: {ex.Message}";
+        }
     }
 
     private void WireEditingCoordinator()
@@ -484,13 +561,19 @@ public partial class MainWindowViewModel : ViewModelBase
     {
         get
         {
-            var fileName = _fileService.CurrentFilePath is not null
-                ? Path.GetFileName(_fileService.CurrentFilePath)
+            var fileName = CurrentFilePath is not null
+                ? Path.GetFileName(CurrentFilePath)
                 : CurrentMotor?.MotorName ?? "Untitled";
 
             var dirtyIndicator = IsDirty ? " *" : "";
             return $"{fileName}{dirtyIndicator} - Curve Editor";
         }
+    }
+
+    partial void OnCurrentFilePathChanged(string? value)
+    {
+        _ = DirectoryBrowser.SyncSelectionToFilePathAsync(value);
+        OnPropertyChanged(nameof(WindowTitle));
     }
 
     /// <summary>
@@ -1485,7 +1568,12 @@ public partial class MainWindowViewModel : ViewModelBase
             maxTorque: 50,
             maxPower: 1500);
 
+        _undoStack.Clear();
+        MarkCleanCheckpoint();
+
         IsDirty = _fileService.IsDirty;
+        CurrentFilePath = _fileService.CurrentFilePath;
+        await DirectoryBrowser.SyncSelectionToFilePathAsync(CurrentFilePath).ConfigureAwait(true);
         StatusMessage = "Created new motor definition";
     }
 
@@ -1519,10 +1607,7 @@ public partial class MainWindowViewModel : ViewModelBase
             var file = files[0];
             var filePath = file.Path.LocalPath;
 
-            CurrentMotor = await _fileService.LoadAsync(filePath);
-            IsDirty = _fileService.IsDirty;
-            StatusMessage = $"Loaded: {Path.GetFileName(filePath)}";
-            OnPropertyChanged(nameof(WindowTitle));
+            await OpenMotorFileInternalAsync(filePath, updateExplorerSelection: true).ConfigureAwait(true);
         }
         catch (Exception ex)
         {
@@ -1557,6 +1642,7 @@ public partial class MainWindowViewModel : ViewModelBase
             IsDirty = false;
             MarkCleanCheckpoint();
             StatusMessage = "File saved successfully";
+            CurrentFilePath = _fileService.CurrentFilePath;
             OnPropertyChanged(nameof(WindowTitle));
         }
         catch (Exception ex)
@@ -1614,12 +1700,36 @@ public partial class MainWindowViewModel : ViewModelBase
             MarkCleanCheckpoint();
             StatusMessage = $"Saved to: {Path.GetFileName(filePath)}";
             OnPropertyChanged(nameof(WindowTitle));
+
+            _settingsStore.SaveString(DirectoryBrowserViewModel.LastOpenedMotorFileKey, filePath);
+            CurrentFilePath = _fileService.CurrentFilePath;
+            await DirectoryBrowser.SyncSelectionToFilePathAsync(filePath).ConfigureAwait(true);
         }
         catch (Exception ex)
         {
             Log.Error(ex, "Failed to save file");
             StatusMessage = $"Error saving: {ex.Message}";
         }
+    }
+
+    public async Task RestoreSessionAfterWindowOpenedAsync()
+    {
+        var restoreResult = await DirectoryBrowser.TryRestoreSessionAsync().ConfigureAwait(true);
+        if (restoreResult == DirectoryBrowserViewModel.RestoreResult.MissingDirectory)
+        {
+            if (ActiveLeftPanelId == PanelRegistry.PanelIds.DirectoryBrowser)
+            {
+                ActiveLeftPanelId = PanelRegistry.PanelIds.CurveData;
+            }
+        }
+
+        var lastFile = _settingsStore.LoadString(DirectoryBrowserViewModel.LastOpenedMotorFileKey);
+        if (string.IsNullOrWhiteSpace(lastFile) || !File.Exists(lastFile))
+        {
+            return;
+        }
+
+        await OpenMotorFileInternalAsync(lastFile, updateExplorerSelection: true).ConfigureAwait(true);
     }
 
     [RelayCommand(CanExecute = nameof(CanSave))]

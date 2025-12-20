@@ -1,5 +1,8 @@
 using System;
+using System.Collections.Generic;
+using System.Globalization;
 using System.IO;
+using System.Linq;
 using System.Text.Json;
 using Avalonia.Controls;
 using CurveEditor.Models;
@@ -14,6 +17,9 @@ namespace CurveEditor.Behaviors;
 public static class PanelLayoutPersistence
 {
     private const string AppFolderName = "CurveEditor";
+
+    private static readonly HashSet<string> LoggedLoadFailures = new(StringComparer.Ordinal);
+    private static readonly object LoggedLoadFailuresGate = new();
 
     private sealed class PanelLayoutSettings
     {
@@ -258,6 +264,152 @@ public static class PanelLayoutPersistence
         {
             Log.Debug(ex, "Failed to load string setting {SettingsKey}, using default", settingsKey);
             return null;
+        }
+    }
+
+    /// <summary>
+    /// Load a boolean value stored via <see cref="SaveBool"/>.
+    /// </summary>
+    public static bool LoadBool(string settingsKey, bool defaultValue = false)
+    {
+        try
+        {
+            var value = LoadString(settingsKey);
+            if (string.IsNullOrWhiteSpace(value))
+            {
+                return defaultValue;
+            }
+
+            if (bool.TryParse(value, out var parsed))
+            {
+                return parsed;
+            }
+
+            LogLoadFailureOnce(settingsKey, $"Invalid bool value '{value}', using default");
+            return defaultValue;
+        }
+        catch (Exception ex)
+        {
+            LogLoadFailureOnce(settingsKey, ex, "Failed to load bool setting, using default");
+            return defaultValue;
+        }
+    }
+
+    /// <summary>
+    /// Save a boolean value using the string storage channel.
+    /// </summary>
+    public static void SaveBool(string settingsKey, bool value)
+    {
+        SaveString(settingsKey, value.ToString(CultureInfo.InvariantCulture));
+    }
+
+    /// <summary>
+    /// Load a double value stored via <see cref="SaveDouble"/>.
+    /// </summary>
+    public static double LoadDouble(string settingsKey, double defaultValue)
+    {
+        try
+        {
+            var value = LoadString(settingsKey);
+            if (string.IsNullOrWhiteSpace(value))
+            {
+                return defaultValue;
+            }
+
+            if (double.TryParse(value, NumberStyles.Float, CultureInfo.InvariantCulture, out var parsed))
+            {
+                return parsed;
+            }
+
+            LogLoadFailureOnce(settingsKey, $"Invalid numeric value '{value}', using default");
+            return defaultValue;
+        }
+        catch (Exception ex)
+        {
+            LogLoadFailureOnce(settingsKey, ex, "Failed to load numeric setting, using default");
+            return defaultValue;
+        }
+    }
+
+    /// <summary>
+    /// Save a double value using the string storage channel.
+    /// </summary>
+    public static void SaveDouble(string settingsKey, double value)
+    {
+        SaveString(settingsKey, value.ToString(CultureInfo.InvariantCulture));
+    }
+
+    /// <summary>
+    /// Load a JSON array of strings stored via <see cref="SaveStringArrayAsJson"/>.
+    /// </summary>
+    public static IReadOnlyList<string> LoadStringArrayFromJson(string settingsKey)
+    {
+        try
+        {
+            var json = LoadString(settingsKey);
+            if (string.IsNullOrWhiteSpace(json))
+            {
+                return Array.Empty<string>();
+            }
+
+            var values = JsonSerializer.Deserialize<string[]>(json);
+            if (values is null)
+            {
+                return Array.Empty<string>();
+            }
+
+            return values.Where(v => !string.IsNullOrWhiteSpace(v)).ToArray();
+        }
+        catch (Exception ex)
+        {
+            LogLoadFailureOnce(settingsKey, ex, "Invalid JSON array value, using empty set");
+            return Array.Empty<string>();
+        }
+    }
+
+    /// <summary>
+    /// Save a JSON array of strings using the string storage channel.
+    /// </summary>
+    public static void SaveStringArrayAsJson(string settingsKey, IEnumerable<string> values)
+    {
+        try
+        {
+            var normalized = values
+                .Where(v => !string.IsNullOrWhiteSpace(v))
+                .Distinct(StringComparer.Ordinal)
+                .OrderBy(v => v, StringComparer.Ordinal)
+                .ToArray();
+
+            SaveString(settingsKey, JsonSerializer.Serialize(normalized));
+        }
+        catch (Exception ex)
+        {
+            Log.Warning(ex, "Failed to save JSON array setting {SettingsKey}", settingsKey);
+        }
+    }
+
+    private static void LogLoadFailureOnce(string settingsKey, string message)
+    {
+        LogLoadFailureOnce(settingsKey, exception: null, message);
+    }
+
+    private static void LogLoadFailureOnce(string settingsKey, Exception? exception, string message)
+    {
+        lock (LoggedLoadFailuresGate)
+        {
+            if (!LoggedLoadFailures.Add(settingsKey))
+            {
+                return;
+            }
+        }
+
+        if (exception is null)
+        {
+            Log.Debug("{Message}. SettingsKey={SettingsKey}", message, settingsKey);
+        }
+        else
+        {
+            Log.Debug(exception, "{Message}. SettingsKey={SettingsKey}", message, settingsKey);
         }
     }
 

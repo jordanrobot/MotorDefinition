@@ -4,6 +4,8 @@
     <ResourceDictionary>
       <ResourceDictionary.ThemeDictionaries>
         <ResourceDictionary x:Key="Dark">
+          <FontFamily x:Key="CurveEditor.Fonts.Monospace">Consolas, Courier New, monospace</FontFamily>
+
           <!-- Activity Bar (Panel Bar) -->
           <SolidColorBrush x:Key="CurveEditor.ActivityBar.BackgroundBrush" Color="#333333"/>
           <SolidColorBrush x:Key="CurveEditor.ActivityBar.BorderBrush" Color="#2A2A2A"/>
@@ -28,6 +30,8 @@
         </ResourceDictionary>
 
         <ResourceDictionary x:Key="Light">
+          <FontFamily x:Key="CurveEditor.Fonts.Monospace">Consolas, Courier New, monospace</FontFamily>
+
           <!-- Activity Bar (Panel Bar) -->
           <SolidColorBrush x:Key="CurveEditor.ActivityBar.BackgroundBrush" Color="#E7E7E7"/>
           <SolidColorBrush x:Key="CurveEditor.ActivityBar.BorderBrush" Color="#E5E5E5"/>

@@ -2,7 +2,7 @@
 
 ### Status
 
-Planned
+In Progress (revised after requirements updates)
 
 **Related ADRs**
 
@@ -10,6 +10,42 @@ Planned
 - ADR-0005 Keyboard Shortcuts and Input Routing Policy (`docs/adr/adr-0005-keyboard-shortcuts-and-input-routing.md`)
 - ADR-0006 Motor File Schema and Versioning Strategy (`docs/adr/adr-0006-motor-file-schema-and-versioning.md`)
 - ADR-0009 Logging and Error Handling Policy (`docs/adr/adr-0009-logging-and-error-handling-policy.md`)
+
+### Goal
+
+- Replace the Directory Browser placeholder with a VS Code–style explorer tree that opens motor JSON files by single-click, persists its state, and restores the last session.
+
+### Scope
+
+In scope
+- [x] VS Code–style explorer tree (folders + `*.json` files) with folders-first sorting, lazy expansion, and single-click open.
+- [x] Persistence of last opened directory, expanded state, selected file, and explorer font size.
+- [x] Restore last session on startup (with safe behavior when the directory is missing).
+- [ ] Follow-up fixes from updated requirements (Dec 2025): chevron icons, root display name (directory name only), dirty prompt on open, auto-expand Browser panel on Open Folder when collapsed, file-menu placement tweaks.
+
+Out of scope (Phase 3.1)
+- [ ] Filtering/badging “valid motor files only” in the explorer listing (deferred).
+- [ ] Explorer dirty indicators.
+- [ ] Exit/open save prompts outside of the explorer-initiated open prompt.
+- [ ] Multi-root workspaces, tabs, or “open in new tab”.
+
+### Assumptions and Constraints
+
+- **AC precedence**: when bullets conflict with acceptance criteria, acceptance criteria win.
+- **No startup prompts**: do not show modal prompts during startup restore; prompts only occur on explicit user actions.
+- **No new UX beyond requirements**: do not add extra menus, views, or navigation.
+- **Windows path handling**: root display name logic must handle standard directories and drive-root paths.
+
+### Current Baseline (What exists today)
+
+Relevant files/components
+- `src/CurveEditor/Views/DirectoryBrowserPanel.axaml` and `src/CurveEditor/Views/DirectoryBrowserPanel.axaml.cs`
+- `src/CurveEditor/ViewModels/DirectoryBrowserViewModel.cs`
+- `src/CurveEditor/ViewModels/ExplorerNodeViewModel.cs`
+- `src/CurveEditor/Services/IDirectoryBrowserService.cs` and `src/CurveEditor/Services/DirectoryBrowserService.cs`
+- `src/CurveEditor/ViewModels/MainWindowViewModel.cs`
+- `src/CurveEditor/Views/MainWindow.axaml` and `src/CurveEditor/Views/MainWindow.axaml.cs`
+- Persistence via `src/CurveEditor/Behaviors/PanelLayoutPersistence.cs` (wrapped for testability)
 
 ### 1. Directory Browser (Phase 3.1)
 
@@ -26,7 +62,7 @@ Planned
 #### 1.2 Functional requirements coverage (Phase 3.1)
 
 File filtering + validation
-- [ ] Show folders and JSON files in the directory listing.
+- [x] Show folders and JSON files in the directory listing.
 - [ ] Future (deferred): validate candidate files using the JSON schema and/or domain validation, and optionally filter or badge invalid files.
 
 Decision (scope adjustment)
@@ -34,33 +70,67 @@ Decision (scope adjustment)
 - This intentionally relaxes the "only show valid curve definition files" requirement for Phase 3.1 to reduce risk and avoid confusing hidden files.
 
 Tree behavior (VS Code-like)
-- [ ] Use a single unified tree (folders + files in the same tree).
-- [ ] Folders expand/collapse via caret icon.
-- [ ] Clicking the caret toggles expand/collapse.
-- [ ] Clicking the folder name toggles expand/collapse (not selection).
-- [ ] Single-clicking a file opens it in the editor.
-- [ ] Sort alphabetically with folders before files.
-- [ ] Top-level directory node is always expanded and has no caret.
+- [x] Use a single unified tree (folders + files in the same tree).
+- [x] Folders expand/collapse via caret icon.
+- [x] Clicking the caret toggles expand/collapse.
+- [x] Clicking the folder name toggles expand/collapse (not selection).
+- [x] Single-clicking a file opens it in the editor.
+- [x] Sort alphabetically with folders before files.
+- [x] Top-level directory node is always expanded and has no caret.
+- [ ] Show Fluent chevron icons for folders:
+  - [ ] Collapsed folder shows chevron right.
+  - [ ] Expanded folder shows chevron down.
+- [ ] Top-level directory node display name shows directory name only (not full path).
 
 Session behavior
-- [ ] On startup, automatically open the last opened file.
-- [ ] On startup, automatically open the last opened directory unless it was explicitly closed.
-- [ ] Persist expanded/collapsed state of directories in the tree.
-- [ ] If the last opened directory no longer exists, start with Directory Browser collapsed and only log a message.
-- [ ] Directory browser width persists (already satisfied by left-zone width persistence).
+- [x] On startup, automatically open the last opened file.
+- [x] On startup, automatically open the last opened directory unless it was explicitly closed.
+- [x] Persist expanded/collapsed state of directories in the tree.
+- [x] If the last opened directory no longer exists, start with Directory Browser collapsed and only log a message.
+- [x] Directory browser width persists (already satisfied by left-zone width persistence).
+
+Dirty/open behavior
+- [ ] If a user opens a file while the current file is dirty, prompt to save before replacing it (Phase 3.1 regression item).
 
 UI + input
-- [ ] Add "Open Folder" to the File menu.
-- [ ] Add "Close Folder" button to the main toolbar.
-- [ ] Add a "Refresh Explorer" **unicode glyph** button at the top of the Directory Browser panel.
-- [ ] Add `F5` shortcut to trigger refresh.
+- [x] Add "Open Folder" to the File menu.
+- [x] Add "Close Folder" button to the main toolbar.
+- [x] Add a "Refresh Explorer" **unicode glyph** button at the top of the Directory Browser panel.
+- [x] Add `F5` shortcut to trigger refresh.
+- [ ] Add "Close Folder" to the File menu (AC 3.1.6).
+- [ ] Ensure "Open Folder" remains in the File menu (AC 3.1.7).
+- [ ] If opening a folder while Directory Browser is collapsed, automatically expand the Directory Browser panel (AC 3.1.5).
 
 Text display
-- [ ] Use monospace font for explorer tree items.
-- [ ] Persist explorer text size.
-- [ ] Support `Ctrl` + `+` / `Ctrl` + `-` to change explorer text size.
-- [ ] Support `Ctrl` + mouse wheel to change explorer text size.
-- [ ] Prevent wrapping; long names truncate with ellipses.
+- [x] Use monospace font for explorer tree items.
+- [x] Persist explorer text size.
+- [x] Support `Ctrl` + `+` / `Ctrl` + `-` to change explorer text size.
+- [x] Support `Ctrl` + mouse wheel to change explorer text size.
+- [x] Prevent wrapping; long names truncate with ellipses.
+
+#### 1.3 New/changed requirements (Dec 2025)
+
+The Phase 3.1 requirements file has been updated with new items, regressions, and additional acceptance criteria.
+This plan treats the following as remaining work for Phase 3.1 follow-up.
+
+New acceptance criteria
+- AC 3.1.4: Explorer tree structure and behavior matches the specified example (including icon behavior).
+- AC 3.1.5: Opening a directory auto-expands the Directory Browser panel if it was collapsed.
+- AC 3.1.6: "Close Folder" menu item is located in the File menu (in addition to any toolbar button).
+- AC 3.1.7: "Open Folder" menu item remains in the File menu (not in a panel header menu).
+- AC 3.1.9: Opening a JSON file while the current file is dirty prompts the user to save first.
+
+Known requirement conflicts to resolve
+- Close Directory behavior conflict:
+  - Requirement bullet: "When the command 'Close Directory' is executed, collapse the directory tree to hide the closed directory."
+  - AC 3.1.8: "When the user executes 'Close Directory', the directory tree does not collapse."
+  - Proposed interpretation for implementation planning: keep the Directory Browser panel expanded/collapsed state unchanged, but clear the opened root directory (tree becomes empty). This matches the prior intent of "close directory" while avoiding collapsing the entire left zone.
+  - If AC 3.1.8 is intended literally (tree must remain visible), we will need a different UX (e.g., keep a non-collapsible root placeholder that shows the last folder name but with no children).
+
+- Open Folder placement conflict:
+  - Requirement bullet: "Move the existing 'Open Folder' menu item ... to the Directory Browser panel header."
+  - AC 3.1.7: "Open Folder" must be in the File menu, not the panel header menu.
+  - Plan decision: follow AC 3.1.7 and keep Open Folder in the File menu.
 
 ### 2. Proposed architecture
 
@@ -180,46 +250,48 @@ Tree rendering requirements
 #### 5.2 Commands + menus + shortcuts
 
 - File menu
-  - [ ] Add "Open Folder..." -> `OpenFolderCommand`.
+  - [x] Add "Open Folder..." -> `OpenFolderCommand`.
 
 - Toolbar
-  - [ ] Introduce a minimal top toolbar and add "Close Folder" -> `CloseFolderCommand`.
+  - [x] Introduce a minimal top toolbar and add "Close Folder" -> `CloseFolderCommand`.
 
 - Keyboard
-  - [ ] Add `F5` -> `RefreshExplorerCommand`.
-  - [ ] Add `Ctrl`+`+` and `Ctrl`+`-` -> increase/decrease explorer font size.
+  - [x] Add `F5` -> `RefreshExplorerCommand`.
+  - [x] Add `Ctrl`+`+` and `Ctrl`+`-` -> increase/decrease explorer font size.
     - Implementation note: in practice, bind both OEM and numpad variants.
 
 - Mouse
-  - [ ] In the Directory Browser panel, handle `Ctrl` + mouse wheel to adjust font size.
+  - [x] In the Directory Browser panel, handle `Ctrl` + mouse wheel to adjust font size.
 
 ### 6. Implementation steps (Phase 3.1)
 
 #### 6.1 Directory browser foundation
-- [ ] Create `DirectoryBrowserViewModel` with:
+- [x] Create `DirectoryBrowserViewModel` with:
   - Root directory path
   - Node tree
   - Commands: open folder, close folder, refresh, open file
   - `FontSize` and increment/decrement helpers
-- [ ] Create `DirectoryBrowserPanel` view and wire it into the Directory Browser panel content.
-- [ ] Replace the placeholder UI in `MainWindow.axaml` with the new panel control.
+- [x] Create `DirectoryBrowserPanel` view and wire it into the Directory Browser panel content.
+- [x] Replace the placeholder UI in `MainWindow.axaml` with the new panel control.
+
+Completed via [src/CurveEditor/ViewModels/DirectoryBrowserViewModel.cs](src/CurveEditor/ViewModels/DirectoryBrowserViewModel.cs) and [src/CurveEditor/Views/DirectoryBrowserPanel.axaml](src/CurveEditor/Views/DirectoryBrowserPanel.axaml).
 
 #### 6.2 Directory scanning + validation
-- [ ] Implement `IDirectoryBrowserService` for:
+- [x] Implement `IDirectoryBrowserService` for:
   - Enumerating folders + `*.json` candidates
   - Cancellation and bounded concurrency
-- [ ] Ensure the service returns results in a UI-thread-safe way (pure data snapshots).
+- [x] Ensure the service returns results in a UI-thread-safe way (pure data snapshots).
 
 Future
 - Add schema-based validation + optional file badges/filtering.
 
 #### 6.3 Open file from explorer + selection sync
-- [ ] Add an "open file by path" method on `MainWindowViewModel` that:
+- [x] Add an "open file by path" method on `MainWindowViewModel` that:
   - Calls `_fileService.LoadAsync(filePath)`
   - Resets selection/editing coordinator as needed
   - Resets undo stack / clean checkpoint appropriately (mirrors existing open-file behavior)
-- [ ] When explorer opens a file, call this method.
-- [ ] When `MainWindowViewModel` loads a motor file (via menu or explorer), update explorer selection:
+- [x] When explorer opens a file, call this method.
+- [x] When `MainWindowViewModel` loads a motor file (via menu or explorer), update explorer selection:
   - If file is under the current directory root: expand ancestors and select.
   - Else: clear selection.
 
@@ -227,49 +299,103 @@ Required enabling change
 - Expose a `CurrentFilePath` (observable) on `MainWindowViewModel` so selection sync does not depend on `WindowTitle` updates.
 
 #### 6.4 Persistence + startup restore
-- [ ] Persist on changes:
+- [x] Persist on changes:
   - Last opened directory
   - Explicitly closed flag
   - Expanded directory paths
   - Last opened motor file
   - Explorer font size
-- [ ] Implement startup restore logic (see Section 4) and ensure missing directory/file is handled gracefully with a log entry.
+- [x] Implement startup restore logic (see Section 4) and ensure missing directory/file is handled gracefully with a log entry.
 - Directory Browser default expanded/collapsed behavior remains as-is (Phase 3.0 default), except:
   - If the last opened directory no longer exists at startup, collapse the Directory Browser panel (AC 3.1.2).
 
 #### 6.5 UI chrome + input
-- [ ] Add File menu item for "Open Folder...".
-- [ ] Add toolbar with "Close Folder" button (minimal toolbar; do not add extra actions).
-- [ ] Add "Refresh Explorer" unicode glyph button to the Directory Browser header.
-- [ ] Add keybindings: `F5`, `Ctrl`+`+`, `Ctrl`+`-`.
-- [ ] Add Ctrl+mouse wheel handling in Directory Browser panel.
+- [x] Add File menu item for "Open Folder...".
+- [x] Add toolbar with "Close Folder" button (minimal toolbar; do not add extra actions).
+- [x] Add "Refresh Explorer" unicode glyph button to the Directory Browser header.
+- [x] Add keybindings: `F5`, `Ctrl`+`+`, `Ctrl`+`-`.
+- [x] Add Ctrl+mouse wheel handling in Directory Browser panel.
+
+#### 6.6 Follow-up: Explorer visuals + menu placement + dirty prompts
+
+Chevron visuals
+- [ ] Replace the default caret toggle visuals with Fluent chevron icons:
+  - [ ] Collapsed: chevron right
+  - [ ] Expanded: chevron down
+- [ ] Ensure the root node continues to hide the expander icon.
+
+Root display name
+- [ ] Ensure the root node shows directory name only (no full path) across:
+  - [ ] Standard paths (e.g., `C:\Users\name\folder`)
+  - [ ] Drive root paths (e.g., `C:\` should display as `C:`)
+
+Open folder behavior (collapsed panel)
+- [ ] If the user invokes Open Folder while Directory Browser panel is collapsed:
+  - [ ] Set the active left panel to Directory Browser before scanning so the user sees the tree.
+
+File menu placement
+- [ ] Add File menu -> "Close Folder" command (do not remove toolbar button).
+- [ ] Ensure there is no separate "Open Folder" menu inside the Directory Browser header.
+
+Dirty file prompt regression
+- [ ] On explorer-initiated file open (and optionally File->Open too), if the current document is dirty:
+  - [ ] Prompt: Save / Ignore / Cancel
+  - [ ] Save: run existing Save flow, then continue opening
+  - [ ] Ignore: proceed opening without saving
+  - [ ] Cancel: do not open the new file
+
+Implementation notes
+- Keep shortcut policy: keybindings remain centralized on `MainWindow.axaml` (ADR-0005).
+- Avoid showing modal prompts during startup restore (only prompt on explicit user action).
+
+### Acceptance Criteria
+
+- [x] AC 3.1.1: On restart, if the last opened directory still exists, its expand/collapse state and the directory browser width are restored.
+- [x] AC 3.1.2: If the last opened directory no longer exists, the directory browser starts collapsed with no errors shown to the user beyond any appropriate log entry.
+- [x] AC 3.1.3: Clicking a file once in the directory browser always opens it in the CurveEditor, and the selection in the tree matches the active motor definition.
+- [ ] AC 3.1.4: The directory browser file/directory listing matches the specified tree structure and behavior described in the requirements.
+- [ ] AC 3.1.5: If the user opens a directory while the directory browser panel is collapsed, the panel automatically expands to show the directory tree.
+- [ ] AC 3.1.6: The "Close Folder" menu item is located in the File menu, not Directory Browser panel header.
+- [x] AC 3.1.7: The "Open Folder" menu item is located in the File menu, not the Directory Browser panel header menu.
+- [ ] AC 3.1.8: When the user executes "Close Directory", the directory tree does not collapse.
+- [ ] AC 3.1.9: When the user opens a json file while the current file is dirty, the user is prompted to save the current file first.
 
 ### 7. Testing strategy (Phase 3.1)
 
 Unit tests (preferred)
-- [ ] `DirectoryBrowserServiceTests`
+- [x] `DirectoryBrowserServiceTests`
   - Enumerates folders + JSON candidates.
   - Lists `*.json` files without filtering in Phase 3.1.
   - Sort order: folders before files, alphabetical.
 
 Future
 - Add schema/domain validation and (optionally) filter or badge invalid files.
-- [ ] `DirectoryBrowserViewModelTests`
+- [x] `DirectoryBrowserViewModelTests`
   - Expanding folder loads children.
   - Root is always expanded and non-collapsible.
   - Persist/restore of expanded directory state.
   - Font size changes clamp to reasonable min/max.
 
 Integration-style tests (ViewModel-level)
-- [ ] Update or add tests around `MainWindowViewModel` for:
+- [x] Update or add tests around `MainWindowViewModel` for:
   - Opening a file by path invoked from the explorer.
   - Persisting and restoring last opened file.
 
+Follow-up tests (recommended)
+- [ ] Dirty prompt decision logic:
+  - [ ] Cancel prevents open-by-path
+  - [ ] Ignore allows open-by-path
+  - [ ] Save attempts save then opens if successful
+  - Note: this likely needs a small abstraction for prompting (e.g., `IUnsavedChangesPrompt`) to keep tests non-UI.
+
 Manual verification checklist
 - [ ] Large directory scan stays responsive.
+- [ ] Explorer tree matches the example structure (AC 3.1.4), including chevron visuals.
 - [ ] Single-click file opens consistently.
+- [ ] If current file is dirty, opening a different file prompts to save/ignore/cancel.
 - [ ] Folder click toggles expansion, does not select.
 - [ ] Restart restores directory, expanded nodes, and selected file.
+- [ ] Open Folder while Browser collapsed auto-expands Browser panel (AC 3.1.5).
 
 ### 8. Logging and error handling
 

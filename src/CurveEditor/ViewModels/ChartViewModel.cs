@@ -403,6 +403,7 @@ public partial class ChartViewModel : ViewModelBase
         for (var i = Series.Count - 1; i >= 0; i--)
         {
             if (Series[i] is LineSeries<ObservablePoint> lineSeries &&
+                lineSeries.Name is not null &&
                 lineSeries.Name.EndsWith(SelectionOverlaySuffix, StringComparison.Ordinal))
             {
                 Series.RemoveAt(i);

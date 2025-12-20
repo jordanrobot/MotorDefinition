@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading.Tasks;
 using Avalonia.Controls;
 using Avalonia.Interactivity;
 using CurveEditor.Behaviors;
@@ -26,7 +27,7 @@ public partial class MainWindow : Window
         Opened += OnOpened;
     }
 
-    private void OnOpened(object? sender, EventArgs e)
+    private async void OnOpened(object? sender, EventArgs e)
     {
         Opened -= OnOpened;
 
@@ -124,6 +125,8 @@ public partial class MainWindow : Window
                 ApplyRightZoneLayout(mainGrid, viewModel);
             }
         };
+
+        await viewModel.RestoreSessionAfterWindowOpenedAsync();
     }
 
     private static IReadOnlyCollection<string> GetPanelBarActivePanelIds(MainWindowViewModel viewModel)
