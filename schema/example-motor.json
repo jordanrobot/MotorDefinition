@@ -35,9 +35,9 @@
   },
   "drives": [
     {
+      "name": "Servo Drive Pro X-203",
       "manufacturer": "Acme Drives",
       "partNumber": "SD-X203",
-      "seriesName": "Servo Drive Pro X-203",
       "voltages": [
         {
           "voltage": 208,
@@ -906,9 +906,9 @@
       ]
     },
     {
+      "name": "Servo Drive Max X-220",
       "manufacturer": "Acme Drives",
       "partNumber": "SD-X220",
-      "seriesName": "Servo Drive Max X-220",
       "voltages": [
         {
           "voltage": 208,

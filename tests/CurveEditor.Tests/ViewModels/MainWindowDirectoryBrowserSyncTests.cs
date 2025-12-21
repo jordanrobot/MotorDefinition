@@ -25,7 +25,7 @@ public sealed class MainWindowDirectoryBrowserSyncTests
             [
                 new DriveFileDto
                 {
-                    SeriesName = "Default Drive",
+                    Name = "Default Drive",
                     Voltages =
                     [
                         new VoltageFileDto

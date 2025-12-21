@@ -261,9 +261,9 @@ Note: In this example, you'll notice that `motor profile 1.json` and `motor prof
 ### Json Format: Change Properties
 
 - [ ] Change `drives` array property:
-  - [ ] `manufacturer` should be moved to the top of the drive object. 
-  - [ ] `partNumber` should be moved to the second position in the drive object.
-  - [ ] `name` should be changed to `seriesName` (string), and be the third property in the drive object.
+  - [ ] `name` (string) should be moved to the top of the drive object.
+  - [ ] `manufacturer` should be moved to the second position in the drive object.
+  - [ ] `partNumber` should be moved to the third position in the drive object.
 
 ### Schema Versioning
 

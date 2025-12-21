@@ -55,7 +55,7 @@ internal static class MotorFileMapper
             {
                 Manufacturer = drive.Manufacturer,
                 PartNumber = drive.PartNumber,
-                SeriesName = drive.Name
+                Name = drive.Name
             };
 
             foreach (var voltage in drive.Voltages)
@@ -153,12 +153,12 @@ internal static class MotorFileMapper
 
         foreach (var driveDto in dto.Drives)
         {
-            if (string.IsNullOrWhiteSpace(driveDto.SeriesName))
+            if (string.IsNullOrWhiteSpace(driveDto.Name))
             {
-                throw new InvalidOperationException("Drive entry is missing a seriesName value.");
+                throw new InvalidOperationException("Drive entry is missing a name value.");
             }
 
-            var drive = new DriveConfiguration(driveDto.SeriesName)
+            var drive = new DriveConfiguration(driveDto.Name)
             {
                 Manufacturer = driveDto.Manufacturer ?? string.Empty,
                 PartNumber = driveDto.PartNumber ?? string.Empty
@@ -166,12 +166,12 @@ internal static class MotorFileMapper
 
             if (driveDto.Voltages is null || driveDto.Voltages.Count == 0)
             {
-                throw new InvalidOperationException($"Drive '{driveDto.SeriesName}' must include at least one voltage configuration.");
+                throw new InvalidOperationException($"Drive '{driveDto.Name}' must include at least one voltage configuration.");
             }
 
             foreach (var voltageDto in driveDto.Voltages)
             {
-                var driveLabel = $"{driveDto.SeriesName} ({voltageDto.Voltage}V)";
+                var driveLabel = $"{driveDto.Name} ({voltageDto.Voltage}V)";
                 MotorFileShapeValidator.ValidateVoltageDto(voltageDto, driveLabel);
 
                 if (voltageDto.Voltage <= 0)
@@ -197,7 +197,7 @@ internal static class MotorFileMapper
 
                     if (entry.Torque.Length != ExpectedPointCount)
                     {
-                        throw new InvalidOperationException($"Series '{seriesName}' torque array must have 101 entries for drive '{driveDto.SeriesName}'.");
+                        throw new InvalidOperationException($"Series '{seriesName}' torque array must have 101 entries for drive '{driveDto.Name}'.");
                     }
 
                     var series = new CurveSeries(seriesName)

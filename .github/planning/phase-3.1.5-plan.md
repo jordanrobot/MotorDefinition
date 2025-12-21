@@ -28,8 +28,8 @@ Complete
     - [x] `brakeBacklash`
   - [x] Add / adjust unit labels in the units section (at minimum: `responseTime`, `backlash`, `percentage`, `inertia`, `temperature`, `torqueConstant`) with defaults.
   - [x] Update drive JSON shape:
-    - [x] Rename drive `name` -> `seriesName`.
-    - [x] Ensure property ordering in emitted JSON: `manufacturer`, `partNumber`, `seriesName`, then remaining properties.
+    - [x] Rename drive `seriesName` -> `name`.
+    - [x] Ensure property ordering in emitted JSON: `name`, `manufacturer`, `partNumber`, then remaining properties.
   - [x] Add validation rules for shared axes and series alignment.
   - [x] Add a simple benchmark/test artifact to demonstrate file size reduction.
 
@@ -89,7 +89,7 @@ Units
 
 - Introduce **persistence DTOs** (internal to CurveEditor) that match the new on-disk format:
   - `MotorDefinitionFileDto`
-  - `DriveFileDto` (with `seriesName`)
+  - `DriveFileDto` (with `name`)
   - `VoltageFileDto` containing:
     - `percent`: int[101]
     - `rpm`: double[101]
@@ -111,8 +111,8 @@ Units
   - Deserialize `MotorDefinitionFileDto` and map to runtime models.
   - Serialize by mapping runtime models to `MotorDefinitionFileDto` and writing the new series table/map format.
 
-- Drive rename (`name` -> `seriesName`):
-  - Prefer DTO-based persistence so the runtime property can remain `DriveConfiguration.Name`, while the JSON uses `seriesName`.
+- Drive rename (`seriesName` -> `name`):
+  - Prefer DTO-based persistence so the runtime property can remain `DriveConfiguration.Name`, while the JSON uses `name`.
   - Emit JSON in stable order using `JsonPropertyOrder` on DTOs.
 
   - Backward compatibility:
@@ -165,7 +165,7 @@ Units
 #### PR 1: Switch Load + Save to the series table/map format (merge-safe)
 
 - [x] Update `FileService` to use DTOs for BOTH save and load.
-- [x] Implement drive JSON rename end-to-end (`name` -> `seriesName`) and property ordering.
+- [x] Implement drive JSON rename end-to-end (`seriesName` -> `name`) and property ordering.
 - [x] Add new motor properties and unit labels with defaults.
 - [x] Update Directory Browser lightweight validation to recognize the new shape (via `JsonDocument` shape probe; ideally shared helper under `jordanrobot.MotorDefinitions.Probing`).
 - [x] Add round-trip tests so a saved file can be reopened.

@@ -9,16 +9,16 @@ namespace jordanrobot.MotorDefinitions.Dtos;
 internal sealed class DriveFileDto
 {
     [JsonPropertyOrder(1)]
+    [JsonPropertyName("name")]
+    public string Name { get; set; } = string.Empty;
+
+    [JsonPropertyOrder(2)]
     [JsonPropertyName("manufacturer")]
     public string Manufacturer { get; set; } = string.Empty;
 
-    [JsonPropertyOrder(2)]
+    [JsonPropertyOrder(3)]
     [JsonPropertyName("partNumber")]
     public string PartNumber { get; set; } = string.Empty;
-
-    [JsonPropertyOrder(3)]
-    [JsonPropertyName("seriesName")]
-    public string SeriesName { get; set; } = string.Empty;
 
     [JsonPropertyOrder(4)]
     [JsonPropertyName("voltages")]

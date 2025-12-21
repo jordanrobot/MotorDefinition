@@ -26,7 +26,7 @@
   - per-series `torque[101]` under a `series` map keyed by series name
 - Keep `schemaVersion` at `1.0.0`.
 - Add new brake-related motor scalar properties and new unit labels with defaults.
-- Update drive JSON shape: `name` -> `seriesName` and ensure emitted property ordering.
+- Update drive JSON shape: `seriesName` -> `name` and ensure emitted property ordering.
 - Add validation rules for axes + alignment and ensure load failures are logged and handled per policy.
 - Demonstrate measurable file size reduction via a simple benchmark/test artifact.
 
@@ -95,12 +95,12 @@ Extraction-friendly layout (recommended)
 - Runtime shape (unchanged):
   - `VoltageConfiguration.Series[]` of `CurveSeries`, each with `DataPoint{ Percent, Rpm, Torque }[101]`.
 - Drive JSON rename:
-  - On disk: drive uses `manufacturer`, `partNumber`, `seriesName` (third property), then `voltages`.
+  - On disk: drive uses `name`, `manufacturer`, `partNumber`, then `voltages`.
   - In runtime: keep `DriveConfiguration.Name` as the internal name.
 
 ### Agent Notes (Migration Guidance)
 - Prefer a DTO + mapper boundary around `FileService` so UI/runtime code doesn’t need to know about the new persisted shape.
-- Use `JsonPropertyOrder` (DTOs) to satisfy “manufacturer/partNumber/seriesName ordering” without relying on serializer implementation quirks.
+- Use `JsonPropertyOrder` (DTOs) to satisfy "name/manufacturer/partNumber ordering" without relying on serializer implementation quirks.
 - Ensure new fields have defaults so missing values deserialize safely.
 - Update `ValidationService` to validate both:
   - the existing runtime invariants (101 points, percent ordering), and
@@ -116,7 +116,7 @@ Introduce persistence DTOs and a mapper layer without changing the app’s load/
 ### Tasks
 - [x] Add internal persistence DTOs representing the target on-disk shape (do not wire them into `FileService` yet):
   - [x] `MotorDefinitionFileDto`
-  - [x] `DriveFileDto` (`seriesName`)
+  - [x] `DriveFileDto` (`name`)
   - [x] `VoltageFileDto` (`percent`, `rpm`, `series` map)
   - [x] `SeriesEntryDto` (`locked`, `notes?`, `torque`)
 - [x] Add a mapping layer (pure functions) between DTOs and runtime types:
@@ -159,9 +159,9 @@ Change persistence so saving and loading both use the new format, so the PR is m
   - [x] Load path: deserialize DTO and map DTO -> runtime.
   - [x] Keep `schemaVersion` emitted as `1.0.0`.
 - [x] Implement drive JSON rename end-to-end:
-  - [x] On disk uses `seriesName` instead of `name`.
-  - [x] On read, map `seriesName` -> runtime `DriveConfiguration.Name`.
-  - [x] Ensure property ordering on write: `manufacturer`, `partNumber`, `seriesName`, then `voltages` (DTO `JsonPropertyOrder`).
+  - [x] On disk uses `name` (and does not use `seriesName`).
+  - [x] On read, map `name` -> runtime `DriveConfiguration.Name`.
+  - [x] Ensure property ordering on write: `name`, `manufacturer`, `partNumber`, then `voltages` (DTO `JsonPropertyOrder`).
 - [x] Add new motor scalar properties end-to-end:
   - [x] `brakeResponseTime`
   - [x] `brakeEngageTimeDiode`
@@ -189,7 +189,7 @@ Tests (must make this PR merge-safe)
   - [x] Save writes `percent`/`rpm` and `series` map.
   - [x] Load reads the new shape and reconstructs the runtime hierarchy.
   - [x] Round-trip save -> load -> save preserves curve data and series metadata.
-  - [x] Drive JSON uses `seriesName` and does not use `name`.
+  - [x] Drive JSON uses `name` and does not use `seriesName`.
 
 Required hygiene:
 - [x] Keep `schemaVersion` emitted as `1.0.0`.

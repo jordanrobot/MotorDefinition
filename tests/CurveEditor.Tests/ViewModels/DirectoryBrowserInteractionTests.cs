@@ -28,7 +28,7 @@ public sealed class DirectoryBrowserInteractionTests
                 {
                     Manufacturer = string.Empty,
                     PartNumber = string.Empty,
-                    SeriesName = "Default Drive",
+                    Name = "Default Drive",
                     Voltages =
                     [
                         new VoltageFileDto

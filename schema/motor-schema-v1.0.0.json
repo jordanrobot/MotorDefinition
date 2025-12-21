@@ -166,15 +166,15 @@
         "type": "object",
         "additionalProperties": false,
         "properties": {
+          "name": {
+            "type": "string",
+            "description": "Name of the drive configuration."
+          },
           "manufacturer": {
             "type": "string"
           },
           "partNumber": {
             "type": "string"
-          },
-          "seriesName": {
-            "type": "string",
-            "description": "Name of the drive configuration."
           },
           "voltages": {
             "type": "array",
@@ -280,7 +280,7 @@
           }
         },
         "required": [
-          "seriesName",
+          "name",
           "voltages"
         ]
       }
