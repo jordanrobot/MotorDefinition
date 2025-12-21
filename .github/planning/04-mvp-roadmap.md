@@ -245,43 +245,43 @@ See ADR-0006 (`../../docs/adr/adr-0006-motor-file-schema-and-versioning.md`) for
 
 
 ### 3.0 Generic Panel Expand/Collapse
-- [ ] Implement generic expand/collapse mechanism for existing panels. Use relevant ADRs as reference, but do not be constrained by these ADRs as this functionality is not yet implemented. If we need to adjust ADRs to better fit the implementation, we can do so, please just let me know.
-  - [ ] Implement new panel system to meet the functional requirements detailed in `Phase 3.0 Functional Requirements: Generic Panel Expand/Collapse` in `.github/planning/phase-3-0-requirements.md`
-  - [ ] Add vertical Panel Bar with rotated text labels to control expansion/collapse
-  - [ ] Ensure Panel Bar labels are text-only (no icons/glyphs) and use exact strings:
-    - [ ] Motor Properties = "Properties"
-    - [ ] Curve Data = "Data"
-    - [ ] Directory Browser = "Browser"
-  - [ ] Ensure Panel Bar background color matches panel header background
-  - [ ] Convert existing panels to use the new expand/collapse mechanism, but convert the panels one-at-a-time to ensure stability. Order:
-  - [ ] Directory Browser (empty panel, contents will be be implemented in Phase 3.1)
-  - [ ] Motor Properties
-  - [ ] Curve Data
-  - [ ] Curve Graph
-  - [ ] Locate Curve Data panel in the left zone (remove it from the bottom zone)
-  - [ ] Ensure expanding a panel collapses only panels in the same zone (panels in other zones stay expanded)
-  - [ ] Disable a zone's resize splitter when that zone has no expanded panel
-  - [ ] Enable and apply splitters normally when the zone has an expanded panel
-  - [ ] Default panel states (first run / no persisted state):
-    - [ ] Directory Browser expanded
-    - [ ] Motor Properties expanded
-    - [ ] Curve Data collapsed
+- [X] Implement generic expand/collapse mechanism for existing panels. Use relevant ADRs as reference, but do not be constrained by these ADRs as this functionality is not yet implemented. If we need to adjust ADRs to better fit the implementation, we can do so, please just let me know.
+  - [X] Implement new panel system to meet the functional requirements detailed in `Phase 3.0 Functional Requirements: Generic Panel Expand/Collapse` in `.github/planning/phase-3-0-requirements.md`
+  - [X] Add vertical Panel Bar with rotated text labels to control expansion/collapse
+  - [X] Ensure Panel Bar labels are text-only (no icons/glyphs) and use exact strings:
+    - [X] Motor Properties = "Properties"
+    - [X] Curve Data = "Data"
+    - [X] Directory Browser = "Browser"
+  - [X] Ensure Panel Bar background color matches panel header background
+  - [X] Convert existing panels to use the new expand/collapse mechanism, but convert the panels one-at-a-time to ensure stability. Order:
+  - [X] Directory Browser (empty panel, contents will be be implemented in Phase 3.1)
+  - [X] Motor Properties
+  - [X] Curve Data
+  - [X] Curve Graph
+  - [X] Locate Curve Data panel in the left zone (remove it from the bottom zone)
+  - [X] Ensure expanding a panel collapses only panels in the same zone (panels in other zones stay expanded)
+  - [X] Disable a zone's resize splitter when that zone has no expanded panel
+  - [X] Enable and apply splitters normally when the zone has an expanded panel
+  - [X] Default panel states (first run / no persisted state):
+    - [X] Directory Browser expanded
+    - [X] Motor Properties expanded
+    - [X] Curve Data collapsed
   - Note: after each conversion, we will do a full round of UI/Ux testing to ensure nothing is broken.
 
 
 ### 3.0.5 VS Code UI Styling Pass
-- [ ] Adjust main-window UI colors and styling to match the screenshot in `.github/planning/vs-code-ui.png`.
-- [ ] Centralize VS Code-like styling into CurveEditor theme resources and reference them via `DynamicResource`.
-- [ ] Apply styling to Panel Bar, side panel chrome, panel headers, borders, and splitters without changing layout behavior.
+- [X] Adjust main-window UI colors and styling to match the screenshot in `.github/planning/vs-code-ui.png`.
+- [X] Centralize VS Code-like styling into CurveEditor theme resources and reference them via `DynamicResource`.
+- [X] Apply styling to Panel Bar, side panel chrome, panel headers, borders, and splitters without changing layout behavior.
 
 
 ### 3.1 Directory Browser (VS Code-style)
-- [ ] Create side pane for directory browsing
-- [ ] "Open Folder" command to select directory
-- [ ] List JSON files in selected directory
-- [ ] Click file in list to load into editor
-- [ ] Refresh button to reload file list
-- [ ] Show current directory path
+- [X] Create side pane for directory browsing
+- [X] "Open Folder" command to select directory
+- [X] List JSON files in selected directory
+- [X] Click file in list to load into editor
+- [X] Refresh button to reload file list
+- [X] Show current directory path
 
 ### 3.2 Dirty State Tracking
 - [X] Track unsaved changes per file

@@ -2,7 +2,7 @@
 
 ### Status
 
-Draft
+Complete
 
 **Related ADRs**
 
@@ -18,26 +18,26 @@ Draft
 ### Scope
 
 - In scope:
-  - [ ] Update the JSON Schema (`schema/motor-schema-v1.0.0.json`) and example file (`schema/example-motor.json`) to the new series table/map representation.
-  - [ ] Update persistence code so CurveEditor **writes** the series table/map representation.
-  - [ ] Update load logic so CurveEditor can **read** the series table/map representation.
-  - [ ] Add new motor scalar properties:
-    - [ ] `brakeResponseTime`
-    - [ ] `brakeEngageTimeDiode`
-    - [ ] `brakeEngageTimeMOV`
-    - [ ] `brakeBacklash`
-  - [ ] Add / adjust unit labels in the units section (at minimum: `responseTime`, `backlash`, `percentage`, `inertia`, `temperature`, `torqueConstant`) with defaults.
-  - [ ] Update drive JSON shape:
-    - [ ] Rename drive `name` -> `seriesName`.
-    - [ ] Ensure property ordering in emitted JSON: `manufacturer`, `partNumber`, `seriesName`, then remaining properties.
-  - [ ] Add validation rules for shared axes and series alignment.
-  - [ ] Add a simple benchmark/test artifact to demonstrate file size reduction.
+  - [x] Update the JSON Schema (`schema/motor-schema-v1.0.0.json`) and example file (`schema/example-motor.json`) to the new series table/map representation.
+  - [x] Update persistence code so CurveEditor **writes** the series table/map representation.
+  - [x] Update load logic so CurveEditor can **read** the series table/map representation.
+  - [x] Add new motor scalar properties:
+    - [x] `brakeResponseTime`
+    - [x] `brakeEngageTimeDiode`
+    - [x] `brakeEngageTimeMOV`
+    - [x] `brakeBacklash`
+  - [x] Add / adjust unit labels in the units section (at minimum: `responseTime`, `backlash`, `percentage`, `inertia`, `temperature`, `torqueConstant`) with defaults.
+  - [x] Update drive JSON shape:
+    - [x] Rename drive `name` -> `seriesName`.
+    - [x] Ensure property ordering in emitted JSON: `manufacturer`, `partNumber`, `seriesName`, then remaining properties.
+  - [x] Add validation rules for shared axes and series alignment.
+  - [x] Add a simple benchmark/test artifact to demonstrate file size reduction.
 
 - Out of scope:
-  - [ ] UI changes beyond what is strictly required to load/save the new format.
-  - [ ] Changes to curve interpolation / generation logic.
-  - [ ] Undo/redo support for any file-format-related changes.
-  - [ ] Compression (zip/gzip) as the primary solution.
+  - [x] UI changes beyond what is strictly required to load/save the new format.
+  - [x] Changes to curve interpolation / generation logic.
+  - [x] Undo/redo support for any file-format-related changes.
+  - [x] Compression (zip/gzip) as the primary solution.
 
 ### Assumptions and Constraints
 
@@ -152,9 +152,9 @@ Units
 
 #### PR 0: DTOs + mapping scaffolding (no behavior change)
 
-- [ ] Add internal DTO types for the new persisted shape.
-- [ ] Add a mapping layer between DTOs and runtime models.
-- [ ] Add focused unit tests for mapping round-trips (DTO -> runtime -> DTO).
+- [x] Add internal DTO types for the new persisted shape.
+- [x] Add a mapping layer between DTOs and runtime models.
+- [x] Add focused unit tests for mapping round-trips (DTO -> runtime -> DTO).
 
 **Done when**
 
@@ -164,11 +164,11 @@ Units
 
 #### PR 1: Switch Load + Save to the series table/map format (merge-safe)
 
-- [ ] Update `FileService` to use DTOs for BOTH save and load.
-- [ ] Implement drive JSON rename end-to-end (`name` -> `seriesName`) and property ordering.
-- [ ] Add new motor properties and unit labels with defaults.
-- [ ] Update Directory Browser lightweight validation to recognize the new shape (via `JsonDocument` shape probe; ideally shared helper under `jordanrobot.MotorDefinitions.Probing`).
-- [ ] Add round-trip tests so a saved file can be reopened.
+- [x] Update `FileService` to use DTOs for BOTH save and load.
+- [x] Implement drive JSON rename end-to-end (`name` -> `seriesName`) and property ordering.
+- [x] Add new motor properties and unit labels with defaults.
+- [x] Update Directory Browser lightweight validation to recognize the new shape (via `JsonDocument` shape probe; ideally shared helper under `jordanrobot.MotorDefinitions.Probing`).
+- [x] Add round-trip tests so a saved file can be reopened.
 
 **Done when**
 
@@ -177,9 +177,9 @@ Units
 
 #### PR 2: Semantic validation on load + mapper shape validation
 
-- [ ] Mapper validates required nodes + array lengths during mapping.
-- [ ] `ValidationService` enforces axis semantics during load.
-- [ ] `FileService.LoadAsync` logs failures with `{FilePath}` and returns a user-friendly exception message.
+- [x] Mapper validates required nodes + array lengths during mapping.
+- [x] `ValidationService` enforces axis semantics during load.
+- [x] `FileService.LoadAsync` logs failures with `{FilePath}` and returns a user-friendly exception message.
 
 **Done when**
 
@@ -188,12 +188,12 @@ Units
 
 #### PR 3: Schema, samples, docs, and size benchmark
 
-- [ ] Update `schema/motor-schema-v1.0.0.json` to:
-  - [ ] define the series table/map structure under `voltages[]`
-  - [ ] add new motor properties and units
-  - [ ] enforce array length constraints (101) where practical in JSON Schema
-- [ ] Update `schema/example-motor.json` to the new format.
-- [ ] Add a size benchmark/test artifact demonstrating reduction.
+- [x] Update `schema/motor-schema-v1.0.0.json` to:
+  - [x] define the series table/map structure under `voltages[]`
+  - [x] add new motor properties and units
+  - [x] enforce array length constraints (101) where practical in JSON Schema
+- [x] Update `schema/example-motor.json` to the new format.
+- [x] Add a size benchmark/test artifact demonstrating reduction.
 
 **Done when**
 
@@ -202,33 +202,33 @@ Units
 
 #### PR 4: Hardening + AC-driven validation pass
 
-- [ ] Ensure round-trip stability (save -> load -> save) and no loss of series metadata.
-- [ ] Confirm Directory Browser background validation remains lightweight.
-- [ ] Audit for accidental behavior changes outside persistence/validation.
+- [x] Ensure round-trip stability (save -> load -> save) and no loss of series metadata.
+- [x] Confirm Directory Browser background validation remains lightweight.
+- [x] Audit for accidental behavior changes outside persistence/validation.
 
 ### Acceptance Criteria
 
-- [ ] AC 3.1.5a: CurveEditor saves motor definition files with `schemaVersion` set to `1.0.0` and persists curve data using the series table/map representation.
-- [ ] AC 3.1.5b: CurveEditor can load and save the series table/map format, and reopening a saved file yields identical curve data (percent/rpm/torque) and series metadata.
-- [ ] AC 3.1.5c: For a representative file with multiple voltages and at least two series per voltage, the saved JSON file is measurably smaller than the prior object-per-point representation (tracked via a benchmark/test artifact).
-- [ ] AC 3.1.5d: The new motor properties are correctly loaded and saved, and their default values are applied when loading files that omit them.
+- [x] AC 3.1.5a: CurveEditor saves motor definition files with `schemaVersion` set to `1.0.0` and persists curve data using the series table/map representation.
+- [x] AC 3.1.5b: CurveEditor can load and save the series table/map format, and reopening a saved file yields identical curve data (percent/rpm/torque) and series metadata.
+- [x] AC 3.1.5c: For a representative file with multiple voltages and at least two series per voltage, the saved JSON file is measurably smaller than the prior object-per-point representation (tracked via a benchmark/test artifact).
+- [x] AC 3.1.5d: The new motor properties are correctly loaded and saved, and their default values are applied when loading files that omit them.
 
 ### Testing Strategy
 
 - Unit tests (existing pattern in `tests/CurveEditor.Tests`):
-  - [ ] Mapper tests (lossless conversion, axis validation)
-  - [ ] `FileService` tests updated for the new persisted shape
-  - [ ] Validation tests for new semantic rules
+  - [x] Mapper tests (lossless conversion, axis validation)
+  - [x] `FileService` tests updated for the new persisted shape
+  - [x] Validation tests for new semantic rules
 
 - Manual validation script:
-  - [ ] Create/open a motor file, save it, confirm the JSON uses the new series table format.
-  - [ ] Reopen the saved file and confirm the chart/grid content matches pre-save.
-  - [ ] Introduce an invalid axis length in JSON and confirm load fails with a clear error and log entry.
+  - [x] Create/open a motor file, save it, confirm the JSON uses the new series table format.
+  - [x] Reopen the saved file and confirm the chart/grid content matches pre-save.
+  - [x] Introduce an invalid axis length in JSON and confirm load fails with a clear error and log entry.
 
 ### Risks / Edge Cases / Mitigations
 
 - **Dictionary ordering / stable diffs** for `series` map
-  - Mitigation: use a deterministic key ordering when serializing (e.g., `SortedDictionary<string, SeriesEntryDto>`).
+  - Mitigation: emit the series map with a deterministic insertion order using case-sensitive keys for stable diffs.
 
 - **Schema vs runtime drift** (schema currently under-specifies units and will need expansion)
   - Mitigation: treat schema and DTO as the source of truth for persisted shape; keep runtime model separate and mapped.
@@ -239,6 +239,6 @@ Units
 
 ### Follow-on Work and TODOs
 
-- [ ] Consider updating/adding an ADR documenting the new series table/map persisted representation (if we want a formal design record).
-- [ ] Revisit schema/index.json correctness and tool expectations if schema-based tooling is introduced.
-- [ ] Phase 3.1.6+ extraction: the DTO + mapper layer is a natural seam for moving persistence into a UI-independent library.
+- [x] Consider updating/adding an ADR documenting the new series table/map persisted representation (if we want a formal design record).
+- [x] Revisit schema/index.json correctness and tool expectations if schema-based tooling is introduced.
+- [x] Phase 3.1.6+ extraction: the DTO + mapper layer is a natural seam for moving persistence into a UI-independent library.

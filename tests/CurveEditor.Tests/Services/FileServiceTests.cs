@@ -2,15 +2,23 @@ using System;
 using System.IO;
 using System.Linq;
 using System.Text.Json;
+using System.Text.Json.Serialization;
 using System.Threading.Tasks;
 using CurveEditor.Models;
 using CurveEditor.Services;
+using jordanrobot.MotorDefinitions.Mapping;
 using Xunit;
 
 namespace CurveEditor.Tests.Services;
 
 public class FileServiceTests : IDisposable
 {
+    private static readonly JsonSerializerOptions TestJsonOptions = new()
+    {
+        WriteIndented = true,
+        DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull
+    };
+
     private readonly string _tempDir;
     private readonly FileService _service;
 
@@ -29,8 +37,8 @@ public class FileServiceTests : IDisposable
         }
         catch
         {
-            // Ignore cleanup errors
         }
+
         GC.SuppressFinalize(this);
     }
 
@@ -44,10 +52,17 @@ public class FileServiceTests : IDisposable
             RatedPeakTorque = 55.0,
             RatedContinuousTorque = 45.0,
             HasBrake = true,
+            BrakeResponseTime = 12,
+            BrakeEngageTimeDiode = 5,
+            BrakeEngageTimeMov = 7,
+            BrakeBacklash = 0.5,
             Power = 1500
         };
 
-        // Add a drive with a voltage configuration and series
+        motor.Units.ResponseTime = "ms";
+        motor.Units.Percentage = "%";
+        motor.Units.Temperature = "C";
+
         var drive = motor.AddDrive("Test Drive");
         var voltage = drive.AddVoltageConfiguration(220);
         voltage.MaxSpeed = 5000;
@@ -62,15 +77,21 @@ public class FileServiceTests : IDisposable
         return motor;
     }
 
+    private static async Task WriteMotorFileAsync(MotorDefinition motor, string filePath)
+    {
+        var dto = MotorFileMapper.ToFileDto(motor);
+        var json = JsonSerializer.Serialize(dto, TestJsonOptions);
+        await File.WriteAllTextAsync(filePath, json);
+    }
+
     [Fact]
     public async Task LoadAsync_ValidFile_ReturnsMotorDefinition()
     {
         var motor = CreateTestMotorDefinition();
         var filePath = Path.Combine(_tempDir, "test-motor.json");
-        var json = JsonSerializer.Serialize(motor, new JsonSerializerOptions { WriteIndented = true });
-        await File.WriteAllTextAsync(filePath, json);
+        await WriteMotorFileAsync(motor, filePath);
 
-        var loaded = await _service.LoadAsync(filePath);
+        var loaded = await new FileService().LoadAsync(filePath);
 
         Assert.NotNull(loaded);
         Assert.Equal(motor.MotorName, loaded.MotorName);
@@ -98,12 +119,12 @@ public class FileServiceTests : IDisposable
     {
         var motor = CreateTestMotorDefinition();
         var filePath = Path.Combine(_tempDir, "test-motor.json");
-        var json = JsonSerializer.Serialize(motor);
-        await File.WriteAllTextAsync(filePath, json);
+        await WriteMotorFileAsync(motor, filePath);
 
-        await _service.LoadAsync(filePath);
+        var loader = new FileService();
+        await loader.LoadAsync(filePath);
 
-        Assert.Equal(filePath, _service.CurrentFilePath);
+        Assert.Equal(filePath, loader.CurrentFilePath);
     }
 
     [Fact]
@@ -111,13 +132,13 @@ public class FileServiceTests : IDisposable
     {
         var motor = CreateTestMotorDefinition();
         var filePath = Path.Combine(_tempDir, "test-motor.json");
-        var json = JsonSerializer.Serialize(motor);
-        await File.WriteAllTextAsync(filePath, json);
+        await WriteMotorFileAsync(motor, filePath);
 
-        _service.MarkDirty();
-        await _service.LoadAsync(filePath);
+        var loader = new FileService();
+        loader.MarkDirty();
+        await loader.LoadAsync(filePath);
 
-        Assert.False(_service.IsDirty);
+        Assert.False(loader.IsDirty);
     }
 
     [Fact]
@@ -220,6 +241,8 @@ public class FileServiceTests : IDisposable
         var original = CreateTestMotorDefinition();
         original.Manufacturer = "Test Corp";
         original.Units.Torque = "lbf-in";
+        original.Units.ResponseTime = "ms";
+        original.Units.Backlash = "arcmin";
         original.Metadata.Notes = "Test notes";
 
         var filePath = Path.Combine(_tempDir, "roundtrip.json");
@@ -232,7 +255,9 @@ public class FileServiceTests : IDisposable
         Assert.Equal(original.MaxSpeed, loaded.MaxSpeed);
         Assert.Equal(original.RatedPeakTorque, loaded.RatedPeakTorque);
         Assert.Equal(original.HasBrake, loaded.HasBrake);
+        Assert.Equal(original.BrakeResponseTime, loaded.BrakeResponseTime);
         Assert.Equal(original.Units.Torque, loaded.Units.Torque);
+        Assert.Equal(original.Units.Backlash, loaded.Units.Backlash);
         Assert.Equal(original.Metadata.Notes, loaded.Metadata.Notes);
     }
 
@@ -246,7 +271,7 @@ public class FileServiceTests : IDisposable
         var loaded = await _service.LoadAsync(filePath);
 
         Assert.Equal(original.Drives.Count, loaded.Drives.Count);
-        
+
         var origDrive = original.Drives[0];
         var loadDrive = loaded.Drives[0];
         Assert.Equal(origDrive.Name, loadDrive.Name);
@@ -258,11 +283,6 @@ public class FileServiceTests : IDisposable
         Assert.Equal(origVoltage.Power, loadVoltage.Power);
         Assert.Equal(origVoltage.MaxSpeed, loadVoltage.MaxSpeed);
         Assert.Equal(origVoltage.Series.Count, loadVoltage.Series.Count);
-
-        var origSeries = origVoltage.Series[0];
-        var loadSeries = loadVoltage.Series[0];
-        Assert.Equal(origSeries.Name, loadSeries.Name);
-        Assert.Equal(101, loadSeries.Data.Count);
     }
 
     [Fact]

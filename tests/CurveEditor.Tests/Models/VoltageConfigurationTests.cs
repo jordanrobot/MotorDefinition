@@ -58,15 +58,14 @@ public class VoltageConfigurationTests
     }
 
     [Fact]
-    public void GetSeriesByName_CaseInsensitive_ReturnsSeries()
+    public void GetSeriesByName_CaseMismatch_ReturnsNull()
     {
         var voltage = new VoltageConfiguration(220) { MaxSpeed = 5000 };
         voltage.AddSeries("Peak", 50);
 
         var result = voltage.GetSeriesByName("PEAK");
 
-        Assert.NotNull(result);
-        Assert.Equal("Peak", result.Name);
+        Assert.Null(result);
     }
 
     [Fact]

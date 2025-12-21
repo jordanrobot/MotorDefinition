@@ -108,30 +108,30 @@ Extraction-friendly layout (recommended)
 
 ---
 
-## [ ] PR 0: Preparation (DTOs + mapper scaffolding, no behavior change)
+## [x] PR 0: Preparation (DTOs + mapper scaffolding, no behavior change)
 
 ### Goal
 Introduce persistence DTOs and a mapper layer without changing the app’s load/save behavior.
 
 ### Tasks
-- [ ] Add internal persistence DTOs representing the target on-disk shape (do not wire them into `FileService` yet):
-  - [ ] `MotorDefinitionFileDto`
-  - [ ] `DriveFileDto` (`seriesName`)
-  - [ ] `VoltageFileDto` (`percent`, `rpm`, `series` map)
-  - [ ] `SeriesEntryDto` (`locked`, `notes?`, `torque`)
-- [ ] Add a mapping layer (pure functions) between DTOs and runtime types:
-  - [ ] DTO -> runtime (lossless)
-  - [ ] runtime -> DTO (lossless if representable)
-- [ ] Add a lightweight shape probe helper for Directory Browser validation:
-  - [ ] `MotorFileProbe` (or similar) under `jordanrobot.MotorDefinitions.Probing` that inspects a `JsonDocument`.
-- [ ] Decide and document deterministic ordering for `series` map emission:
-  - [ ] Use `SortedDictionary<string, SeriesEntryDto>` or explicitly sort keys during serialization mapping.
-- [ ] Add unit tests for mapper round-trips using small in-memory objects:
-  - [ ] One voltage, two series
-  - [ ] Multiple voltages
+- [x] Add internal persistence DTOs representing the target on-disk shape (do not wire them into `FileService` yet):
+  - [x] `MotorDefinitionFileDto`
+  - [x] `DriveFileDto` (`seriesName`)
+  - [x] `VoltageFileDto` (`percent`, `rpm`, `series` map)
+  - [x] `SeriesEntryDto` (`locked`, `notes?`, `torque`)
+- [x] Add a mapping layer (pure functions) between DTOs and runtime types:
+  - [x] DTO -> runtime (lossless)
+  - [x] runtime -> DTO (lossless if representable)
+- [x] Add a lightweight shape probe helper for Directory Browser validation:
+  - [x] `MotorFileProbe` (or similar) under `jordanrobot.MotorDefinitions.Probing` that inspects a `JsonDocument`.
+- [x] Decide and document deterministic ordering for `series` map emission:
+  - [x] Use `SortedDictionary<string, SeriesEntryDto>` or explicitly sort keys during serialization mapping.
+- [x] Add unit tests for mapper round-trips using small in-memory objects:
+  - [x] One voltage, two series
+  - [x] Multiple voltages
 
 Required hygiene:
-- [ ] No user-visible behavior change.
+- [x] No user-visible behavior change.
 
 ### Done when
 - Solution builds.
@@ -148,52 +148,52 @@ Required hygiene:
 
 ---
 
-## [ ] PR 1: Switch Load + Save to the series table/map format (end-to-end persistence)
+## [x] PR 1: Switch Load + Save to the series table/map format (end-to-end persistence)
 
 ### Goal
 Change persistence so saving and loading both use the new format, so the PR is merge-safe and the app can round-trip files immediately (AC 3.1.5a + AC 3.1.5b partial).
 
 ### Tasks
-- [ ] Update [src/CurveEditor/Services/FileService.cs](src/CurveEditor/Services/FileService.cs) to use DTOs for BOTH save and load:
-  - [ ] Save path: map runtime -> DTO and serialize DTO.
-  - [ ] Load path: deserialize DTO and map DTO -> runtime.
-  - [ ] Keep `schemaVersion` emitted as `1.0.0`.
-- [ ] Implement drive JSON rename end-to-end:
-  - [ ] On disk uses `seriesName` instead of `name`.
-  - [ ] On read, map `seriesName` -> runtime `DriveConfiguration.Name`.
-  - [ ] Ensure property ordering on write: `manufacturer`, `partNumber`, `seriesName`, then `voltages` (DTO `JsonPropertyOrder`).
-- [ ] Add new motor scalar properties end-to-end:
-  - [ ] `brakeResponseTime`
-  - [ ] `brakeEngageTimeDiode`
-  - [ ] `brakeEngageTimeMOV`
-  - [ ] `brakeBacklash`
-- [ ] Expand `UnitSettings` to include new unit labels (runtime model):
-  - [ ] Add `responseTime` (default `milliseconds`)
-  - [ ] Add `percentage` (default `%`)
-  - [ ] Add `temperature` (default `C`)
-  - [ ] Ensure `backlash` default is `arcmin` (not `arc-minutes`).
-  - [ ] Ensure `inertia` default is `kg-m^2`.
-  - [ ] Ensure `torqueConstant` default is `Nm/A`.
-- [ ] Update Directory Browser lightweight validator to recognize the new format without deserializing runtime models:
-  - [ ] Replace `JsonSerializer.Deserialize<MotorDefinition>` approach with a `JsonDocument` shape probe.
-  - [ ] Prefer calling the shared `jordanrobot.MotorDefinitions.Probing` helper so `DirectoryBrowserViewModel` does not embed schema details.
-  - [ ] Check for `schemaVersion == "1.0.0"`, `motorName`, and plausible `drives[].voltages[]` structure.
-  - [ ] Check that voltage entries contain `percent`/`rpm` arrays and a `series` object.
-  - [ ] Keep it lightweight (no full schema validation in Phase 3.1.5; migrate to library validator in Phase 3.1.6+).
-- [ ] Case-sensitive series key behavior:
-  - [ ] Ensure the mapper uses case-sensitive dictionary keys for `series` (no casing normalization).
-  - [ ] Update runtime series lookup helpers to be case-sensitive where applicable (e.g., `VoltageConfiguration.GetSeriesByName`).
+- [x] Update [src/CurveEditor/Services/FileService.cs](src/CurveEditor/Services/FileService.cs) to use DTOs for BOTH save and load:
+  - [x] Save path: map runtime -> DTO and serialize DTO.
+  - [x] Load path: deserialize DTO and map DTO -> runtime.
+  - [x] Keep `schemaVersion` emitted as `1.0.0`.
+- [x] Implement drive JSON rename end-to-end:
+  - [x] On disk uses `seriesName` instead of `name`.
+  - [x] On read, map `seriesName` -> runtime `DriveConfiguration.Name`.
+  - [x] Ensure property ordering on write: `manufacturer`, `partNumber`, `seriesName`, then `voltages` (DTO `JsonPropertyOrder`).
+- [x] Add new motor scalar properties end-to-end:
+  - [x] `brakeResponseTime`
+  - [x] `brakeEngageTimeDiode`
+  - [x] `brakeEngageTimeMOV`
+  - [x] `brakeBacklash`
+- [x] Expand `UnitSettings` to include new unit labels (runtime model):
+  - [x] Add `responseTime` (default `milliseconds`)
+  - [x] Add `percentage` (default `%`)
+  - [x] Add `temperature` (default `C`)
+  - [x] Ensure `backlash` default is `arcmin` (not `arc-minutes`).
+  - [x] Ensure `inertia` default is `kg-m^2`.
+  - [x] Ensure `torqueConstant` default is `Nm/A`.
+- [x] Update Directory Browser lightweight validator to recognize the new format without deserializing runtime models:
+  - [x] Replace `JsonSerializer.Deserialize<MotorDefinition>` approach with a `JsonDocument` shape probe.
+  - [x] Prefer calling the shared `jordanrobot.MotorDefinitions.Probing` helper so `DirectoryBrowserViewModel` does not embed schema details.
+  - [x] Check for `schemaVersion == "1.0.0"`, `motorName`, and plausible `drives[].voltages[]` structure.
+  - [x] Check that voltage entries contain `percent`/`rpm` arrays and a `series` object.
+  - [x] Keep it lightweight (no full schema validation in Phase 3.1.5; migrate to library validator in Phase 3.1.6+).
+- [x] Case-sensitive series key behavior:
+  - [x] Ensure the mapper uses case-sensitive dictionary keys for `series` (no casing normalization).
+  - [x] Update runtime series lookup helpers to be case-sensitive where applicable (e.g., `VoltageConfiguration.GetSeriesByName`).
 
 Tests (must make this PR merge-safe)
-- [ ] Update/add unit tests to validate the new end-to-end behavior:
-  - [ ] Save writes `percent`/`rpm` and `series` map.
-  - [ ] Load reads the new shape and reconstructs the runtime hierarchy.
-  - [ ] Round-trip save -> load -> save preserves curve data and series metadata.
-  - [ ] Drive JSON uses `seriesName` and does not use `name`.
+- [x] Update/add unit tests to validate the new end-to-end behavior:
+  - [x] Save writes `percent`/`rpm` and `series` map.
+  - [x] Load reads the new shape and reconstructs the runtime hierarchy.
+  - [x] Round-trip save -> load -> save preserves curve data and series metadata.
+  - [x] Drive JSON uses `seriesName` and does not use `name`.
 
 Required hygiene:
-- [ ] Keep `schemaVersion` emitted as `1.0.0`.
-- [ ] Do not change curve generation logic.
+- [x] Keep `schemaVersion` emitted as `1.0.0`.
+- [x] Do not change curve generation logic.
 
 ### Done when
 - Saving produces the new persisted shape AND a saved file can be reopened.
@@ -215,30 +215,30 @@ Required hygiene:
 
 ---
 
-## [ ] PR 2: Semantic validation on load + mapper shape validation (logging + safe failure)
+## [x] PR 2: Semantic validation on load + mapper shape validation (logging + safe failure)
 
 ### Goal
 Enforce Phase 3.1.5 semantic rules during load (and fail fast with clear logging), keeping the mapper responsible for structural/shape validation.
 
 ### Tasks
-- [ ] Mapper shape validation (DTO -> runtime):
-  - [ ] Validate array lengths and required nodes during mapping:
-    - [ ] `percent` length 101
-    - [ ] `rpm` length 101
-    - [ ] each series `torque` length 101
-  - [ ] Validate required scalar properties are present or defaultable.
-  - [ ] Fail mapping with a clear exception that includes enough context to log.
-- [ ] Semantic validation on load:
-  - [ ] Validate `percent` axis semantics: strictly increasing, starts at 0, ends at 100.
-  - [ ] Validate `rpm` axis semantics: non-negative and monotonic non-decreasing.
-  - [ ] Validate torque values are non-negative (if required by existing domain rules).
-- [ ] Logging + safe failure behavior (per ADR-0009):
-  - [ ] In `LoadAsync`, catch mapping/semantic validation failures and log with `{FilePath}`.
-  - [ ] Surface a user-friendly exception message to the caller (no crash loop).
-- [ ] Unit tests:
-  - [ ] Invalid percent axis length fails to load.
-  - [ ] Percent not starting at 0 or not ending at 100 fails to load.
-  - [ ] RPM decreasing somewhere fails to load.
+- [x] Mapper shape validation (DTO -> runtime):
+  - [x] Validate array lengths and required nodes during mapping:
+    - [x] `percent` length 101
+    - [x] `rpm` length 101
+    - [x] each series `torque` length 101
+  - [x] Validate required scalar properties are present or defaultable.
+  - [x] Fail mapping with a clear exception that includes enough context to log.
+- [x] Semantic validation on load:
+  - [x] Validate `percent` axis semantics: strictly increasing, starts at 0, ends at 100.
+  - [x] Validate `rpm` axis semantics: non-negative and monotonic non-decreasing.
+  - [x] Validate torque values are non-negative (if required by existing domain rules).
+- [x] Logging + safe failure behavior (per ADR-0009):
+  - [x] In `LoadAsync`, catch mapping/semantic validation failures and log with `{FilePath}`.
+  - [x] Surface a user-friendly exception message to the caller (no crash loop).
+- [x] Unit tests:
+  - [x] Invalid percent axis length fails to load.
+  - [x] Percent not starting at 0 or not ending at 100 fails to load.
+  - [x] RPM decreasing somewhere fails to load.
 
 ### Done when
 - Load rejects semantically invalid files with clear errors and log entries.
@@ -257,26 +257,26 @@ Enforce Phase 3.1.5 semantic rules during load (and fail fast with clear logging
 
 ---
 
-## [ ] PR 3: Schema + example updates + size benchmark artifact
+## [x] PR 3: Schema + example updates + size benchmark artifact
 
 ### Goal
 Update schema and sample files to match the new representation, and add proof of file size reduction (AC 3.1.5c).
 
 ### Tasks
-- [ ] Update [schema/motor-schema-v1.0.0.json](schema/motor-schema-v1.0.0.json):
-  - [ ] Replace voltage `series` definition from array-of-series-with-data[] to series table/map format.
-  - [ ] Add new motor properties (`brakeResponseTime`, `brakeEngageTimeDiode`, `brakeEngageTimeMOV`, `brakeBacklash`).
-  - [ ] Expand `units` schema to include: `responseTime`, `backlash`, `percentage`, `inertia`, `temperature`, `torqueConstant`.
-  - [ ] Ensure `backlash` default is `arcmin`.
-  - [ ] Add array length constraints (101) where practical (`minItems`/`maxItems`).
-  - [ ] Ensure additionalProperties remains constrained where appropriate.
-- [ ] Update [schema/example-motor.json](schema/example-motor.json) to the new format.
-- [ ] Add a size benchmark/test artifact:
-  - [ ] Option A (preferred): xUnit test that serializes the same in-memory motor to:
+- [x] Update [schema/motor-schema-v1.0.0.json](schema/motor-schema-v1.0.0.json):
+  - [x] Replace voltage `series` definition from array-of-series-with-data[] to series table/map format.
+  - [x] Add new motor properties (`brakeResponseTime`, `brakeEngageTimeDiode`, `brakeEngageTimeMOV`, `brakeBacklash`).
+  - [x] Expand `units` schema to include: `responseTime`, `backlash`, `percentage`, `inertia`, `temperature`, `torqueConstant`.
+  - [x] Ensure `backlash` default is `arcmin`.
+  - [x] Add array length constraints (101) where practical (`minItems`/`maxItems`).
+  - [x] Ensure additionalProperties remains constrained where appropriate.
+- [x] Update [schema/example-motor.json](schema/example-motor.json) to the new format.
+- [x] Add a size benchmark/test artifact:
+  - [x] Option A (preferred): xUnit test that serializes the same in-memory motor to:
     - legacy per-point shape (via a local legacy DTO in test only), and
     - new table/map shape,
     and asserts new JSON length is smaller.
-  - [ ] Option B: a small markdown file that records measured sizes from a representative sample.
+  - [x] Option B: a small markdown file that records measured sizes from a representative sample.
 
 ### Done when
 - `schema/example-motor.json` conforms to `schema/motor-schema-v1.0.0.json` (at least by inspection / external schema validation if available).
@@ -294,21 +294,21 @@ Update schema and sample files to match the new representation, and add proof of
 
 ---
 
-## [ ] PR 4: Hardening + AC-driven validation pass
+## [x] PR 4: Hardening + AC-driven validation pass
 
 ### Goal
 Finish round-trip correctness, ensure logging is clean, and complete AC verification.
 
 ### Tasks
-- [ ] Ensure round-trip stability (save -> load -> save) in tests:
-  - [ ] No loss of `locked` or `notes`.
-  - [ ] Percent/rpm/torque values remain identical.
-- [ ] Ensure `DirectoryBrowserViewModel` background validation remains fast and doesn’t allocate huge structures unnecessarily.
-- [ ] Audit for accidental behavior changes outside persistence/validation.
+- [x] Ensure round-trip stability (save -> load -> save) in tests:
+  - [x] No loss of `locked` or `notes`.
+  - [x] Percent/rpm/torque values remain identical.
+- [x] Ensure `DirectoryBrowserViewModel` background validation remains fast and doesn’t allocate huge structures unnecessarily.
+- [x] Audit for accidental behavior changes outside persistence/validation.
 
 Required hygiene:
-- [ ] Run unit tests.
-- [ ] Confirm no new noisy log spam on expected failures.
+- [x] Run unit tests.
+- [x] Confirm no new noisy log spam on expected failures.
 
 ### Done when
 - All acceptance criteria are satisfied.
@@ -321,9 +321,9 @@ Required hygiene:
 4. (AC 3.1.5d) Remove new fields from JSON, reload, confirm defaults applied and save reintroduces fields.
 
 ### Sign-off checklist
-- [ ] All tasks across all PR sections are checked `[x]`.
-- [ ] Every AC has a verification step (test or manual script).
-- [ ] No out-of-scope features were implemented.
+- [x] All tasks across all PR sections are checked `[x]`.
+- [x] Every AC has a verification step (test or manual script).
+- [x] No out-of-scope features were implemented.
 
 ### Files (expected)
 - Update: [schema/motor-schema-v1.0.0.json](schema/motor-schema-v1.0.0.json)

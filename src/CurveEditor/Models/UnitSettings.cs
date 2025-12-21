@@ -18,6 +18,9 @@ public class UnitSettings : INotifyPropertyChanged
     private string _inertia = "kg-m^2";
     private string _torqueConstant = "Nm/A";
     private string _backlash = "arcmin";
+    private string _responseTime = "ms";
+    private string _percentage = "%";
+    private string _temperature = "C";
 
     /// <summary>
     /// Occurs when a property value changes.
@@ -115,6 +118,36 @@ public class UnitSettings : INotifyPropertyChanged
     }
 
     /// <summary>
+    /// Response time unit for brake measurements.
+    /// </summary>
+    [JsonPropertyName("responseTime")]
+    public string ResponseTime
+    {
+        get => _responseTime;
+        set => SetProperty(ref _responseTime, value);
+    }
+
+    /// <summary>
+    /// Percentage unit label.
+    /// </summary>
+    [JsonPropertyName("percentage")]
+    public string Percentage
+    {
+        get => _percentage;
+        set => SetProperty(ref _percentage, value);
+    }
+
+    /// <summary>
+    /// Temperature unit label.
+    /// </summary>
+    [JsonPropertyName("temperature")]
+    public string Temperature
+    {
+        get => _temperature;
+        set => SetProperty(ref _temperature, value);
+    }
+
+    /// <summary>
     /// Sets the property value and raises PropertyChanged if the value changed.
     /// </summary>
     protected bool SetProperty<T>(ref T field, T value, [CallerMemberName] string? propertyName = null)
@@ -177,4 +210,19 @@ public class UnitSettings : INotifyPropertyChanged
     /// Gets the supported backlash units.
     /// </summary>
     public static string[] SupportedBacklashUnits => ["arcmin", "arcsec"];
+
+    /// <summary>
+    /// Gets the supported response time units.
+    /// </summary>
+    public static string[] SupportedResponseTimeUnits => ["ms"];
+
+    /// <summary>
+    /// Gets the supported percentage units.
+    /// </summary>
+    public static string[] SupportedPercentageUnits => ["%"];
+
+    /// <summary>
+    /// Gets the supported temperature units.
+    /// </summary>
+    public static string[] SupportedTemperatureUnits => ["C"];
 }

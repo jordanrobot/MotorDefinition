@@ -108,7 +108,7 @@ public class VoltageConfiguration : INotifyPropertyChanged
     /// <returns>The matching series, or null if not found.</returns>
     public CurveSeries? GetSeriesByName(string name)
     {
-        return Series.Find(s => s.Name.Equals(name, StringComparison.OrdinalIgnoreCase));
+        return Series.Find(s => s.Name.Equals(name, StringComparison.Ordinal));
     }
 
     /// <summary>

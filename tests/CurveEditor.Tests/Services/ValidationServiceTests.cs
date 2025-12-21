@@ -158,6 +158,34 @@ public class ValidationServiceTests
         Assert.Contains(errors, e => e.Contains("cannot exceed peak torque"));
     }
 
+    [Fact]
+    public void ValidateVoltageConfiguration_MisalignedPercentAxes_ReturnsErrors()
+    {
+        var config = CreateValidVoltageConfiguration();
+        var second = new CurveSeries("Continuous");
+        second.InitializeData(config.MaxSpeed, 45);
+        second.Data[10].Percent = 11;
+        config.Series.Add(second);
+
+        var errors = _service.ValidateVoltageConfiguration(config);
+
+        Assert.Contains(errors, e => e.Contains("percent axis differs"));
+    }
+
+    [Fact]
+    public void ValidateVoltageConfiguration_MisalignedRpmAxes_ReturnsErrors()
+    {
+        var config = CreateValidVoltageConfiguration();
+        var second = new CurveSeries("Continuous");
+        second.InitializeData(config.MaxSpeed, 45);
+        second.Data[20].Rpm = config.Series[0].Data[20].Rpm - 10;
+        config.Series.Add(second);
+
+        var errors = _service.ValidateVoltageConfiguration(config);
+
+        Assert.Contains(errors, e => e.Contains("rpm axis differs"));
+    }
+
     #endregion
 
     #region ValidateMotorDefinition Tests
@@ -223,6 +251,17 @@ public class ValidationServiceTests
         // Assert
         Assert.NotEmpty(errors);
         Assert.Contains(errors, e => e.Contains("Max speed cannot be negative"));
+    }
+
+    [Fact]
+    public void ValidateMotorDefinition_NegativeBrakeResponse_ReturnsErrors()
+    {
+        var motor = CreateValidMotorDefinition();
+        motor.BrakeResponseTime = -1;
+
+        var errors = _service.ValidateMotorDefinition(motor);
+
+        Assert.Contains(errors, e => e.Contains("Brake response time"));
     }
 
     #endregion

@@ -11,6 +11,7 @@ using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using CurveEditor.Services;
 using CurveEditor.Models;
+using jordanrobot.MotorDefinitions.Probing;
 using Serilog;
 using Avalonia.Threading;
 
@@ -21,11 +22,6 @@ namespace CurveEditor.ViewModels;
 /// </summary>
 public partial class DirectoryBrowserViewModel : ObservableObject
 {
-    private static readonly JsonSerializerOptions JsonOptions = new()
-    {
-        PropertyNameCaseInsensitive = true
-    };
-
     public const string LastOpenedDirectoryKey = "DirectoryBrowser.LastOpenedDirectory";
     public const string WasExplicitlyClosedKey = "DirectoryBrowser.WasExplicitlyClosed";
     public const string ExpandedDirectoryPathsKey = "DirectoryBrowser.ExpandedDirectoryPaths";
@@ -508,17 +504,10 @@ public partial class DirectoryBrowserViewModel : ObservableObject
                 return false;
             }
 
-            var json = await File.ReadAllTextAsync(filePath, cancellationToken).ConfigureAwait(false);
-            var motorDefinition = JsonSerializer.Deserialize<MotorDefinition>(json, JsonOptions);
+            await using var stream = File.OpenRead(filePath);
+            using var document = await JsonDocument.ParseAsync(stream, cancellationToken: cancellationToken).ConfigureAwait(false);
 
-            if (motorDefinition is null)
-            {
-                return false;
-            }
-
-            // Lightweight validity check: ensure it's plausibly a motor definition (not random JSON).
-            // Keep this cheaper than full domain validation to avoid requiring large series arrays.
-            return !string.IsNullOrWhiteSpace(motorDefinition.MotorName) && motorDefinition.HasValidConfiguration();
+            return MotorFileProbe.IsLikelyMotorDefinition(document);
         }
         catch (OperationCanceledException)
         {

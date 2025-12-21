@@ -117,6 +117,30 @@ public class MotorDefinition
     [JsonPropertyName("brakeVoltage")]
     public double BrakeVoltage { get; set; }
 
+    /// <summary>
+    /// The response time of the brake engagement.
+    /// </summary>
+    [JsonPropertyName("brakeResponseTime")]
+    public double BrakeResponseTime { get; set; }
+
+    /// <summary>
+    /// The brake engage time when using a diode.
+    /// </summary>
+    [JsonPropertyName("brakeEngageTimeDiode")]
+    public double BrakeEngageTimeDiode { get; set; }
+
+    /// <summary>
+    /// The brake engage time when using an MOV.
+    /// </summary>
+    [JsonPropertyName("brakeEngageTimeMOV")]
+    public double BrakeEngageTimeMov { get; set; }
+
+    /// <summary>
+    /// The backlash of the brake mechanism.
+    /// </summary>
+    [JsonPropertyName("brakeBacklash")]
+    public double BrakeBacklash { get; set; }
+
     // Units Configuration
     /// <summary>
     /// The unit settings for this motor definition.

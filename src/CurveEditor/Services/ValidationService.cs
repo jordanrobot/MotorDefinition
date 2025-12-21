@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using CurveEditor.Models;
 
@@ -8,6 +9,8 @@ namespace CurveEditor.Services;
 /// </summary>
 public class ValidationService : IValidationService
 {
+    private const double AxisTolerance = 1e-9;
+
     /// <inheritdoc />
     public IReadOnlyList<string> ValidateDataPoint(DataPoint dataPoint)
     {
@@ -105,15 +108,39 @@ public class ValidationService : IValidationService
         if (voltageConfig.Series.Count == 0)
         {
             errors.Add("Voltage configuration must have at least one curve series.");
+            return errors;
         }
 
-        // Validate each series
         foreach (var series in voltageConfig.Series)
         {
             var seriesErrors = ValidateCurveSeries(series);
             foreach (var error in seriesErrors)
             {
                 errors.Add($"Series '{series.Name}': {error}");
+            }
+        }
+
+        if (voltageConfig.Series.Count > 1)
+        {
+            var baseline = voltageConfig.Series[0];
+            for (var s = 1; s < voltageConfig.Series.Count; s++)
+            {
+                var candidate = voltageConfig.Series[s];
+                var pointCount = Math.Min(baseline.Data.Count, candidate.Data.Count);
+                for (var i = 0; i < pointCount; i++)
+                {
+                    if (candidate.Data[i].Percent != baseline.Data[i].Percent)
+                    {
+                        errors.Add($"Series '{candidate.Name}' percent axis differs from '{baseline.Name}' at index {i}.");
+                        break;
+                    }
+
+                    if (Math.Abs(candidate.Data[i].Rpm - baseline.Data[i].Rpm) > AxisTolerance)
+                    {
+                        errors.Add($"Series '{candidate.Name}' rpm axis differs from '{baseline.Name}' at index {i}.");
+                        break;
+                    }
+                }
             }
         }
 
@@ -148,6 +175,26 @@ public class ValidationService : IValidationService
         if (motor.RatedContinuousTorque < 0)
         {
             errors.Add($"Continuous torque cannot be negative (current: {motor.RatedContinuousTorque}).");
+        }
+
+        if (motor.BrakeResponseTime < 0)
+        {
+            errors.Add($"Brake response time cannot be negative (current: {motor.BrakeResponseTime}).");
+        }
+
+        if (motor.BrakeEngageTimeDiode < 0)
+        {
+            errors.Add($"Brake engage time (diode) cannot be negative (current: {motor.BrakeEngageTimeDiode}).");
+        }
+
+        if (motor.BrakeEngageTimeMov < 0)
+        {
+            errors.Add($"Brake engage time (MOV) cannot be negative (current: {motor.BrakeEngageTimeMov}).");
+        }
+
+        if (motor.BrakeBacklash < 0)
+        {
+            errors.Add($"Brake backlash cannot be negative (current: {motor.BrakeBacklash}).");
         }
 
         if (motor.Drives.Count == 0)

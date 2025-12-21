@@ -1,35 +1,53 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using CurveEditor.Services;
 using CurveEditor.ViewModels;
+using jordanrobot.MotorDefinitions.Dtos;
 using Xunit;
 
 namespace CurveEditor.Tests.ViewModels;
 
 public sealed class DirectoryBrowserInteractionTests
 {
-        private static string TestMotorJson(string motorName) => $$"""
+    private static string TestMotorJson(string motorName)
+    {
+        var percent = Enumerable.Range(0, 101).ToArray();
+        var rpm = percent.Select(p => (double)p).ToArray();
+
+        var dto = new MotorDefinitionFileDto
         {
-            \"schemaVersion\": \"1.0.0\",
-            \"motorName\": \"{{motorName}}\",
-            \"drives\": [
+            SchemaVersion = CurveEditor.Models.MotorDefinition.CurrentSchemaVersion,
+            MotorName = motorName,
+            Drives =
+            [
+                new DriveFileDto
                 {
-                    \"name\": \"Default Drive\",
-                    \"voltages\": [
+                    Manufacturer = string.Empty,
+                    PartNumber = string.Empty,
+                    SeriesName = "Default Drive",
+                    Voltages =
+                    [
+                        new VoltageFileDto
                         {
-                            \"voltage\": 220,
-                            \"series\": [
-                                { \"name\": \"Peak\", \"data\": [] }
-                            ]
+                            Voltage = 220,
+                            Percent = percent,
+                            Rpm = rpm,
+                            Series = new SortedDictionary<string, SeriesEntryDto>
+                            {
+                                ["Peak"] = new SeriesEntryDto { Locked = false, Torque = rpm.ToArray() }
+                            }
                         }
                     ]
                 }
             ]
-        }
-        """;
+        };
+
+        return System.Text.Json.JsonSerializer.Serialize(dto);
+    }
 
     private sealed class InMemorySettingsStore : IUserSettingsStore
     {
