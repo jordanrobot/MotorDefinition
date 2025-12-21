@@ -90,11 +90,13 @@
             <Setter Property="FontSize" Value="11"/>
             <Setter Property="Padding" Value="4,2"/>
             <Setter Property="MinHeight" Value="24"/>
+            <Setter Property="HorizontalAlignment" Value="Stretch"/>
         </Style>
         
         <!-- Property Row Style -->
         <Style Selector="Grid.PropertyRow">
             <Setter Property="Margin" Value="0,1"/>
+            <Setter Property="HorizontalAlignment" Value="Stretch"/>
         </Style>
         
         <!-- GridSplitter Style -->
