@@ -252,7 +252,7 @@ Note: In this example, you'll notice that `motor profile 1.json` and `motor prof
 
 - [ ] Add new properties to the units section:
   - [ ] `responseTime` (string) indicating the motor brake response time unit of measure. Default is milliseconds.
-  - [ ] `backlash` (string) indicating a angular displacement. Default is arc-minutes.
+  - [ ] `backlash` (string) indicating a angular displacement. Default is arcmin.
     - [ ] `percentage` (string) indicates a percentage number. Default is %.
     - [ ] `inertia` (string): default is "kg-m^2",
     - [ ] `temperature` (string): default is "C",
@@ -294,12 +294,20 @@ Note: In this example, you'll notice that `motor profile 1.json` and `motor prof
 - [ ] Implement conversion logic:
   - [ ] Series table/map  runtime `CurveSeries`/`DataPoint` (lossless conversion).
 
+### Implementation Guidance (Phase 3.1.5)
+
+- Keep persistence-facing DTOs/mapping/validation code isolated so it can be moved into the Phase 3.1.6 client library with minimal refactoring (recommended: `jordanrobot.MotorDefinitions.*` namespaces).
+
 ### Acceptance Criteria (Phase 3.1.5)
 
 - [ ] AC 3.1.5a: CurveEditor saves motor definition files with `schemaVersion` set to `1.0.0` and persists curve data using the series table/map representation.
 - [ ] AC 3.1.5b: CurveEditor can load and save the series table/map format, and reopening a saved file yields identical curve data (percent/rpm/torque) and series metadata.
 - [ ] AC 3.1.5c: For a representative file with multiple voltages and at least two series per voltage, the saved JSON file is measurably smaller than the current object-per-point representation used before this change (track size reduction in a simple benchmark/test artifact).
 - [ ] AC 3.1.5d: The new motor properties are correctly loaded and saved, and their default values are applied when loading files that omit them.
+
+### Deferred (Phase 3.1.5)
+
+- Duplicate series names and series-name uniqueness policy is deferred to a later phase. Phase 3.1.5 treats `series` keys as case-sensitive and does not define behavior for duplicates beyond what JSON objects inherently allow.
 
 
 ## Phase 3.1.6 Functional Requirements: .NET Client Library Skeleton Project
@@ -316,11 +324,12 @@ Note: In this example, you'll notice that `motor profile 1.json` and `motor prof
 
 ### Requirements
 
-- [ ] Add a new class library project (name TBD, e.g., `CurveEditor.MotorFiles`) to the solution.
+- [ ] Add a new class library project `jordanrobot.MotorDefinitions` to the solution.
 - [ ] The library project must not reference Avalonia or CurveEditor UI assemblies.
 - [ ] The library project should contain (initially):
   - [ ] Schema-aligned models (or rehomed shared models) that represent the motor definition file.
   - [ ] A single entrypoint for file IO (e.g., `MotorFile` helpers or `MotorFileSerializer`).
+  - [ ] Rehome/move the Phase 3.1.5 persistence DTOs + mapper + validators into the library with minimal churn (ideally a file move and minor namespace/project-reference updates).
 
 ### Acceptance Criteria (Phase 3.1.6)
 

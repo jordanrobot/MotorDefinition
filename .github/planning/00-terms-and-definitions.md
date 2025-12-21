@@ -237,7 +237,7 @@ A mode where the user can "enter" the cell to directly edit the value within the
 - **Nm/A**: Newton-meters per ampere
 
 ### Backlash Units
-- **arcmin**: Arc minutes
+- **arcmin**: Arcminutes
 - **arcsec**: Arc seconds
 
 ---

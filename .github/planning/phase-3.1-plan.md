@@ -187,6 +187,12 @@ UI-thread safety
 Deferred validation (future phase)
 - Phase 3.1 will not filter or badge invalid files.
 - Future implementation should prefer **JSON schema validation** (per `schema/motor-schema-v1.0.0.json`) as the first pass, and only then optionally run domain validation.
+
+Addendum (post-Phase 3.1)
+- The current implementation in `DirectoryBrowserViewModel` performs a lightweight validation by deserializing `MotorDefinition` and checking `HasValidConfiguration()`.
+- Phase 3.1.5 changes the on-disk JSON shape (series table/map) while keeping the runtime model unchanged, so this deserialization-based validator will become incorrect and must be updated.
+- Short-term (Phase 3.1.5): update the explorer filter to a `JsonDocument`-based shape probe that is cheap and does not depend on runtime model serialization.
+- Long-term (Phase 3.1.6+): replace the shape probe with schema-based validation provided by the planned client library (schema + validator), so the explorer validator automatically stays aligned with schema evolution.
 - Do not use `IFileService.LoadAsync()` as a validator because it mutates `CurrentFilePath` and dirty state.
 
 ### 3. Persistence plan (user settings)
