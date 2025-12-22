@@ -169,20 +169,20 @@ Required hygiene:
 
 ---
 
-## [ ] PR 2: Move schema-aligned runtime models into the library
+## [x] PR 2: Move schema-aligned runtime models into the library
 
 ### Goal
 Move runtime model types into the library so the library can own file IO end-to-end without referencing the app.
 
 ### Tasks
-- [ ] Move schema-aligned model files from `src/CurveEditor/Models/` into `src/jordanrobot.MotorDefinition/Models/`.
-  - [ ] Include `MotorDefinition`, `DriveConfiguration`, `VoltageConfiguration`, `CurveSeries`, `DataPoint`, `UnitSettings`, `MotorMetadata` and any supporting model files required by compilation.
-- [ ] Ensure moved models compile without Avalonia dependencies.
-- [ ] Update the app project to reference the library project:
-  - [ ] Add a `ProjectReference` from `src/CurveEditor/CurveEditor.csproj` to `src/jordanrobot.MotorDefinition/jordanrobot.MotorDefinition.csproj`.
-- [ ] Ensure the app no longer compiles the moved model files (remove them from the app project via file move).
-- [ ] Ensure tests still compile:
-  - [ ] If tests depended on app for models, they should resolve through the app’s transitive reference or reference the library directly.
+- [x] Move schema-aligned model files from `src/CurveEditor/Models/` into `src/jordanrobot.MotorDefinition/Models/`.
+  - [x] Include `MotorDefinition`, `DriveConfiguration`, `VoltageConfiguration`, `CurveSeries`, `DataPoint`, `UnitSettings`, `MotorMetadata` and any supporting model files required by compilation.
+- [x] Ensure moved models compile without Avalonia dependencies.
+- [x] Update the app project to reference the library project:
+  - [x] Add a `ProjectReference` from `src/CurveEditor/CurveEditor.csproj` to `src/jordanrobot.MotorDefinition/jordanrobot.MotorDefinition.csproj`.
+- [x] Ensure the app no longer compiles the moved model files (remove them from the app project via file move).
+- [x] Ensure tests still compile:
+  - [x] If tests depended on app for models, they should resolve through the app’s transitive reference or reference the library directly.
 
 Required hygiene:
 - [ ] Do not change any user-visible UI behavior.
