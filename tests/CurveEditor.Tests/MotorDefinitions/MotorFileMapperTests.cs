@@ -12,6 +12,12 @@ namespace CurveEditor.Tests.MotorDefinitions;
 
 public class MotorFileMapperTests
 {
+    private static readonly JsonSerializerOptions SerializerOptions = new()
+    {
+        WriteIndented = true,
+        DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull
+    };
+
     [Fact]
     public void SaveAndLoad_RoundTripsSingleVoltageAndSeriesMetadata()
     {
@@ -118,7 +124,7 @@ public class MotorFileMapperTests
 
             File.WriteAllText(
                 tempPath,
-                node.ToJsonString(new JsonSerializerOptions { WriteIndented = true, DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull }));
+                node.ToJsonString(SerializerOptions));
 
             Assert.Throws<InvalidOperationException>(() => MotorFile.Load(tempPath));
         }
