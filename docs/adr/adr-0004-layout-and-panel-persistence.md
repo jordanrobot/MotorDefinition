@@ -102,6 +102,6 @@ We standardize layout persistence around a **view-driven, JSON-backed strategy**
 
 ## References
 
-- **REF-001**: `src/CurveEditor/Views/MainWindow.axaml` – layout grid definitions for browser, chart, curve data, and properties panels.
-- **REF-002**: `src/CurveEditor/Views/MainWindow.axaml.cs` – `OnOpened` and `Apply*PanelLayout` methods.
+- **REF-001**: `src/MotorEditor.Avalonia/Views/MainWindow.axaml` – layout grid definitions for browser, chart, curve data, and properties panels.
+- **REF-002**: `src/MotorEditor.Avalonia/Views/MainWindow.axaml.cs` – `OnOpened` and `Apply*PanelLayout` methods.
 - **REF-003**: Panel persistence helpers in `CurveEditor.Behaviors` (`WindowBoundsPersistence`, `PanelLayoutPersistence`).

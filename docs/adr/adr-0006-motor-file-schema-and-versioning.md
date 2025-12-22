@@ -105,6 +105,6 @@ We adopt a **semver-style, schema-indexed versioning strategy** for motor JSON f
 ## References
 
 - **REF-001**: ADR-0001 – Motor JSON File Format (v1).
-- **REF-002**: `src/CurveEditor/Models/MotorDefinition.cs` – `CurrentSchemaVersion` constant and JSON attributes.
+- **REF-002**: `src/MotorEditor.Avalonia/Models/MotorDefinition.cs` – `CurrentSchemaVersion` constant and JSON attributes.
 - **REF-003**: `schema/index.json` – schema index.
 - **REF-004**: JSON Schema files under `schema/` (e.g., `motor-schema-v2.0.0.json`).

@@ -81,6 +81,6 @@ We adopt the following logging and error-handling policy:
 
 ## References
 
-- **REF-001**: `src/CurveEditor/Program.cs` and logging configuration.
-- **REF-002**: `src/CurveEditor/Services` – file and curve generation services using Serilog.
+- **REF-001**: `src/MotorEditor.Avalonia/Program.cs` and logging configuration.
+- **REF-002**: `src/MotorEditor.Avalonia/Services` – file and curve generation services using Serilog.
 - **REF-003**: Roadmap Phase 1.7 – Logging and Exception Handling.

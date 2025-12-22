@@ -22,7 +22,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\src\CurveEditor\MotorEditor.Avalonia.csproj" />
+    <ProjectReference Include="..\..\src\MotorEditor.Avalonia\MotorEditor.Avalonia.csproj" />
   </ItemGroup>
 
 </Project>

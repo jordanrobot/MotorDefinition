@@ -156,7 +156,7 @@ We standardize on a **versioned JSON format** for motor definition files with th
 
 ## References
 
-- **REF-001**: Runtime model: `src/CurveEditor/Models/MotorDefinition.cs` and related model types.
+- **REF-001**: Runtime model: `src/MotorEditor.Avalonia/Models/MotorDefinition.cs` and related model types.
 - **REF-002**: JSON Schema: `schema/motor-schema-v1.0.0.json`.
 - **REF-003**: Schema index: `schema/index.json`.
 - **REF-004**: Example motor file: `schema/example-motor.json`.

@@ -41,7 +41,7 @@ public partial class App : Application
 
         var message =
             "An unexpected error occurred and was logged. " +
-            "You can find log files under %APPDATA%/CurveEditor/logs.\n\n" +
+            "You can find log files under %APPDATA%/MotorEditor/logs.\n\n" +
             $"Error: {e.Exception.Message}";
 
         try

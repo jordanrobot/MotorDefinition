@@ -310,20 +310,20 @@ Required hygiene:
 
 ---
 
-## [ ] PR 6: Move app folder to src/MotorEditor.Avalonia and update scripts (VERIFY BUILD)
+## [x] PR 6: Move app folder to src/MotorEditor.Avalonia and update scripts (VERIFY BUILD)
 
 ### Goal
 Move the app codebase directory and ensure the solution, tests, and publish script still work.
 
 ### Tasks
-- [ ] Move folder:
-  - [ ] `src/CurveEditor/` → `src/MotorEditor.Avalonia/`.
-- [ ] Update solution project path to the moved csproj.
-- [ ] Update tests project reference path to the moved csproj.
-- [ ] Update publish script:
-  - [ ] Update [build-singlefile.ps1](build-singlefile.ps1) to publish from `src/MotorEditor.Avalonia`.
-  - [ ] Update the output path message in the script.
-- [ ] Verify build immediately after the move (required by Phase 3.1.6).
+- [x] Move folder:
+  - [x] `src/CurveEditor/` → `src/MotorEditor.Avalonia/`.
+- [x] Update solution project path to the moved csproj.
+- [x] Update tests project reference path to the moved csproj.
+- [x] Update publish script:
+  - [x] Update [build-singlefile.ps1](build-singlefile.ps1) to publish from `src/MotorEditor.Avalonia`.
+  - [x] Update the output path message in the script.
+- [x] Verify build immediately after the move (required by Phase 3.1.6).
 
 ### Done when
 - `dotnet build CurveEditor.sln` succeeds.

@@ -83,6 +83,6 @@ We define `EditingCoordinator` as the **single source of truth for selection and
 
 ## References
 
-- **REF-001**: `src/CurveEditor/ViewModels/EditingCoordinator.cs` (or equivalent) – selection coordination implementation.
+- **REF-001**: `src/MotorEditor.Avalonia/ViewModels/EditingCoordinator.cs` (or equivalent) – selection coordination implementation.
 - **REF-002**: ADR-0003 – generalized undo/redo command pattern.
 - **REF-003**: Roadmap Phase 4 – advanced editing and selection coordination.

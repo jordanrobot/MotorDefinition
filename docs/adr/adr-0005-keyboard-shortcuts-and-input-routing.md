@@ -100,6 +100,6 @@ We adopt a **window-level shortcut and input routing policy** with the following
 
 ## References
 
-- **REF-001**: `src/CurveEditor/Views/MainWindow.axaml` – key bindings and menu definitions.
-- **REF-002**: `src/CurveEditor/ViewModels/MainWindowViewModel.cs` – undo/redo and other commands.
+- **REF-001**: `src/MotorEditor.Avalonia/Views/MainWindow.axaml` – key bindings and menu definitions.
+- **REF-002**: `src/MotorEditor.Avalonia/ViewModels/MainWindowViewModel.cs` – undo/redo and other commands.
 - **REF-003**: ADR-0003 – generalized undo/redo command pattern.

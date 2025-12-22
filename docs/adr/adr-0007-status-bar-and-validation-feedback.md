@@ -83,6 +83,6 @@ We define the following conventions for status bar usage, validation, and user f
 
 ## References
 
-- **REF-001**: `src/CurveEditor/Views/MainWindow.axaml` – status bar layout and bindings.
-- **REF-002**: `src/CurveEditor/ViewModels/MainWindowViewModel.cs` – status and validation properties.
-- **REF-003**: Validation service interfaces and implementations in `src/CurveEditor/Services`.
+- **REF-001**: `src/MotorEditor.Avalonia/Views/MainWindow.axaml` – status bar layout and bindings.
+- **REF-002**: `src/MotorEditor.Avalonia/ViewModels/MainWindowViewModel.cs` – status and validation properties.
+- **REF-003**: Validation service interfaces and implementations in `src/MotorEditor.Avalonia/Services`.

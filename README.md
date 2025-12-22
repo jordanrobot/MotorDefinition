@@ -47,7 +47,7 @@ dotnet build
 ### Run
 
 ```bash
-dotnet run --project src/CurveEditor
+dotnet run --project src/MotorEditor.Avalonia
 ```
 
 ### Test
@@ -62,19 +62,19 @@ This project supports creating a self-contained, single-file executable for Wind
 
 - **Target runtime**: `win-x64`
 - **Publish profile**: `WinSingleFile`
-- **Output folder**: `src/CurveEditor/bin/Release/net8.0/win-x64/publish`
-- **Artifact to distribute**: `CurveEditor.exe` in the `publish` folder
+- **Output folder**: `src/MotorEditor.Avalonia/bin/Release/net8.0/win-x64/publish`
+- **Artifact to distribute**: `MotorEditor.exe` in the `publish` folder
 
 #### Option 1: Using the publish profile (recommended)
 
 ```bash
-dotnet publish src/CurveEditor -c Release -p:PublishProfile=WinSingleFile
+dotnet publish src/MotorEditor.Avalonia -c Release -p:PublishProfile=WinSingleFile
 ```
 
 #### Option 2: Explicit single-file command
 
 ```bash
-dotnet publish src/CurveEditor -c Release -r win-x64 --self-contained true -p:PublishSingleFile=true
+dotnet publish src/MotorEditor.Avalonia -c Release -r win-x64 --self-contained true -p:PublishSingleFile=true
 ```
 
 #### Option 3: Convenience PowerShell script (Windows)
@@ -92,16 +92,12 @@ The resulting EXE is self-contained and should run on a Windows 10/11 x64 machin
 ```
 CurveEditor/
 ├── src/
-│   └── CurveEditor/
-│       ├── Models/           # Data models
-│       ├── ViewModels/       # MVVM view models
-│       ├── Views/            # Avalonia UI views
-│       ├── Services/         # File and curve generation services
-│       └── Assets/           # Application resources
+│   ├── MotorEditor.Avalonia/   # Avalonia application
+│   └── jordanrobot.MotorDefinition/ # Shared library owning models + IO
 ├── tests/
-│   └── CurveEditor.Tests/    # Unit tests
+│   └── CurveEditor.Tests/      # Unit tests
 └── samples/
-    └── example-motor.json    # Sample motor definition file
+    └── example-motor.json      # Sample motor definition file
 ```
 
 ## Data Format

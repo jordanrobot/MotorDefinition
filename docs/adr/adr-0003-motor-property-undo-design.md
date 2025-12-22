@@ -147,8 +147,8 @@ We adopt a **single generalized undo/redo pattern** for all user-visible, undoab
 
 ## References
 
-- **REF-001**: Undo/redo infrastructure and commands in `src/CurveEditor/Services/UndoStack.cs` and related command classes.
-- **REF-002**: Motor, drive, voltage, and curve models in `src/CurveEditor/Models`.
-- **REF-003**: View-model integration and editor buffers in `src/CurveEditor/ViewModels/MainWindowViewModel.cs` and related view models.
+- **REF-001**: Undo/redo infrastructure and commands in `src/MotorEditor.Avalonia/Services/UndoStack.cs` and related command classes.
+- **REF-002**: Motor, drive, voltage, and curve models in `src/MotorEditor.Avalonia/Models`.
+- **REF-003**: View-model integration and editor buffers in `src/MotorEditor.Avalonia/ViewModels/MainWindowViewModel.cs` and related view models.
 - **REF-004**: Roadmap and phase plan: `.github/planning/04-mvp-roadmap.md` (section 1.8) and `.github/planning/phase-2-plan.md`.
 - **REF-005**: Superseded ADRs `adr-000X-voltage-property-undo-design.md` and `adr-000Y-undo-redo-general-pattern.md` (now consolidated into this document).
