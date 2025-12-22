@@ -11,7 +11,7 @@ using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using CurveEditor.Services;
 using CurveEditor.Models;
-using jordanrobot.MotorDefinitions.Probing;
+using jordanrobot.MotorDefinitions;
 using Serilog;
 using Avalonia.Threading;
 
@@ -507,8 +507,8 @@ public partial class DirectoryBrowserViewModel : ObservableObject
             await using var stream = File.OpenRead(filePath);
             using var document = await JsonDocument.ParseAsync(stream, cancellationToken: cancellationToken).ConfigureAwait(false);
 
-            return MotorFileProbe.IsLikelyMotorDefinition(document);
-        }
+        return MotorFile.IsLikelyMotorDefinition(document);
+    }
         catch (OperationCanceledException)
         {
             throw;

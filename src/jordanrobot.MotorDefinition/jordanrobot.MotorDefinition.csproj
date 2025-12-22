@@ -6,4 +6,8 @@
     <Nullable>enable</Nullable>
   </PropertyGroup>
 
+  <ItemGroup>
+    <EmbeddedResource Include="Schema/motor-schema-v1.0.0.json" />
+  </ItemGroup>
+
 </Project>

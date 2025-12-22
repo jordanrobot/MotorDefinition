@@ -203,35 +203,35 @@ Required hygiene:
 
 ---
 
-## [ ] PR 3: Move persistence layer into the library + introduce working library IO entrypoint
+## [x] PR 3: Move persistence layer into the library + introduce working library IO entrypoint
 
 ### Goal
 Make the library own the DTO/mapper/probe/validation code and provide a functional load/save entrypoint, while keeping app logging and UX intact.
 
 ### Tasks
-- [ ] Move persistence layer into the library (minimal churn):
-  - [ ] Move `src/CurveEditor/MotorDefinitions/**` → `src/jordanrobot.MotorDefinition/MotorDefinitions/**`.
-- [ ] Update persistence code so it does not reference app-only concerns:
-  - [ ] Ensure schema version checks reference the model constant now located in the library.
-  - [ ] Ensure no Serilog usage appears in the library.
-- [ ] Implement the library IO entrypoint (`MotorFile` / chosen name):
-  - [ ] `Load(string path)` returns `MotorDefinition`.
-  - [ ] `Save(MotorDefinition motor, string path)` writes JSON.
-  - [ ] Use System.Text.Json options consistent with current `FileService` where appropriate.
-- [ ] Handle internals/test access:
-  - [ ] Preferred: update tests to use `MotorFile` entrypoint.
-  - [ ] If tests still need internal access: add `InternalsVisibleTo("CurveEditor.Tests")` in the library assembly.
-  - [ ] Remove or adjust the existing [src/CurveEditor/AssemblyInfo.cs](src/CurveEditor/AssemblyInfo.cs) as appropriate.
-- [ ] Copy schema into the library:
-  - [ ] Copy `schema/motor-schema-v1.0.0.json` → `src/jordanrobot.MotorDefinition/Schema/motor-schema-v1.0.0.json`.
-  - [ ] Include as an Embedded Resource.
-- [ ] Update app integrations:
-  - [ ] Update [src/CurveEditor/Services/FileService.cs](src/CurveEditor/Services/FileService.cs) to call `MotorFile.Load/Save`.
-  - [ ] Keep app-level logging/error handling behavior in `FileService` (per ADR-0009).
-  - [ ] Update [src/CurveEditor/ViewModels/DirectoryBrowserViewModel.cs](src/CurveEditor/ViewModels/DirectoryBrowserViewModel.cs) to use the library probe API.
-- [ ] Update tests to reflect new assembly boundaries:
-  - [ ] Update [tests/CurveEditor.Tests/MotorDefinitions/MotorFileMapperTests.cs](tests/CurveEditor.Tests/MotorDefinitions/MotorFileMapperTests.cs) to test via `MotorFile` entrypoint where possible.
-  - [ ] Update [tests/CurveEditor.Tests/Services/MotorFileSizeBenchmarkTests.cs](tests/CurveEditor.Tests/Services/MotorFileSizeBenchmarkTests.cs) to reference the correct mapper/entrypoint location.
+- [x] Move persistence layer into the library (minimal churn):
+  - [x] Move `src/CurveEditor/MotorDefinitions/**` → `src/jordanrobot.MotorDefinition/MotorDefinitions/**`.
+- [x] Update persistence code so it does not reference app-only concerns:
+  - [x] Ensure schema version checks reference the model constant now located in the library.
+  - [x] Ensure no Serilog usage appears in the library.
+- [x] Implement the library IO entrypoint (`MotorFile` / chosen name):
+  - [x] `Load(string path)` returns `MotorDefinition`.
+  - [x] `Save(MotorDefinition motor, string path)` writes JSON.
+  - [x] Use System.Text.Json options consistent with current `FileService` where appropriate.
+- [x] Handle internals/test access:
+  - [x] Preferred: update tests to use `MotorFile` entrypoint.
+  - [x] If tests still need internal access: add `InternalsVisibleTo("CurveEditor.Tests")` in the library assembly.
+  - [x] Remove or adjust the existing [src/CurveEditor/AssemblyInfo.cs](src/CurveEditor/AssemblyInfo.cs) as appropriate.
+- [x] Copy schema into the library:
+  - [x] Copy `schema/motor-schema-v1.0.0.json` → `src/jordanrobot.MotorDefinition/Schema/motor-schema-v1.0.0.json`.
+  - [x] Include as an Embedded Resource.
+- [x] Update app integrations:
+  - [x] Update [src/CurveEditor/Services/FileService.cs](src/CurveEditor/Services/FileService.cs) to call `MotorFile.Load/Save`.
+  - [x] Keep app-level logging/error handling behavior in `FileService` (per ADR-0009).
+  - [x] Update [src/CurveEditor/ViewModels/DirectoryBrowserViewModel.cs](src/CurveEditor/ViewModels/DirectoryBrowserViewModel.cs) to use the library probe API.
+- [x] Update tests to reflect new assembly boundaries:
+  - [x] Update [tests/CurveEditor.Tests/MotorDefinitions/MotorFileMapperTests.cs](tests/CurveEditor.Tests/MotorDefinitions/MotorFileMapperTests.cs) to test via `MotorFile` entrypoint where possible.
+  - [x] Update [tests/CurveEditor.Tests/Services/MotorFileSizeBenchmarkTests.cs](tests/CurveEditor.Tests/Services/MotorFileSizeBenchmarkTests.cs) to reference the correct mapper/entrypoint location.
 
 ### Done when
 - `dotnet build CurveEditor.sln` succeeds.

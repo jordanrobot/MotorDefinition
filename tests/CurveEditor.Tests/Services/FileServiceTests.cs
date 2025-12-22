@@ -1,24 +1,16 @@
 using System;
 using System.IO;
 using System.Linq;
-using System.Text.Json;
-using System.Text.Json.Serialization;
 using System.Threading.Tasks;
 using CurveEditor.Models;
 using CurveEditor.Services;
-using jordanrobot.MotorDefinitions.Mapping;
+using jordanrobot.MotorDefinitions;
 using Xunit;
 
 namespace CurveEditor.Tests.Services;
 
 public class FileServiceTests : IDisposable
 {
-    private static readonly JsonSerializerOptions TestJsonOptions = new()
-    {
-        WriteIndented = true,
-        DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull
-    };
-
     private readonly string _tempDir;
     private readonly FileService _service;
 
@@ -77,19 +69,12 @@ public class FileServiceTests : IDisposable
         return motor;
     }
 
-    private static async Task WriteMotorFileAsync(MotorDefinition motor, string filePath)
-    {
-        var dto = MotorFileMapper.ToFileDto(motor);
-        var json = JsonSerializer.Serialize(dto, TestJsonOptions);
-        await File.WriteAllTextAsync(filePath, json);
-    }
-
     [Fact]
     public async Task LoadAsync_ValidFile_ReturnsMotorDefinition()
     {
         var motor = CreateTestMotorDefinition();
         var filePath = Path.Combine(_tempDir, "test-motor.json");
-        await WriteMotorFileAsync(motor, filePath);
+        await MotorFile.SaveAsync(motor, filePath);
 
         var loaded = await new FileService().LoadAsync(filePath);
 
@@ -119,7 +104,7 @@ public class FileServiceTests : IDisposable
     {
         var motor = CreateTestMotorDefinition();
         var filePath = Path.Combine(_tempDir, "test-motor.json");
-        await WriteMotorFileAsync(motor, filePath);
+        await MotorFile.SaveAsync(motor, filePath);
 
         var loader = new FileService();
         await loader.LoadAsync(filePath);
@@ -132,7 +117,7 @@ public class FileServiceTests : IDisposable
     {
         var motor = CreateTestMotorDefinition();
         var filePath = Path.Combine(_tempDir, "test-motor.json");
-        await WriteMotorFileAsync(motor, filePath);
+        await MotorFile.SaveAsync(motor, filePath);
 
         var loader = new FileService();
         loader.MarkDirty();

@@ -1,18 +1,19 @@
 using System;
+using System.IO;
 using System.Linq;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using CurveEditor.Models;
-using jordanrobot.MotorDefinitions.Mapping;
+using jordanrobot.MotorDefinitions;
 using Xunit;
 
 namespace CurveEditor.Tests.Services;
 
 public class MotorFileSizeBenchmarkTests
 {
-    private static readonly JsonSerializerOptions CompactOptions = new()
+    private static readonly JsonSerializerOptions SaveOptions = new()
     {
-        WriteIndented = false,
+        WriteIndented = true,
         DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull
     };
 
@@ -21,10 +22,19 @@ public class MotorFileSizeBenchmarkTests
     {
         var motor = CreateSampleMotor();
 
-        var tableJson = JsonSerializer.Serialize(MotorFileMapper.ToFileDto(motor), CompactOptions);
-        var legacyJson = SerializeLegacy(motor);
+        var tempPath = Path.GetTempFileName();
+        try
+        {
+            MotorFile.Save(motor, tempPath);
+            var tableJson = File.ReadAllText(tempPath);
+            var legacyJson = SerializeLegacy(motor);
 
-        Assert.True(tableJson.Length < legacyJson.Length, $"Expected table format to be smaller. Table={tableJson.Length}, Legacy={legacyJson.Length}");
+            Assert.True(tableJson.Length < legacyJson.Length, $"Expected table format to be smaller. Table={tableJson.Length}, Legacy={legacyJson.Length}");
+        }
+        finally
+        {
+            File.Delete(tempPath);
+        }
     }
 
     private static string SerializeLegacy(MotorDefinition motor)
@@ -86,7 +96,7 @@ public class MotorFileSizeBenchmarkTests
             }
         };
 
-        return JsonSerializer.Serialize(legacy, CompactOptions);
+        return JsonSerializer.Serialize(legacy, SaveOptions);
     }
 
     private static MotorDefinition CreateSampleMotor()

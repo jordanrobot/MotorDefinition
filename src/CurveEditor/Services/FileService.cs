@@ -1,12 +1,10 @@
 using System;
 using System.IO;
 using System.Linq;
-using System.Text.Json;
-using System.Text.Json.Serialization;
 using System.Threading.Tasks;
 using CurveEditor.Models;
-using jordanrobot.MotorDefinitions.Dtos;
-using jordanrobot.MotorDefinitions.Mapping;
+using jordanrobot.MotorDefinitions;
+using System.Text.Json;
 using Serilog;
 
 namespace CurveEditor.Services;
@@ -16,13 +14,6 @@ namespace CurveEditor.Services;
 /// </summary>
 public class FileService : IFileService
 {
-    private static readonly JsonSerializerOptions JsonOptions = new()
-    {
-        WriteIndented = true,
-        PropertyNameCaseInsensitive = true,
-        DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull
-    };
-
     private readonly ICurveGeneratorService _curveGenerator;
     private readonly IValidationService _validationService;
 
@@ -73,14 +64,7 @@ public class FileService : IFileService
 
         try
         {
-            await using var stream = File.OpenRead(filePath);
-            var dto = await JsonSerializer.DeserializeAsync<MotorDefinitionFileDto>(stream, JsonOptions).ConfigureAwait(false);
-            if (dto is null)
-            {
-                throw new InvalidOperationException("Failed to deserialize motor definition: result was null.");
-            }
-
-            var motorDefinition = MotorFileMapper.ToRuntimeModel(dto);
+            var motorDefinition = await MotorFile.LoadAsync(filePath).ConfigureAwait(false);
             ValidateOrThrow(motorDefinition, filePath);
 
             CurrentFilePath = filePath;
@@ -207,12 +191,6 @@ public class FileService : IFileService
         throw new InvalidOperationException($"The file '{filePath}' is not valid: {errors[0]}");
     }
 
-    private static async Task SerializeAsync(MotorDefinitionFileDto dto, string filePath)
-    {
-        var json = JsonSerializer.Serialize(dto, JsonOptions);
-        await File.WriteAllTextAsync(filePath, json);
-    }
-
     private async Task SaveToFileAsync(MotorDefinition motorDefinition, string filePath)
     {
         ArgumentNullException.ThrowIfNull(motorDefinition);
@@ -225,8 +203,7 @@ public class FileService : IFileService
 
         try
         {
-            var dto = MotorFileMapper.ToFileDto(motorDefinition);
-            await SerializeAsync(dto, filePath).ConfigureAwait(false);
+            await MotorFile.SaveAsync(motorDefinition, filePath).ConfigureAwait(false);
         }
         catch (InvalidOperationException ex)
         {

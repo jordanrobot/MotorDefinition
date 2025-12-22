@@ -1,8 +1,11 @@
 using System;
+using System.IO;
 using System.Linq;
+using System.Text.Json;
+using System.Text.Json.Nodes;
+using System.Text.Json.Serialization;
 using CurveEditor.Models;
-using jordanrobot.MotorDefinitions.Dtos;
-using jordanrobot.MotorDefinitions.Mapping;
+using jordanrobot.MotorDefinitions;
 using Xunit;
 
 namespace CurveEditor.Tests.MotorDefinitions;
@@ -10,7 +13,7 @@ namespace CurveEditor.Tests.MotorDefinitions;
 public class MotorFileMapperTests
 {
     [Fact]
-    public void ToFileDto_AndBack_RoundTripsSingleVoltageAndSeriesMetadata()
+    public void SaveAndLoad_RoundTripsSingleVoltageAndSeriesMetadata()
     {
         var motor = CreateMotorDefinition();
         motor.Units.ResponseTime = "ms";
@@ -20,57 +23,109 @@ public class MotorFileMapperTests
         motor.BrakeBacklash = 0.5;
         motor.BrakeReleaseTime = 12.5;
 
-        var dto = MotorFileMapper.ToFileDto(motor);
-        var roundTrip = MotorFileMapper.ToRuntimeModel(dto);
+        var tempPath = Path.GetTempFileName();
 
-        Assert.Equal(motor.MotorName, roundTrip.MotorName);
-        Assert.Equal(motor.Manufacturer, roundTrip.Manufacturer);
-        Assert.Equal(motor.BrakeReleaseTime, roundTrip.BrakeReleaseTime);
-        Assert.Equal(motor.BrakeBacklash, roundTrip.BrakeBacklash);
-        Assert.Equal(motor.Units.ResponseTime, roundTrip.Units.ResponseTime);
-        Assert.Equal(motor.Units.Percentage, roundTrip.Units.Percentage);
-        Assert.Equal(motor.Units.Temperature, roundTrip.Units.Temperature);
+        try
+        {
+            MotorFile.Save(motor, tempPath);
+            var roundTrip = MotorFile.Load(tempPath);
 
-        var originalSeries = motor.Drives[0].Voltages[0].Series[0];
-        var mappedSeries = roundTrip.Drives[0].Voltages[0].Series[0];
-        Assert.Equal(originalSeries.Name, mappedSeries.Name);
-        Assert.Equal(originalSeries.Locked, mappedSeries.Locked);
-        Assert.Equal(originalSeries.Data.Count, mappedSeries.Data.Count);
-        Assert.Equal(originalSeries.Data[50].Torque, mappedSeries.Data[50].Torque);
-        Assert.Equal(originalSeries.Data[50].Percent, mappedSeries.Data[50].Percent);
-        Assert.Equal(originalSeries.Data[50].Rpm, mappedSeries.Data[50].Rpm);
+            Assert.Equal(motor.MotorName, roundTrip.MotorName);
+            Assert.Equal(motor.Manufacturer, roundTrip.Manufacturer);
+            Assert.Equal(motor.BrakeReleaseTime, roundTrip.BrakeReleaseTime);
+            Assert.Equal(motor.BrakeBacklash, roundTrip.BrakeBacklash);
+            Assert.Equal(motor.Units.ResponseTime, roundTrip.Units.ResponseTime);
+            Assert.Equal(motor.Units.Percentage, roundTrip.Units.Percentage);
+            Assert.Equal(motor.Units.Temperature, roundTrip.Units.Temperature);
+
+            var originalSeries = motor.Drives[0].Voltages[0].Series[0];
+            var mappedSeries = roundTrip.Drives[0].Voltages[0].Series[0];
+            Assert.Equal(originalSeries.Name, mappedSeries.Name);
+            Assert.Equal(originalSeries.Locked, mappedSeries.Locked);
+            Assert.Equal(originalSeries.Data.Count, mappedSeries.Data.Count);
+            Assert.Equal(originalSeries.Data[50].Torque, mappedSeries.Data[50].Torque);
+            Assert.Equal(originalSeries.Data[50].Percent, mappedSeries.Data[50].Percent);
+            Assert.Equal(originalSeries.Data[50].Rpm, mappedSeries.Data[50].Rpm);
+        }
+        finally
+        {
+            File.Delete(tempPath);
+        }
     }
 
     [Fact]
-    public void ToFileDto_AndBack_RoundTripsMultipleVoltages()
+    public void SaveAndLoad_RoundTripsMultipleVoltages()
     {
         var motor = CreateMotorDefinition(withSecondVoltage: true);
-        var dto = MotorFileMapper.ToFileDto(motor);
-        var roundTrip = MotorFileMapper.ToRuntimeModel(dto);
+        var tempPath = Path.GetTempFileName();
 
-        Assert.Equal(1, roundTrip.Drives.Count);
-        Assert.Equal(2, roundTrip.Drives[0].Voltages.Count);
-        Assert.Equal(motor.Drives[0].Voltages[1].Voltage, roundTrip.Drives[0].Voltages[1].Voltage);
-        Assert.Equal(motor.Drives[0].Voltages[1].Series.Count, roundTrip.Drives[0].Voltages[1].Series.Count);
+        try
+        {
+            MotorFile.Save(motor, tempPath);
+            var roundTrip = MotorFile.Load(tempPath);
+
+            Assert.Equal(1, roundTrip.Drives.Count);
+            Assert.Equal(2, roundTrip.Drives[0].Voltages.Count);
+            Assert.Equal(motor.Drives[0].Voltages[1].Voltage, roundTrip.Drives[0].Voltages[1].Voltage);
+            Assert.Equal(motor.Drives[0].Voltages[1].Series.Count, roundTrip.Drives[0].Voltages[1].Series.Count);
+        }
+        finally
+        {
+            File.Delete(tempPath);
+        }
     }
 
     [Fact]
-    public void ToFileDto_MismatchedAxes_ThrowsInvalidOperationException()
+    public void Save_WithMismatchedAxes_ThrowsInvalidOperationException()
     {
         var motor = CreateMotorDefinition();
         motor.Drives[0].Voltages[0].Series[1].Data[100].Percent = 99;
 
-        Assert.Throws<InvalidOperationException>(() => MotorFileMapper.ToFileDto(motor));
+        var tempPath = Path.GetTempFileName();
+        try
+        {
+            Assert.Throws<InvalidOperationException>(() => MotorFile.Save(motor, tempPath));
+        }
+        finally
+        {
+            File.Delete(tempPath);
+        }
     }
 
     [Fact]
-    public void ToRuntimeModel_InvalidTorqueLength_ThrowsInvalidOperationException()
+    public void Load_WithInvalidTorqueLength_ThrowsInvalidOperationException()
     {
-        var dto = MotorFileMapper.ToFileDto(CreateMotorDefinition());
-        var voltage = dto.Drives[0].Voltages[0];
-        voltage.Series.First().Value.Torque = new double[10];
+        var motor = CreateMotorDefinition();
+        var tempPath = Path.GetTempFileName();
+        try
+        {
+            MotorFile.Save(motor, tempPath);
 
-        Assert.Throws<InvalidOperationException>(() => MotorFileMapper.ToRuntimeModel(dto));
+            var node = JsonNode.Parse(File.ReadAllText(tempPath))!;
+            var seriesMap = node["drives"]?[0]?["voltages"]?[0]?["series"]?.AsObject();
+            if (seriesMap is null)
+            {
+                throw new InvalidOperationException("Test fixture did not contain expected series map.");
+            }
+
+            var firstSeries = seriesMap.First().Value?.AsObject();
+            if (firstSeries is null)
+            {
+                throw new InvalidOperationException("Test fixture did not contain expected series entry.");
+            }
+
+            firstSeries["torque"] = new JsonArray(1, 2, 3);
+
+            File.WriteAllText(
+                tempPath,
+                node.ToJsonString(new JsonSerializerOptions { WriteIndented = true, DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull }));
+
+            Assert.Throws<InvalidOperationException>(() => MotorFile.Load(tempPath));
+        }
+        finally
+        {
+            File.Delete(tempPath);
+        }
     }
 
     private static MotorDefinition CreateMotorDefinition(bool withSecondVoltage = false)
