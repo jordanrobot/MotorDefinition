@@ -136,22 +136,22 @@ Required hygiene:
 
 ---
 
-## [ ] PR 1: Add `jordanrobot.MotorDefinition` library project scaffold
+## [x] PR 1: Add `jordanrobot.MotorDefinition` library project scaffold
 
 ### Goal
 Create and add a new SDK-style class library project to the solution without impacting app behavior.
 
 ### Tasks
-- [ ] Create `src/jordanrobot.MotorDefinition/jordanrobot.MotorDefinition.csproj`:
-  - [ ] Target `net8.0`.
-  - [ ] No references to Avalonia packages.
-- [ ] Add minimal folder structure:
-  - [ ] `Schema/` (for schema copy)
-  - [ ] `MotorDefinitions/` (for DTOs/mapper/probe/validator)
-  - [ ] `Models/` (for schema-aligned runtime models)
-- [ ] Add placeholder entrypoint:
-  - [ ] `MotorFile` (or chosen name) with stub `Load/Save` signatures (no wiring yet).
-- [ ] Add the library project to [CurveEditor.sln](CurveEditor.sln) under the `src` solution folder.
+- [x] Create `src/jordanrobot.MotorDefinition/jordanrobot.MotorDefinition.csproj`:
+  - [x] Target `net8.0`.
+  - [x] No references to Avalonia packages.
+- [x] Add minimal folder structure:
+  - [x] `Schema/` (for schema copy)
+  - [x] `MotorDefinitions/` (for DTOs/mapper/probe/validator)
+  - [x] `Models/` (for schema-aligned runtime models)
+- [x] Add placeholder entrypoint:
+  - [x] `MotorFile` (or chosen name) with stub `Load/Save` signatures (no wiring yet).
+- [x] Add the library project to [CurveEditor.sln](CurveEditor.sln) under the `src` solution folder.
 
 Required hygiene:
 - [ ] Do not change `FileService` or Directory Browser behavior in this PR.
