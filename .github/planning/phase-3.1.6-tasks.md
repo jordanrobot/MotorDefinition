@@ -342,21 +342,21 @@ Move the app codebase directory and ensure the solution, tests, and publish scri
 
 ---
 
-## [ ] PR 7: Final AC validation + dependency audit
+## [x] PR 7: Final AC validation + dependency audit
 
 ### Goal
 Confirm Phase 3.1.6 acceptance criteria and ensure the library is cleanly separated from UI dependencies.
 
 ### Tasks
-- [ ] Validate AC 3.1.6a:
-  - [ ] Run `dotnet build CurveEditor.sln`.
-- [ ] Validate AC 3.1.6b:
-  - [ ] Confirm the library csproj has no UI package references.
-  - [ ] Confirm no library source file references Avalonia namespaces.
-- [ ] Confirm app references the library for file IO:
-  - [ ] File load/save uses library entrypoint.
-  - [ ] Directory Browser probe uses library code.
-- [ ] Ensure tests still run and cover the moved IO boundary.
+- [x] Validate AC 3.1.6a:
+  - [x] Run `dotnet build CurveEditor.sln`.
+- [x] Validate AC 3.1.6b:
+  - [x] Confirm the library csproj has no UI package references.
+  - [x] Confirm no library source file references Avalonia namespaces.
+- [x] Confirm app references the library for file IO:
+  - [x] File load/save uses library entrypoint.
+  - [x] Directory Browser probe uses library code.
+- [x] Ensure tests still run and cover the moved IO boundary.
 
 ### Done when
 - All Phase 3.1.6 acceptance criteria pass.
@@ -369,6 +369,6 @@ Confirm Phase 3.1.6 acceptance criteria and ensure the library is cleanly separa
 5. Run `./build-singlefile.ps1`.
 
 ### Sign-off checklist
-- [ ] All tasks across all PR sections are checked `[x]`.
-- [ ] All acceptance criteria listed above have a verification step (test or manual script).
-- [ ] No out-of-scope features were implemented.
+- [x] All tasks across all PR sections are checked `[x]`.
+- [x] All acceptance criteria listed above have a verification step (test or manual script).
+- [x] No out-of-scope features were implemented.
