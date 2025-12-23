@@ -1,3 +1,20 @@
+[Quick Start](docs/QuickStart.md) | [User Guide](docs/UserGuide.md) | [API documentation](docs/api/index.md)
+
+# MotorDefinition Library
+
+## Getting Started
+
+Use these pages to learn the `MotorDefinition` library:
+
+- [Quick Start](docs/QuickStart.md)
+- [User Guide](docs/UserGuide.md)
+- [API documentation](docs/api/index.md "MotorDefinition API")
+Related resources:
+
+- [Example motor definition JSON](../schema/example-motor.json)
+- [JSON schema](../schema/motor-schema-v1.0.0.json)
+
+
 # Motor Torque Curve Editor
 
 A desktop application for creating and editing motor torque curves stored in JSON files.
