@@ -4,6 +4,14 @@
     <TargetFramework>net8.0</TargetFramework>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
+
+		<!-- NuGet package metadata (Phase 3.1.7) -->
+		<PackageId>JordanRobot.MotorDefinition</PackageId>
+		<Version>1.0.0-alpha.1</Version>
+		<Authors>JordanRobot</Authors>
+		<Description>Definitions for electrical motor properties and performance data. Allows mapping of performance (torque/speed curves) per drive and voltage. Includes JSON load/save functionality and object models.</Description>
+		<RepositoryUrl>https://github.com/jordanrobot/MotorDefinition</RepositoryUrl>
+		<PackageReadmeFile>README.md</PackageReadmeFile>
   </PropertyGroup>
 
   <ItemGroup>
@@ -16,11 +24,7 @@
   </ItemGroup>
 
 	<ItemGroup>
-		<None Include="README.md">
-			<Pack>True</Pack>
-			<PackagePath>\</PackagePath>
-		</None>
-		<None Include="README.md" />
+		<None Include="README.md" Pack="true" PackagePath="\" />
 	</ItemGroup>
 	
 	<!-- Documentation generation settings -->
