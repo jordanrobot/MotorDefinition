@@ -1,5 +1,13 @@
 ## Phase 3.1.6 Subtasks: .NET Client Library Skeleton Project (Agent Execution Checklist)
 
+### Post-Phase Addendum (Completed)
+
+- Variable curve point counts are supported when opening/viewing motor JSON files (not hard-requiring 101 points).
+  - Library probe updated: `src/jordanrobot.MotorDefinition/MotorDefinitions/Probing/MotorFileProbe.cs`.
+  - App validation updated: `src/MotorEditor.Avalonia/Services/ValidationService.cs`.
+  - Regression test added: `tests/CurveEditor.Tests/Services/MotorFileVariablePointsLoadTests.cs`.
+  - Example updated with a 21-point curve: `schema/example-motor.json`.
+
 ### Purpose
 - Provide a PR-sliceable task list for implementing Phase 3.1.6 with minimal rework.
 - Make it easy to validate each Phase 3.1.6 acceptance criterion incrementally.

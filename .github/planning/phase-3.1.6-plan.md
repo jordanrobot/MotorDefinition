@@ -2,7 +2,7 @@
 
 ### Status
 
-Draft
+Completed
 
 **Related ADRs**
 
@@ -18,22 +18,30 @@ Draft
 ### Scope
 
 - In scope:
-  - [ ] Add new class library project `jordanrobot.MotorDefinition` to the solution.
-  - [ ] Move the existing persistence layer (DTOs + mapper + validators + probe) into the library with minimal churn.
-  - [ ] Rehome schema-aligned model types into the library so the library does not reference the Avalonia app.
-  - [ ] Add a single entrypoint for file IO in the library (e.g., `MotorFileSerializer` or `MotorFile`).
-  - [ ] Copy the schema into the library project.
-  - [ ] Perform the required product/project/folder renames and update references.
-  - [ ] Update unit tests as needed so `dotnet test` still runs.
-- Out of scope:
-  - [ ] Publishing a NuGet package (Phase 3.1.7).
-  - [ ] Consumer-friendly public API surface / non-throwing result types (Phase 3.1.8).
-  - [ ] Any UI behavior changes beyond what is necessary to keep builds and file IO working.
+  - [x] Add new class library project `jordanrobot.MotorDefinition` to the solution.
+  - [x] Move the existing persistence layer (DTOs + mapper + validators + probe) into the library with minimal churn.
+  - [x] Rehome schema-aligned model types into the library so the library does not reference the Avalonia app.
+  - [x] Add a single entrypoint for file IO in the library (e.g., `MotorFileSerializer` or `MotorFile`).
+  - [x] Copy the schema into the library project.
+  - [x] Perform the required product/project/folder renames and update references.
+  - [x] Update unit tests as needed so `dotnet test` still runs.
+- Out of scope (not planned for this phase):
+  - Publishing a NuGet package (Phase 3.1.7).
+  - Consumer-friendly public API surface / non-throwing result types (Phase 3.1.8).
+  - Any UI behavior changes beyond what is necessary to keep builds and file IO working.
 
 ### Acceptance Criteria
 
-- [ ] AC 3.1.6a: `dotnet build` succeeds for the solution with the new library project added.
-- [ ] AC 3.1.6b: The library project has zero dependencies on UI frameworks (e.g., no Avalonia references).
+- [x] AC 3.1.6a: `dotnet build` succeeds for the solution with the new library project added.
+- [x] AC 3.1.6b: The library project has zero dependencies on UI frameworks (e.g., no Avalonia references).
+
+### Recent Follow-up Fixes (Post-Phase)
+
+- Variable curve point counts are supported when opening/viewing motor JSON files (no longer hard-requires 101 points).
+  - Library probe no longer requires 101-length axes: `src/jordanrobot.MotorDefinition/MotorDefinitions/Probing/MotorFileProbe.cs`.
+  - App validation no longer blocks loading non-101 series: `src/MotorEditor.Avalonia/Services/ValidationService.cs`.
+  - Regression test added: `tests/CurveEditor.Tests/Services/MotorFileVariablePointsLoadTests.cs`.
+  - Example schema file includes a 21-point series: `schema/example-motor.json`.
 
 ### Assumptions and Constraints
 
@@ -106,11 +114,11 @@ Draft
 
 #### Step 1: Add the library project scaffold (no app behavior change)
 
-- [ ] Create `src/jordanrobot.MotorDefinition/jordanrobot.MotorDefinition.csproj` as an SDK-style class library.
+- [x] Create `src/jordanrobot.MotorDefinition/jordanrobot.MotorDefinition.csproj` as an SDK-style class library.
   - Target: `net8.0` (match solution); keep dependencies minimal (System.Text.Json only).
   - Confirm no Avalonia packages are referenced.
-- [ ] Add the project to `CurveEditor.sln` under the `src` solution folder.
-- [ ] Add an initial `MotorFile` (or `MotorFileSerializer`) entrypoint stub.
+- [x] Add the project to `CurveEditor.sln` under the `src` solution folder.
+- [x] Add an initial `MotorFile` (or `MotorFileSerializer`) entrypoint stub.
 
 **Done when**
 
@@ -118,11 +126,11 @@ Draft
 
 #### Step 2: Rehome schema-aligned models into the library
 
-- [ ] Move model types from `src/CurveEditor/Models/` into the library project.
+- [x] Move model types from `src/CurveEditor/Models/` into the library project.
   - Keep namespaces unchanged initially to avoid large app-wide edits.
   - Ensure model code compiles without referencing Avalonia.
-- [ ] Update the Avalonia app project to reference the library and remove the moved model source files from the app project.
-- [ ] Update the test project to reference the library (directly or via the app project) so model types resolve.
+- [x] Update the Avalonia app project to reference the library and remove the moved model source files from the app project.
+- [x] Update the test project to reference the library (directly or via the app project) so model types resolve.
 
 **Done when**
 
@@ -131,11 +139,11 @@ Draft
 
 #### Step 3: Move persistence DTOs + mapper + validators + probe into the library
 
-- [ ] Move `src/CurveEditor/MotorDefinitions/**` into the library.
-- [ ] Remove app-specific dependencies inside persistence code:
+- [x] Move `src/CurveEditor/MotorDefinitions/**` into the library.
+- [x] Remove app-specific dependencies inside persistence code:
   - Replace any references like `CurveEditor.Models.MotorDefinition.CurrentSchemaVersion` with a library-owned constant source (or keep `MotorDefinition.CurrentSchemaVersion` if `MotorDefinition` moved to the library).
   - Ensure probe/validator/mapper do not use Serilog or app services.
-- [ ] Decide visibility:
+- [x] Decide visibility:
   - Preferred: keep DTOs/mapper internal and test through `MotorFile` APIs.
   - If needed: add `InternalsVisibleTo("CurveEditor.Tests")` (or updated test assembly name after rename).
 
@@ -145,11 +153,11 @@ Draft
 
 #### Step 4: Route app file IO through the library entrypoint
 
-- [ ] Update `src/CurveEditor/Services/FileService.cs`:
+- [x] Update `src/CurveEditor/Services/FileService.cs`:
   - Replace direct `JsonSerializer.DeserializeAsync<MotorDefinitionFileDto>` + `MotorFileMapper` calls with `MotorFile.Load` / `MotorFile.Save`.
   - Keep app-level logging and error dialogs per ADR-0009.
-- [ ] Update `src/CurveEditor/ViewModels/DirectoryBrowserViewModel.cs` to call the library probe API (directly or via `MotorFile` helpers).
-- [ ] Update tests:
+- [x] Update `src/CurveEditor/ViewModels/DirectoryBrowserViewModel.cs` to call the library probe API (directly or via `MotorFile` helpers).
+- [x] Update tests:
   - Update `MotorFileMapperTests` (and any other tests referencing internal persistence types) to validate behavior via the new public library entrypoint where possible.
 
 **Done when**
@@ -159,11 +167,11 @@ Draft
 
 #### Step 5: Required rename 1 — Rename the program CurveEditor to MotorEditor (VERIFY BUILD)
 
-- [ ] Update product/program naming artifacts:
+- [x] Update product/program naming artifacts:
   - `src/CurveEditor/Program.cs`: log messages and log directory naming (e.g., `%AppData%/MotorEditor/logs`).
   - `src/CurveEditor/CurveEditor.csproj`: `AssemblyName`, `Product`, and any other branding values.
   - `src/CurveEditor/app.manifest`: assembly identity name.
-- [ ] Search/replace user-facing strings “CurveEditor” → “MotorEditor” only where appropriate (avoid changing persisted keys unless explicitly intended).
+- [x] Search/replace user-facing strings “CurveEditor” → “MotorEditor” only where appropriate (avoid changing persisted keys unless explicitly intended).
 
 **Done when**
 
@@ -171,11 +179,11 @@ Draft
 
 #### Step 6: Required rename 2 — Rename the project CurveEditor to MotorEditor.Avalonia (VERIFY BUILD)
 
-- [ ] Rename project file and project entry:
+- [x] Rename project file and project entry:
   - `src/CurveEditor/CurveEditor.csproj` → `src/CurveEditor/MotorEditor.Avalonia.csproj`.
   - Update `CurveEditor.sln` project name + path.
   - Update `tests/CurveEditor.Tests/CurveEditor.Tests.csproj` project reference to the renamed csproj.
-- [ ] Decide whether to rename the default root namespace now or defer (defer preferred for minimal churn).
+- [x] Decide whether to rename the default root namespace now or defer (defer preferred for minimal churn).
 
 **Done when**
 
@@ -183,12 +191,12 @@ Draft
 
 #### Step 7: Required move — Move app codebase folder to src/MotorEditor.Avalonia (VERIFY BUILD)
 
-- [ ] Move folder:
+- [x] Move folder:
   - `src/CurveEditor/` → `src/MotorEditor.Avalonia/`.
-- [ ] Update solution paths:
+- [x] Update solution paths:
   - `CurveEditor.sln` project path.
   - `tests/CurveEditor.Tests/CurveEditor.Tests.csproj` project reference path.
-- [ ] Update scripts:
+- [x] Update scripts:
   - `build-singlefile.ps1` publish path and output message.
 
 **Done when**
@@ -197,9 +205,9 @@ Draft
 
 #### Step 8: Required wiring — Ensure MotorEditor.Avalonia references the new library for file IO (VERIFY BUILD)
 
-- [ ] Ensure `MotorEditor.Avalonia` has a `ProjectReference` to `jordanrobot.MotorDefinition`.
-- [ ] Ensure all app-side persistence usages compile against the library entrypoint.
-- [ ] Update tests if assembly names changed (e.g., InternalsVisibleTo target).
+- [x] Ensure `MotorEditor.Avalonia` has a `ProjectReference` to `jordanrobot.MotorDefinition`.
+- [x] Ensure all app-side persistence usages compile against the library entrypoint.
+- [x] Update tests if assembly names changed (e.g., InternalsVisibleTo target).
 
 **Done when**
 

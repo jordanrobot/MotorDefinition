@@ -81,8 +81,14 @@ Phase 8: Power Curve Overlay (Future)
 - [X] Create UnitSettings model class (torque, speed, power, weight units)
 - [X] Create MotorMetadata model class
 - [X] Implement standard 1% increment data structure (101 points per series; file format supports 0–101)
+- [X] Support opening/viewing variable point curves (0..101 points, not hard-required to be 101)
 - [X] Add JSON serialization attributes
 - [X] Write model unit tests
+
+Notes:
+
+- Variable-point support work touched: `src/MotorEditor.Avalonia/Services/ValidationService.cs`, `src/jordanrobot.MotorDefinition/MotorDefinitions/Probing/MotorFileProbe.cs`, `tests/CurveEditor.Tests/Services/MotorFileVariablePointsLoadTests.cs`.
+- `schema/example-motor.json` includes a 21-point voltage curve series.
 
 ### 1.4 File Service
 - [X] Implement JSON loading
