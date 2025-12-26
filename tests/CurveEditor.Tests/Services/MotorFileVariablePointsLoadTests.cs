@@ -8,8 +8,7 @@ public class MotorFileVariablePointsLoadTests
     [Fact]
     public void Load_ExampleMotor_With21PointVoltage_Succeeds()
     {
-        var repoRoot = Directory.GetCurrentDirectory();
-        var filePath = Path.GetFullPath(Path.Combine(repoRoot, "..", "..", "..", "schema", "example-motor.json"));
+        var filePath = FindRepoFilePath("schema", "example-motor.json");
 
         Assert.True(File.Exists(filePath), $"Test file not found: {filePath}");
 
@@ -28,5 +27,23 @@ public class MotorFileVariablePointsLoadTests
         Assert.Equal(100, peak.Data[^1].Percent);
         Assert.Equal(0, peak.Data[0].Rpm);
         Assert.Equal(4000, peak.Data[^1].Rpm);
+    }
+
+    private static string FindRepoFilePath(params string[] relativePathSegments)
+    {
+        // Test runners vary in their working directory; resolve by walking upwards until we find the repo root.
+        var current = new DirectoryInfo(AppContext.BaseDirectory);
+        for (var i = 0; i < 10 && current is not null; i++)
+        {
+            var candidate = Path.Combine(current.FullName, Path.Combine(relativePathSegments));
+            if (File.Exists(candidate))
+            {
+                return candidate;
+            }
+
+            current = current.Parent;
+        }
+
+        return Path.GetFullPath(Path.Combine(AppContext.BaseDirectory, Path.Combine(relativePathSegments)));
     }
 }

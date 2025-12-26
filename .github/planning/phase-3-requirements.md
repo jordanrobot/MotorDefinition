@@ -98,17 +98,17 @@
 
 ### Requirements
 
-- [ ] The application should centralize VS Code-like colors into a single resource dictionary (CurveEditor-specific theme tokens) and reference them via `DynamicResource`.
-- [ ] The Panel Bar (Activity Bar) background and border should match the screenshot.
-- [ ] Panel Bar button backgrounds:
-  - [ ] Are highlighted when the corresponding panel is expanded.
-  - [ ] Are not highlighted when the corresponding panel is collapsed.
-  - [ ] Are independent per item.
-  - [ ] Support multiple highlighted buttons simultaneously when multiple zones have expanded panels.
-- [ ] Side panel backgrounds and borders should match the screenshot.
-- [ ] Panel headers/section headers should match the screenshot.
-- [ ] Splitters/separators should match the screenshot (subtle VS Code-like separators).
-- [ ] Styling must work correctly when the Panel Bar is docked left or right.
+- [x] The application should centralize VS Code-like colors into a single resource dictionary (CurveEditor-specific theme tokens) and reference them via `DynamicResource`.
+- [x] The Panel Bar (Activity Bar) background and border should match the screenshot.
+- [x] Panel Bar button backgrounds:
+  - [x] Are highlighted when the corresponding panel is expanded.
+  - [x] Are not highlighted when the corresponding panel is collapsed.
+  - [x] Are independent per item.
+  - [x] Support multiple highlighted buttons simultaneously when multiple zones have expanded panels.
+- [x] Side panel backgrounds and borders should match the screenshot.
+- [x] Panel headers/section headers should match the screenshot.
+- [x] Splitters/separators should match the screenshot (subtle VS Code-like separators).
+- [x] Styling must work correctly when the Panel Bar is docked left or right.
 
 ### Acceptance Criteria (Phase 3.0.5)
 
@@ -228,74 +228,74 @@ Note: In this example, you'll notice that `motor profile 1.json` and `motor prof
 
 ### Json Format: General
 
-- [ ] Update the schema, json samples, object models, and documentation to support the json file changes listed below.
+- [x] Update the schema, json samples, object models, and documentation to support the json file changes listed below.
 
 ### Json Format: Series Table/Map
 
-- [ ] Each voltage configuration should support persisting curve data using a table/map representation (the “series table” format).
-- [ ] The series table format should store:
-  - [ ] A shared `percent` axis array (0–100) for all series.
-  - [ ] A shared `rpm` axis array aligned 1:1 with `percent`.
-  - [ ] A `series` map keyed by series name (e.g., `Peak`, `Continuous`), where each entry contains:
-    - [ ] `locked` (boolean)
-    - [ ] `notes` (string, optional)
-    - [ ] `torque` array aligned by index with the shared axes.
-- [ ] The series table format must support any number of series (including one) and must allow user-added series.
+- [x] Each voltage configuration should support persisting curve data using a table/map representation (the “series table” format).
+- [x] The series table format should store:
+  - [x] A shared `percent` axis array for all series (typically 0..100, but may be any strictly-increasing, non-negative sequence).
+  - [x] A shared `rpm` axis array aligned 1:1 with `percent`.
+  - [x] A `series` map keyed by series name (e.g., `Peak`, `Continuous`), where each entry contains:
+    - [x] `locked` (boolean)
+    - [x] `notes` (string, optional)
+    - [x] `torque` array aligned by index with the shared axes.
+- [x] The series table format must support any number of series (including one) and must allow user-added series.
 
 ### Json Format: New Properties
 
-- [ ] Add new properties to the motor properties:
-  - [ ] `brakeReleaseTime` (number) indicating the motor brake release time unit of measure.
-  - [ ] `brakeEngageTimeDiode` (number) indicating the motor brake engage time when using a diode.
-  - [ ] `brakeEngageTimeMOV` (number) indicating the motor brake engage time when using an MOV.
-  - [ ] `brakeBacklash` (number) indicating a angular displacement.
+- [x] Add new properties to the motor properties:
+  - [x] `brakeReleaseTime` (number) indicating the motor brake release time unit of measure.
+  - [x] `brakeEngageTimeDiode` (number) indicating the motor brake engage time when using a diode.
+  - [x] `brakeEngageTimeMOV` (number) indicating the motor brake engage time when using an MOV.
+  - [x] `brakeBacklash` (number) indicating a angular displacement.
 
-- [ ] Add new properties to the units section:
-  - [ ] `responseTime` (string) indicating the motor brake release time unit of measure. Default is milliseconds.
-  - [ ] `backlash` (string) indicating a angular displacement. Default is arcmin.
-    - [ ] `percentage` (string) indicates a percentage number. Default is %.
-    - [ ] `inertia` (string): default is "kg-m^2",
-    - [ ] `temperature` (string): default is "C",
-    - [ ] `torqueConstant` (string): "Nm/A",
+- [x] Add new properties to the units section:
+  - [x] `responseTime` (string) indicating the motor brake release time unit of measure. Default is milliseconds.
+  - [x] `backlash` (string) indicating a angular displacement. Default is arcmin.
+    - [x] `percentage` (string) indicates a percentage number. Default is %.
+    - [x] `inertia` (string): default is "kg-m^2",
+    - [x] `temperature` (string): default is "C",
+    - [x] `torqueConstant` (string): "Nm/A",
 
 ### Json Format: Change Properties
 
-- [ ] Change `drives` array property:
-  - [ ] `name` (string) should be moved to the top of the drive object.
-  - [ ] `manufacturer` should be moved to the second position in the drive object.
-  - [ ] `partNumber` should be moved to the third position in the drive object.
+- [x] Change `drives` array property:
+  - [x] `name` (string) should be moved to the top of the drive object.
+  - [x] `manufacturer` should be moved to the second position in the drive object.
+  - [x] `partNumber` should be moved to the third position in the drive object.
 
 ### Schema Versioning
 
-- [ ] The motor definition schema version remains `1.0.0`.
-- [ ] The schema and file format should define a single representation for curve series data: the series table/map representation.
-- [ ] Add the new properties to the schema with appropriate types and default values.
-- [ ] When saving motor definition files, CurveEditor should write the series table/map representation.
+- [x] The motor definition schema version remains `1.0.0`.
+- [x] The schema and file format should define a single representation for curve series data: the series table/map representation.
+- [x] Add the new properties to the schema with appropriate types and default values.
+- [x] When saving motor definition files, CurveEditor should write the series table/map representation.
 
 ### Validation Rules
 
-- [ ] The shared `percent` axis must be strictly increasing and contain 0–101 entries.
-  - [ ] Values must be integers and non-negative.
-  - [ ] Values above 100 may be used to represent overspeed (manual JSON editing; editor may be view-only).
-  - [ ] Standard curves use 101 points (0%..100% in 1% increments).
-- [ ] The shared `rpm` axis must:
-  - [ ] Contain the same number of entries as `percent` (0–101).
-  - [ ] Be non-negative.
-  - [ ] Be monotonically non-decreasing.
-- [ ] Each series `torque` array must contain the same number of entries as the shared axes (0–101).
-- [ ] All arrays must remain index-aligned (`percent[i]`, `rpm[i]`, and each series `torque[i]` refer to the same point).
-- [ ] Load failures (schema mismatch, invalid lengths, invalid values) should be logged and handled per the project’s logging/error handling policy.
+- [x] The shared `percent` axis must be strictly increasing and contain 0–101 entries.
+  - [x] Values must be integers and non-negative.
+  - [x] Values above 100 may be used to represent overspeed (manual JSON editing; editor may be view-only).
+  - [x] Standard curves use 101 points (0%..100% in 1% increments), but variable point counts are allowed (e.g., 21 points at 5% increments).
+- [x] The shared `rpm` axis must:
+  - [x] Contain the same number of entries as `percent` (0–101).
+  - [x] Be non-negative.
+  - [x] Be monotonically non-decreasing.
+- [x] Each series `torque` array must contain the same number of entries as the shared axes (0–101).
+- [x] All arrays must remain index-aligned (`percent[i]`, `rpm[i]`, and each series `torque[i]` refer to the same point).
+- [x] Load failures (schema mismatch, invalid lengths, invalid values) should be logged and handled per the project’s logging/error handling policy.
 
 ### Data Model Adjustments
 
-- [ ] Update the in-memory data model so it can:
-  - [ ] Deserialize the series table/map representation.
-  - [ ] Deserialize the new motor properties.
-  - [ ] Serialize the series table/map representation.
-  - [ ] Serialize the new motor properties.
-  - [ ] Normalize internally to a single representation suitable for the rest of the application (recommended: keep existing `CurveSeries` + `DataPoint` as the runtime model and convert on load/save).
-- [ ] Implement conversion logic:
-  - [ ] Series table/map  runtime `CurveSeries`/`DataPoint` (lossless conversion).
+- [x] Update the in-memory data model so it can:
+  - [x] Deserialize the series table/map representation.
+  - [x] Deserialize the new motor properties.
+  - [x] Serialize the series table/map representation.
+  - [x] Serialize the new motor properties.
+  - [x] Normalize internally to a single representation suitable for the rest of the application (recommended: keep existing `CurveSeries` + `DataPoint` as the runtime model and convert on load/save).
+- [x] Implement conversion logic:
+  - [x] Series table/map  runtime `CurveSeries`/`DataPoint` (lossless conversion).
 
 ### Implementation Guidance (Phase 3.1.5)
 
@@ -303,10 +303,10 @@ Note: In this example, you'll notice that `motor profile 1.json` and `motor prof
 
 ### Acceptance Criteria (Phase 3.1.5)
 
-- [ ] AC 3.1.5a: CurveEditor saves motor definition files with `schemaVersion` set to `1.0.0` and persists curve data using the series table/map representation.
-- [ ] AC 3.1.5b: CurveEditor can load and save the series table/map format, and reopening a saved file yields identical curve data (percent/rpm/torque) and series metadata.
-- [ ] AC 3.1.5c: For a representative file with multiple voltages and at least two series per voltage, the saved JSON file is measurably smaller than the current object-per-point representation used before this change (track size reduction in a simple benchmark/test artifact).
-- [ ] AC 3.1.5d: The new motor properties are correctly loaded and saved, and their default values are applied when loading files that omit them.
+- [x] AC 3.1.5a: CurveEditor saves motor definition files with `schemaVersion` set to `1.0.0` and persists curve data using the series table/map representation.
+- [x] AC 3.1.5b: CurveEditor can load and save the series table/map format, and reopening a saved file yields identical curve data (percent/rpm/torque) and series metadata.
+- [x] AC 3.1.5c: For a representative file with multiple voltages and at least two series per voltage, the saved JSON file is measurably smaller than the current object-per-point representation used before this change (track size reduction in a simple benchmark/test artifact).
+- [x] AC 3.1.5d: The new motor properties are correctly loaded and saved, and their default values are applied when loading files that omit them.
 
 ### Deferred (Phase 3.1.5)
 
@@ -327,20 +327,21 @@ Note: In this example, you'll notice that `motor profile 1.json` and `motor prof
 
 ### Requirements
 
-- [ ] Add a new class library project `jordanrobot.MotorDefinition` to the solution.
-- [ ] The library project must not reference Avalonia or MotorEditor UI assemblies.
-- [ ] The library project should contain (initially):
-  - [ ] Schema-aligned models (or rehomed shared models) that represent the motor definition file.
-  - [ ] A single entrypoint for file IO (e.g., `MotorFile` helpers or `MotorFileSerializer`).
-  - [ ] A copy of the Schema.
-  - [ ] Rehome/move the Phase 3.1.5 persistence DTOs + mapper + validators into the library with minimal churn (ideally a file move and minor namespace/project-reference updates).
-  - [ ] Unit test as needed to verify functionality.
+
+- [x] Add a new class library project (implemented as `src/MotorDefinition/MotorDefinition.csproj`) to the solution.
+- [x] The library project must not reference Avalonia or MotorEditor UI assemblies.
+- [x] The library project should contain (initially):
+  - [x] Schema-aligned models (or rehomed shared models) that represent the motor definition file.
+  - [x] A single entrypoint for file IO (e.g., `MotorFile` helpers or `MotorFileSerializer`).
+  - [x] A copy of the Schema.
+  - [x] Rehome/move the Phase 3.1.5 persistence DTOs + mapper + validators into the library with minimal churn (ideally a file move and minor namespace/project-reference updates).
+  - [x] Unit test as needed to verify functionality.
 
 - AFTER EACH OF THESE YOU MUST VERIFY BUILD BEFORE MOVING TO THE NEXT STEP:
-- [ ] Rename the program CurveEditor to MotorEditor.
-- [ ] Rename the project CurveEditor to MotorEditor.Avalonia.
-- [ ] Move the curve editor application codebase to a `src/MotorEditor.Avalonia/` directory.
-- [ ] Update the MotorEditor.Avalonia project to reference the new library project for motor definition file IO.
+- [x] Rename the program CurveEditor to MotorEditor.
+- [x] Rename the project CurveEditor to MotorEditor.Avalonia.
+- [x] Move the curve editor application codebase to a `src/MotorEditor.Avalonia/` directory.
+- [x] Update the MotorEditor.Avalonia project to reference the new library project for motor definition file IO.
  
   
 ### Acceptance Criteria (Phase 3.1.6)
