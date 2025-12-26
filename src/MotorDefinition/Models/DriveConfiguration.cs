@@ -5,7 +5,7 @@ using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Text.Json.Serialization;
 
-namespace CurveEditor.Models;
+namespace JordanRobot.MotorDefinitions.Model;
 
 /// <summary>
 /// Represents a servo drive configuration for a motor.

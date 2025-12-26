@@ -1,4 +1,4 @@
-namespace CurveEditor.Models;
+namespace MotorEditor.Avalonia.Models;
 
 /// <summary>
 /// Defines which side of the window the Panel Bar is docked to.

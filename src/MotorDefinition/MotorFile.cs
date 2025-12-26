@@ -1,7 +1,7 @@
-using CurveEditor.Models;
-using JordanRobot.MotorDefinitions.Dtos;
-using JordanRobot.MotorDefinitions.Mapping;
-using JordanRobot.MotorDefinitions.Probing;
+using JordanRobot.MotorDefinitions.Model;
+using JordanRobot.MotorDefinitions.Persistence.Dtos;
+using JordanRobot.MotorDefinitions.Persistence.Mapping;
+using JordanRobot.MotorDefinitions.Persistence.Probing;
 using System;
 using System.IO;
 using System.Text.Json;

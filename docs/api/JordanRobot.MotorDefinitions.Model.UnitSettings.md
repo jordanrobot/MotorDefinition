@@ -1,5 +1,5 @@
 #### [MotorDefinition](index.md 'index')
-### [CurveEditor\.Models](CurveEditor.Models.md 'CurveEditor\.Models')
+### [JordanRobot\.MotorDefinitions\.Model](JordanRobot.MotorDefinitions.Model.md 'JordanRobot\.MotorDefinitions\.Model')
 
 ## UnitSettings Class
 
@@ -14,7 +14,7 @@ Inheritance [System\.Object](https://learn.microsoft.com/en-us/dotnet/api/system
 Implements [System\.ComponentModel\.INotifyPropertyChanged](https://learn.microsoft.com/en-us/dotnet/api/system.componentmodel.inotifypropertychanged 'System\.ComponentModel\.INotifyPropertyChanged')
 ### Properties
 
-<a name='CurveEditor.Models.UnitSettings.Backlash'></a>
+<a name='JordanRobot.MotorDefinitions.Model.UnitSettings.Backlash'></a>
 
 ## UnitSettings\.Backlash Property
 
@@ -27,7 +27,7 @@ public string Backlash { get; set; }
 #### Property Value
 [System\.String](https://learn.microsoft.com/en-us/dotnet/api/system.string 'System\.String')
 
-<a name='CurveEditor.Models.UnitSettings.Current'></a>
+<a name='JordanRobot.MotorDefinitions.Model.UnitSettings.Current'></a>
 
 ## UnitSettings\.Current Property
 
@@ -40,7 +40,7 @@ public string Current { get; set; }
 #### Property Value
 [System\.String](https://learn.microsoft.com/en-us/dotnet/api/system.string 'System\.String')
 
-<a name='CurveEditor.Models.UnitSettings.Inertia'></a>
+<a name='JordanRobot.MotorDefinitions.Model.UnitSettings.Inertia'></a>
 
 ## UnitSettings\.Inertia Property
 
@@ -53,7 +53,7 @@ public string Inertia { get; set; }
 #### Property Value
 [System\.String](https://learn.microsoft.com/en-us/dotnet/api/system.string 'System\.String')
 
-<a name='CurveEditor.Models.UnitSettings.Percentage'></a>
+<a name='JordanRobot.MotorDefinitions.Model.UnitSettings.Percentage'></a>
 
 ## UnitSettings\.Percentage Property
 
@@ -66,7 +66,7 @@ public string Percentage { get; set; }
 #### Property Value
 [System\.String](https://learn.microsoft.com/en-us/dotnet/api/system.string 'System\.String')
 
-<a name='CurveEditor.Models.UnitSettings.Power'></a>
+<a name='JordanRobot.MotorDefinitions.Model.UnitSettings.Power'></a>
 
 ## UnitSettings\.Power Property
 
@@ -79,7 +79,7 @@ public string Power { get; set; }
 #### Property Value
 [System\.String](https://learn.microsoft.com/en-us/dotnet/api/system.string 'System\.String')
 
-<a name='CurveEditor.Models.UnitSettings.ResponseTime'></a>
+<a name='JordanRobot.MotorDefinitions.Model.UnitSettings.ResponseTime'></a>
 
 ## UnitSettings\.ResponseTime Property
 
@@ -92,7 +92,7 @@ public string ResponseTime { get; set; }
 #### Property Value
 [System\.String](https://learn.microsoft.com/en-us/dotnet/api/system.string 'System\.String')
 
-<a name='CurveEditor.Models.UnitSettings.Speed'></a>
+<a name='JordanRobot.MotorDefinitions.Model.UnitSettings.Speed'></a>
 
 ## UnitSettings\.Speed Property
 
@@ -105,7 +105,7 @@ public string Speed { get; set; }
 #### Property Value
 [System\.String](https://learn.microsoft.com/en-us/dotnet/api/system.string 'System\.String')
 
-<a name='CurveEditor.Models.UnitSettings.SupportedBacklashUnits'></a>
+<a name='JordanRobot.MotorDefinitions.Model.UnitSettings.SupportedBacklashUnits'></a>
 
 ## UnitSettings\.SupportedBacklashUnits Property
 
@@ -118,7 +118,7 @@ public static string[] SupportedBacklashUnits { get; }
 #### Property Value
 [System\.String](https://learn.microsoft.com/en-us/dotnet/api/system.string 'System\.String')[\[\]](https://learn.microsoft.com/en-us/dotnet/api/system.array 'System\.Array')
 
-<a name='CurveEditor.Models.UnitSettings.SupportedCurrentUnits'></a>
+<a name='JordanRobot.MotorDefinitions.Model.UnitSettings.SupportedCurrentUnits'></a>
 
 ## UnitSettings\.SupportedCurrentUnits Property
 
@@ -131,7 +131,7 @@ public static string[] SupportedCurrentUnits { get; }
 #### Property Value
 [System\.String](https://learn.microsoft.com/en-us/dotnet/api/system.string 'System\.String')[\[\]](https://learn.microsoft.com/en-us/dotnet/api/system.array 'System\.Array')
 
-<a name='CurveEditor.Models.UnitSettings.SupportedInertiaUnits'></a>
+<a name='JordanRobot.MotorDefinitions.Model.UnitSettings.SupportedInertiaUnits'></a>
 
 ## UnitSettings\.SupportedInertiaUnits Property
 
@@ -144,7 +144,7 @@ public static string[] SupportedInertiaUnits { get; }
 #### Property Value
 [System\.String](https://learn.microsoft.com/en-us/dotnet/api/system.string 'System\.String')[\[\]](https://learn.microsoft.com/en-us/dotnet/api/system.array 'System\.Array')
 
-<a name='CurveEditor.Models.UnitSettings.SupportedPercentageUnits'></a>
+<a name='JordanRobot.MotorDefinitions.Model.UnitSettings.SupportedPercentageUnits'></a>
 
 ## UnitSettings\.SupportedPercentageUnits Property
 
@@ -157,7 +157,7 @@ public static string[] SupportedPercentageUnits { get; }
 #### Property Value
 [System\.String](https://learn.microsoft.com/en-us/dotnet/api/system.string 'System\.String')[\[\]](https://learn.microsoft.com/en-us/dotnet/api/system.array 'System\.Array')
 
-<a name='CurveEditor.Models.UnitSettings.SupportedPowerUnits'></a>
+<a name='JordanRobot.MotorDefinitions.Model.UnitSettings.SupportedPowerUnits'></a>
 
 ## UnitSettings\.SupportedPowerUnits Property
 
@@ -170,7 +170,7 @@ public static string[] SupportedPowerUnits { get; }
 #### Property Value
 [System\.String](https://learn.microsoft.com/en-us/dotnet/api/system.string 'System\.String')[\[\]](https://learn.microsoft.com/en-us/dotnet/api/system.array 'System\.Array')
 
-<a name='CurveEditor.Models.UnitSettings.SupportedResponseTimeUnits'></a>
+<a name='JordanRobot.MotorDefinitions.Model.UnitSettings.SupportedResponseTimeUnits'></a>
 
 ## UnitSettings\.SupportedResponseTimeUnits Property
 
@@ -183,7 +183,7 @@ public static string[] SupportedResponseTimeUnits { get; }
 #### Property Value
 [System\.String](https://learn.microsoft.com/en-us/dotnet/api/system.string 'System\.String')[\[\]](https://learn.microsoft.com/en-us/dotnet/api/system.array 'System\.Array')
 
-<a name='CurveEditor.Models.UnitSettings.SupportedSpeedUnits'></a>
+<a name='JordanRobot.MotorDefinitions.Model.UnitSettings.SupportedSpeedUnits'></a>
 
 ## UnitSettings\.SupportedSpeedUnits Property
 
@@ -196,7 +196,7 @@ public static string[] SupportedSpeedUnits { get; }
 #### Property Value
 [System\.String](https://learn.microsoft.com/en-us/dotnet/api/system.string 'System\.String')[\[\]](https://learn.microsoft.com/en-us/dotnet/api/system.array 'System\.Array')
 
-<a name='CurveEditor.Models.UnitSettings.SupportedTemperatureUnits'></a>
+<a name='JordanRobot.MotorDefinitions.Model.UnitSettings.SupportedTemperatureUnits'></a>
 
 ## UnitSettings\.SupportedTemperatureUnits Property
 
@@ -209,7 +209,7 @@ public static string[] SupportedTemperatureUnits { get; }
 #### Property Value
 [System\.String](https://learn.microsoft.com/en-us/dotnet/api/system.string 'System\.String')[\[\]](https://learn.microsoft.com/en-us/dotnet/api/system.array 'System\.Array')
 
-<a name='CurveEditor.Models.UnitSettings.SupportedTorqueConstantUnits'></a>
+<a name='JordanRobot.MotorDefinitions.Model.UnitSettings.SupportedTorqueConstantUnits'></a>
 
 ## UnitSettings\.SupportedTorqueConstantUnits Property
 
@@ -222,7 +222,7 @@ public static string[] SupportedTorqueConstantUnits { get; }
 #### Property Value
 [System\.String](https://learn.microsoft.com/en-us/dotnet/api/system.string 'System\.String')[\[\]](https://learn.microsoft.com/en-us/dotnet/api/system.array 'System\.Array')
 
-<a name='CurveEditor.Models.UnitSettings.SupportedTorqueUnits'></a>
+<a name='JordanRobot.MotorDefinitions.Model.UnitSettings.SupportedTorqueUnits'></a>
 
 ## UnitSettings\.SupportedTorqueUnits Property
 
@@ -235,7 +235,7 @@ public static string[] SupportedTorqueUnits { get; }
 #### Property Value
 [System\.String](https://learn.microsoft.com/en-us/dotnet/api/system.string 'System\.String')[\[\]](https://learn.microsoft.com/en-us/dotnet/api/system.array 'System\.Array')
 
-<a name='CurveEditor.Models.UnitSettings.SupportedVoltageUnits'></a>
+<a name='JordanRobot.MotorDefinitions.Model.UnitSettings.SupportedVoltageUnits'></a>
 
 ## UnitSettings\.SupportedVoltageUnits Property
 
@@ -248,7 +248,7 @@ public static string[] SupportedVoltageUnits { get; }
 #### Property Value
 [System\.String](https://learn.microsoft.com/en-us/dotnet/api/system.string 'System\.String')[\[\]](https://learn.microsoft.com/en-us/dotnet/api/system.array 'System\.Array')
 
-<a name='CurveEditor.Models.UnitSettings.SupportedWeightUnits'></a>
+<a name='JordanRobot.MotorDefinitions.Model.UnitSettings.SupportedWeightUnits'></a>
 
 ## UnitSettings\.SupportedWeightUnits Property
 
@@ -261,7 +261,7 @@ public static string[] SupportedWeightUnits { get; }
 #### Property Value
 [System\.String](https://learn.microsoft.com/en-us/dotnet/api/system.string 'System\.String')[\[\]](https://learn.microsoft.com/en-us/dotnet/api/system.array 'System\.Array')
 
-<a name='CurveEditor.Models.UnitSettings.Temperature'></a>
+<a name='JordanRobot.MotorDefinitions.Model.UnitSettings.Temperature'></a>
 
 ## UnitSettings\.Temperature Property
 
@@ -274,7 +274,7 @@ public string Temperature { get; set; }
 #### Property Value
 [System\.String](https://learn.microsoft.com/en-us/dotnet/api/system.string 'System\.String')
 
-<a name='CurveEditor.Models.UnitSettings.Torque'></a>
+<a name='JordanRobot.MotorDefinitions.Model.UnitSettings.Torque'></a>
 
 ## UnitSettings\.Torque Property
 
@@ -287,7 +287,7 @@ public string Torque { get; set; }
 #### Property Value
 [System\.String](https://learn.microsoft.com/en-us/dotnet/api/system.string 'System\.String')
 
-<a name='CurveEditor.Models.UnitSettings.TorqueConstant'></a>
+<a name='JordanRobot.MotorDefinitions.Model.UnitSettings.TorqueConstant'></a>
 
 ## UnitSettings\.TorqueConstant Property
 
@@ -300,7 +300,7 @@ public string TorqueConstant { get; set; }
 #### Property Value
 [System\.String](https://learn.microsoft.com/en-us/dotnet/api/system.string 'System\.String')
 
-<a name='CurveEditor.Models.UnitSettings.Voltage'></a>
+<a name='JordanRobot.MotorDefinitions.Model.UnitSettings.Voltage'></a>
 
 ## UnitSettings\.Voltage Property
 
@@ -313,7 +313,7 @@ public string Voltage { get; set; }
 #### Property Value
 [System\.String](https://learn.microsoft.com/en-us/dotnet/api/system.string 'System\.String')
 
-<a name='CurveEditor.Models.UnitSettings.Weight'></a>
+<a name='JordanRobot.MotorDefinitions.Model.UnitSettings.Weight'></a>
 
 ## UnitSettings\.Weight Property
 
@@ -327,7 +327,7 @@ public string Weight { get; set; }
 [System\.String](https://learn.microsoft.com/en-us/dotnet/api/system.string 'System\.String')
 ### Methods
 
-<a name='CurveEditor.Models.UnitSettings.OnPropertyChanged(string)'></a>
+<a name='JordanRobot.MotorDefinitions.Model.UnitSettings.OnPropertyChanged(string)'></a>
 
 ## UnitSettings\.OnPropertyChanged\(string\) Method
 
@@ -338,11 +338,11 @@ protected virtual void OnPropertyChanged(string? propertyName=null);
 ```
 #### Parameters
 
-<a name='CurveEditor.Models.UnitSettings.OnPropertyChanged(string).propertyName'></a>
+<a name='JordanRobot.MotorDefinitions.Model.UnitSettings.OnPropertyChanged(string).propertyName'></a>
 
 `propertyName` [System\.String](https://learn.microsoft.com/en-us/dotnet/api/system.string 'System\.String')
 
-<a name='CurveEditor.Models.UnitSettings.SetProperty_T_(T,T,string)'></a>
+<a name='JordanRobot.MotorDefinitions.Model.UnitSettings.SetProperty_T_(T,T,string)'></a>
 
 ## UnitSettings\.SetProperty\<T\>\(T, T, string\) Method
 
@@ -353,20 +353,20 @@ protected bool SetProperty<T>(ref T field, T value, string? propertyName=null);
 ```
 #### Type parameters
 
-<a name='CurveEditor.Models.UnitSettings.SetProperty_T_(T,T,string).T'></a>
+<a name='JordanRobot.MotorDefinitions.Model.UnitSettings.SetProperty_T_(T,T,string).T'></a>
 
 `T`
 #### Parameters
 
-<a name='CurveEditor.Models.UnitSettings.SetProperty_T_(T,T,string).field'></a>
+<a name='JordanRobot.MotorDefinitions.Model.UnitSettings.SetProperty_T_(T,T,string).field'></a>
 
-`field` [T](CurveEditor.Models.UnitSettings.md#CurveEditor.Models.UnitSettings.SetProperty_T_(T,T,string).T 'CurveEditor\.Models\.UnitSettings\.SetProperty\<T\>\(T, T, string\)\.T')
+`field` [T](JordanRobot.MotorDefinitions.Model.UnitSettings.md#JordanRobot.MotorDefinitions.Model.UnitSettings.SetProperty_T_(T,T,string).T 'JordanRobot\.MotorDefinitions\.Model\.UnitSettings\.SetProperty\<T\>\(T, T, string\)\.T')
 
-<a name='CurveEditor.Models.UnitSettings.SetProperty_T_(T,T,string).value'></a>
+<a name='JordanRobot.MotorDefinitions.Model.UnitSettings.SetProperty_T_(T,T,string).value'></a>
 
-`value` [T](CurveEditor.Models.UnitSettings.md#CurveEditor.Models.UnitSettings.SetProperty_T_(T,T,string).T 'CurveEditor\.Models\.UnitSettings\.SetProperty\<T\>\(T, T, string\)\.T')
+`value` [T](JordanRobot.MotorDefinitions.Model.UnitSettings.md#JordanRobot.MotorDefinitions.Model.UnitSettings.SetProperty_T_(T,T,string).T 'JordanRobot\.MotorDefinitions\.Model\.UnitSettings\.SetProperty\<T\>\(T, T, string\)\.T')
 
-<a name='CurveEditor.Models.UnitSettings.SetProperty_T_(T,T,string).propertyName'></a>
+<a name='JordanRobot.MotorDefinitions.Model.UnitSettings.SetProperty_T_(T,T,string).propertyName'></a>
 
 `propertyName` [System\.String](https://learn.microsoft.com/en-us/dotnet/api/system.string 'System\.String')
 
@@ -374,7 +374,7 @@ protected bool SetProperty<T>(ref T field, T value, string? propertyName=null);
 [System\.Boolean](https://learn.microsoft.com/en-us/dotnet/api/system.boolean 'System\.Boolean')
 ### Events
 
-<a name='CurveEditor.Models.UnitSettings.PropertyChanged'></a>
+<a name='JordanRobot.MotorDefinitions.Model.UnitSettings.PropertyChanged'></a>
 
 ## UnitSettings\.PropertyChanged Event
 

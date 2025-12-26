@@ -1,7 +1,7 @@
 using System;
 using System.Text.Json.Serialization;
 
-namespace JordanRobot.MotorDefinitions.Dtos;
+namespace JordanRobot.MotorDefinitions.Persistence.Dtos;
 
 /// <summary>
 /// Persistence DTO for motor metadata.

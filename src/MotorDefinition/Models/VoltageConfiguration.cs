@@ -5,7 +5,7 @@ using System.Runtime.CompilerServices;
 using System.Globalization;
 using System.Text.Json.Serialization;
 
-namespace CurveEditor.Models;
+namespace JordanRobot.MotorDefinitions.Model;
 
 /// <summary>
 /// Represents voltage-specific configuration and performance data for a motor/drive combination.

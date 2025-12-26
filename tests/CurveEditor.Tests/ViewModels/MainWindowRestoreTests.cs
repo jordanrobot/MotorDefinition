@@ -2,9 +2,9 @@ using System;
 using System.IO;
 using System.Collections.Generic;
 using System.Threading.Tasks;
-using CurveEditor.Models;
 using CurveEditor.Services;
 using CurveEditor.ViewModels;
+using MotorEditor.Avalonia.Models;
 using Xunit;
 
 namespace CurveEditor.Tests.ViewModels;

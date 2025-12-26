@@ -1,4 +1,4 @@
-namespace CurveEditor.Models;
+namespace MotorEditor.Avalonia.Models;
 
 /// <summary>
 /// Defines the zones where panels can be docked in the main window layout.

@@ -1,6 +1,7 @@
 using CurveEditor.Services;
 using CurveEditor.ViewModels;
-using JordanRobot.MotorDefinitions.Dtos;
+using JordanRobot.MotorDefinitions.Model;
+using JordanRobot.MotorDefinitions.Persistence.Dtos;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -20,7 +21,7 @@ public sealed class DirectoryBrowserInteractionTests
 
         var dto = new MotorDefinitionFileDto
         {
-            SchemaVersion = CurveEditor.Models.MotorDefinition.CurrentSchemaVersion,
+            SchemaVersion = MotorDefinition.CurrentSchemaVersion,
             MotorName = motorName,
             Drives =
             [

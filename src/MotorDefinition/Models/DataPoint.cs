@@ -1,7 +1,7 @@
 using System;
 using System.Text.Json.Serialization;
 
-namespace CurveEditor.Models;
+namespace JordanRobot.MotorDefinitions.Model;
 
 /// <summary>
 /// Represents a single point on a motor torque curve.

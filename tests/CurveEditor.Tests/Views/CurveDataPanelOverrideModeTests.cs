@@ -1,7 +1,7 @@
 using System.Linq;
 using Avalonia.Controls;
 using Avalonia.Input;
-using CurveEditor.Models;
+using JordanRobot.MotorDefinitions.Model;
 using CurveEditor.ViewModels;
 using CurveEditor.Views;
 using Xunit;

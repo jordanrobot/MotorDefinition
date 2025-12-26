@@ -1,9 +1,9 @@
-using CurveEditor.Models;
+using JordanRobot.MotorDefinitions.Model;
 using System;
 using System.Linq;
 using System.Text.Json;
 
-namespace JordanRobot.MotorDefinitions.Probing;
+namespace JordanRobot.MotorDefinitions.Persistence.Probing;
 
 /// <summary>
 /// Lightweight shape probe for motor definition files to avoid full deserialization.

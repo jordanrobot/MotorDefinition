@@ -1,6 +1,6 @@
 using System.Text.Json.Serialization;
 
-namespace JordanRobot.MotorDefinitions.Dtos;
+namespace JordanRobot.MotorDefinitions.Persistence.Dtos;
 
 /// <summary>
 /// Persistence DTO for unit settings in motor definition files.

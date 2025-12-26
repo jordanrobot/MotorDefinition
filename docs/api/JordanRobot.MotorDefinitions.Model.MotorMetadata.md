@@ -1,5 +1,5 @@
 #### [MotorDefinition](index.md 'index')
-### [CurveEditor\.Models](CurveEditor.Models.md 'CurveEditor\.Models')
+### [JordanRobot\.MotorDefinitions\.Model](JordanRobot.MotorDefinitions.Model.md 'JordanRobot\.MotorDefinitions\.Model')
 
 ## MotorMetadata Class
 
@@ -12,7 +12,7 @@ public class MotorMetadata
 Inheritance [System\.Object](https://learn.microsoft.com/en-us/dotnet/api/system.object 'System\.Object') &#129106; MotorMetadata
 ### Properties
 
-<a name='CurveEditor.Models.MotorMetadata.Created'></a>
+<a name='JordanRobot.MotorDefinitions.Model.MotorMetadata.Created'></a>
 
 ## MotorMetadata\.Created Property
 
@@ -25,7 +25,7 @@ public System.DateTime Created { get; set; }
 #### Property Value
 [System\.DateTime](https://learn.microsoft.com/en-us/dotnet/api/system.datetime 'System\.DateTime')
 
-<a name='CurveEditor.Models.MotorMetadata.Modified'></a>
+<a name='JordanRobot.MotorDefinitions.Model.MotorMetadata.Modified'></a>
 
 ## MotorMetadata\.Modified Property
 
@@ -38,7 +38,7 @@ public System.DateTime Modified { get; set; }
 #### Property Value
 [System\.DateTime](https://learn.microsoft.com/en-us/dotnet/api/system.datetime 'System\.DateTime')
 
-<a name='CurveEditor.Models.MotorMetadata.Notes'></a>
+<a name='JordanRobot.MotorDefinitions.Model.MotorMetadata.Notes'></a>
 
 ## MotorMetadata\.Notes Property
 
@@ -52,7 +52,7 @@ public string Notes { get; set; }
 [System\.String](https://learn.microsoft.com/en-us/dotnet/api/system.string 'System\.String')
 ### Methods
 
-<a name='CurveEditor.Models.MotorMetadata.UpdateModified()'></a>
+<a name='JordanRobot.MotorDefinitions.Model.MotorMetadata.UpdateModified()'></a>
 
 ## MotorMetadata\.UpdateModified\(\) Method
 

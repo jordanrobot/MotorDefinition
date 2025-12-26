@@ -49,7 +49,7 @@ The object model is:
 - Motor → Drive(s) → Voltage(s) → Curve series → Data points
 
 ```csharp
-using CurveEditor.Models;
+using JordanRobot.MotorDefinitions.Model;
 using JordanRobot.MotorDefinitions;
 
 var motor = new MotorDefinition("My Motor")

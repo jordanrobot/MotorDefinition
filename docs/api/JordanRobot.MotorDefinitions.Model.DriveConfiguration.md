@@ -1,5 +1,5 @@
 #### [MotorDefinition](index.md 'index')
-### [CurveEditor\.Models](CurveEditor.Models.md 'CurveEditor\.Models')
+### [JordanRobot\.MotorDefinitions\.Model](JordanRobot.MotorDefinitions.Model.md 'JordanRobot\.MotorDefinitions\.Model')
 
 ## DriveConfiguration Class
 
@@ -15,7 +15,7 @@ Inheritance [System\.Object](https://learn.microsoft.com/en-us/dotnet/api/system
 Implements [System\.ComponentModel\.INotifyPropertyChanged](https://learn.microsoft.com/en-us/dotnet/api/system.componentmodel.inotifypropertychanged 'System\.ComponentModel\.INotifyPropertyChanged')
 ### Constructors
 
-<a name='CurveEditor.Models.DriveConfiguration.DriveConfiguration()'></a>
+<a name='JordanRobot.MotorDefinitions.Model.DriveConfiguration.DriveConfiguration()'></a>
 
 ## DriveConfiguration\(\) Constructor
 
@@ -25,7 +25,7 @@ Creates a new DriveConfiguration with default values\.
 public DriveConfiguration();
 ```
 
-<a name='CurveEditor.Models.DriveConfiguration.DriveConfiguration(string)'></a>
+<a name='JordanRobot.MotorDefinitions.Model.DriveConfiguration.DriveConfiguration(string)'></a>
 
 ## DriveConfiguration\(string\) Constructor
 
@@ -36,14 +36,14 @@ public DriveConfiguration(string name);
 ```
 #### Parameters
 
-<a name='CurveEditor.Models.DriveConfiguration.DriveConfiguration(string).name'></a>
+<a name='JordanRobot.MotorDefinitions.Model.DriveConfiguration.DriveConfiguration(string).name'></a>
 
 `name` [System\.String](https://learn.microsoft.com/en-us/dotnet/api/system.string 'System\.String')
 
 The name of the drive\.
 ### Fields
 
-<a name='CurveEditor.Models.DriveConfiguration.DefaultVoltageTolerance'></a>
+<a name='JordanRobot.MotorDefinitions.Model.DriveConfiguration.DefaultVoltageTolerance'></a>
 
 ## DriveConfiguration\.DefaultVoltageTolerance Field
 
@@ -57,7 +57,7 @@ public const double DefaultVoltageTolerance = 0.1;
 [System\.Double](https://learn.microsoft.com/en-us/dotnet/api/system.double 'System\.Double')
 ### Properties
 
-<a name='CurveEditor.Models.DriveConfiguration.Manufacturer'></a>
+<a name='JordanRobot.MotorDefinitions.Model.DriveConfiguration.Manufacturer'></a>
 
 ## DriveConfiguration\.Manufacturer Property
 
@@ -70,7 +70,7 @@ public string Manufacturer { get; set; }
 #### Property Value
 [System\.String](https://learn.microsoft.com/en-us/dotnet/api/system.string 'System\.String')
 
-<a name='CurveEditor.Models.DriveConfiguration.Name'></a>
+<a name='JordanRobot.MotorDefinitions.Model.DriveConfiguration.Name'></a>
 
 ## DriveConfiguration\.Name Property
 
@@ -83,7 +83,7 @@ public string Name { get; set; }
 #### Property Value
 [System\.String](https://learn.microsoft.com/en-us/dotnet/api/system.string 'System\.String')
 
-<a name='CurveEditor.Models.DriveConfiguration.PartNumber'></a>
+<a name='JordanRobot.MotorDefinitions.Model.DriveConfiguration.PartNumber'></a>
 
 ## DriveConfiguration\.PartNumber Property
 
@@ -96,21 +96,21 @@ public string PartNumber { get; set; }
 #### Property Value
 [System\.String](https://learn.microsoft.com/en-us/dotnet/api/system.string 'System\.String')
 
-<a name='CurveEditor.Models.DriveConfiguration.VoltageConfigurations'></a>
+<a name='JordanRobot.MotorDefinitions.Model.DriveConfiguration.VoltageConfigurations'></a>
 
 ## DriveConfiguration\.VoltageConfigurations Property
 
 Gets a LINQ\-friendly enumeration of voltage configurations\.
-This is a convenience alias for [Voltages](CurveEditor.Models.DriveConfiguration.md#CurveEditor.Models.DriveConfiguration.Voltages 'CurveEditor\.Models\.DriveConfiguration\.Voltages')\.
+This is a convenience alias for [Voltages](JordanRobot.MotorDefinitions.Model.DriveConfiguration.md#JordanRobot.MotorDefinitions.Model.DriveConfiguration.Voltages 'JordanRobot\.MotorDefinitions\.Model\.DriveConfiguration\.Voltages')\.
 
 ```csharp
-public System.Collections.Generic.IEnumerable<CurveEditor.Models.VoltageConfiguration> VoltageConfigurations { get; }
+public System.Collections.Generic.IEnumerable<JordanRobot.MotorDefinitions.Model.VoltageConfiguration> VoltageConfigurations { get; }
 ```
 
 #### Property Value
-[System\.Collections\.Generic\.IEnumerable&lt;](https://learn.microsoft.com/en-us/dotnet/api/system.collections.generic.ienumerable-1 'System\.Collections\.Generic\.IEnumerable\`1')[VoltageConfiguration](CurveEditor.Models.VoltageConfiguration.md 'CurveEditor\.Models\.VoltageConfiguration')[&gt;](https://learn.microsoft.com/en-us/dotnet/api/system.collections.generic.ienumerable-1 'System\.Collections\.Generic\.IEnumerable\`1')
+[System\.Collections\.Generic\.IEnumerable&lt;](https://learn.microsoft.com/en-us/dotnet/api/system.collections.generic.ienumerable-1 'System\.Collections\.Generic\.IEnumerable\`1')[VoltageConfiguration](JordanRobot.MotorDefinitions.Model.VoltageConfiguration.md 'JordanRobot\.MotorDefinitions\.Model\.VoltageConfiguration')[&gt;](https://learn.microsoft.com/en-us/dotnet/api/system.collections.generic.ienumerable-1 'System\.Collections\.Generic\.IEnumerable\`1')
 
-<a name='CurveEditor.Models.DriveConfiguration.VoltageNames'></a>
+<a name='JordanRobot.MotorDefinitions.Model.DriveConfiguration.VoltageNames'></a>
 
 ## DriveConfiguration\.VoltageNames Property
 
@@ -124,20 +124,20 @@ public System.Collections.Generic.IEnumerable<string> VoltageNames { get; }
 #### Property Value
 [System\.Collections\.Generic\.IEnumerable&lt;](https://learn.microsoft.com/en-us/dotnet/api/system.collections.generic.ienumerable-1 'System\.Collections\.Generic\.IEnumerable\`1')[System\.String](https://learn.microsoft.com/en-us/dotnet/api/system.string 'System\.String')[&gt;](https://learn.microsoft.com/en-us/dotnet/api/system.collections.generic.ienumerable-1 'System\.Collections\.Generic\.IEnumerable\`1')
 
-<a name='CurveEditor.Models.DriveConfiguration.Voltages'></a>
+<a name='JordanRobot.MotorDefinitions.Model.DriveConfiguration.Voltages'></a>
 
 ## DriveConfiguration\.Voltages Property
 
 The collection of voltage configurations for this drive\.
 
 ```csharp
-public System.Collections.Generic.List<CurveEditor.Models.VoltageConfiguration> Voltages { get; set; }
+public System.Collections.Generic.List<JordanRobot.MotorDefinitions.Model.VoltageConfiguration> Voltages { get; set; }
 ```
 
 #### Property Value
-[System\.Collections\.Generic\.List&lt;](https://learn.microsoft.com/en-us/dotnet/api/system.collections.generic.list-1 'System\.Collections\.Generic\.List\`1')[VoltageConfiguration](CurveEditor.Models.VoltageConfiguration.md 'CurveEditor\.Models\.VoltageConfiguration')[&gt;](https://learn.microsoft.com/en-us/dotnet/api/system.collections.generic.list-1 'System\.Collections\.Generic\.List\`1')
+[System\.Collections\.Generic\.List&lt;](https://learn.microsoft.com/en-us/dotnet/api/system.collections.generic.list-1 'System\.Collections\.Generic\.List\`1')[VoltageConfiguration](JordanRobot.MotorDefinitions.Model.VoltageConfiguration.md 'JordanRobot\.MotorDefinitions\.Model\.VoltageConfiguration')[&gt;](https://learn.microsoft.com/en-us/dotnet/api/system.collections.generic.list-1 'System\.Collections\.Generic\.List\`1')
 
-<a name='CurveEditor.Models.DriveConfiguration.VoltageValues'></a>
+<a name='JordanRobot.MotorDefinitions.Model.DriveConfiguration.VoltageValues'></a>
 
 ## DriveConfiguration\.VoltageValues Property
 
@@ -152,25 +152,25 @@ public System.Collections.Generic.IEnumerable<double> VoltageValues { get; }
 [System\.Collections\.Generic\.IEnumerable&lt;](https://learn.microsoft.com/en-us/dotnet/api/system.collections.generic.ienumerable-1 'System\.Collections\.Generic\.IEnumerable\`1')[System\.Double](https://learn.microsoft.com/en-us/dotnet/api/system.double 'System\.Double')[&gt;](https://learn.microsoft.com/en-us/dotnet/api/system.collections.generic.ienumerable-1 'System\.Collections\.Generic\.IEnumerable\`1')
 ### Methods
 
-<a name='CurveEditor.Models.DriveConfiguration.AddVoltageConfiguration(double)'></a>
+<a name='JordanRobot.MotorDefinitions.Model.DriveConfiguration.AddVoltageConfiguration(double)'></a>
 
 ## DriveConfiguration\.AddVoltageConfiguration\(double\) Method
 
 Adds a new voltage configuration\.
 
 ```csharp
-public CurveEditor.Models.VoltageConfiguration AddVoltageConfiguration(double voltage);
+public JordanRobot.MotorDefinitions.Model.VoltageConfiguration AddVoltageConfiguration(double voltage);
 ```
 #### Parameters
 
-<a name='CurveEditor.Models.DriveConfiguration.AddVoltageConfiguration(double).voltage'></a>
+<a name='JordanRobot.MotorDefinitions.Model.DriveConfiguration.AddVoltageConfiguration(double).voltage'></a>
 
 `voltage` [System\.Double](https://learn.microsoft.com/en-us/dotnet/api/system.double 'System\.Double')
 
 The voltage value\.
 
 #### Returns
-[VoltageConfiguration](CurveEditor.Models.VoltageConfiguration.md 'CurveEditor\.Models\.VoltageConfiguration')  
+[VoltageConfiguration](JordanRobot.MotorDefinitions.Model.VoltageConfiguration.md 'JordanRobot\.MotorDefinitions\.Model\.VoltageConfiguration')  
 The newly created voltage configuration\.
 
 #### Exceptions
@@ -178,34 +178,34 @@ The newly created voltage configuration\.
 [System\.InvalidOperationException](https://learn.microsoft.com/en-us/dotnet/api/system.invalidoperationexception 'System\.InvalidOperationException')  
 Thrown if a configuration with the same voltage already exists\.
 
-<a name='CurveEditor.Models.DriveConfiguration.GetVoltageConfiguration(double,double)'></a>
+<a name='JordanRobot.MotorDefinitions.Model.DriveConfiguration.GetVoltageConfiguration(double,double)'></a>
 
 ## DriveConfiguration\.GetVoltageConfiguration\(double, double\) Method
 
 Gets a voltage configuration by voltage value\.
 
 ```csharp
-public CurveEditor.Models.VoltageConfiguration? GetVoltageConfiguration(double voltage, double tolerance=0.1);
+public JordanRobot.MotorDefinitions.Model.VoltageConfiguration? GetVoltageConfiguration(double voltage, double tolerance=0.1);
 ```
 #### Parameters
 
-<a name='CurveEditor.Models.DriveConfiguration.GetVoltageConfiguration(double,double).voltage'></a>
+<a name='JordanRobot.MotorDefinitions.Model.DriveConfiguration.GetVoltageConfiguration(double,double).voltage'></a>
 
 `voltage` [System\.Double](https://learn.microsoft.com/en-us/dotnet/api/system.double 'System\.Double')
 
 The voltage to find\.
 
-<a name='CurveEditor.Models.DriveConfiguration.GetVoltageConfiguration(double,double).tolerance'></a>
+<a name='JordanRobot.MotorDefinitions.Model.DriveConfiguration.GetVoltageConfiguration(double,double).tolerance'></a>
 
 `tolerance` [System\.Double](https://learn.microsoft.com/en-us/dotnet/api/system.double 'System\.Double')
 
 The tolerance for matching voltage values \(default 0\.1V\)\.
 
 #### Returns
-[VoltageConfiguration](CurveEditor.Models.VoltageConfiguration.md 'CurveEditor\.Models\.VoltageConfiguration')  
+[VoltageConfiguration](JordanRobot.MotorDefinitions.Model.VoltageConfiguration.md 'JordanRobot\.MotorDefinitions\.Model\.VoltageConfiguration')  
 The matching voltage configuration, or null if not found\.
 
-<a name='CurveEditor.Models.DriveConfiguration.OnPropertyChanged(string)'></a>
+<a name='JordanRobot.MotorDefinitions.Model.DriveConfiguration.OnPropertyChanged(string)'></a>
 
 ## DriveConfiguration\.OnPropertyChanged\(string\) Method
 
@@ -216,14 +216,14 @@ protected virtual void OnPropertyChanged(string? propertyName=null);
 ```
 #### Parameters
 
-<a name='CurveEditor.Models.DriveConfiguration.OnPropertyChanged(string).propertyName'></a>
+<a name='JordanRobot.MotorDefinitions.Model.DriveConfiguration.OnPropertyChanged(string).propertyName'></a>
 
 `propertyName` [System\.String](https://learn.microsoft.com/en-us/dotnet/api/system.string 'System\.String')
 
 The name of the property that changed\.
 ### Events
 
-<a name='CurveEditor.Models.DriveConfiguration.PropertyChanged'></a>
+<a name='JordanRobot.MotorDefinitions.Model.DriveConfiguration.PropertyChanged'></a>
 
 ## DriveConfiguration\.PropertyChanged Event
 

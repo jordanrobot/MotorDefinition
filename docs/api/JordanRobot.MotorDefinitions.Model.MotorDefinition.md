@@ -1,5 +1,5 @@
 #### [MotorDefinition](index.md 'index')
-### [CurveEditor\.Models](CurveEditor.Models.md 'CurveEditor\.Models')
+### [JordanRobot\.MotorDefinitions\.Model](JordanRobot.MotorDefinitions.Model.md 'JordanRobot\.MotorDefinitions\.Model')
 
 ## MotorDefinition Class
 
@@ -13,7 +13,7 @@ public class MotorDefinition
 Inheritance [System\.Object](https://learn.microsoft.com/en-us/dotnet/api/system.object 'System\.Object') &#129106; MotorDefinition
 ### Constructors
 
-<a name='CurveEditor.Models.MotorDefinition.MotorDefinition()'></a>
+<a name='JordanRobot.MotorDefinitions.Model.MotorDefinition.MotorDefinition()'></a>
 
 ## MotorDefinition\(\) Constructor
 
@@ -23,7 +23,7 @@ Creates a new MotorDefinition with default values\.
 public MotorDefinition();
 ```
 
-<a name='CurveEditor.Models.MotorDefinition.MotorDefinition(string)'></a>
+<a name='JordanRobot.MotorDefinitions.Model.MotorDefinition.MotorDefinition(string)'></a>
 
 ## MotorDefinition\(string\) Constructor
 
@@ -34,14 +34,14 @@ public MotorDefinition(string motorName);
 ```
 #### Parameters
 
-<a name='CurveEditor.Models.MotorDefinition.MotorDefinition(string).motorName'></a>
+<a name='JordanRobot.MotorDefinitions.Model.MotorDefinition.MotorDefinition(string).motorName'></a>
 
 `motorName` [System\.String](https://learn.microsoft.com/en-us/dotnet/api/system.string 'System\.String')
 
 The name of the motor\.
 ### Fields
 
-<a name='CurveEditor.Models.MotorDefinition.CurrentSchemaVersion'></a>
+<a name='JordanRobot.MotorDefinitions.Model.MotorDefinition.CurrentSchemaVersion'></a>
 
 ## MotorDefinition\.CurrentSchemaVersion Field
 
@@ -55,7 +55,7 @@ public const string CurrentSchemaVersion = "1.0.0";
 [System\.String](https://learn.microsoft.com/en-us/dotnet/api/system.string 'System\.String')
 ### Properties
 
-<a name='CurveEditor.Models.MotorDefinition.BrakeAmperage'></a>
+<a name='JordanRobot.MotorDefinitions.Model.MotorDefinition.BrakeAmperage'></a>
 
 ## MotorDefinition\.BrakeAmperage Property
 
@@ -68,7 +68,7 @@ public double BrakeAmperage { get; set; }
 #### Property Value
 [System\.Double](https://learn.microsoft.com/en-us/dotnet/api/system.double 'System\.Double')
 
-<a name='CurveEditor.Models.MotorDefinition.BrakeBacklash'></a>
+<a name='JordanRobot.MotorDefinitions.Model.MotorDefinition.BrakeBacklash'></a>
 
 ## MotorDefinition\.BrakeBacklash Property
 
@@ -81,7 +81,7 @@ public double BrakeBacklash { get; set; }
 #### Property Value
 [System\.Double](https://learn.microsoft.com/en-us/dotnet/api/system.double 'System\.Double')
 
-<a name='CurveEditor.Models.MotorDefinition.BrakeEngageTimeDiode'></a>
+<a name='JordanRobot.MotorDefinitions.Model.MotorDefinition.BrakeEngageTimeDiode'></a>
 
 ## MotorDefinition\.BrakeEngageTimeDiode Property
 
@@ -94,7 +94,7 @@ public double BrakeEngageTimeDiode { get; set; }
 #### Property Value
 [System\.Double](https://learn.microsoft.com/en-us/dotnet/api/system.double 'System\.Double')
 
-<a name='CurveEditor.Models.MotorDefinition.BrakeEngageTimeMov'></a>
+<a name='JordanRobot.MotorDefinitions.Model.MotorDefinition.BrakeEngageTimeMov'></a>
 
 ## MotorDefinition\.BrakeEngageTimeMov Property
 
@@ -107,7 +107,7 @@ public double BrakeEngageTimeMov { get; set; }
 #### Property Value
 [System\.Double](https://learn.microsoft.com/en-us/dotnet/api/system.double 'System\.Double')
 
-<a name='CurveEditor.Models.MotorDefinition.BrakeReleaseTime'></a>
+<a name='JordanRobot.MotorDefinitions.Model.MotorDefinition.BrakeReleaseTime'></a>
 
 ## MotorDefinition\.BrakeReleaseTime Property
 
@@ -120,7 +120,7 @@ public double BrakeReleaseTime { get; set; }
 #### Property Value
 [System\.Double](https://learn.microsoft.com/en-us/dotnet/api/system.double 'System\.Double')
 
-<a name='CurveEditor.Models.MotorDefinition.BrakeTorque'></a>
+<a name='JordanRobot.MotorDefinitions.Model.MotorDefinition.BrakeTorque'></a>
 
 ## MotorDefinition\.BrakeTorque Property
 
@@ -133,7 +133,7 @@ public double BrakeTorque { get; set; }
 #### Property Value
 [System\.Double](https://learn.microsoft.com/en-us/dotnet/api/system.double 'System\.Double')
 
-<a name='CurveEditor.Models.MotorDefinition.BrakeVoltage'></a>
+<a name='JordanRobot.MotorDefinitions.Model.MotorDefinition.BrakeVoltage'></a>
 
 ## MotorDefinition\.BrakeVoltage Property
 
@@ -146,21 +146,21 @@ public double BrakeVoltage { get; set; }
 #### Property Value
 [System\.Double](https://learn.microsoft.com/en-us/dotnet/api/system.double 'System\.Double')
 
-<a name='CurveEditor.Models.MotorDefinition.DriveConfigurations'></a>
+<a name='JordanRobot.MotorDefinitions.Model.MotorDefinition.DriveConfigurations'></a>
 
 ## MotorDefinition\.DriveConfigurations Property
 
 Gets a LINQ\-friendly enumeration of all drive configurations\.
-This is a convenience alias for [Drives](CurveEditor.Models.MotorDefinition.md#CurveEditor.Models.MotorDefinition.Drives 'CurveEditor\.Models\.MotorDefinition\.Drives')\.
+This is a convenience alias for [Drives](JordanRobot.MotorDefinitions.Model.MotorDefinition.md#JordanRobot.MotorDefinitions.Model.MotorDefinition.Drives 'JordanRobot\.MotorDefinitions\.Model\.MotorDefinition\.Drives')\.
 
 ```csharp
-public System.Collections.Generic.IEnumerable<CurveEditor.Models.DriveConfiguration> DriveConfigurations { get; }
+public System.Collections.Generic.IEnumerable<JordanRobot.MotorDefinitions.Model.DriveConfiguration> DriveConfigurations { get; }
 ```
 
 #### Property Value
-[System\.Collections\.Generic\.IEnumerable&lt;](https://learn.microsoft.com/en-us/dotnet/api/system.collections.generic.ienumerable-1 'System\.Collections\.Generic\.IEnumerable\`1')[DriveConfiguration](CurveEditor.Models.DriveConfiguration.md 'CurveEditor\.Models\.DriveConfiguration')[&gt;](https://learn.microsoft.com/en-us/dotnet/api/system.collections.generic.ienumerable-1 'System\.Collections\.Generic\.IEnumerable\`1')
+[System\.Collections\.Generic\.IEnumerable&lt;](https://learn.microsoft.com/en-us/dotnet/api/system.collections.generic.ienumerable-1 'System\.Collections\.Generic\.IEnumerable\`1')[DriveConfiguration](JordanRobot.MotorDefinitions.Model.DriveConfiguration.md 'JordanRobot\.MotorDefinitions\.Model\.DriveConfiguration')[&gt;](https://learn.microsoft.com/en-us/dotnet/api/system.collections.generic.ienumerable-1 'System\.Collections\.Generic\.IEnumerable\`1')
 
-<a name='CurveEditor.Models.MotorDefinition.DriveNames'></a>
+<a name='JordanRobot.MotorDefinitions.Model.MotorDefinition.DriveNames'></a>
 
 ## MotorDefinition\.DriveNames Property
 
@@ -174,7 +174,7 @@ public System.Collections.Generic.IEnumerable<string> DriveNames { get; }
 #### Property Value
 [System\.Collections\.Generic\.IEnumerable&lt;](https://learn.microsoft.com/en-us/dotnet/api/system.collections.generic.ienumerable-1 'System\.Collections\.Generic\.IEnumerable\`1')[System\.String](https://learn.microsoft.com/en-us/dotnet/api/system.string 'System\.String')[&gt;](https://learn.microsoft.com/en-us/dotnet/api/system.collections.generic.ienumerable-1 'System\.Collections\.Generic\.IEnumerable\`1')
 
-<a name='CurveEditor.Models.MotorDefinition.Drives'></a>
+<a name='JordanRobot.MotorDefinitions.Model.MotorDefinition.Drives'></a>
 
 ## MotorDefinition\.Drives Property
 
@@ -182,13 +182,13 @@ The collection of drive configurations for this motor\.
 Each drive can have multiple voltage configurations with their own curve series\.
 
 ```csharp
-public System.Collections.Generic.List<CurveEditor.Models.DriveConfiguration> Drives { get; set; }
+public System.Collections.Generic.List<JordanRobot.MotorDefinitions.Model.DriveConfiguration> Drives { get; set; }
 ```
 
 #### Property Value
-[System\.Collections\.Generic\.List&lt;](https://learn.microsoft.com/en-us/dotnet/api/system.collections.generic.list-1 'System\.Collections\.Generic\.List\`1')[DriveConfiguration](CurveEditor.Models.DriveConfiguration.md 'CurveEditor\.Models\.DriveConfiguration')[&gt;](https://learn.microsoft.com/en-us/dotnet/api/system.collections.generic.list-1 'System\.Collections\.Generic\.List\`1')
+[System\.Collections\.Generic\.List&lt;](https://learn.microsoft.com/en-us/dotnet/api/system.collections.generic.list-1 'System\.Collections\.Generic\.List\`1')[DriveConfiguration](JordanRobot.MotorDefinitions.Model.DriveConfiguration.md 'JordanRobot\.MotorDefinitions\.Model\.DriveConfiguration')[&gt;](https://learn.microsoft.com/en-us/dotnet/api/system.collections.generic.list-1 'System\.Collections\.Generic\.List\`1')
 
-<a name='CurveEditor.Models.MotorDefinition.FeedbackPpr'></a>
+<a name='JordanRobot.MotorDefinitions.Model.MotorDefinition.FeedbackPpr'></a>
 
 ## MotorDefinition\.FeedbackPpr Property
 
@@ -202,7 +202,7 @@ public int FeedbackPpr { get; set; }
 #### Property Value
 [System\.Int32](https://learn.microsoft.com/en-us/dotnet/api/system.int32 'System\.Int32')
 
-<a name='CurveEditor.Models.MotorDefinition.HasBrake'></a>
+<a name='JordanRobot.MotorDefinitions.Model.MotorDefinition.HasBrake'></a>
 
 ## MotorDefinition\.HasBrake Property
 
@@ -215,7 +215,7 @@ public bool HasBrake { get; set; }
 #### Property Value
 [System\.Boolean](https://learn.microsoft.com/en-us/dotnet/api/system.boolean 'System\.Boolean')
 
-<a name='CurveEditor.Models.MotorDefinition.Manufacturer'></a>
+<a name='JordanRobot.MotorDefinitions.Model.MotorDefinition.Manufacturer'></a>
 
 ## MotorDefinition\.Manufacturer Property
 
@@ -228,7 +228,7 @@ public string Manufacturer { get; set; }
 #### Property Value
 [System\.String](https://learn.microsoft.com/en-us/dotnet/api/system.string 'System\.String')
 
-<a name='CurveEditor.Models.MotorDefinition.MaxSpeed'></a>
+<a name='JordanRobot.MotorDefinitions.Model.MotorDefinition.MaxSpeed'></a>
 
 ## MotorDefinition\.MaxSpeed Property
 
@@ -241,20 +241,20 @@ public double MaxSpeed { get; set; }
 #### Property Value
 [System\.Double](https://learn.microsoft.com/en-us/dotnet/api/system.double 'System\.Double')
 
-<a name='CurveEditor.Models.MotorDefinition.Metadata'></a>
+<a name='JordanRobot.MotorDefinitions.Model.MotorDefinition.Metadata'></a>
 
 ## MotorDefinition\.Metadata Property
 
 Metadata about the motor definition file\.
 
 ```csharp
-public CurveEditor.Models.MotorMetadata Metadata { get; set; }
+public JordanRobot.MotorDefinitions.Model.MotorMetadata Metadata { get; set; }
 ```
 
 #### Property Value
-[MotorMetadata](CurveEditor.Models.MotorMetadata.md 'CurveEditor\.Models\.MotorMetadata')
+[MotorMetadata](JordanRobot.MotorDefinitions.Model.MotorMetadata.md 'JordanRobot\.MotorDefinitions\.Model\.MotorMetadata')
 
-<a name='CurveEditor.Models.MotorDefinition.MotorName'></a>
+<a name='JordanRobot.MotorDefinitions.Model.MotorDefinition.MotorName'></a>
 
 ## MotorDefinition\.MotorName Property
 
@@ -267,7 +267,7 @@ public string MotorName { get; set; }
 #### Property Value
 [System\.String](https://learn.microsoft.com/en-us/dotnet/api/system.string 'System\.String')
 
-<a name='CurveEditor.Models.MotorDefinition.PartNumber'></a>
+<a name='JordanRobot.MotorDefinitions.Model.MotorDefinition.PartNumber'></a>
 
 ## MotorDefinition\.PartNumber Property
 
@@ -280,7 +280,7 @@ public string PartNumber { get; set; }
 #### Property Value
 [System\.String](https://learn.microsoft.com/en-us/dotnet/api/system.string 'System\.String')
 
-<a name='CurveEditor.Models.MotorDefinition.Power'></a>
+<a name='JordanRobot.MotorDefinitions.Model.MotorDefinition.Power'></a>
 
 ## MotorDefinition\.Power Property
 
@@ -293,7 +293,7 @@ public double Power { get; set; }
 #### Property Value
 [System\.Double](https://learn.microsoft.com/en-us/dotnet/api/system.double 'System\.Double')
 
-<a name='CurveEditor.Models.MotorDefinition.RatedContinuousTorque'></a>
+<a name='JordanRobot.MotorDefinitions.Model.MotorDefinition.RatedContinuousTorque'></a>
 
 ## MotorDefinition\.RatedContinuousTorque Property
 
@@ -306,7 +306,7 @@ public double RatedContinuousTorque { get; set; }
 #### Property Value
 [System\.Double](https://learn.microsoft.com/en-us/dotnet/api/system.double 'System\.Double')
 
-<a name='CurveEditor.Models.MotorDefinition.RatedPeakTorque'></a>
+<a name='JordanRobot.MotorDefinitions.Model.MotorDefinition.RatedPeakTorque'></a>
 
 ## MotorDefinition\.RatedPeakTorque Property
 
@@ -319,7 +319,7 @@ public double RatedPeakTorque { get; set; }
 #### Property Value
 [System\.Double](https://learn.microsoft.com/en-us/dotnet/api/system.double 'System\.Double')
 
-<a name='CurveEditor.Models.MotorDefinition.RatedSpeed'></a>
+<a name='JordanRobot.MotorDefinitions.Model.MotorDefinition.RatedSpeed'></a>
 
 ## MotorDefinition\.RatedSpeed Property
 
@@ -332,7 +332,7 @@ public double RatedSpeed { get; set; }
 #### Property Value
 [System\.Double](https://learn.microsoft.com/en-us/dotnet/api/system.double 'System\.Double')
 
-<a name='CurveEditor.Models.MotorDefinition.RotorInertia'></a>
+<a name='JordanRobot.MotorDefinitions.Model.MotorDefinition.RotorInertia'></a>
 
 ## MotorDefinition\.RotorInertia Property
 
@@ -345,7 +345,7 @@ public double RotorInertia { get; set; }
 #### Property Value
 [System\.Double](https://learn.microsoft.com/en-us/dotnet/api/system.double 'System\.Double')
 
-<a name='CurveEditor.Models.MotorDefinition.SchemaVersion'></a>
+<a name='JordanRobot.MotorDefinitions.Model.MotorDefinition.SchemaVersion'></a>
 
 ## MotorDefinition\.SchemaVersion Property
 
@@ -358,20 +358,20 @@ public string SchemaVersion { get; set; }
 #### Property Value
 [System\.String](https://learn.microsoft.com/en-us/dotnet/api/system.string 'System\.String')
 
-<a name='CurveEditor.Models.MotorDefinition.Units'></a>
+<a name='JordanRobot.MotorDefinitions.Model.MotorDefinition.Units'></a>
 
 ## MotorDefinition\.Units Property
 
 The unit settings for this motor definition\.
 
 ```csharp
-public CurveEditor.Models.UnitSettings Units { get; set; }
+public JordanRobot.MotorDefinitions.Model.UnitSettings Units { get; set; }
 ```
 
 #### Property Value
-[UnitSettings](CurveEditor.Models.UnitSettings.md 'CurveEditor\.Models\.UnitSettings')
+[UnitSettings](JordanRobot.MotorDefinitions.Model.UnitSettings.md 'JordanRobot\.MotorDefinitions\.Model\.UnitSettings')
 
-<a name='CurveEditor.Models.MotorDefinition.Weight'></a>
+<a name='JordanRobot.MotorDefinitions.Model.MotorDefinition.Weight'></a>
 
 ## MotorDefinition\.Weight Property
 
@@ -385,25 +385,25 @@ public double Weight { get; set; }
 [System\.Double](https://learn.microsoft.com/en-us/dotnet/api/system.double 'System\.Double')
 ### Methods
 
-<a name='CurveEditor.Models.MotorDefinition.AddDrive(string)'></a>
+<a name='JordanRobot.MotorDefinitions.Model.MotorDefinition.AddDrive(string)'></a>
 
 ## MotorDefinition\.AddDrive\(string\) Method
 
 Adds a new drive configuration with the specified name\.
 
 ```csharp
-public CurveEditor.Models.DriveConfiguration AddDrive(string name);
+public JordanRobot.MotorDefinitions.Model.DriveConfiguration AddDrive(string name);
 ```
 #### Parameters
 
-<a name='CurveEditor.Models.MotorDefinition.AddDrive(string).name'></a>
+<a name='JordanRobot.MotorDefinitions.Model.MotorDefinition.AddDrive(string).name'></a>
 
 `name` [System\.String](https://learn.microsoft.com/en-us/dotnet/api/system.string 'System\.String')
 
 The name for the new drive\.
 
 #### Returns
-[DriveConfiguration](CurveEditor.Models.DriveConfiguration.md 'CurveEditor\.Models\.DriveConfiguration')  
+[DriveConfiguration](JordanRobot.MotorDefinitions.Model.DriveConfiguration.md 'JordanRobot\.MotorDefinitions\.Model\.DriveConfiguration')  
 The newly created drive configuration\.
 
 #### Exceptions
@@ -411,28 +411,28 @@ The newly created drive configuration\.
 [System\.InvalidOperationException](https://learn.microsoft.com/en-us/dotnet/api/system.invalidoperationexception 'System\.InvalidOperationException')  
 Thrown if a drive with the same name already exists\.
 
-<a name='CurveEditor.Models.MotorDefinition.GetDriveByName(string)'></a>
+<a name='JordanRobot.MotorDefinitions.Model.MotorDefinition.GetDriveByName(string)'></a>
 
 ## MotorDefinition\.GetDriveByName\(string\) Method
 
 Gets a drive configuration by name\.
 
 ```csharp
-public CurveEditor.Models.DriveConfiguration? GetDriveByName(string name);
+public JordanRobot.MotorDefinitions.Model.DriveConfiguration? GetDriveByName(string name);
 ```
 #### Parameters
 
-<a name='CurveEditor.Models.MotorDefinition.GetDriveByName(string).name'></a>
+<a name='JordanRobot.MotorDefinitions.Model.MotorDefinition.GetDriveByName(string).name'></a>
 
 `name` [System\.String](https://learn.microsoft.com/en-us/dotnet/api/system.string 'System\.String')
 
 The name of the drive to find\.
 
 #### Returns
-[DriveConfiguration](CurveEditor.Models.DriveConfiguration.md 'CurveEditor\.Models\.DriveConfiguration')  
+[DriveConfiguration](JordanRobot.MotorDefinitions.Model.DriveConfiguration.md 'JordanRobot\.MotorDefinitions\.Model\.DriveConfiguration')  
 The matching drive configuration, or null if not found\.
 
-<a name='CurveEditor.Models.MotorDefinition.HasValidConfiguration()'></a>
+<a name='JordanRobot.MotorDefinitions.Model.MotorDefinition.HasValidConfiguration()'></a>
 
 ## MotorDefinition\.HasValidConfiguration\(\) Method
 
@@ -446,7 +446,7 @@ public bool HasValidConfiguration();
 [System\.Boolean](https://learn.microsoft.com/en-us/dotnet/api/system.boolean 'System\.Boolean')  
 True if valid; otherwise false\.
 
-<a name='CurveEditor.Models.MotorDefinition.RemoveDrive(string)'></a>
+<a name='JordanRobot.MotorDefinitions.Model.MotorDefinition.RemoveDrive(string)'></a>
 
 ## MotorDefinition\.RemoveDrive\(string\) Method
 
@@ -457,7 +457,7 @@ public bool RemoveDrive(string name);
 ```
 #### Parameters
 
-<a name='CurveEditor.Models.MotorDefinition.RemoveDrive(string).name'></a>
+<a name='JordanRobot.MotorDefinitions.Model.MotorDefinition.RemoveDrive(string).name'></a>
 
 `name` [System\.String](https://learn.microsoft.com/en-us/dotnet/api/system.string 'System\.String')
 

@@ -1,4 +1,4 @@
-using CurveEditor.Models;
+using JordanRobot.MotorDefinitions.Model;
 using System;
 using System.Collections.Generic;
 using System.Linq;

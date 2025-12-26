@@ -1,5 +1,5 @@
 #### [MotorDefinition](index.md 'index')
-### [CurveEditor\.Models](CurveEditor.Models.md 'CurveEditor\.Models')
+### [JordanRobot\.MotorDefinitions\.Model](JordanRobot.MotorDefinitions.Model.md 'JordanRobot\.MotorDefinitions\.Model')
 
 ## VoltageConfiguration Class
 
@@ -15,7 +15,7 @@ Inheritance [System\.Object](https://learn.microsoft.com/en-us/dotnet/api/system
 Implements [System\.ComponentModel\.INotifyPropertyChanged](https://learn.microsoft.com/en-us/dotnet/api/system.componentmodel.inotifypropertychanged 'System\.ComponentModel\.INotifyPropertyChanged')
 ### Constructors
 
-<a name='CurveEditor.Models.VoltageConfiguration.VoltageConfiguration()'></a>
+<a name='JordanRobot.MotorDefinitions.Model.VoltageConfiguration.VoltageConfiguration()'></a>
 
 ## VoltageConfiguration\(\) Constructor
 
@@ -25,7 +25,7 @@ Creates a new VoltageConfiguration with default values\.
 public VoltageConfiguration();
 ```
 
-<a name='CurveEditor.Models.VoltageConfiguration.VoltageConfiguration(double)'></a>
+<a name='JordanRobot.MotorDefinitions.Model.VoltageConfiguration.VoltageConfiguration(double)'></a>
 
 ## VoltageConfiguration\(double\) Constructor
 
@@ -36,14 +36,14 @@ public VoltageConfiguration(double voltage);
 ```
 #### Parameters
 
-<a name='CurveEditor.Models.VoltageConfiguration.VoltageConfiguration(double).voltage'></a>
+<a name='JordanRobot.MotorDefinitions.Model.VoltageConfiguration.VoltageConfiguration(double).voltage'></a>
 
 `voltage` [System\.Double](https://learn.microsoft.com/en-us/dotnet/api/system.double 'System\.Double')
 
 The operating voltage\.
 ### Properties
 
-<a name='CurveEditor.Models.VoltageConfiguration.ContinuousAmperage'></a>
+<a name='JordanRobot.MotorDefinitions.Model.VoltageConfiguration.ContinuousAmperage'></a>
 
 ## VoltageConfiguration\.ContinuousAmperage Property
 
@@ -56,21 +56,21 @@ public double ContinuousAmperage { get; set; }
 #### Property Value
 [System\.Double](https://learn.microsoft.com/en-us/dotnet/api/system.double 'System\.Double')
 
-<a name='CurveEditor.Models.VoltageConfiguration.CurveSeries'></a>
+<a name='JordanRobot.MotorDefinitions.Model.VoltageConfiguration.CurveSeries'></a>
 
 ## VoltageConfiguration\.CurveSeries Property
 
 Gets a LINQ\-friendly enumeration of Curve Series\.
-This is a convenience alias for [Series](CurveEditor.Models.VoltageConfiguration.md#CurveEditor.Models.VoltageConfiguration.Series 'CurveEditor\.Models\.VoltageConfiguration\.Series')\.
+This is a convenience alias for [Series](JordanRobot.MotorDefinitions.Model.VoltageConfiguration.md#JordanRobot.MotorDefinitions.Model.VoltageConfiguration.Series 'JordanRobot\.MotorDefinitions\.Model\.VoltageConfiguration\.Series')\.
 
 ```csharp
-public System.Collections.Generic.IEnumerable<CurveEditor.Models.CurveSeries> CurveSeries { get; }
+public System.Collections.Generic.IEnumerable<JordanRobot.MotorDefinitions.Model.CurveSeries> CurveSeries { get; }
 ```
 
 #### Property Value
-[System\.Collections\.Generic\.IEnumerable&lt;](https://learn.microsoft.com/en-us/dotnet/api/system.collections.generic.ienumerable-1 'System\.Collections\.Generic\.IEnumerable\`1')[CurveSeries](CurveEditor.Models.CurveSeries.md 'CurveEditor\.Models\.CurveSeries')[&gt;](https://learn.microsoft.com/en-us/dotnet/api/system.collections.generic.ienumerable-1 'System\.Collections\.Generic\.IEnumerable\`1')
+[System\.Collections\.Generic\.IEnumerable&lt;](https://learn.microsoft.com/en-us/dotnet/api/system.collections.generic.ienumerable-1 'System\.Collections\.Generic\.IEnumerable\`1')[CurveSeries](JordanRobot.MotorDefinitions.Model.CurveSeries.md 'JordanRobot\.MotorDefinitions\.Model\.CurveSeries')[&gt;](https://learn.microsoft.com/en-us/dotnet/api/system.collections.generic.ienumerable-1 'System\.Collections\.Generic\.IEnumerable\`1')
 
-<a name='CurveEditor.Models.VoltageConfiguration.DisplayName'></a>
+<a name='JordanRobot.MotorDefinitions.Model.VoltageConfiguration.DisplayName'></a>
 
 ## VoltageConfiguration\.DisplayName Property
 
@@ -84,7 +84,7 @@ public string DisplayName { get; }
 #### Property Value
 [System\.String](https://learn.microsoft.com/en-us/dotnet/api/system.string 'System\.String')
 
-<a name='CurveEditor.Models.VoltageConfiguration.MaxSpeed'></a>
+<a name='JordanRobot.MotorDefinitions.Model.VoltageConfiguration.MaxSpeed'></a>
 
 ## VoltageConfiguration\.MaxSpeed Property
 
@@ -97,7 +97,7 @@ public double MaxSpeed { get; set; }
 #### Property Value
 [System\.Double](https://learn.microsoft.com/en-us/dotnet/api/system.double 'System\.Double')
 
-<a name='CurveEditor.Models.VoltageConfiguration.PeakAmperage'></a>
+<a name='JordanRobot.MotorDefinitions.Model.VoltageConfiguration.PeakAmperage'></a>
 
 ## VoltageConfiguration\.PeakAmperage Property
 
@@ -110,7 +110,7 @@ public double PeakAmperage { get; set; }
 #### Property Value
 [System\.Double](https://learn.microsoft.com/en-us/dotnet/api/system.double 'System\.Double')
 
-<a name='CurveEditor.Models.VoltageConfiguration.Power'></a>
+<a name='JordanRobot.MotorDefinitions.Model.VoltageConfiguration.Power'></a>
 
 ## VoltageConfiguration\.Power Property
 
@@ -123,7 +123,7 @@ public double Power { get; set; }
 #### Property Value
 [System\.Double](https://learn.microsoft.com/en-us/dotnet/api/system.double 'System\.Double')
 
-<a name='CurveEditor.Models.VoltageConfiguration.RatedContinuousTorque'></a>
+<a name='JordanRobot.MotorDefinitions.Model.VoltageConfiguration.RatedContinuousTorque'></a>
 
 ## VoltageConfiguration\.RatedContinuousTorque Property
 
@@ -136,7 +136,7 @@ public double RatedContinuousTorque { get; set; }
 #### Property Value
 [System\.Double](https://learn.microsoft.com/en-us/dotnet/api/system.double 'System\.Double')
 
-<a name='CurveEditor.Models.VoltageConfiguration.RatedPeakTorque'></a>
+<a name='JordanRobot.MotorDefinitions.Model.VoltageConfiguration.RatedPeakTorque'></a>
 
 ## VoltageConfiguration\.RatedPeakTorque Property
 
@@ -149,7 +149,7 @@ public double RatedPeakTorque { get; set; }
 #### Property Value
 [System\.Double](https://learn.microsoft.com/en-us/dotnet/api/system.double 'System\.Double')
 
-<a name='CurveEditor.Models.VoltageConfiguration.RatedSpeed'></a>
+<a name='JordanRobot.MotorDefinitions.Model.VoltageConfiguration.RatedSpeed'></a>
 
 ## VoltageConfiguration\.RatedSpeed Property
 
@@ -162,20 +162,20 @@ public double RatedSpeed { get; set; }
 #### Property Value
 [System\.Double](https://learn.microsoft.com/en-us/dotnet/api/system.double 'System\.Double')
 
-<a name='CurveEditor.Models.VoltageConfiguration.Series'></a>
+<a name='JordanRobot.MotorDefinitions.Model.VoltageConfiguration.Series'></a>
 
 ## VoltageConfiguration\.Series Property
 
 The collection of curve series for this voltage configuration \(e\.g\., "Peak", "Continuous"\)\.
 
 ```csharp
-public System.Collections.Generic.List<CurveEditor.Models.CurveSeries> Series { get; set; }
+public System.Collections.Generic.List<JordanRobot.MotorDefinitions.Model.CurveSeries> Series { get; set; }
 ```
 
 #### Property Value
-[System\.Collections\.Generic\.List&lt;](https://learn.microsoft.com/en-us/dotnet/api/system.collections.generic.list-1 'System\.Collections\.Generic\.List\`1')[CurveSeries](CurveEditor.Models.CurveSeries.md 'CurveEditor\.Models\.CurveSeries')[&gt;](https://learn.microsoft.com/en-us/dotnet/api/system.collections.generic.list-1 'System\.Collections\.Generic\.List\`1')
+[System\.Collections\.Generic\.List&lt;](https://learn.microsoft.com/en-us/dotnet/api/system.collections.generic.list-1 'System\.Collections\.Generic\.List\`1')[CurveSeries](JordanRobot.MotorDefinitions.Model.CurveSeries.md 'JordanRobot\.MotorDefinitions\.Model\.CurveSeries')[&gt;](https://learn.microsoft.com/en-us/dotnet/api/system.collections.generic.list-1 'System\.Collections\.Generic\.List\`1')
 
-<a name='CurveEditor.Models.VoltageConfiguration.Voltage'></a>
+<a name='JordanRobot.MotorDefinitions.Model.VoltageConfiguration.Voltage'></a>
 
 ## VoltageConfiguration\.Voltage Property
 
@@ -189,31 +189,31 @@ public double Voltage { get; set; }
 [System\.Double](https://learn.microsoft.com/en-us/dotnet/api/system.double 'System\.Double')
 ### Methods
 
-<a name='CurveEditor.Models.VoltageConfiguration.AddSeries(string,double)'></a>
+<a name='JordanRobot.MotorDefinitions.Model.VoltageConfiguration.AddSeries(string,double)'></a>
 
 ## VoltageConfiguration\.AddSeries\(string, double\) Method
 
 Adds a new series with the specified name\.
 
 ```csharp
-public CurveEditor.Models.CurveSeries AddSeries(string name, double initializeTorque=0.0);
+public JordanRobot.MotorDefinitions.Model.CurveSeries AddSeries(string name, double initializeTorque=0.0);
 ```
 #### Parameters
 
-<a name='CurveEditor.Models.VoltageConfiguration.AddSeries(string,double).name'></a>
+<a name='JordanRobot.MotorDefinitions.Model.VoltageConfiguration.AddSeries(string,double).name'></a>
 
 `name` [System\.String](https://learn.microsoft.com/en-us/dotnet/api/system.string 'System\.String')
 
 The name for the new series\.
 
-<a name='CurveEditor.Models.VoltageConfiguration.AddSeries(string,double).initializeTorque'></a>
+<a name='JordanRobot.MotorDefinitions.Model.VoltageConfiguration.AddSeries(string,double).initializeTorque'></a>
 
 `initializeTorque` [System\.Double](https://learn.microsoft.com/en-us/dotnet/api/system.double 'System\.Double')
 
 The default torque value for all points\.
 
 #### Returns
-[CurveSeries](CurveEditor.Models.CurveSeries.md 'CurveEditor\.Models\.CurveSeries')  
+[CurveSeries](JordanRobot.MotorDefinitions.Model.CurveSeries.md 'JordanRobot\.MotorDefinitions\.Model\.CurveSeries')  
 The newly created series\.
 
 #### Exceptions
@@ -221,28 +221,28 @@ The newly created series\.
 [System\.InvalidOperationException](https://learn.microsoft.com/en-us/dotnet/api/system.invalidoperationexception 'System\.InvalidOperationException')  
 Thrown if a series with the same name already exists\.
 
-<a name='CurveEditor.Models.VoltageConfiguration.GetSeriesByName(string)'></a>
+<a name='JordanRobot.MotorDefinitions.Model.VoltageConfiguration.GetSeriesByName(string)'></a>
 
 ## VoltageConfiguration\.GetSeriesByName\(string\) Method
 
 Gets a curve series by name\.
 
 ```csharp
-public CurveEditor.Models.CurveSeries? GetSeriesByName(string name);
+public JordanRobot.MotorDefinitions.Model.CurveSeries? GetSeriesByName(string name);
 ```
 #### Parameters
 
-<a name='CurveEditor.Models.VoltageConfiguration.GetSeriesByName(string).name'></a>
+<a name='JordanRobot.MotorDefinitions.Model.VoltageConfiguration.GetSeriesByName(string).name'></a>
 
 `name` [System\.String](https://learn.microsoft.com/en-us/dotnet/api/system.string 'System\.String')
 
 The name of the series to find\.
 
 #### Returns
-[CurveSeries](CurveEditor.Models.CurveSeries.md 'CurveEditor\.Models\.CurveSeries')  
+[CurveSeries](JordanRobot.MotorDefinitions.Model.CurveSeries.md 'JordanRobot\.MotorDefinitions\.Model\.CurveSeries')  
 The matching series, or null if not found\.
 
-<a name='CurveEditor.Models.VoltageConfiguration.OnPropertyChanged(string)'></a>
+<a name='JordanRobot.MotorDefinitions.Model.VoltageConfiguration.OnPropertyChanged(string)'></a>
 
 ## VoltageConfiguration\.OnPropertyChanged\(string\) Method
 
@@ -253,14 +253,14 @@ protected virtual void OnPropertyChanged(string? propertyName=null);
 ```
 #### Parameters
 
-<a name='CurveEditor.Models.VoltageConfiguration.OnPropertyChanged(string).propertyName'></a>
+<a name='JordanRobot.MotorDefinitions.Model.VoltageConfiguration.OnPropertyChanged(string).propertyName'></a>
 
 `propertyName` [System\.String](https://learn.microsoft.com/en-us/dotnet/api/system.string 'System\.String')
 
 The name of the changed property\.
 ### Events
 
-<a name='CurveEditor.Models.VoltageConfiguration.PropertyChanged'></a>
+<a name='JordanRobot.MotorDefinitions.Model.VoltageConfiguration.PropertyChanged'></a>
 
 ## VoltageConfiguration\.PropertyChanged Event
 

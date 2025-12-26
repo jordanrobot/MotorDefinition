@@ -1,11 +1,11 @@
-using CurveEditor.Models;
-using JordanRobot.MotorDefinitions.Dtos;
-using JordanRobot.MotorDefinitions.Validation;
+using JordanRobot.MotorDefinitions.Model;
+using JordanRobot.MotorDefinitions.Persistence.Dtos;
+using JordanRobot.MotorDefinitions.Persistence.Validation;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 
-namespace JordanRobot.MotorDefinitions.Mapping;
+namespace JordanRobot.MotorDefinitions.Persistence.Mapping;
 
 /// <summary>
 /// Converts between persisted motor definition DTOs and runtime models.

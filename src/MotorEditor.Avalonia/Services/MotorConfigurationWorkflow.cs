@@ -1,6 +1,6 @@
 using System;
 using System.Linq;
-using CurveEditor.Models;
+using JordanRobot.MotorDefinitions.Model;
 using CurveEditor.Views;
 
 namespace CurveEditor.Services;

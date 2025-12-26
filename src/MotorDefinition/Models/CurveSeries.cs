@@ -5,7 +5,7 @@ using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Text.Json.Serialization;
 
-namespace CurveEditor.Models;
+namespace JordanRobot.MotorDefinitions.Model;
 
 /// <summary>
 /// Represents a named series of motor torque/speed data points.

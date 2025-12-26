@@ -1,6 +1,6 @@
 using System;
 using System.Reflection;
-using CurveEditor.Models;
+using JordanRobot.MotorDefinitions.Model;
 
 namespace CurveEditor.Services;
 

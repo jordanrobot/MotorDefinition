@@ -5,7 +5,7 @@ using System.IO;
 using System.Linq;
 using System.Text.Json;
 using Avalonia.Controls;
-using CurveEditor.Models;
+using MotorEditor.Avalonia.Models;
 using Serilog;
 
 namespace CurveEditor.Behaviors;

@@ -1,7 +1,8 @@
 using System.Collections.Generic;
 using System.Text.Json.Serialization;
+using JordanRobot.MotorDefinitions.Model;
 
-namespace JordanRobot.MotorDefinitions.Dtos;
+namespace JordanRobot.MotorDefinitions.Persistence.Dtos;
 
 /// <summary>
 /// Root DTO representing the persisted motor definition file.
@@ -9,7 +10,7 @@ namespace JordanRobot.MotorDefinitions.Dtos;
 internal sealed class MotorDefinitionFileDto
 {
     [JsonPropertyName("schemaVersion")]
-    public string SchemaVersion { get; set; } = CurveEditor.Models.MotorDefinition.CurrentSchemaVersion;
+    public string SchemaVersion { get; set; } = MotorDefinition.CurrentSchemaVersion;
 
     [JsonPropertyName("motorName")]
     public string MotorName { get; set; } = string.Empty;

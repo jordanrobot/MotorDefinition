@@ -1,5 +1,5 @@
 #### [MotorDefinition](index.md 'index')
-### [CurveEditor\.Models](CurveEditor.Models.md 'CurveEditor\.Models')
+### [JordanRobot\.MotorDefinitions\.Model](JordanRobot.MotorDefinitions.Model.md 'JordanRobot\.MotorDefinitions\.Model')
 
 ## DataPoint Class
 
@@ -12,7 +12,7 @@ public class DataPoint
 Inheritance [System\.Object](https://learn.microsoft.com/en-us/dotnet/api/system.object 'System\.Object') &#129106; DataPoint
 ### Constructors
 
-<a name='CurveEditor.Models.DataPoint.DataPoint()'></a>
+<a name='JordanRobot.MotorDefinitions.Model.DataPoint.DataPoint()'></a>
 
 ## DataPoint\(\) Constructor
 
@@ -22,7 +22,7 @@ Creates a new DataPoint with default values\.
 public DataPoint();
 ```
 
-<a name='CurveEditor.Models.DataPoint.DataPoint(int,double,double)'></a>
+<a name='JordanRobot.MotorDefinitions.Model.DataPoint.DataPoint(int,double,double)'></a>
 
 ## DataPoint\(int, double, double\) Constructor
 
@@ -33,26 +33,26 @@ public DataPoint(int percent, double rpm, double torque);
 ```
 #### Parameters
 
-<a name='CurveEditor.Models.DataPoint.DataPoint(int,double,double).percent'></a>
+<a name='JordanRobot.MotorDefinitions.Model.DataPoint.DataPoint(int,double,double).percent'></a>
 
 `percent` [System\.Int32](https://learn.microsoft.com/en-us/dotnet/api/system.int32 'System\.Int32')
 
 Percentage along the speed range\. Must be non\-negative\.
 
-<a name='CurveEditor.Models.DataPoint.DataPoint(int,double,double).rpm'></a>
+<a name='JordanRobot.MotorDefinitions.Model.DataPoint.DataPoint(int,double,double).rpm'></a>
 
 `rpm` [System\.Double](https://learn.microsoft.com/en-us/dotnet/api/system.double 'System\.Double')
 
 RPM value at this point\.
 
-<a name='CurveEditor.Models.DataPoint.DataPoint(int,double,double).torque'></a>
+<a name='JordanRobot.MotorDefinitions.Model.DataPoint.DataPoint(int,double,double).torque'></a>
 
 `torque` [System\.Double](https://learn.microsoft.com/en-us/dotnet/api/system.double 'System\.Double')
 
 Torque value at this point\.
 ### Properties
 
-<a name='CurveEditor.Models.DataPoint.DisplayRpm'></a>
+<a name='JordanRobot.MotorDefinitions.Model.DataPoint.DisplayRpm'></a>
 
 ## DataPoint\.DisplayRpm Property
 
@@ -65,7 +65,7 @@ public int DisplayRpm { get; }
 #### Property Value
 [System\.Int32](https://learn.microsoft.com/en-us/dotnet/api/system.int32 'System\.Int32')
 
-<a name='CurveEditor.Models.DataPoint.Percent'></a>
+<a name='JordanRobot.MotorDefinitions.Model.DataPoint.Percent'></a>
 
 ## DataPoint\.Percent Property
 
@@ -79,7 +79,7 @@ public int Percent { get; set; }
 #### Property Value
 [System\.Int32](https://learn.microsoft.com/en-us/dotnet/api/system.int32 'System\.Int32')
 
-<a name='CurveEditor.Models.DataPoint.Rpm'></a>
+<a name='JordanRobot.MotorDefinitions.Model.DataPoint.Rpm'></a>
 
 ## DataPoint\.Rpm Property
 
@@ -92,7 +92,7 @@ public double Rpm { get; set; }
 #### Property Value
 [System\.Double](https://learn.microsoft.com/en-us/dotnet/api/system.double 'System\.Double')
 
-<a name='CurveEditor.Models.DataPoint.Torque'></a>
+<a name='JordanRobot.MotorDefinitions.Model.DataPoint.Torque'></a>
 
 ## DataPoint\.Torque Property
 

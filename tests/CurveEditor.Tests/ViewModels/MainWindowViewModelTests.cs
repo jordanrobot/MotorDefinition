@@ -1,6 +1,6 @@
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
-using CurveEditor.Models;
+using JordanRobot.MotorDefinitions.Model;
 using CurveEditor.Services;
 using CurveEditor.ViewModels;
 using Moq;

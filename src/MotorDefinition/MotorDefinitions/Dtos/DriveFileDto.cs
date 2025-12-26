@@ -1,7 +1,7 @@
 using System.Collections.Generic;
 using System.Text.Json.Serialization;
 
-namespace JordanRobot.MotorDefinitions.Dtos;
+namespace JordanRobot.MotorDefinitions.Persistence.Dtos;
 
 /// <summary>
 /// Represents a drive configuration in the persisted motor file.

@@ -1,7 +1,7 @@
 using System.Collections.Generic;
 using System.Linq;
 
-namespace CurveEditor.Models;
+namespace MotorEditor.Avalonia.Models;
 
 /// <summary>
 /// Registry of all panel descriptors in the application.

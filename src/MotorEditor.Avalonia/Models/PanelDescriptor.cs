@@ -1,4 +1,4 @@
-namespace CurveEditor.Models;
+namespace MotorEditor.Avalonia.Models;
 
 /// <summary>
 /// Describes a panel in the application, including its behavior,

@@ -1,7 +1,7 @@
 using System.Collections.Generic;
 using System.Text.Json.Serialization;
 
-namespace JordanRobot.MotorDefinitions.Dtos;
+namespace JordanRobot.MotorDefinitions.Persistence.Dtos;
 
 /// <summary>
 /// Represents voltage-specific data using shared axes and a series map.

@@ -7,7 +7,7 @@ using Avalonia.Controls;
 using Avalonia.Media;
 using Avalonia.VisualTree;
 using CommunityToolkit.Mvvm.Input;
-using CurveEditor.Models;
+using MotorEditor.Avalonia.Models;
 
 namespace CurveEditor.Views;
 

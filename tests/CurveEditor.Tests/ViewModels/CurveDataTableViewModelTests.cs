@@ -1,4 +1,4 @@
-using CurveEditor.Models;
+using JordanRobot.MotorDefinitions.Model;
 using CurveEditor.ViewModels;
 
 namespace CurveEditor.Tests.ViewModels;

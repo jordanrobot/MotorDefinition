@@ -1,4 +1,4 @@
-using CurveEditor.Models;
+using JordanRobot.MotorDefinitions.Model;
 using JordanRobot.MotorDefinitions;
 using Serilog;
 using System;

@@ -1,5 +1,5 @@
 using System;
-using CurveEditor.Models;
+using JordanRobot.MotorDefinitions.Model;
 using Xunit;
 
 namespace CurveEditor.Tests.Models;

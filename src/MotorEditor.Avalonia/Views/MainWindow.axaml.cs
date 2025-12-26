@@ -5,8 +5,8 @@ using System.Threading.Tasks;
 using Avalonia.Controls;
 using Avalonia.Interactivity;
 using CurveEditor.Behaviors;
-using CurveEditor.Models;
 using CurveEditor.ViewModels;
+using MotorEditor.Avalonia.Models;
 
 namespace CurveEditor.Views;
 

@@ -6,7 +6,7 @@ This guide explains the concepts and common workflows for the `JordanRobot.Motor
 
 ### What this library provides
 
-- A runtime object model for motor definition data (in the `CurveEditor.Models` namespace).
+- A runtime object model for motor definition data (in the `JordanRobot.MotorDefinitions.Model` namespace).
 - Simple load/save entry points via `JordanRobot.MotorDefinitions.MotorFile`.
 - A JSON format designed for motor/drive/voltage torque curves, supporting 0–101 points per curve.
     - 101 points corresponds to the standard 1% increment curve (0%..100%).
@@ -114,7 +114,7 @@ await MotorFile.SaveAsync(motor, "motor.updated.json", cancellationToken);
 #### Create drives, voltages, and series
 
 ```csharp
-using CurveEditor.Models;
+using JordanRobot.MotorDefinitions.Model;
 
 var motor = new MotorDefinition("Example")
 {
