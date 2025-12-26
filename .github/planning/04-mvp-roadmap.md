@@ -80,7 +80,7 @@ Phase 8: Power Curve Overlay (Future)
 - [X] Create DataPoint model class (percent, rpm, torque)
 - [X] Create UnitSettings model class (torque, speed, power, weight units)
 - [X] Create MotorMetadata model class
-- [X] Implement 1% increment data structure (101 points per series)
+- [X] Implement standard 1% increment data structure (101 points per series; file format supports 0–101)
 - [X] Add JSON serialization attributes
 - [X] Write model unit tests
 
@@ -569,7 +569,7 @@ Create `samples/example-motor.json` for testing:
 }
 ```
 
-**Note:** Full files will have 101 data points per series (0% to 100% in 1% increments).
+**Note:** Full files typically use the standard 101-point curve (0% to 100% in 1% increments), but the file format supports 0–101 points per series.
 The sample above shows 10% increments for brevity.
 
 ---
@@ -595,7 +595,7 @@ The sample above shows 10% increments for brevity.
 - [ ] Series visibility toggleable via checkboxes
 - [ ] Series distinguished by unique colors
 - [ ] User can edit series colors (persisted per series name)
-- [ ] Data saved at 1% increments (0-100%)
+- [ ] Standard curves saved at 1% increments (0-100%); file format supports 0–101 points per series
 - [ ] RPM displayed rounded to nearest whole number
 - [ ] RPM on X axis, Torque on Y axis (default)
 - [ ] Grid lines at rounded value increments

@@ -1344,6 +1344,125 @@
           }
         }
       ]
+    },
+        {
+      "name": "K5300 7.5kW",
+      "manufacturer": "",
+      "partNumber": "2198-C2075-ERS",
+      "voltages": [
+        {
+          "voltage": 208,
+          "power": 5.5,
+          "maxSpeed": 4000,
+          "ratedSpeed": 4000,
+          "ratedContinuousTorque": 19.42,
+          "ratedPeakTorque": 48.6,
+          "continuousAmperage": 41.5,
+          "peakAmperage": 120,
+          "percent": [
+            0,
+            5,
+            10,
+            15,
+            20,
+            25,
+            30,
+            35,
+            40,
+            45,
+            50,
+            55,
+            60,
+            65,
+            70,
+            75,
+            80,
+            85,
+            90,
+            95,
+            100
+          ],
+          "rpm": [
+            0,
+            200,
+            400,
+            600,
+            800,
+            1000,
+            1200,
+            1400,
+            1600,
+            1800,
+            2000,
+            2200,
+            2400,
+            2600,
+            2800,
+            3000,
+            3200,
+            3400,
+            3600,
+            3800,
+            4000
+          ],
+          "series": {
+            "Peak": {
+              "locked": false,
+              "notes": "Digitized/estimated from the attached torque-speed curve for MPL-A540K at 208V; values linearly interpolated between visually sampled keypoints.",
+              "torque": [
+                48.6,
+                48.6,
+                48.6,
+                48.6,
+                48.6,
+                48.6,
+                48.6,
+                48.6,
+                48.6,
+                43.8,
+                39,
+                35.54,
+                32.08,
+                28.75,
+                25.62,
+                22.5,
+                20,
+                17.5,
+                15,
+                9.64,
+                0
+              ]
+            },
+            "Continuous": {
+              "locked": false,
+              "notes": "Digitized/estimated from the attached torque-speed curve for MPL-A540K at 208V; values linearly interpolated between visually sampled keypoints.",
+              "torque": [
+                19.42,
+                19.18,
+                18.93,
+                18.69,
+                18.44,
+                18.2,
+                17.9,
+                17.6,
+                17.3,
+                17,
+                16.7,
+                16.4,
+                16.1,
+                15.8,
+                15.5,
+                15.2,
+                14.82,
+                14.43,
+                13.92,
+                9.64,
+                0
+              ]
+            }
+          }
+        }
+      ]
     }
   ],
   "metadata": {

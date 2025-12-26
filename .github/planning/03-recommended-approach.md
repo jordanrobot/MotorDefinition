@@ -455,14 +455,16 @@ XAML for series list panel:
 <Button Content="+ Add Series" Command="{Binding AddSeriesCommand}"/>
 ```
 
-### 8. Data Format (1% Increments)
+### 8. Data Format (Standard 1% Increments)
+
+The editor generates standard curves with 101 points (0%..100% in 1% increments), but the file format supports 0–101 points per series and percent values above 100% for overspeed (manual JSON editing; editor may be view-only).
 
 Data model for percentage-based curve data:
 
 ```csharp
 public class DataPoint
 {
-    /// <summary>Percentage (0-100) where 0% = 0 RPM, 100% = MaxRpm</summary>
+    /// <summary>Percentage (>= 0) where 0% = 0 RPM. Values above 100% may represent overspeed.</summary>
     public int Percent { get; set; }
     
     /// <summary>RPM value (calculated from Percent × MaxRpm)</summary>
@@ -480,7 +482,7 @@ public class CurveSeries
     public string Name { get; set; } = "Peak";
     public List<DataPoint> Data { get; set; } = new();
     
-    /// <summary>Generate 101 data points (0% to 100%)</summary>
+    /// <summary>Generate the default 101 data points (0% to 100%)</summary>
     public void InitializeData(double maxRpm, double defaultTorque)
     {
         Data.Clear();

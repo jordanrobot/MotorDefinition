@@ -274,12 +274,15 @@ Note: In this example, you'll notice that `motor profile 1.json` and `motor prof
 
 ### Validation Rules
 
-- [ ] The shared `percent` axis must be strictly increasing, start at 0, end at 100, and contain 101 entries.
+- [ ] The shared `percent` axis must be strictly increasing and contain 0–101 entries.
+  - [ ] Values must be integers and non-negative.
+  - [ ] Values above 100 may be used to represent overspeed (manual JSON editing; editor may be view-only).
+  - [ ] Standard curves use 101 points (0%..100% in 1% increments).
 - [ ] The shared `rpm` axis must:
-  - [ ] Contain 101 entries.
+  - [ ] Contain the same number of entries as `percent` (0–101).
   - [ ] Be non-negative.
   - [ ] Be monotonically non-decreasing.
-- [ ] Each series `torque` array must contain exactly 101 entries.
+- [ ] Each series `torque` array must contain the same number of entries as the shared axes (0–101).
 - [ ] All arrays must remain index-aligned (`percent[i]`, `rpm[i]`, and each series `torque[i]` refer to the same point).
 - [ ] Load failures (schema mismatch, invalid lengths, invalid values) should be logged and handled per the project’s logging/error handling policy.
 

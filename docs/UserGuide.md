@@ -1,14 +1,17 @@
-[Quick Start](QuickStart.md) | [API documentation](api/index.md)
+[Docs Home](index.md) | [Quick Start](QuickStart.md) | [API documentation](api/index.md)
 
 ## User Guide
 
-This guide explains the concepts and common workflows for the `MotorDefinition` NuGet package.
+This guide explains the concepts and common workflows for the `JordanRobot.MotorDefinition` NuGet package.
 
 ### What this library provides
 
 - A runtime object model for motor definition data (in the `CurveEditor.Models` namespace).
 - Simple load/save entry points via `JordanRobot.MotorDefinitions.MotorFile`.
-- A JSON format designed for motor/drive/voltage torque curves, using 1% increments (101 points).
+- A JSON format designed for motor/drive/voltage torque curves, supporting 0–101 points per curve.
+    - 101 points corresponds to the standard 1% increment curve (0%..100%).
+    - Fewer points are allowed for coarse datasets.
+    - Percent values above 100% may be used to represent overspeed ranges.
 
 The generated API reference lives under [docs/api](api/index.md).
 
@@ -28,9 +31,12 @@ This mirrors how a motor can be paired with different drives and operated at dif
 
 #### Axes and data shape
 
-Each `CurveSeries` contains `DataPoint` entries at 1% increments:
+Each `CurveSeries` contains `DataPoint` entries.
 
-- `Percent`: integer 0..100
+- Point count is supported from 0 to 101.
+- In the standard case, a series uses 101 points at 1% increments (0%..100%).
+
+- `Percent`: integer >= 0 (may exceed 100% for overspeed ranges)
 - `Rpm`: typically derived from max RPM (e.g., `percent / 100.0 * maxRpm`)
 - `Torque`: torque value at that point (can be negative)
 
@@ -57,15 +63,9 @@ If you're populating combo-boxes or lists, you can use the convenience name enum
 // Drive names for a combo-box
 var driveNames = motor.DriveNames;
 
-// Voltage names (flattened across all drives) for a combo-box
-var voltageNames = motor.VoltageNames;
-```
-
-If you already have a drive and want just that drive's voltages:
-
-```csharp
 var drive = motor.GetDriveByName("Drive A");
-var voltageNamesForDrive = drive?.VoltageNames ?? Enumerable.Empty<string>();
+// Or
+IEnumerable<string> voltage = drive.VoltageNames;
 ```
 
 #### LINQ query access (drives and voltages)
@@ -77,10 +77,11 @@ For LINQ queries, use the LINQ-friendly enumerables:
 var servoDrives = motor.DriveConfigurations
     .Where(d => d.Manufacturer.Contains("Servo", StringComparison.OrdinalIgnoreCase));
 
-// All voltages across all drives
-var highVoltages = motor.VoltageConfigurations
-    .Where(v => v.Voltage >= 400)
-    .OrderBy(v => v.Voltage);
+// Find a specific curve series
+var curve = this.Drives.Where(d => d.Name.Equals("Drive X", StringComparison.OrdinalIgnoreCase))
+                       .Where(d => d.VoltageNames.Equals("400 V"))
+                       .Where(v => v.CurveSeries.Equals("Continuous"));
+
 ```
 
 If you’re dealing with “unknown JSON” and want to quickly detect whether it resembles a motor definition:
@@ -134,8 +135,9 @@ var peak = voltage.AddSeries("Peak", initializeTorque: motor.RatedPeakTorque);
 
 When you modify curve data, keep the shape consistent:
 
-- Do not add/remove points from `CurveSeries.Data` unless you also re-establish the full 0..100 axis.
 - Prefer editing the existing points in place.
+- If you add/remove points, ensure the percent axis remains strictly increasing and that all series under a `VoltageConfiguration` share the same axis.
+- A point count of 0 is allowed; clients may fall back to rated continuous/peak torque for visualization.
 
 Example: apply a simple torque scale to the entire series:
 
@@ -151,7 +153,7 @@ Verify the data integrity:
 ```csharp
 if (!peak.ValidateDataIntegrity())
 {
-    throw new InvalidOperationException("Invalid series data. Expected 101 points (0%..100%).");
+    throw new InvalidOperationException("Invalid series data. Expected 0..101 points with a strictly increasing, non-negative percent axis.");
 }
 ```
 
@@ -198,6 +200,6 @@ If you are integrating with other tools or generating files externally, use the 
 
 - **Deserialization fails**: `MotorFile.Load` throws an `InvalidOperationException` when it cannot deserialize a motor definition.
 - **Empty or incomplete models**: `MotorDefinition.HasValidConfiguration()` returns `false` when there is no drive/voltage/series data.
-- **Wrong number of points**: `CurveSeries.ValidateDataIntegrity()` returns `false` when the series is not 101 points.
+- **Invalid curve shape**: `CurveSeries.ValidateDataIntegrity()` returns `false` when the series has more than 101 points, has negative percent values, or has a non-increasing percent axis.
 
 For detailed type/member information, see the generated [API documentation](api/index.md).

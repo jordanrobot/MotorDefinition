@@ -88,12 +88,12 @@ Extraction-friendly layout (recommended)
 
 ### State Model Summary (Target)
 - Persisted shape under each voltage configuration:
-  - `percent`: array length 101, strictly increasing, 0..100
-  - `rpm`: array length 101, non-negative, monotonic non-decreasing
+  - `percent`: array length 0–101, strictly increasing, integer >= 0 (values above 100% may represent overspeed)
+  - `rpm`: array length matches `percent`, non-negative, monotonic non-decreasing
   - `series`: object/map keyed by series name
-    - entry has: `locked` (bool), `notes` (optional string), `torque` (array length 101)
+    - entry has: `locked` (bool), `notes` (optional string), `torque` (array length matches `percent`)
 - Runtime shape (unchanged):
-  - `VoltageConfiguration.Series[]` of `CurveSeries`, each with `DataPoint{ Percent, Rpm, Torque }[101]`.
+  - `VoltageConfiguration.Series[]` of `CurveSeries`, each with `DataPoint{ Percent, Rpm, Torque }[0..101]`.
 - Drive JSON rename:
   - On disk: drive uses `name`, `manufacturer`, `partNumber`, then `voltages`.
   - In runtime: keep `DriveConfiguration.Name` as the internal name.
@@ -103,7 +103,7 @@ Extraction-friendly layout (recommended)
 - Use `JsonPropertyOrder` (DTOs) to satisfy "name/manufacturer/partNumber ordering" without relying on serializer implementation quirks.
 - Ensure new fields have defaults so missing values deserialize safely.
 - Update `ValidationService` to validate both:
-  - the existing runtime invariants (101 points, percent ordering), and
+  - the existing runtime invariants (supported point counts 0–101, percent ordering), and
   - the new shared-axis representability constraint.
 
 ---
@@ -223,13 +223,13 @@ Enforce Phase 3.1.5 semantic rules during load (and fail fast with clear logging
 ### Tasks
 - [x] Mapper shape validation (DTO -> runtime):
   - [x] Validate array lengths and required nodes during mapping:
-    - [x] `percent` length 101
-    - [x] `rpm` length 101
-    - [x] each series `torque` length 101
+    - [x] `percent` length 0–101
+    - [x] `rpm` length matches `percent`
+    - [x] each series `torque` length matches `percent`
   - [x] Validate required scalar properties are present or defaultable.
   - [x] Fail mapping with a clear exception that includes enough context to log.
 - [x] Semantic validation on load:
-  - [x] Validate `percent` axis semantics: strictly increasing, starts at 0, ends at 100.
+  - [x] Validate `percent` axis semantics: strictly increasing and non-negative (may exceed 100 for overspeed).
   - [x] Validate `rpm` axis semantics: non-negative and monotonic non-decreasing.
   - [x] Validate torque values are non-negative (if required by existing domain rules).
 - [x] Logging + safe failure behavior (per ADR-0009):
@@ -237,7 +237,7 @@ Enforce Phase 3.1.5 semantic rules during load (and fail fast with clear logging
   - [x] Surface a user-friendly exception message to the caller (no crash loop).
 - [x] Unit tests:
   - [x] Invalid percent axis length fails to load.
-  - [x] Percent not starting at 0 or not ending at 100 fails to load.
+  - [x] Percent not strictly increasing (or negative percent) fails to load.
   - [x] RPM decreasing somewhere fails to load.
 
 ### Done when

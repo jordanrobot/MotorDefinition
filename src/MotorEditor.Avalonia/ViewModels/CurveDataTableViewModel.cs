@@ -44,9 +44,21 @@ public class CurveDataRow : INotifyPropertyChanged
     }
 
     /// <summary>
-    /// Gets the percentage value for this row (0-100).
+    /// Gets the percentage value for this row based on the first series.
     /// </summary>
-    public int Percent => _rowIndex;
+    public int Percent
+    {
+        get
+        {
+            var firstSeries = _voltage.Series.FirstOrDefault();
+            if (firstSeries is not null && _rowIndex < firstSeries.Data.Count)
+            {
+                return firstSeries.Data[_rowIndex].Percent;
+            }
+
+            return 0;
+        }
+    }
 
     /// <summary>
     /// Gets the RPM value for this row based on the first series.

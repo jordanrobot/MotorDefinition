@@ -13,6 +13,7 @@ namespace CurveEditor.Models;
 /// </summary>
 public class CurveSeries : INotifyPropertyChanged
 {
+    private const int MaxSupportedPointCount = 101;
     private string _name = string.Empty;
     private bool _locked;
     private bool _isVisible = true;
@@ -86,8 +87,9 @@ public class CurveSeries : INotifyPropertyChanged
     }
 
     /// <summary>
-    /// The data points for this curve, stored at 1% increments.
-    /// Should contain 101 points (0% through 100%).
+    /// The data points for this curve.
+    /// Typically contains 101 points at 1% increments (0% through 100%), but may contain fewer points.
+    /// Values above 100% may be present to represent overspeed ranges.
     /// </summary>
     [JsonPropertyName("data")]
     public List<DataPoint> Data { get; set; } = [];
@@ -128,7 +130,8 @@ public class CurveSeries : INotifyPropertyChanged
     }
 
     /// <summary>
-    /// Initializes the data with 101 points (0% to 100%) at 1% increments.
+    /// Initializes the data with the default 101 points (0% to 100%) at 1% increments.
+    /// The file format can store 0..101 points per series; this helper always generates the standard 1% curve.
     /// </summary>
     /// <param name="maxRpm">The maximum RPM of the motor.</param>
     /// <param name="defaultTorque">The default torque value for all points.</param>
@@ -155,43 +158,53 @@ public class CurveSeries : INotifyPropertyChanged
     public int PointCount => Data.Count;
 
     /// <summary>
-    /// Validates that the series has the expected 101 data points at 1% increments.
+    /// Validates that the series has a supported shape.
+    /// A valid series has 0..101 points, non-negative percent values, and a strictly increasing percent axis.
     /// </summary>
     /// <returns>True if the series has valid data structure; otherwise false.</returns>
     public bool ValidateDataIntegrity()
     {
-        if (Data.Count != 101)
+        if (Data.Count > MaxSupportedPointCount)
         {
             return false;
         }
 
-        for (var i = 0; i <= 100; i++)
+        var previousPercent = -1;
+        for (var i = 0; i < Data.Count; i++)
         {
-            if (Data[i].Percent != i)
+            var percent = Data[i].Percent;
+            if (percent < 0)
             {
                 return false;
             }
+
+            if (percent <= previousPercent)
+            {
+                return false;
+            }
+
+            previousPercent = percent;
         }
 
         return true;
     }
 
     /// <summary>
-    /// Gets the data point for a given percent (0..100).
+    /// Gets the data point for a given percent.
     /// Prefer this for quick lookups when exporting or rendering tables.
     /// </summary>
-    /// <param name="percent">The percent (0..100).</param>
+    /// <param name="percent">The percent (non-negative).</param>
     /// <returns>The matching data point.</returns>
-    /// <exception cref="ArgumentOutOfRangeException">Thrown when <paramref name="percent"/> is outside 0..100.</exception>
+    /// <exception cref="ArgumentOutOfRangeException">Thrown when <paramref name="percent"/> is negative.</exception>
     /// <exception cref="KeyNotFoundException">Thrown when no point exists for <paramref name="percent"/>.</exception>
     public DataPoint GetPointByPercent(int percent)
     {
-        if (percent is < 0 or > 100)
+        if (percent < 0)
         {
-            throw new ArgumentOutOfRangeException(nameof(percent), percent, "Percent must be between 0 and 100.");
+            throw new ArgumentOutOfRangeException(nameof(percent), percent, "Percent cannot be negative.");
         }
 
-        if (Data.Count == 101 && percent < Data.Count && Data[percent].Percent == percent)
+        if (Data.Count == 101 && percent >= 0 && percent <= 100 && percent < Data.Count && Data[percent].Percent == percent)
         {
             return Data[percent];
         }
@@ -206,21 +219,21 @@ public class CurveSeries : INotifyPropertyChanged
     }
 
     /// <summary>
-    /// Attempts to get the data point for a given percent (0..100).
+    /// Attempts to get the data point for a given percent.
     /// </summary>
-    /// <param name="percent">The percent (0..100).</param>
+    /// <param name="percent">The percent (non-negative).</param>
     /// <param name="point">When this method returns, contains the matching point if found; otherwise null.</param>
     /// <returns>True if found; otherwise false.</returns>
     public bool TryGetPointByPercent(int percent, out DataPoint? point)
     {
         point = null;
 
-        if (percent is < 0 or > 100)
+        if (percent < 0)
         {
             return false;
         }
 
-        if (Data.Count == 101 && percent < Data.Count && Data[percent].Percent == percent)
+        if (Data.Count == 101 && percent >= 0 && percent <= 100 && percent < Data.Count && Data[percent].Percent == percent)
         {
             point = Data[percent];
             return true;

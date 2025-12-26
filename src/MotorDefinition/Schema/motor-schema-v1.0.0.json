@@ -225,10 +225,9 @@
                   "description": "Percent axis shared by all series.",
                   "items": {
                     "type": "integer",
-                    "minimum": 0,
-                    "maximum": 100
+                    "minimum": 0
                   },
-                  "minItems": 101,
+                  "minItems": 0,
                   "maxItems": 101
                 },
                 "rpm": {
@@ -238,7 +237,7 @@
                     "type": "number",
                     "minimum": 0
                   },
-                  "minItems": 101,
+                  "minItems": 0,
                   "maxItems": 101
                 },
                 "series": {
@@ -261,7 +260,7 @@
                         "items": {
                           "type": "number"
                         },
-                        "minItems": 101,
+                        "minItems": 0,
                         "maxItems": 101
                       }
                     },

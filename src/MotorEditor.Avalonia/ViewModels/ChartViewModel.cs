@@ -350,16 +350,50 @@ public partial class ChartViewModel : ViewModelBase
 
         Title = $"Torque Curve - {_currentVoltage.Voltage}V";
 
+        // Use the maximum of Motor Max Speed and Drive (voltage) Max Speed for stand-in lines.
+        var standInMaxRpm = Math.Max(MotorMaxSpeed, _currentVoltage.MaxSpeed);
+        if (standInMaxRpm <= 0)
+        {
+            standInMaxRpm = 6000;
+        }
+
         for (var i = 0; i < _currentVoltage.Series.Count; i++)
         {
             var curveSeries = _currentVoltage.Series[i];
             var color = SeriesColors[i % SeriesColors.Length];
             var isVisible = IsSeriesVisible(curveSeries.Name);
 
-            // Create observable points for the series
-            var points = new ObservableCollection<ObservablePoint>(
-                curveSeries.Data.Select(dp => new ObservablePoint(dp.Rpm, dp.Torque))
-            );
+            // Create observable points for the series.
+            // If no curve points exist, fall back to rated torque lines so the chart can still render.
+            ObservableCollection<ObservablePoint> points;
+            if (curveSeries.Data.Count == 0)
+            {
+                var torque = 0d;
+                if (curveSeries.Name.Contains("peak", StringComparison.OrdinalIgnoreCase))
+                {
+                    torque = _currentVoltage.RatedPeakTorque;
+                }
+                else if (curveSeries.Name.Contains("cont", StringComparison.OrdinalIgnoreCase))
+                {
+                    torque = _currentVoltage.RatedContinuousTorque;
+                }
+                else
+                {
+                    torque = Math.Max(_currentVoltage.RatedPeakTorque, _currentVoltage.RatedContinuousTorque);
+                }
+
+                points = new ObservableCollection<ObservablePoint>
+                {
+                    new(0, torque),
+                    new(standInMaxRpm, torque)
+                };
+            }
+            else
+            {
+                points = new ObservableCollection<ObservablePoint>(
+                    curveSeries.Data.Select(dp => new ObservablePoint(dp.Rpm, dp.Torque))
+                );
+            }
             _seriesDataCache[curveSeries.Name] = points;
 
             var lineSeries = new LineSeries<ObservablePoint>
@@ -521,6 +555,16 @@ public partial class ChartViewModel : ViewModelBase
             .Select(dp => dp.Torque)
             .DefaultIfEmpty(0)
             .Max();
+
+        if (maxTorque <= 0)
+        {
+            maxTorque = new[]
+            {
+                _currentVoltage.RatedPeakTorque,
+                _currentVoltage.RatedContinuousTorque,
+                HasBrake ? BrakeTorque : 0d
+            }.Max();
+        }
 
         // Use exact max RPM (no rounding), but round torque for nice Y-axis
         var yMax = RoundToNiceValue(maxTorque * 1.1, true); // Add 10% margin

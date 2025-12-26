@@ -51,7 +51,7 @@ internal static class MotorFileProbe
 
                 foreach (var voltage in voltagesElement.EnumerateArray())
                 {
-                    if (!HasAxis(voltage, "percent", 101) || !HasAxis(voltage, "rpm", 101))
+                    if (!HasAxis(voltage, "percent") || !HasAxis(voltage, "rpm"))
                     {
                         continue;
                     }
@@ -100,7 +100,7 @@ internal static class MotorFileProbe
         return false;
     }
 
-    private static bool HasAxis(JsonElement parent, string propertyName, int expectedLength)
+    private static bool HasAxis(JsonElement parent, string propertyName)
     {
         if (!parent.TryGetProperty(propertyName, out var axis))
         {
@@ -112,6 +112,7 @@ internal static class MotorFileProbe
             return false;
         }
 
-        return axis.GetArrayLength() == expectedLength;
+        // Length is variable (including 0). This probe only verifies presence and shape.
+        return true;
     }
 }

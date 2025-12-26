@@ -1,0 +1,14 @@
+<Solution>
+  <Configurations>
+    <Platform Name="Any CPU" />
+    <Platform Name="x64" />
+    <Platform Name="x86" />
+  </Configurations>
+  <Folder Name="/src/">
+    <Project Path="src/MotorDefinition/MotorDefinition.csproj" />
+    <Project Path="src/MotorEditor.Avalonia/MotorEditor.Avalonia.csproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/CurveEditor.Tests/MotorEditor.Tests.csproj" />
+  </Folder>
+</Solution>

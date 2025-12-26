@@ -12,8 +12,6 @@ namespace JordanRobot.MotorDefinitions.Mapping;
 /// </summary>
 internal static class MotorFileMapper
 {
-    private const int ExpectedPointCount = 101;
-
     /// <summary>
     /// Maps a runtime <see cref="MotorDefinition"/> into a persistence DTO.
     /// </summary>
@@ -63,6 +61,7 @@ internal static class MotorFileMapper
                 MotorFileShapeValidator.ValidateRuntimeVoltage(voltage);
 
                 var axisSource = voltage.Series[0];
+                var pointCount = axisSource.Data.Count;
                 var percentAxis = axisSource.Data.Select(p => p.Percent).ToArray();
                 var rpmAxis = axisSource.Data.Select(p => p.Rpm).ToArray();
 
@@ -74,8 +73,8 @@ internal static class MotorFileMapper
                         throw new InvalidOperationException($"Duplicate series name '{series.Name}' found for {voltage.Voltage}V in drive '{drive.Name}'.");
                     }
 
-                    var torque = new double[ExpectedPointCount];
-                    for (var i = 0; i < ExpectedPointCount; i++)
+                    var torque = new double[pointCount];
+                    for (var i = 0; i < pointCount; i++)
                     {
                         torque[i] = series.Data[i].Torque;
                     }
@@ -195,9 +194,11 @@ internal static class MotorFileMapper
                     var seriesName = kvp.Key;
                     var entry = kvp.Value;
 
-                    if (entry.Torque.Length != ExpectedPointCount)
+                    var pointCount = voltageDto.Percent.Length;
+
+                    if (entry.Torque.Length != pointCount)
                     {
-                        throw new InvalidOperationException($"Series '{seriesName}' torque array must have 101 entries for drive '{driveDto.Name}'.");
+                        throw new InvalidOperationException($"Series '{seriesName}' torque array length ({entry.Torque.Length}) must match axis length ({pointCount}) for drive '{driveDto.Name}'.");
                     }
 
                     var series = new CurveSeries(seriesName)
@@ -206,7 +207,7 @@ internal static class MotorFileMapper
                         Notes = entry.Notes ?? string.Empty
                     };
 
-                    for (var i = 0; i < ExpectedPointCount; i++)
+                    for (var i = 0; i < pointCount; i++)
                     {
                         series.Data.Add(new DataPoint(voltageDto.Percent[i], voltageDto.Rpm[i], entry.Torque[i]));
                     }

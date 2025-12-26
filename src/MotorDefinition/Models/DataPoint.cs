@@ -12,8 +12,8 @@ public class DataPoint
     private double _rpm;
 
     /// <summary>
-    /// Percentage (0-100) representing position along the motor's speed range.
-    /// 0% = 0 RPM, 100% = MaxRpm.
+    /// Percentage representing position along the motor's speed range.
+    /// Typically 0% = 0 RPM and 100% = MaxRpm, but values above 100 may be used for overspeed ranges.
     /// </summary>
     [JsonPropertyName("percent")]
     public int Percent
@@ -21,9 +21,9 @@ public class DataPoint
         get => _percent;
         set
         {
-            if (value < 0 || value > 100)
+            if (value < 0)
             {
-                throw new ArgumentOutOfRangeException(nameof(value), value, "Percent must be between 0 and 100.");
+                throw new ArgumentOutOfRangeException(nameof(value), value, "Percent cannot be negative.");
             }
             _percent = value;
         }
@@ -69,7 +69,7 @@ public class DataPoint
     /// <summary>
     /// Creates a new DataPoint with the specified values.
     /// </summary>
-    /// <param name="percent">Percentage (0-100) along the speed range.</param>
+    /// <param name="percent">Percentage along the speed range. Must be non-negative.</param>
     /// <param name="rpm">RPM value at this point.</param>
     /// <param name="torque">Torque value at this point.</param>
     public DataPoint(int percent, double rpm, double torque)

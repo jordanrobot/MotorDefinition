@@ -37,7 +37,7 @@ public DataPoint(int percent, double rpm, double torque);
 
 `percent` [System\.Int32](https://learn.microsoft.com/en-us/dotnet/api/system.int32 'System\.Int32')
 
-Percentage \(0\-100\) along the speed range\.
+Percentage along the speed range\. Must be non\-negative\.
 
 <a name='CurveEditor.Models.DataPoint.DataPoint(int,double,double).rpm'></a>
 
@@ -69,8 +69,8 @@ public int DisplayRpm { get; }
 
 ## DataPoint\.Percent Property
 
-Percentage \(0\-100\) representing position along the motor's speed range\.
-0% = 0 RPM, 100% = MaxRpm\.
+Percentage representing position along the motor's speed range\.
+Typically 0% = 0 RPM and 100% = MaxRpm, but values above 100 may be used for overspeed ranges\.
 
 ```csharp
 public int Percent { get; set; }

@@ -170,19 +170,6 @@ public class MotorDefinition
     [JsonIgnore]
     public IEnumerable<string> DriveNames => Drives.Select(d => d.Name);
 
-    /// <summary>
-    /// Gets a LINQ-friendly enumeration of all voltage configurations across all drives.
-    /// </summary>
-    [JsonIgnore]
-    public IEnumerable<VoltageConfiguration> VoltageConfigurations => Drives.SelectMany(d => d.Voltages);
-
-    /// <summary>
-    /// Gets display-friendly voltage names (e.g., "208 V") across all drives.
-    /// Useful for populating UI lists and combo-boxes.
-    /// </summary>
-    [JsonIgnore]
-    public IEnumerable<string> VoltageNames => VoltageConfigurations.Select(v => v.DisplayName);
-
     // Metadata
     /// <summary>
     /// Metadata about the motor definition file.
@@ -268,15 +255,5 @@ public class MotorDefinition
         Drives.Remove(drive);
         Metadata.UpdateModified();
         return true;
-    }
-
-    /// <summary>
-    /// Gets all curve series across all drives and voltages.
-    /// Useful for getting a flat list of all curves in the motor definition.
-    /// </summary>
-    /// <returns>All curve series in the motor definition.</returns>
-    public IEnumerable<CurveSeries> GetAllSeries()
-    {
-        return Drives.SelectMany(d => d.Voltages.SelectMany(v => v.Series));
     }
 }

@@ -511,7 +511,7 @@ Alternative models exist:
 - b) Store only provided points?
 - c) Reject the input?
 
-**Recommendation**: Always store 101 points, interpolating as needed:
+**Recommendation**: Store the points as provided (0–101), and only interpolate to 101 points when needed for standard curve generation or specific UI workflows:
 ```csharp
 public List<DataPoint> InterpolateToStandard(List<DataPoint> sparsePoints)
 {

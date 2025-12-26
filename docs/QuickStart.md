@@ -1,15 +1,15 @@
-[User Guide](UserGuide.md) | [API documentation](api/index.md)
+[Docs Home](index.md) | [User Guide](UserGuide.md) | [API documentation](api/index.md)
 
 ## Quick Start
 
-This guide gets you from zero to reading and writing a motor definition JSON file using the `MotorDefinition` NuGet package.
+This guide gets you from zero to reading and writing a motor definition JSON file using the `JordanRobot.MotorDefinition` NuGet package.
 
 ### Install
 
 Add the package to your project:
 
 ```bash
-dotnet add package MotorDefinition
+dotnet add package JordanRobot.MotorDefinition
 ```
 
 ### Load a motor definition
@@ -65,12 +65,12 @@ var drive = motor.AddDrive("My Drive");
 var voltage = drive.AddVoltageConfiguration(230);
 voltage.MaxSpeed = motor.MaxSpeed;
 
-// Creates 101 points (0%..100%) and fills RPM axis from MaxSpeed.
+// Creates the default 101-point curve (0%..100% in 1% increments) and fills RPM axis from MaxSpeed.
 var peak = voltage.AddSeries("Peak", initializeTorque: motor.RatedPeakTorque);
 
 if (!peak.ValidateDataIntegrity())
 {
-    throw new InvalidOperationException("Series data must contain 101 points at 1% increments.");
+    throw new InvalidOperationException("Series data must contain 0..101 points with a strictly increasing, non-negative percent axis.");
 }
 
 MotorFile.Save(motor, "my-motor.json");
@@ -78,7 +78,9 @@ MotorFile.Save(motor, "my-motor.json");
 
 ### Notes and gotchas
 
-- **101 points at 1% increments**: Each series is expected to contain exactly 101 points from 0% to 100%.
+- **0–101 points per curve**: The file format supports 0 to 101 points per series.
+    - The standard curve is 101 points at 1% increments (0%..100%).
+    - Overspeed percent values (>100%) are allowed in the file format but are JSON-authored for now in the editor.
 - **Shared axes per voltage**: All series under a given voltage are expected to share the same percent and RPM axes.
 - **Schema version**: `MotorDefinition.SchemaVersion` defaults to the current schema version (`1.0.0`).
 

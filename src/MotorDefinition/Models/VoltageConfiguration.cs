@@ -94,6 +94,13 @@ public class VoltageConfiguration : INotifyPropertyChanged
     public List<CurveSeries> Series { get; set; } = [];
 
     /// <summary>
+    /// Gets a LINQ-friendly enumeration of Curve Series.
+    /// This is a convenience alias for <see cref="Series"/>.
+    /// </summary>
+    [JsonIgnore]
+    public IEnumerable<CurveSeries> CurveSeries => Series;
+
+    /// <summary>
     /// Creates a new VoltageConfiguration with default values.
     /// </summary>
     public VoltageConfiguration()

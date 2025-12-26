@@ -371,33 +371,6 @@ public CurveEditor.Models.UnitSettings Units { get; set; }
 #### Property Value
 [UnitSettings](CurveEditor.Models.UnitSettings.md 'CurveEditor\.Models\.UnitSettings')
 
-<a name='CurveEditor.Models.MotorDefinition.VoltageConfigurations'></a>
-
-## MotorDefinition\.VoltageConfigurations Property
-
-Gets a LINQ\-friendly enumeration of all voltage configurations across all drives\.
-
-```csharp
-public System.Collections.Generic.IEnumerable<CurveEditor.Models.VoltageConfiguration> VoltageConfigurations { get; }
-```
-
-#### Property Value
-[System\.Collections\.Generic\.IEnumerable&lt;](https://learn.microsoft.com/en-us/dotnet/api/system.collections.generic.ienumerable-1 'System\.Collections\.Generic\.IEnumerable\`1')[VoltageConfiguration](CurveEditor.Models.VoltageConfiguration.md 'CurveEditor\.Models\.VoltageConfiguration')[&gt;](https://learn.microsoft.com/en-us/dotnet/api/system.collections.generic.ienumerable-1 'System\.Collections\.Generic\.IEnumerable\`1')
-
-<a name='CurveEditor.Models.MotorDefinition.VoltageNames'></a>
-
-## MotorDefinition\.VoltageNames Property
-
-Gets display\-friendly voltage names \(e\.g\., "208 V"\) across all drives\.
-Useful for populating UI lists and combo\-boxes\.
-
-```csharp
-public System.Collections.Generic.IEnumerable<string> VoltageNames { get; }
-```
-
-#### Property Value
-[System\.Collections\.Generic\.IEnumerable&lt;](https://learn.microsoft.com/en-us/dotnet/api/system.collections.generic.ienumerable-1 'System\.Collections\.Generic\.IEnumerable\`1')[System\.String](https://learn.microsoft.com/en-us/dotnet/api/system.string 'System\.String')[&gt;](https://learn.microsoft.com/en-us/dotnet/api/system.collections.generic.ienumerable-1 'System\.Collections\.Generic\.IEnumerable\`1')
-
 <a name='CurveEditor.Models.MotorDefinition.Weight'></a>
 
 ## MotorDefinition\.Weight Property
@@ -437,21 +410,6 @@ The newly created drive configuration\.
 
 [System\.InvalidOperationException](https://learn.microsoft.com/en-us/dotnet/api/system.invalidoperationexception 'System\.InvalidOperationException')  
 Thrown if a drive with the same name already exists\.
-
-<a name='CurveEditor.Models.MotorDefinition.GetAllSeries()'></a>
-
-## MotorDefinition\.GetAllSeries\(\) Method
-
-Gets all curve series across all drives and voltages\.
-Useful for getting a flat list of all curves in the motor definition\.
-
-```csharp
-public System.Collections.Generic.IEnumerable<CurveEditor.Models.CurveSeries> GetAllSeries();
-```
-
-#### Returns
-[System\.Collections\.Generic\.IEnumerable&lt;](https://learn.microsoft.com/en-us/dotnet/api/system.collections.generic.ienumerable-1 'System\.Collections\.Generic\.IEnumerable\`1')[CurveSeries](CurveEditor.Models.CurveSeries.md 'CurveEditor\.Models\.CurveSeries')[&gt;](https://learn.microsoft.com/en-us/dotnet/api/system.collections.generic.ienumerable-1 'System\.Collections\.Generic\.IEnumerable\`1')  
-All curve series in the motor definition\.
 
 <a name='CurveEditor.Models.MotorDefinition.GetDriveByName(string)'></a>
 

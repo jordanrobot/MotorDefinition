@@ -47,8 +47,9 @@ The name of the curve series\.
 
 ## CurveSeries\.Data Property
 
-The data points for this curve, stored at 1% increments\.
-Should contain 101 points \(0% through 100%\)\.
+The data points for this curve\.
+Typically contains 101 points at 1% increments \(0% through 100%\), but may contain fewer points\.
+Values above 100% may be present to represent overspeed ranges\.
 
 ```csharp
 public System.Collections.Generic.List<CurveEditor.Models.DataPoint> Data { get; set; }
@@ -168,7 +169,7 @@ public System.Collections.Generic.IEnumerable<double> Torques { get; }
 
 ## CurveSeries\.GetPointByPercent\(int\) Method
 
-Gets the data point for a given percent \(0\.\.100\)\.
+Gets the data point for a given percent\.
 Prefer this for quick lookups when exporting or rendering tables\.
 
 ```csharp
@@ -180,7 +181,7 @@ public CurveEditor.Models.DataPoint GetPointByPercent(int percent);
 
 `percent` [System\.Int32](https://learn.microsoft.com/en-us/dotnet/api/system.int32 'System\.Int32')
 
-The percent \(0\.\.100\)\.
+The percent \(non\-negative\)\.
 
 #### Returns
 [DataPoint](CurveEditor.Models.DataPoint.md 'CurveEditor\.Models\.DataPoint')  
@@ -189,7 +190,7 @@ The matching data point\.
 #### Exceptions
 
 [System\.ArgumentOutOfRangeException](https://learn.microsoft.com/en-us/dotnet/api/system.argumentoutofrangeexception 'System\.ArgumentOutOfRangeException')  
-Thrown when [percent](CurveEditor.Models.CurveSeries.md#CurveEditor.Models.CurveSeries.GetPointByPercent(int).percent 'CurveEditor\.Models\.CurveSeries\.GetPointByPercent\(int\)\.percent') is outside 0\.\.100\.
+Thrown when [percent](CurveEditor.Models.CurveSeries.md#CurveEditor.Models.CurveSeries.GetPointByPercent(int).percent 'CurveEditor\.Models\.CurveSeries\.GetPointByPercent\(int\)\.percent') is negative\.
 
 [System\.Collections\.Generic\.KeyNotFoundException](https://learn.microsoft.com/en-us/dotnet/api/system.collections.generic.keynotfoundexception 'System\.Collections\.Generic\.KeyNotFoundException')  
 Thrown when no point exists for [percent](CurveEditor.Models.CurveSeries.md#CurveEditor.Models.CurveSeries.GetPointByPercent(int).percent 'CurveEditor\.Models\.CurveSeries\.GetPointByPercent\(int\)\.percent')\.
@@ -198,7 +199,8 @@ Thrown when no point exists for [percent](CurveEditor.Models.CurveSeries.md#Curv
 
 ## CurveSeries\.InitializeData\(double, double\) Method
 
-Initializes the data with 101 points \(0% to 100%\) at 1% increments\.
+Initializes the data with the default 101 points \(0% to 100%\) at 1% increments\.
+The file format can store 0\.\.101 points per series; this helper always generates the standard 1% curve\.
 
 ```csharp
 public void InitializeData(double maxRpm, double defaultTorque);
@@ -258,7 +260,7 @@ Thrown if the series contains duplicate percent values\.
 
 ## CurveSeries\.TryGetPointByPercent\(int, DataPoint\) Method
 
-Attempts to get the data point for a given percent \(0\.\.100\)\.
+Attempts to get the data point for a given percent\.
 
 ```csharp
 public bool TryGetPointByPercent(int percent, out CurveEditor.Models.DataPoint? point);
@@ -269,7 +271,7 @@ public bool TryGetPointByPercent(int percent, out CurveEditor.Models.DataPoint? 
 
 `percent` [System\.Int32](https://learn.microsoft.com/en-us/dotnet/api/system.int32 'System\.Int32')
 
-The percent \(0\.\.100\)\.
+The percent \(non\-negative\)\.
 
 <a name='CurveEditor.Models.CurveSeries.TryGetPointByPercent(int,CurveEditor.Models.DataPoint).point'></a>
 
@@ -285,7 +287,8 @@ True if found; otherwise false\.
 
 ## CurveSeries\.ValidateDataIntegrity\(\) Method
 
-Validates that the series has the expected 101 data points at 1% increments\.
+Validates that the series has a supported shape\.
+A valid series has 0\.\.101 points, non\-negative percent values, and a strictly increasing percent axis\.
 
 ```csharp
 public bool ValidateDataIntegrity();

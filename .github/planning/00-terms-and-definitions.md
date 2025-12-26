@@ -13,11 +13,13 @@ The root domain object for this application. Represents the entirety of informat
 The JSON file on disk that serializes a `MotorDefinition`. It contains motor properties, unit settings, one or more drive configurations, each with one or more voltage configurations, each of which contains multiple curve series and data points.
 
 ### Curve (or Curve Series)
-A `CurveSeries` describes a single named series of motor torque/speed data points for a specific drive and voltage configuration. Each curve represents a specific operating condition (e.g., "Peak" or "Continuous") and is stored as data points at 1% increments of motor max speed.
+A `CurveSeries` describes a single named series of motor torque/speed data points for a specific drive and voltage configuration. Each curve represents a specific operating condition (e.g., "Peak" or "Continuous") and is stored as 0–101 data points.
+
+The standard curve is 101 points at 1% increments (0%..100%), but files may contain fewer points. Percent values above 100 may be used to represent overspeed (manual JSON editing; the editor may treat these as view-only).
 
 ### Data Point
 A single point on a curve, consisting of:
-- **Percent**: 0-100%, representing position along the speed range
+- **Percent**: non-negative integer representing position along the speed range (may exceed 100% for overspeed)
 - **RPM**: Rotational speed at that percentage point
 - **Torque**: Torque value at that speed
 
@@ -258,11 +260,11 @@ A derived curve showing power vs. speed, calculated from the torque curve.
 
 ## Data Format
 
-### 1% Increment Storage
-Curves are stored with data points at every 1% of max speed (101 points total: 0% through 100%).
+### Standard 1% Increment Storage
+Standard curves use data points at every 1% of max speed (101 points total: 0% through 100%), but the file format supports 0–101 points per series.
 
 ### Percentage
-A value from 0 to 100 representing position along the motor's speed range:
+A non-negative integer representing position along the motor's speed range (may exceed 100% for overspeed):
 - 0% = 0 RPM
 - 100% = Max RPM
 

@@ -79,7 +79,8 @@ A dedicated desktop application for editing motor torque curves stored in JSON f
    - User preference to enable/disable hover popup
 
 10. **Data Format**
-    - Curve data saved at 1% increments (0% = 0 RPM, 100% = max RPM)
+   - Standard curves use 101 points at 1% increments (0% = 0 RPM, 100% = max RPM)
+   - File format supports 0–101 points per series, and percent values may exceed 100 for overspeed (manual JSON editing)
     - Each data point stores percentage, RPM, and torque values
     - RPM values displayed rounded to nearest whole number
 
@@ -226,8 +227,8 @@ Motor definition file with comprehensive properties and multiple curve series:
 | weight | "kg", "lbs", "g" |
 
 **Key data format notes:**
-- Data saved at 1% increments (101 points per series: 0% to 100%)
-- `percent`: 0-100, where 0% = 0 RPM, 100% = maxRpm
+- Data saved with 0–101 points per series (standard: 101 points at 1% increments, 0%..100%)
+- `percent`: integer >= 0 (0% = 0 RPM; values above 100% may represent overspeed)
 - `rpm`: Calculated from percent × maxRpm, displayed rounded to whole number
 - `torque`: Torque value at that percentage point
 - Multiple series per file (e.g., "Peak", "Continuous", custom names)
@@ -280,7 +281,7 @@ Motor definition file with comprehensive properties and multiple curve series:
 - [ ] Shows/hides individual series via checkboxes
 - [ ] Series distinguished by color
 - [ ] User can edit series colors (persisted per series name)
-- [ ] Data saved at 1% increments (0-100%)
+- [ ] Standard curves saved at 1% increments (0-100%); file format supports 0–101 points per series
 - [ ] RPM displayed rounded to nearest whole number
 - [ ] Default series: "Peak" and "Continuous"
 - [ ] Can add/rename/delete curve series

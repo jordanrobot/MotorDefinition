@@ -62,7 +62,7 @@ Units
 - Runtime model:
   - `MotorDefinition`, `DriveConfiguration`, `VoltageConfiguration`, `CurveSeries`, `DataPoint`, `UnitSettings` (`src/CurveEditor/Models/*`).
 - Validation:
-  - `ValidationService` validates series count, 101 points per series, percent order, and per-series ascending RPM (`src/CurveEditor/Services/ValidationService.cs`).
+  - `ValidationService` validates series count, supported point counts (0–101), percent order, and per-series ascending RPM.
   - The Directory Browser uses a lightweight JSON parse + `HasValidConfiguration()` (`src/CurveEditor/ViewModels/DirectoryBrowserViewModel.cs`).
 - Schema:
   - `schema/motor-schema-v1.0.0.json` still describes the object-per-point representation and a minimal `units` object.
@@ -126,14 +126,14 @@ Units
 
 - Mapper responsibilities (shape validation):
   - Validate required nodes exist and array lengths are correct during DTO -> runtime mapping:
-    - `percent` length 101
-    - `rpm` length 101
-    - each series `torque` length 101
+    - `percent` length 0–101
+    - `rpm` length matches `percent`
+    - each series `torque` length matches `percent`
   - Fail mapping with a clear exception suitable for logging with `{FilePath}`.
 
 - ValidationService responsibilities (domain/semantic validation):
   - Enforce axis semantics during load:
-    - `percent` strictly increasing, starts at 0, ends at 100
+    - `percent` strictly increasing and non-negative (may exceed 100 for overspeed)
     - `rpm` non-negative and monotonic non-decreasing
   - Keep validation domain-focused; structural schema/shape checks remain in the mapper.
 

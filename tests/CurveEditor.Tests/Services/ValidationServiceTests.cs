@@ -9,11 +9,6 @@ namespace CurveEditor.Tests.Services;
 public class ValidationServiceTests
 {
     private readonly ValidationService _service = new();
-    
-    /// <summary>
-    /// Expected number of data points in a valid curve series.
-    /// </summary>
-    private const int ExpectedDataPointCount = 101;
 
     #region ValidateDataPoint Tests
 
@@ -43,6 +38,16 @@ public class ValidationServiceTests
         Assert.Empty(errors);
     }
 
+    [Fact]
+    public void ValidateDataPoint_PercentAbove100_IsAllowedForViewing_ReturnsNoErrors()
+    {
+        var point = new DataPoint(110, 6000, 45.0);
+
+        var errors = _service.ValidateDataPoint(point);
+
+        Assert.Empty(errors);
+    }
+
     #endregion
 
     #region ValidateCurveSeries Tests
@@ -62,7 +67,7 @@ public class ValidationServiceTests
     }
 
     [Fact]
-    public void ValidateCurveSeries_EmptySeries_ReturnsErrors()
+    public void ValidateCurveSeries_EmptySeries_IsAllowedForViewing_ReturnsNoErrors()
     {
         // Arrange
         var series = new CurveSeries("Peak");
@@ -71,12 +76,11 @@ public class ValidationServiceTests
         var errors = _service.ValidateCurveSeries(series);
 
         // Assert
-        Assert.NotEmpty(errors);
-        Assert.Contains(errors, e => e.Contains($"{ExpectedDataPointCount} data points"));
+        Assert.Empty(errors);
     }
 
     [Fact]
-    public void ValidateCurveSeries_WrongPointCount_ReturnsErrors()
+    public void ValidateCurveSeries_VariablePointCount_IsAllowedForViewing_ReturnsNoErrors()
     {
         // Arrange
         var series = new CurveSeries("Peak");
@@ -86,8 +90,23 @@ public class ValidationServiceTests
         var errors = _service.ValidateCurveSeries(series);
 
         // Assert
+        Assert.Empty(errors);
+    }
+
+    [Fact]
+    public void ValidateCurveSeries_TooManyPoints_ReturnsErrors()
+    {
+        var series = new CurveSeries("Peak");
+
+        for (var i = 0; i < 102; i++)
+        {
+            series.Data.Add(new DataPoint(i, i, 1));
+        }
+
+        var errors = _service.ValidateCurveSeries(series);
+
         Assert.NotEmpty(errors);
-        Assert.Contains(errors, e => e.Contains($"{ExpectedDataPointCount} data points"));
+        Assert.Contains(errors, e => e.Contains("0 to 101 data points"));
     }
 
     #endregion

@@ -169,7 +169,7 @@ public class CurveSeriesTests
         var series = new CurveSeries("Peak");
         series.Data.Add(new DataPoint(0, 0, 50));
 
-        Assert.False(series.ValidateDataIntegrity());
+        Assert.True(series.ValidateDataIntegrity());
     }
 
     [Fact]
@@ -179,6 +179,19 @@ public class CurveSeriesTests
         series.InitializeData(5000, 50);
         // Swap two points to break order
         (series.Data[50], series.Data[51]) = (series.Data[51], series.Data[50]);
+
+        Assert.False(series.ValidateDataIntegrity());
+    }
+
+    [Fact]
+    public void ValidateDataIntegrity_TooManyPoints_ReturnsFalse()
+    {
+        var series = new CurveSeries("Peak");
+
+        for (var i = 0; i < 102; i++)
+        {
+            series.Data.Add(new DataPoint(i, i, 1));
+        }
 
         Assert.False(series.ValidateDataIntegrity());
     }

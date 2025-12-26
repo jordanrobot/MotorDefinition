@@ -10,6 +10,7 @@ namespace CurveEditor.Services;
 public class ValidationService : IValidationService
 {
     private const double AxisTolerance = 1e-9;
+    private const int MaxSupportedPointCount = 101;
 
     /// <inheritdoc />
     public IReadOnlyList<string> ValidateDataPoint(DataPoint dataPoint)
@@ -21,9 +22,15 @@ public class ValidationService : IValidationService
             errors.Add($"RPM cannot be negative (current: {dataPoint.Rpm}).");
         }
 
-        if (dataPoint.Percent < 0 || dataPoint.Percent > 100)
+        if (dataPoint.Percent < 0)
         {
-            errors.Add($"Percent must be between 0 and 100 (current: {dataPoint.Percent}).");
+            errors.Add($"Percent cannot be negative (current: {dataPoint.Percent}).");
+        }
+
+        if (dataPoint.Percent > 100)
+        {
+            // Overspeed/manual percent axes are allowed in the file format.
+            // The editor may not provide UI to author them, but files should still be viewable.
         }
 
         return errors;
@@ -39,15 +46,15 @@ public class ValidationService : IValidationService
             errors.Add("Series name cannot be empty.");
         }
 
-        if (series.Data.Count != 101)
+        if (series.Data.Count > MaxSupportedPointCount)
         {
-            errors.Add($"Series must have exactly 101 data points (current: {series.Data.Count}).");
+            errors.Add($"Series must have 0 to {MaxSupportedPointCount} data points (current: {series.Data.Count}).");
         }
 
         // Validate data integrity
         if (!series.ValidateDataIntegrity())
         {
-            errors.Add("Series data points are not in valid order (0-100% in 1% increments).");
+            errors.Add("Series percent axis must be strictly increasing and contain no negative percents.");
         }
 
         // Validate ascending RPM

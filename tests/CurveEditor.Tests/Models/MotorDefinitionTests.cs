@@ -7,6 +7,13 @@ namespace CurveEditor.Tests.Models;
 
 public class MotorDefinitionTests
 {
+    private static CurveSeries[] GetAllSeries(MotorDefinition motor)
+    {
+        return motor.Drives
+            .SelectMany(d => d.Voltages)
+            .SelectMany(v => v.Series)
+            .ToArray();
+    }
     [Fact]
     public void Constructor_Default_CreatesEmptyDefinition()
     {
@@ -208,7 +215,7 @@ public class MotorDefinitionTests
         voltage2.MaxSpeed = 5000;
         voltage2.AddSeries("Peak", 48);
 
-        var allSeries = motor.GetAllSeries().ToList();
+        var allSeries = GetAllSeries(motor).ToList();
 
         Assert.Equal(4, allSeries.Count);
     }
@@ -218,7 +225,7 @@ public class MotorDefinitionTests
     {
         var motor = new MotorDefinition();
 
-        var allSeries = motor.GetAllSeries().ToList();
+        var allSeries = GetAllSeries(motor).ToList();
 
         Assert.Empty(allSeries);
     }

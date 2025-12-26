@@ -27,7 +27,7 @@ A desktop application for creating and editing motor torque curves stored in JSO
 - ✅ Hierarchical data structure: Motor → Drive(s) → Voltage(s) → Curve Series
 - ✅ Data models for motor definitions, drive configurations, voltage configurations, curve series, and data points
 - ✅ Curve generation from motor parameters (max speed, torque, power)
-- ✅ 1% increment data storage (101 points per curve)
+- ✅ Curve data storage supports 0–101 points per curve (default: 101 points at 1% increments)
 - ✅ Basic UI shell with menu bar
 - ✅ Structured logging with Serilog
 
@@ -201,7 +201,11 @@ This structure reflects the real-world relationship where:
 }
 ```
 
-Each curve series contains 101 data points at 1% increments from 0% to 100% of max speed.
+Each curve series can contain 0 to 101 data points.
+
+- 101 points corresponds to the standard 1% increment curve (0% through 100%).
+- Fewer points are allowed for coarse datasets.
+- Percent values above 100% may be present for overspeed ranges (JSON authoring only in the editor for now).
 
 ## Technology Stack
 

@@ -56,6 +56,20 @@ public double ContinuousAmperage { get; set; }
 #### Property Value
 [System\.Double](https://learn.microsoft.com/en-us/dotnet/api/system.double 'System\.Double')
 
+<a name='CurveEditor.Models.VoltageConfiguration.CurveSeries'></a>
+
+## VoltageConfiguration\.CurveSeries Property
+
+Gets a LINQ\-friendly enumeration of Curve Series\.
+This is a convenience alias for [Series](CurveEditor.Models.VoltageConfiguration.md#CurveEditor.Models.VoltageConfiguration.Series 'CurveEditor\.Models\.VoltageConfiguration\.Series')\.
+
+```csharp
+public System.Collections.Generic.IEnumerable<CurveEditor.Models.CurveSeries> CurveSeries { get; }
+```
+
+#### Property Value
+[System\.Collections\.Generic\.IEnumerable&lt;](https://learn.microsoft.com/en-us/dotnet/api/system.collections.generic.ienumerable-1 'System\.Collections\.Generic\.IEnumerable\`1')[CurveSeries](CurveEditor.Models.CurveSeries.md 'CurveEditor\.Models\.CurveSeries')[&gt;](https://learn.microsoft.com/en-us/dotnet/api/system.collections.generic.ienumerable-1 'System\.Collections\.Generic\.IEnumerable\`1')
+
 <a name='CurveEditor.Models.VoltageConfiguration.DisplayName'></a>
 
 ## VoltageConfiguration\.DisplayName Property

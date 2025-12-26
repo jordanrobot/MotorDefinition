@@ -70,7 +70,10 @@ public class FileService : IFileService
             CurrentFilePath = filePath;
             IsDirty = false;
 
-            var totalSeries = motorDefinition.GetAllSeries().Count();
+            var totalSeries = motorDefinition.Drives
+                .SelectMany(d => d.Voltages)
+                .SelectMany(v => v.Series)
+                .Count();
             Log.Debug("Loaded motor: {MotorName} with {DriveCount} drives and {SeriesCount} total series",
                 motorDefinition.MotorName, motorDefinition.Drives.Count, totalSeries);
 

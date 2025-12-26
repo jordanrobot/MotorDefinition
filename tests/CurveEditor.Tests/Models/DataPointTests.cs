@@ -28,15 +28,13 @@ public class DataPointTests
 
     [Theory]
     [InlineData(-1)]
-    [InlineData(101)]
     [InlineData(-100)]
-    [InlineData(200)]
-    public void Percent_OutOfRange_ThrowsArgumentOutOfRangeException(int invalidPercent)
+    public void Percent_Negative_ThrowsArgumentOutOfRangeException(int invalidPercent)
     {
         var point = new DataPoint();
 
         var exception = Assert.Throws<ArgumentOutOfRangeException>(() => point.Percent = invalidPercent);
-        Assert.Contains("Percent must be between 0 and 100", exception.Message);
+        Assert.Contains("Percent cannot be negative", exception.Message);
     }
 
     [Theory]
@@ -45,6 +43,8 @@ public class DataPointTests
     [InlineData(50)]
     [InlineData(99)]
     [InlineData(100)]
+    [InlineData(101)]
+    [InlineData(200)]
     public void Percent_ValidValues_SetsPercent(int validPercent)
     {
         var point = new DataPoint { Percent = validPercent };

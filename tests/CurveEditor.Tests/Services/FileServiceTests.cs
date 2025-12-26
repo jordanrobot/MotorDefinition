@@ -69,6 +69,14 @@ public class FileServiceTests : IDisposable
         return motor;
     }
 
+    private static CurveSeries[] GetAllSeries(MotorDefinition motor)
+    {
+        return motor.Drives
+            .SelectMany(d => d.Voltages)
+            .SelectMany(v => v.Series)
+            .ToArray();
+    }
+
     [Fact]
     public async Task LoadAsync_ValidFile_ReturnsMotorDefinition()
     {
@@ -279,19 +287,19 @@ public class FileServiceTests : IDisposable
         await _service.SaveAsAsync(original, filePath);
         var loaded = await _service.LoadAsync(filePath);
 
-        var originalAllSeries = original.GetAllSeries().ToList();
-        var loadedAllSeries = loaded.GetAllSeries().ToList();
+        var originalAllSeries = GetAllSeries(original);
+        var loadedAllSeries = GetAllSeries(loaded);
 
-        Assert.Equal(originalAllSeries.Count, loadedAllSeries.Count);
-        for (var s = 0; s < originalAllSeries.Count; s++)
+        Assert.Equal(originalAllSeries.Length, loadedAllSeries.Length);
+        for (var s = 0; s < originalAllSeries.Length; s++)
         {
             var origSeries = originalAllSeries[s];
             var loadSeries = loadedAllSeries[s];
 
             Assert.Equal(origSeries.Name, loadSeries.Name);
-            Assert.Equal(101, loadSeries.Data.Count);
+            Assert.Equal(origSeries.Data.Count, loadSeries.Data.Count);
 
-            for (var p = 0; p < 101; p++)
+            for (var p = 0; p < origSeries.Data.Count; p++)
             {
                 Assert.Equal(origSeries.Data[p].Percent, loadSeries.Data[p].Percent);
                 Assert.Equal(origSeries.Data[p].Rpm, loadSeries.Data[p].Rpm);
@@ -351,7 +359,7 @@ public class FileServiceTests : IDisposable
     {
         var motor = _service.CreateNew("New Motor", 5000, 50, 1500);
 
-        var allSeries = motor.GetAllSeries();
+        var allSeries = GetAllSeries(motor);
         Assert.All(allSeries, s => Assert.Equal(101, s.Data.Count));
     }
 

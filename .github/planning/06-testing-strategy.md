@@ -25,12 +25,12 @@ Unit tests verify individual components in isolation.
 
 | Test Area | Test Cases | Priority |
 |-----------|------------|----------|
-| **DataPoint** | Valid construction (percent 0-100, positive RPM/torque) | High |
-| | Invalid percent values (negative, >100) throws | High |
+| **DataPoint** | Valid construction (percent >= 0, positive RPM/torque) | High |
+| | Invalid percent values (negative) throws | High |
 | | DisplayRpm rounds correctly | Medium |
 | | Equality comparison | Low |
 | **CurveSeries** | InitializeData creates 101 points (0%-100%) | High |
-| | Points are at exact 1% increments | High |
+| | Default points are at exact 1% increments | High |
 | | RPM values calculated correctly from percent × maxRpm | High |
 | | Name validation (non-empty) | Medium |
 | **MotorDefinition** | All properties serialize to JSON correctly | High |
@@ -56,7 +56,6 @@ public class DataPointTests
 
     [Theory]
     [InlineData(-1)]
-    [InlineData(101)]
     public void Percent_OutOfRange_ThrowsArgumentException(int invalidPercent)
     {
         Assert.Throws<ArgumentOutOfRangeException>(() => 
@@ -577,7 +576,7 @@ public void SaveCopyAs_DoesNotClearDirty()
 ### Critical Path Tests (Run on Every Commit)
 
 1. JSON serialization/deserialization round-trip
-2. 101 data points at 1% increments
+2. Default curve generation produces 101 data points at 1% increments
 3. Dirty state tracking
 4. Save/Load file operations
 5. Curve generation formulas

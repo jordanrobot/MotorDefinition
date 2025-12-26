@@ -25,7 +25,7 @@ public interface ICurveGeneratorService
     /// <param name="maxRpm">The maximum RPM of the motor.</param>
     /// <param name="maxTorque">The maximum torque of the motor.</param>
     /// <param name="maxPower">The maximum power of the motor (Watts).</param>
-    /// <returns>A list of 101 data points (0% to 100%).</returns>
+    /// <returns>A list of 101 data points (0% to 100% in 1% increments).</returns>
     List<DataPoint> InterpolateCurve(double maxRpm, double maxTorque, double maxPower);
 
     /// <summary>
