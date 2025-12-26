@@ -27,8 +27,11 @@
 - Configure required package metadata.
 - Ensure XML docs output is enabled.
 - Add minimal package README with usage examples.
-- Add minimal automated round-trip test project.
-- Add a minimal sample app that references the packed package.
+
+Stop note (Dec 2025)
+
+- Phase 3.1.7 work is intentionally stopping after PR 2.
+- We are not implementing the sample app or remaining PRs right now.
 
 Out of scope reminders
 
@@ -55,7 +58,7 @@ Out of scope reminders
 
 ---
 
-## [ ] PR 0: Lock down packaging decisions (no behavior changes)
+## [x] PR 0: Lock down packaging decisions (no behavior changes)
 
 ### Tasks
 
@@ -65,12 +68,12 @@ Out of scope reminders
   - [x] `Authors` = `mjordan`
   - [x] `RepositoryUrl` = `https://github.com/jordanrobot/curve`
   - [x] `Description` = "Motor definition JSON load/save library (Motor → Drive(s) → Voltage(s) → Curve series)."
-- [ ] Confirm the README location to pack (`src/MotorDefinition/README.md`).
-- [ ] Confirm we will add a **new library-only test project** instead of extending the existing app-level tests.
-- [ ] Record the exact build/pack verification commands for this phase:
-  - [ ] `dotnet build CurveEditor.slnx -c Release`
-  - [ ] `dotnet test CurveEditor.slnx -c Release`
-  - [ ] `dotnet pack src/MotorDefinition/MotorDefinition.csproj -c Release`
+- [x] Confirm the README location to pack (`src/MotorDefinition/README.md`).
+- [x] Confirm we will add a **new library-only test project** instead of extending the existing app-level tests.
+- [x] Record the exact build/pack verification commands for this phase:
+  - [x] `dotnet build CurveEditor.slnx -c Release`
+  - [x] `dotnet test CurveEditor.slnx -c Release`
+  - [x] `dotnet pack src/MotorDefinition/MotorDefinition.csproj -c Release`
 
 ### Done when
 
@@ -78,20 +81,20 @@ Out of scope reminders
 
 ---
 
-## [ ] PR 1: Add required NuGet package metadata + pack correctness
+## [x] PR 1: Add required NuGet package metadata + pack correctness
 
 ### Tasks
 
-- [ ] Update `src/MotorDefinition/MotorDefinition.csproj`:
-  - [ ] Set required NuGet properties:
-    - [ ] `PackageId`
-    - [ ] `Version`
-    - [ ] `Authors`
-    - [ ] `Description`
-    - [ ] `RepositoryUrl`
-  - [ ] Ensure XML docs output remains enabled (should already be `GenerateDocumentationFile=true`).
-  - [ ] Set `PackageReadmeFile=README.md`.
-  - [ ] Ensure README is packed exactly once (avoid duplicate `<None Include="README.md" />` entries).
+- [x] Update `src/MotorDefinition/MotorDefinition.csproj`:
+  - [x] Set required NuGet properties:
+    - [x] `PackageId`
+    - [x] `Version`
+    - [x] `Authors`
+    - [x] `Description`
+    - [x] `RepositoryUrl`
+  - [x] Ensure XML docs output remains enabled (should already be `GenerateDocumentationFile=true`).
+  - [x] Set `PackageReadmeFile=README.md`.
+  - [x] Ensure README is packed exactly once (avoid duplicate `<None Include="README.md" />` entries).
 
 ### Done when
 
@@ -99,17 +102,17 @@ Out of scope reminders
 
 ---
 
-## [ ] PR 2: Minimal package README with consumer examples
+## [x] PR 2: Minimal package README with consumer examples
 
 ### Tasks
 
-- [ ] Expand `src/MotorDefinition/README.md` to include:
-  - [ ] One-paragraph overview (“what is this library?”).
-  - [ ] Load example (path-based).
-  - [ ] Save example.
-  - [ ] Lightweight validation/probing example using `MotorFile.IsLikelyMotorDefinition`.
-  - [ ] Note about schema version being `MotorDefinition.CurrentSchemaVersion`.
-- [ ] Verify README renders as the package README (via `PackageReadmeFile`).
+- [x] Expand `src/MotorDefinition/README.md` to include:
+  - [x] One-paragraph overview (“what is this library?”).
+  - [x] Load example (path-based).
+  - [x] Save example.
+  - [x] Lightweight validation/probing example using `MotorFile.IsLikelyMotorDefinition`.
+  - [x] Note about schema version being `MotorDefinition.CurrentSchemaVersion`.
+- [x] Verify README renders as the package README (via `PackageReadmeFile`).
 
 ### Done when
 
@@ -117,9 +120,9 @@ Out of scope reminders
 
 ---
 
-## [ ] PR 3: Add library-only round-trip test project
+## [ ] PR 3: Skipped (not planned right now)  library-only round-trip test project
 
-### Tasks
+### Tasks (skipped)
 
 - [ ] Create new test project `tests/MotorDefinition.Tests`:
   - [ ] xUnit test project targeting `net8.0`.
@@ -136,9 +139,9 @@ Out of scope reminders
 
 ---
 
-## [ ] PR 4: Add minimal sample app that references the packed package
+## [ ] PR 4: Skipped (not planned right now)  sample app referencing the packed package
 
-### Tasks
+### Tasks (skipped)
 
 - [ ] Create `samples/MotorDefinition.Sample` console app.
 - [ ] Document and validate local package restore:
@@ -157,9 +160,9 @@ Out of scope reminders
 
 ---
 
-## [ ] PR 5: Final validation pass (Phase 3.1.7)
+## [ ] PR 5: Skipped (not planned right now)  final validation pass
 
-### Tasks
+### Tasks (skipped)
 
 - [ ] Run the full Phase 3.1.7 gates:
   - [ ] `dotnet build CurveEditor.slnx -c Release`

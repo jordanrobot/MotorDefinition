@@ -2,7 +2,7 @@
 
 ### Status
 
-Draft
+Partially completed (stopped after PR 2)
 
 **Related ADRs**
 
@@ -12,7 +12,15 @@ Draft
 
 - Prepare the motor definition library project for NuGet packaging.
 - Produce a local `.nupkg` via `dotnet pack`.
-- Validate the package can be referenced by a minimal sample app and can load a motor definition JSON file.
+- Document minimal consumer usage via the package README.
+
+### Stop Note (Dec 2025)
+
+Work on Phase 3.1.7 is intentionally stopping after PR 2.
+
+- Completed: package metadata + pack correctness, and package README examples.
+- Skipped: the remaining Phase 3.1.7 items (new library-only test project, sample app validation, and final phase gates).
+- Reason: sample app work is not needed right now.
 
 ### Scope
 
@@ -25,6 +33,9 @@ In scope (Phase 3.1.7)
   - Load
   - Save
   - “shape probe” (`IsLikelyMotorDefinition`) as the current lightweight validation surface.
+
+Intentionally skipped (recorded, not planned right now)
+
 - Add a minimal automated test project that validates basic round-trip save/load for the current format.
 - Add a minimal sample console app that references the **packed** NuGet package from a local source and loads a file.
 
@@ -82,15 +93,15 @@ README packaging
 
 Tests
 
-- Add a new, library-only test project (recommended name: `tests/MotorDefinition.Tests`).
-  - Rationale: keeps packaging/round-trip tests independent of UI/app references.
-  - Tests should use only the public surface (`MotorFile` + model types), not internals.
+
+Intentionally skipped for now
+
+- New, library-only test project (e.g., `tests/MotorDefinition.Tests`).
+
 
 Sample app
 
-- Add `samples/MotorDefinition.Sample` (console app).
-- The sample should restore from the locally packed `.nupkg` (local folder source).
-- The sample should load `schema/example-motor.json` and print at least the motor name.
+- Intentionally skipped for now (not needed).
 
 ### Implementation Outline
 
@@ -102,21 +113,7 @@ Sample app
   - Add a short “Quick usage” section with code examples.
   - Keep examples aligned to the current public API.
 
-3. Add a library-only round-trip test project
-  - Round-trip a representative in-repo motor JSON file:
-    - Load via `MotorFile.Load(...)`
-    - Save to a temp file via `MotorFile.Save(...)`
-    - Load again and assert key fields.
-
-4. Add a minimal sample app referencing the packed package
-  - Demonstrate `dotnet pack` -> local source -> `dotnet add package` -> run.
-  - This validates that the `.nupkg` is usable as a consumer artifact.
-
-5. Validation gates
-  - `dotnet build CurveEditor.slnx -c Release`
-  - `dotnet test CurveEditor.slnx -c Release`
-  - `dotnet pack src/MotorDefinition/MotorDefinition.csproj -c Release`
-  - Run the sample app against the local package.
+Remaining steps are intentionally skipped for now (tests + sample app).
 
 ### Risks and Mitigations
 

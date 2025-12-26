@@ -362,58 +362,14 @@ Note: In this example, you'll notice that `motor profile 1.json` and `motor prof
 
 ### Requirements
 
-- [ ] Configure package metadata in the library project (`PackageId`, `Version`, `Authors`, `Description`, `RepositoryUrl`).
-- [ ] Enable XML documentation output.
-- [ ] Add a minimal README with consumer usage examples for loading + validation.
-- [ ] Add a minimal test project verifying basic round-trip save/load for the current format.
+- [X] Configure package metadata in the library project (`PackageId`, `Version`, `Authors`, `Description`, `RepositoryUrl`).
+- [X] Enable XML documentation output.
+- [X] Add a minimal README with consumer usage examples for loading + validation.
 
 ### Acceptance Criteria (Phase 3.1.7)
 
 - AC 3.1.7a: `dotnet pack` produces a `.nupkg` locally.
-- AC 3.1.7b: The package can be referenced by a sample app and successfully loads a motor definition file.
 
-
-## Phase 3.1.8 Functional Requirements: .NET Client Library and NuGet Package (Consumer Validation)
-
-### Scope (Phase 3.1.8)
-
-- Provide a high-quality consumer experience for loading and validating motor definition JSON files.
-- Consumers should not need to write custom schema validators or semantic validators.
-
-### Non-goals (Phase 3.1.8)
-
-- Do not couple the library to Avalonia UI types, CurveEditor ViewModels, or app-specific services.
-- Do not require consumers to reference CurveEditor itself.
-
-### Requirements
-
-- [ ] The client library should provide:
-  - [ ] Public POCO models aligned with the motor definition schema.
-  - [ ] System.Text.Json serialization/deserialization helpers with consistent defaults.
-  - [ ] Parsing for the current motor definition file format (schema `1.0.0` with series table/map curve data).
-  - [ ] Built-in validation that checks schema compliance and semantic rules (axes length/alignment, monotonicity, required fields).
-  - [ ] A non-throwing load API that returns a result object (success + errors) suitable for UI and tooling scenarios.
-  - [ ] A throwing load API that throws a single exception containing a structured list of validation errors.
-  - [ ] A structured validation error model that includes (at minimum):
-    - [ ] A JSON path/pointer to the failing node (for easy user messaging and debugging).
-    - [ ] A stable error code/category (e.g., `InvalidJson`, `SchemaViolation`, `SemanticViolation`).
-    - [ ] A human-readable error message.
-  - [ ] The schema should be embedded in the package (as an internal resource) so consumers do not need to ship a separate schema file.
-- [ ] The NuGet package should:
-  - [ ] Use semantic versioning aligned with the schema versioning strategy.
-  - [ ] Target consumer-friendly frameworks (recommendation to validate: `netstandard2.0` + `net8.0`).
-  - [ ] Include XML docs and a minimal README with usage examples.
-  - [ ] Include unit tests in the repo verifying round-trip behavior and validation behavior.
-
-### Acceptance Criteria (Phase 3.1.8)
-
-- AC 3.1.8a: A small console app can reference the package and load/save a motor definition file without referencing CurveEditor UI assemblies.
-- AC 3.1.8b: When given invalid JSON, the non-throwing load API returns a failure result with an `InvalidJson` error that includes location information.
-- AC 3.1.8c: When given schema-invalid JSON, the non-throwing load API returns a failure result with one or more `SchemaViolation` errors that include JSON paths.
-- AC 3.1.8d: When given schema-valid but semantically invalid JSON (e.g., wrong axis length), the non-throwing load API returns a failure result with one or more `SemanticViolation` errors.
-- AC 3.1.8e: The throwing load API throws a single exception type containing the full error list.
-- AC 3.1.8f: The package successfully round-trips the current format files without data loss.
-- AC 3.1.8g: Package API surface is stable, documented, and does not expose internal CurveEditor-specific concepts.
 
 ## Phase 3.2 Functional Requirements: Curve Data Panel
 
