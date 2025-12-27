@@ -518,6 +518,7 @@ public partial class MainWindowViewModel : ViewModelBase
         DirectoryBrowser.PropertyChanged += OnDirectoryBrowserPropertyChanged;
 
         CurrentFilePath = _fileService.CurrentFilePath;
+        DirectoryBrowser.UpdateActiveFileState(CurrentFilePath, IsDirty);
     }
 
     private void OnDirectoryBrowserPropertyChanged(object? sender, System.ComponentModel.PropertyChangedEventArgs e)
@@ -568,6 +569,7 @@ public partial class MainWindowViewModel : ViewModelBase
             }
 
             await DirectoryBrowser.SyncSelectionToFilePathAsync(filePath).ConfigureAwait(true);
+            DirectoryBrowser.UpdateActiveFileState(filePath, IsDirty);
         }
         catch
         {
@@ -744,7 +746,13 @@ public partial class MainWindowViewModel : ViewModelBase
     partial void OnCurrentFilePathChanged(string? value)
     {
         _ = DirectoryBrowser.SyncSelectionToFilePathAsync(value);
+        DirectoryBrowser.UpdateActiveFileState(value, IsDirty);
         OnPropertyChanged(nameof(WindowTitle));
+    }
+
+    partial void OnIsDirtyChanged(bool value)
+    {
+        DirectoryBrowser.UpdateActiveFileState(CurrentFilePath, value);
     }
 
     /// <summary>

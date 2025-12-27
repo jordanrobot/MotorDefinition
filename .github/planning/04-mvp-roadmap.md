@@ -294,7 +294,7 @@ See ADR-0006 (`../../docs/adr/adr-0006-motor-file-schema-and-versioning.md`) for
 - [X] Mark file dirty when any edit is made
 - [X] Clear dirty state when file is saved
 - [X] Show asterisk (*) in window title when dirty
-- [ ] Visual indicator in directory list for dirty files
+- [X] Visual indicator in directory list for dirty files
 
 ### 3.3 Save Prompts
 - [ ] Prompt to save when closing app with dirty file

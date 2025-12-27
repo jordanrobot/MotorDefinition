@@ -64,9 +64,9 @@
 - [ ] AC 3W.4 — App/window close prompt
   - [ ] When dirty, closing the app/window prompts; Cancel aborts app/window close.
   - [ ] If Save is chosen and save is cancelled/fails (still dirty), closing is aborted.
-- [ ] AC 3W.5 — Directory browser dirty indicator
-  - [ ] The directory list appends `*` to the active file’s displayed name when it is dirty.
-  - [ ] The `*` disappears after Save.
+- [x] AC 3W.5 — Directory browser dirty indicator
+  - [x] The directory list appends `*` to the active file’s displayed name when it is dirty.
+  - [x] The `*` disappears after Save.
 - [ ] AC 3W.6 — Directory browser indentation
   - [ ] Tree nesting indentation is reduced (target visual: ~2–3 monospace characters per level).
   - [ ] Chevrons remain aligned and readable.
@@ -258,7 +258,7 @@ Required hygiene:
 
 ---
 
-## [ ] PR 4: Dirty Indicator (`*`) in Directory Browser List
+## [x] PR 4: Dirty Indicator (`*`) in Directory Browser List
 
 ### Goal
 
@@ -266,20 +266,20 @@ Show `*` appended to the currently-open file name in the directory browser when 
 
 ### Tasks
 
-- [ ] Decide the minimal data flow from the main editor state to the directory browser:
-  - [ ] Update directory browser state from `MainWindowViewModel` when `CurrentFilePath` or `IsDirty` changes.
-- [ ] Implement a non-XAML-converter-based computation for display text:
-  - [ ] Add a computed property (e.g., `DisplayNameWithDirtyIndicator`) on `ExplorerNodeViewModel`, or
-  - [ ] Add an `IsActiveFile`/`IsActiveFileDirty` flag on the node and compute display text from it.
-- [ ] Update [src/MotorEditor.Avalonia/Views/DirectoryBrowserPanel.axaml](src/MotorEditor.Avalonia/Views/DirectoryBrowserPanel.axaml) node template to bind to the dirty-aware display text.
-- [ ] Ensure updates propagate when:
-  - [ ] the active file changes
-  - [ ] dirty state toggles (save/undo back to clean)
-  - [ ] directory tree refresh occurs
+- [x] Decide the minimal data flow from the main editor state to the directory browser:
+  - [x] Update directory browser state from `MainWindowViewModel` when `CurrentFilePath` or `IsDirty` changes.
+- [x] Implement a non-XAML-converter-based computation for display text:
+  - [x] Add a computed property (e.g., `DisplayNameWithDirtyIndicator`) on `ExplorerNodeViewModel`, or
+  - [x] Add an `IsActiveFile`/`IsActiveFileDirty` flag on the node and compute display text from it.
+- [x] Update [src/MotorEditor.Avalonia/Views/DirectoryBrowserPanel.axaml](src/MotorEditor.Avalonia/Views/DirectoryBrowserPanel.axaml) node template to bind to the dirty-aware display text.
+- [x] Ensure updates propagate when:
+  - [x] the active file changes
+  - [x] dirty state toggles (save/undo back to clean)
+  - [x] directory tree refresh occurs
 
 Required hygiene:
 
-- [ ] Do not add per-node file parsing or disk I/O to compute the indicator.
+- [x] Do not add per-node file parsing or disk I/O to compute the indicator.
 
 ### Done when
 

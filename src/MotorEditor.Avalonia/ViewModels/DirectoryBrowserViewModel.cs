@@ -46,6 +46,9 @@ public partial class DirectoryBrowserViewModel : ObservableObject
     [ObservableProperty]
     private double _fontSize = DefaultFontSize;
 
+    private string? _activeFileRelativePath;
+    private bool _isActiveFileDirty;
+
     private readonly IDirectoryBrowserService _directoryBrowserService;
     private readonly IFolderPicker _folderPicker;
     private readonly IUserSettingsStore _settings;
@@ -96,6 +99,75 @@ public partial class DirectoryBrowserViewModel : ObservableObject
     }
 
     public ObservableCollection<ExplorerNodeViewModel> RootItems { get; } = [];
+
+    public void UpdateActiveFileState(string? activeFilePath, bool isDirty)
+    {
+        _isActiveFileDirty = isDirty;
+        _activeFileRelativePath = TryGetRelativePathUnderRoot(activeFilePath);
+        ApplyActiveFileStateToLoadedNodes();
+    }
+
+    private string? TryGetRelativePathUnderRoot(string? activeFilePath)
+    {
+        var rootDirectoryPath = RootDirectoryPath;
+        if (string.IsNullOrWhiteSpace(activeFilePath) || string.IsNullOrWhiteSpace(rootDirectoryPath))
+        {
+            return null;
+        }
+
+        if (!IsUnderRoot(activeFilePath, rootDirectoryPath))
+        {
+            return null;
+        }
+
+        var relative = NormalizeRelativePath(Path.GetRelativePath(rootDirectoryPath, activeFilePath));
+        if (string.IsNullOrWhiteSpace(relative) || relative == ".")
+        {
+            return null;
+        }
+
+        return relative;
+    }
+
+    private void ApplyActiveFileStateToLoadedNodes()
+    {
+        foreach (var root in RootItems)
+        {
+            ApplyActiveFileStateToNodeRecursive(root);
+        }
+    }
+
+    private void ApplyActiveFileStateToNodeRecursive(ExplorerNodeViewModel node)
+    {
+        ApplyActiveFileStateToSingleNode(node);
+
+        if (node.Children.Count == 0)
+        {
+            return;
+        }
+
+        foreach (var child in node.Children)
+        {
+            ApplyActiveFileStateToNodeRecursive(child);
+        }
+    }
+
+    private void ApplyActiveFileStateToSingleNode(ExplorerNodeViewModel node)
+    {
+        if (node.IsDirectory || node.IsPlaceholder)
+        {
+            node.IsActiveFile = false;
+            node.IsActiveFileDirty = false;
+            return;
+        }
+
+        var activeRel = _activeFileRelativePath;
+        var isActive = !string.IsNullOrWhiteSpace(activeRel)
+            && string.Equals(node.RelativePath, activeRel, StringComparison.OrdinalIgnoreCase);
+
+        node.IsActiveFile = isActive;
+        node.IsActiveFileDirty = isActive && _isActiveFileDirty;
+    }
 
     partial void OnRootDirectoryPathChanged(string? value)
     {
@@ -349,6 +421,8 @@ public partial class DirectoryBrowserViewModel : ObservableObject
             HasLoadedChildren = false,
             IsLoadingChildren = false
         };
+
+        ApplyActiveFileStateToSingleNode(node);
 
         if (node.IsDirectory)
         {

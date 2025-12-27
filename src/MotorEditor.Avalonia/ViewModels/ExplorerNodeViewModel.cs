@@ -16,6 +16,7 @@ public enum MotorFileValidationState
 public partial class ExplorerNodeViewModel : ObservableObject
 {
     [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(DisplayNameWithDirtyIndicator))]
     private string _displayName = string.Empty;
 
     [ObservableProperty]
@@ -46,11 +47,34 @@ public partial class ExplorerNodeViewModel : ObservableObject
     private bool _isPlaceholder;
 
     [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(DisplayNameWithDirtyIndicator))]
+    private bool _isActiveFile;
+
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(DisplayNameWithDirtyIndicator))]
+    private bool _isActiveFileDirty;
+
+    [ObservableProperty]
     private MotorFileValidationState _validationState = MotorFileValidationState.Unknown;
 
     public bool ShowChevron => IsDirectory && !IsRoot;
 
     public bool ShowValidationMarker => !IsDirectory && !IsPlaceholder;
+
+    public string DisplayNameWithDirtyIndicator
+    {
+        get
+        {
+            if (IsDirectory || IsPlaceholder)
+            {
+                return DisplayName;
+            }
+
+            return IsActiveFile && IsActiveFileDirty
+                ? DisplayName + "*"
+                : DisplayName;
+        }
+    }
 
     public string ValidationMarker => ValidationState switch
     {

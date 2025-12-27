@@ -9,7 +9,7 @@ Draft (planning)
 Finish the remaining Phase 3 UX items:
 
 - [ ] Reduce indentation in the Directory Browser tree.
-- [ ] Show a dirty indicator (`*`) in the directory list for the active dirty file.
+- [x] Show a dirty indicator (`*`) in the directory list for the active dirty file.
 - [ ] Ensure consistent Save/Don’t Save/Cancel prompts when the user is about to lose unsaved changes:
   - [ ] closing the app/window
   - [x] opening another file (both via directory browser and via file picker)
@@ -19,7 +19,7 @@ Finish the remaining Phase 3 UX items:
 - [x] PR 1 — Standardize the Unsaved Changes Dialog
 - [x] PR 2 — Add Dirty Prompt to File Picker Open + New File
 - [x] PR 3 — Prompt on App/Window Close
-- [ ] PR 4 — Dirty Indicator in Directory Browser
+- [x] PR 4 — Dirty Indicator in Directory Browser
 
 ### Current Baseline (What’s Already There)
 
