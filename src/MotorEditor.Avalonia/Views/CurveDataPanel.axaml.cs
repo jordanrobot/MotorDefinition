@@ -87,27 +87,70 @@ public partial class CurveDataPanel : UserControl
         DataTable.AddHandler(TextInputEvent, DataTable_TextInput, Avalonia.Interactivity.RoutingStrategies.Tunnel);
         
         // Sync horizontal scrolling between header and data grid
-        DataTable.AddHandler(ScrollViewer.ScrollChangedEvent, OnDataGridScrollChanged, Avalonia.Interactivity.RoutingStrategies.Bubble);
+        // We need to find the ScrollViewer inside the DataGrid and subscribe to its scroll changes
+        AttachScrollSyncHandler();
         
         _eventHandlersRegistered = true;
+    }
+
+    private ScrollViewer? _dataGridScrollViewer;
+
+    private void AttachScrollSyncHandler()
+    {
+        if (DataTable is null || HeaderScrollViewer is null)
+        {
+            return;
+        }
+
+        // Find the ScrollViewer inside the DataGrid's visual tree
+        _dataGridScrollViewer = FindScrollViewerInVisualTree(DataTable);
+        
+        if (_dataGridScrollViewer is not null)
+        {
+            _dataGridScrollViewer.ScrollChanged += OnDataGridScrollChanged;
+        }
+    }
+
+    private static ScrollViewer? FindScrollViewerInVisualTree(Visual visual)
+    {
+        // Breadth-first search for ScrollViewer in the visual tree
+        var queue = new Queue<Visual>();
+        queue.Enqueue(visual);
+
+        while (queue.Count > 0)
+        {
+            var current = queue.Dequeue();
+            
+            if (current is ScrollViewer scrollViewer)
+            {
+                return scrollViewer;
+            }
+
+            // Use GetVisualChildren to access child elements
+            foreach (var child in current.GetVisualChildren())
+            {
+                if (child is Visual visualChild)
+                {
+                    queue.Enqueue(visualChild);
+                }
+            }
+        }
+
+        return null;
     }
 
     private void OnDataGridScrollChanged(object? sender, ScrollChangedEventArgs e)
     {
         // Sync horizontal scroll offset from DataGrid to HeaderScrollViewer
-        if (HeaderScrollViewer is null)
+        if (HeaderScrollViewer is null || _dataGridScrollViewer is null)
         {
             return;
         }
 
-        // The ScrollViewer that raised the event is the one inside the DataGrid
-        if (e.Source is ScrollViewer scrollViewer)
+        // Only update if horizontal offset actually changed to prevent circular updates
+        if (Math.Abs(_dataGridScrollViewer.Offset.X - HeaderScrollViewer.Offset.X) > 0.01)
         {
-            // Only update if horizontal offset actually changed
-            if (Math.Abs(scrollViewer.Offset.X - HeaderScrollViewer.Offset.X) > 0.01)
-            {
-                HeaderScrollViewer.Offset = new Vector(scrollViewer.Offset.X, HeaderScrollViewer.Offset.Y);
-            }
+            HeaderScrollViewer.Offset = new Vector(_dataGridScrollViewer.Offset.X, HeaderScrollViewer.Offset.Y);
         }
     }
 
@@ -131,7 +174,14 @@ public partial class CurveDataPanel : UserControl
             DataTable.RemoveHandler(PointerReleasedEvent, DataTable_PointerReleased);
             DataTable.RemoveHandler(KeyDownEvent, DataTable_KeyDown);
             DataTable.RemoveHandler(TextInputEvent, DataTable_TextInput);
-            DataTable.RemoveHandler(ScrollViewer.ScrollChangedEvent, OnDataGridScrollChanged);
+            
+            // Unsubscribe from scroll viewer
+            if (_dataGridScrollViewer is not null)
+            {
+                _dataGridScrollViewer.ScrollChanged -= OnDataGridScrollChanged;
+                _dataGridScrollViewer = null;
+            }
+            
             _eventHandlersRegistered = false;
         }
     }
