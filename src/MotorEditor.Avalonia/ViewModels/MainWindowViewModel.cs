@@ -2223,7 +2223,7 @@ public partial class MainWindowViewModel : ViewModelBase
     }
 
     /// <summary>
-    /// Core workflow for adding a new drive with an initial voltage configuration.
+    /// Core workflow for adding a new drive without voltage configuration.
     /// Kept internal to simplify future extraction into a dedicated workflow service.
     /// </summary>
     private async Task AddDriveInternalAsync()
@@ -2235,12 +2235,7 @@ public partial class MainWindowViewModel : ViewModelBase
 
         try
         {
-            var dialog = new Views.AddDriveVoltageDialog();
-            dialog.Initialize(
-                CurrentMotor.MaxSpeed,
-                CurrentMotor.RatedPeakTorque,
-                CurrentMotor.RatedContinuousTorque,
-                CurrentMotor.Power);
+            var dialog = new Views.AddDriveDialog();
 
             if (Application.Current?.ApplicationLifetime is not IClassicDesktopStyleApplicationLifetime desktop ||
                 desktop.MainWindow is null)
@@ -2257,7 +2252,7 @@ public partial class MainWindowViewModel : ViewModelBase
 
             var result = dialog.Result;
 
-            var (drive, _) = _motorConfigurationWorkflow.CreateDriveWithVoltage(CurrentMotor, result);
+            var drive = _motorConfigurationWorkflow.CreateDrive(CurrentMotor, result);
 
             // Add the new drive directly to the collection (don't clear/refresh)
             AvailableDrives.Add(drive);
@@ -2265,7 +2260,7 @@ public partial class MainWindowViewModel : ViewModelBase
             // Select the new drive - this will trigger OnSelectedDriveChanged which updates voltages
             SelectedDrive = drive;
 
-            // Explicitly refresh chart to ensure axes are updated with new max speed
+            // Explicitly refresh chart to ensure axes are updated
             ChartViewModel.RefreshChart();
 
             MarkDirty();
@@ -2283,19 +2278,19 @@ public partial class MainWindowViewModel : ViewModelBase
     /// </summary>
     private async Task AddVoltageInternalAsync()
     {
-        if (SelectedDrive is null)
+        if (CurrentMotor is null || CurrentMotor.Drives.Count == 0)
         {
+            StatusMessage = "Cannot add voltage: no drives available. Add a drive first.";
             return;
         }
 
         try
         {
-            var dialog = new Views.AddDriveVoltageDialog
-            {
-                Title = "Add New Value Configuration"
-            };
+            var dialog = new Views.AddVoltageDialog();
 
             dialog.Initialize(
+                CurrentMotor.Drives,
+                SelectedDrive,
                 CurrentMotor?.MaxSpeed ?? 5000,
                 CurrentMotor?.RatedPeakTorque ?? 50,
                 CurrentMotor?.RatedContinuousTorque ?? 40,
@@ -2316,25 +2311,38 @@ public partial class MainWindowViewModel : ViewModelBase
 
             var result = dialog.Result;
 
+            // The target drive is selected in the dialog
+            var targetDrive = result.TargetDrive;
+
             // Delegate duplicate check and creation to the workflow
-            var voltageResult = _motorConfigurationWorkflow.CreateVoltageWithSeries(SelectedDrive, result);
+            var voltageResult = _motorConfigurationWorkflow.CreateVoltageWithOptionalSeries(targetDrive, result);
             if (voltageResult.IsDuplicate)
             {
-                StatusMessage = $"Value {result.Voltage}V already exists for this drive.";
+                StatusMessage = $"Voltage {result.Voltage}V already exists for drive '{targetDrive.Name}'.";
                 return;
             }
 
             var voltage = voltageResult.Voltage;
 
-            // Refresh the available voltages and select the new one
-            RefreshAvailableVoltages();
+            // If the target drive is different from the currently selected drive, switch to it
+            if (SelectedDrive != targetDrive)
+            {
+                SelectedDrive = targetDrive;
+            }
+            else
+            {
+                // If the same drive, refresh the available voltages
+                RefreshAvailableVoltages();
+            }
+
+            // Select the new voltage
             SelectedVoltage = voltage;
 
             // Force chart refresh to update axes based on new max speed
             ChartViewModel.RefreshChart();
 
             MarkDirty();
-            StatusMessage = $"Added voltage: {result.Voltage}V";
+            StatusMessage = $"Added voltage: {result.Voltage}V to drive '{targetDrive.Name}'";
         }
         catch (Exception ex)
         {

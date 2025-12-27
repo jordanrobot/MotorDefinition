@@ -1,0 +1,136 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:model="using:JordanRobot.MotorDefinition.Model"
+        mc:Ignorable="d" d:DesignWidth="400" d:DesignHeight="550"
+        x:Class="CurveEditor.Views.AddVoltageDialog"
+        Title="Add New Voltage Configuration"
+        Width="400" Height="550"
+        WindowStartupLocation="CenterOwner"
+        CanResize="False"
+        ShowInTaskbar="False">
+    
+    <Window.Styles>
+        <Style Selector="TextBlock.Label">
+            <Setter Property="FontSize" Value="12"/>
+            <Setter Property="VerticalAlignment" Value="Center"/>
+            <Setter Property="Margin" Value="0,0,8,0"/>
+            <Setter Property="MinWidth" Value="120"/>
+        </Style>
+        <Style Selector="TextBox.Input">
+            <Setter Property="FontSize" Value="12"/>
+            <Setter Property="Padding" Value="6,4"/>
+        </Style>
+        <Style Selector="CheckBox.Option">
+            <Setter Property="FontSize" Value="12"/>
+            <Setter Property="Margin" Value="0,4"/>
+        </Style>
+    </Window.Styles>
+    
+    <Grid RowDefinitions="*,Auto" Margin="16">
+        <!-- Form Fields -->
+        <ScrollViewer Grid.Row="0">
+            <StackPanel Spacing="8">
+                <TextBlock Text="Select the drive and enter voltage configuration:" 
+                           TextWrapping="Wrap" Margin="0,0,0,12"/>
+                
+                <!-- Drive Selection -->
+                <Grid ColumnDefinitions="Auto,*">
+                    <TextBlock Grid.Column="0" Text="Target Drive" Classes="Label"/>
+                    <ComboBox Grid.Column="1" x:Name="DriveComboBox" 
+                              FontSize="12" Padding="6,4">
+                        <ComboBox.ItemTemplate>
+                            <DataTemplate DataType="model:Drive">
+                                <TextBlock Text="{Binding Name}"/>
+                            </DataTemplate>
+                        </ComboBox.ItemTemplate>
+                    </ComboBox>
+                </Grid>
+                
+                <Separator Margin="0,8"/>
+                
+                <!-- Voltage Properties -->
+                <Grid ColumnDefinitions="Auto,*,Auto">
+                    <TextBlock Grid.Column="0" Text="Voltage" Classes="Label"/>
+                    <TextBox Grid.Column="1" x:Name="VoltageInput" Classes="Input" Watermark="208" Text="208"/>
+                    <TextBlock Grid.Column="2" Text="V" VerticalAlignment="Center" Margin="4,0,0,0"/>
+                </Grid>
+                
+                <Grid ColumnDefinitions="Auto,*,Auto">
+                    <TextBlock Grid.Column="0" Text="Power" Classes="Label"/>
+                    <TextBox Grid.Column="1" x:Name="PowerInput" Classes="Input" Watermark="1500" Text="1500"/>
+                    <TextBlock Grid.Column="2" Text="W" VerticalAlignment="Center" Margin="4,0,0,0"/>
+                </Grid>
+                
+                <Grid ColumnDefinitions="Auto,*,Auto">
+                    <TextBlock Grid.Column="0" Text="Max Speed" Classes="Label"/>
+                    <TextBox Grid.Column="1" x:Name="MaxSpeedInput" Classes="Input" Watermark="5000" Text="5000"/>
+                    <TextBlock Grid.Column="2" Text="RPM" VerticalAlignment="Center" Margin="4,0,0,0"/>
+                </Grid>
+                
+                <Separator Margin="0,8"/>
+                
+                <!-- Curve Options -->
+                <TextBlock Text="Curve Options:" FontWeight="SemiBold" FontSize="12" Margin="0,4,0,8"/>
+                
+                <!-- Continuous Torque Option -->
+                <CheckBox x:Name="AddContinuousTorqueCheckBox" 
+                          Content="Add Continuous Torque curve"
+                          IsChecked="True"
+                          Classes="Option"
+                          Click="OnContinuousTorqueChecked"/>
+                
+                <StackPanel x:Name="ContinuousTorquePanel" Spacing="8" Margin="20,0,0,0">
+                    <Grid ColumnDefinitions="Auto,*,Auto">
+                        <TextBlock Grid.Column="0" Text="Cont. Torque" Classes="Label"/>
+                        <TextBox Grid.Column="1" x:Name="ContinuousTorqueInput" Classes="Input" Watermark="40" Text="40"/>
+                        <TextBlock Grid.Column="2" Text="Nm" VerticalAlignment="Center" Margin="4,0,0,0"/>
+                    </Grid>
+                    
+                    <Grid ColumnDefinitions="Auto,*,Auto">
+                        <TextBlock Grid.Column="0" Text="Cont. Amperage" Classes="Label"/>
+                        <TextBox Grid.Column="1" x:Name="ContinuousCurrentInput" Classes="Input" Watermark="10" Text="10"/>
+                        <TextBlock Grid.Column="2" Text="A" VerticalAlignment="Center" Margin="4,0,0,0"/>
+                    </Grid>
+                </StackPanel>
+                
+                <!-- Peak Torque Option -->
+                <CheckBox x:Name="AddPeakTorqueCheckBox" 
+                          Content="Add Peak Torque curve"
+                          IsChecked="True"
+                          Classes="Option"
+                          Click="OnPeakTorqueChecked"
+                          Margin="0,8,0,0"/>
+                
+                <StackPanel x:Name="PeakTorquePanel" Spacing="8" Margin="20,0,0,0">
+                    <Grid ColumnDefinitions="Auto,*,Auto">
+                        <TextBlock Grid.Column="0" Text="Peak Torque" Classes="Label"/>
+                        <TextBox Grid.Column="1" x:Name="PeakTorqueInput" Classes="Input" Watermark="50" Text="50"/>
+                        <TextBlock Grid.Column="2" Text="Nm" VerticalAlignment="Center" Margin="4,0,0,0"/>
+                    </Grid>
+                    
+                    <Grid ColumnDefinitions="Auto,*,Auto">
+                        <TextBlock Grid.Column="0" Text="Peak Amperage" Classes="Label"/>
+                        <TextBox Grid.Column="1" x:Name="PeakCurrentInput" Classes="Input" Watermark="20" Text="20"/>
+                        <TextBlock Grid.Column="2" Text="A" VerticalAlignment="Center" Margin="4,0,0,0"/>
+                    </Grid>
+                </StackPanel>
+                
+                <!-- Calculate Curve Option -->
+                <CheckBox x:Name="CalculateCurveCheckBox" 
+                          Content="Calculate curve from Power and Speed"
+                          IsChecked="False"
+                          Classes="Option"
+                          Margin="0,8,0,0"
+                          ToolTip.Tip="Future implementation: automatically calculate torque curves based on power and speed"/>
+            </StackPanel>
+        </ScrollViewer>
+        
+        <!-- Buttons -->
+        <StackPanel Grid.Row="1" Orientation="Horizontal" HorizontalAlignment="Right" Spacing="8" Margin="0,16,0,0">
+            <Button Content="Cancel" Width="80" Click="OnCancelClick"/>
+            <Button Content="Add" Width="80" Classes="accent" Click="OnAddClick"/>
+        </StackPanel>
+    </Grid>
+</Window>

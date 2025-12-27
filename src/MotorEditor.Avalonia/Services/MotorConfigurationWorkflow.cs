@@ -19,6 +19,18 @@ public class MotorConfigurationWorkflow : IMotorConfigurationWorkflow
         _driveVoltageSeriesService = driveVoltageSeriesService ?? throw new ArgumentNullException(nameof(driveVoltageSeriesService));
     }
 
+    public Drive CreateDrive(ServoMotor motor, AddDriveDialogResult result)
+    {
+        ArgumentNullException.ThrowIfNull(motor);
+        ArgumentNullException.ThrowIfNull(result);
+
+        return _driveVoltageSeriesService.CreateDrive(
+            motor,
+            result.Name,
+            result.PartNumber,
+            result.Manufacturer);
+    }
+
     public (Drive Drive, Voltage Voltage) CreateDriveWithVoltage(ServoMotor motor, DriveVoltageDialogResult result)
     {
         ArgumentNullException.ThrowIfNull(motor);
@@ -58,6 +70,32 @@ public class MotorConfigurationWorkflow : IMotorConfigurationWorkflow
             result.ContinuousTorque,
             result.ContinuousCurrent,
             result.PeakCurrent);
+
+        return (false, voltage);
+    }
+
+    public (bool IsDuplicate, Voltage? Voltage) CreateVoltageWithOptionalSeries(Drive drive, AddVoltageDialogResult result)
+    {
+        ArgumentNullException.ThrowIfNull(drive);
+        ArgumentNullException.ThrowIfNull(result);
+
+        // Check if voltage already exists for this drive
+        if (drive.Voltages.Any(v => Math.Abs(v.Value - result.Voltage) < Drive.DefaultVoltageTolerance))
+        {
+            return (true, null);
+        }
+
+        var voltage = _driveVoltageSeriesService.CreateVoltageWithOptionalCurves(
+            drive,
+            result.Voltage,
+            result.MaxSpeed,
+            result.Power,
+            result.AddPeakTorque,
+            result.PeakTorque,
+            result.PeakCurrent,
+            result.AddContinuousTorque,
+            result.ContinuousTorque,
+            result.ContinuousCurrent);
 
         return (false, voltage);
     }

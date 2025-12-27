@@ -12,6 +12,12 @@ namespace CurveEditor.Services;
 /// </summary>
 public interface IDriveVoltageSeriesService
 {
+    Drive CreateDrive(
+        ServoMotor motor,
+        string? name,
+        string? partNumber,
+        string? manufacturer);
+
     (Drive drive, Voltage voltage) CreateDriveWithVoltage(
         ServoMotor motor,
         string? name,
@@ -35,11 +41,42 @@ public interface IDriveVoltageSeriesService
         double continuousCurrent,
         double peakCurrent);
 
+    Voltage CreateVoltageWithOptionalCurves(
+        Drive drive,
+        double voltageValue,
+        double maxSpeed,
+        double power,
+        bool addPeakTorque,
+        double peakTorque,
+        double peakCurrent,
+        bool addContinuousTorque,
+        double continuousTorque,
+        double continuousCurrent);
+
     string GenerateUniqueName(IEnumerable<string> existingNames, string baseName);
 }
 
 public sealed class DriveVoltageSeriesService : IDriveVoltageSeriesService
 {
+    public Drive CreateDrive(
+        ServoMotor motor,
+        string? name,
+        string? partNumber,
+        string? manufacturer)
+    {
+        if (motor is null) throw new ArgumentNullException(nameof(motor));
+
+        var driveName = string.IsNullOrWhiteSpace(name)
+            ? GenerateUniqueName(motor.Drives.Select(d => d.Name), "New Drive")
+            : GenerateUniqueName(motor.Drives.Select(d => d.Name), name!);
+
+        var drive = motor.AddDrive(driveName);
+        drive.PartNumber = partNumber ?? string.Empty;
+        drive.Manufacturer = manufacturer ?? string.Empty;
+
+        return drive;
+    }
+
     public (Drive drive, Voltage voltage) CreateDriveWithVoltage(
         ServoMotor motor,
         string? name,
@@ -103,6 +140,46 @@ public sealed class DriveVoltageSeriesService : IDriveVoltageSeriesService
         continuousSeries.InitializeData(voltage.MaxSpeed, voltage.RatedContinuousTorque);
         voltage.Curves.Add(peakSeries);
         voltage.Curves.Add(continuousSeries);
+
+        return voltage;
+    }
+
+    public Voltage CreateVoltageWithOptionalCurves(
+        Drive drive,
+        double voltageValue,
+        double maxSpeed,
+        double power,
+        bool addPeakTorque,
+        double peakTorque,
+        double peakCurrent,
+        bool addContinuousTorque,
+        double continuousTorque,
+        double continuousCurrent)
+    {
+        if (drive is null) throw new ArgumentNullException(nameof(drive));
+
+        var voltage = drive.AddVoltage(voltageValue);
+        voltage.MaxSpeed = maxSpeed;
+        voltage.Power = power;
+        voltage.RatedPeakTorque = peakTorque;
+        voltage.RatedContinuousTorque = continuousTorque;
+        voltage.ContinuousAmperage = continuousCurrent;
+        voltage.PeakAmperage = peakCurrent;
+
+        // Conditionally create curves based on checkboxes
+        if (addPeakTorque)
+        {
+            var peakSeries = new Curve("Peak");
+            peakSeries.InitializeData(voltage.MaxSpeed, voltage.RatedPeakTorque);
+            voltage.Curves.Add(peakSeries);
+        }
+
+        if (addContinuousTorque)
+        {
+            var continuousSeries = new Curve("Continuous");
+            continuousSeries.InitializeData(voltage.MaxSpeed, voltage.RatedContinuousTorque);
+            voltage.Curves.Add(continuousSeries);
+        }
 
         return voltage;
     }

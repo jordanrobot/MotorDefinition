@@ -1,0 +1,54 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        mc:Ignorable="d" d:DesignWidth="400" d:DesignHeight="250"
+        x:Class="CurveEditor.Views.AddDriveDialog"
+        Title="Add New Drive"
+        Width="400" Height="250"
+        WindowStartupLocation="CenterOwner"
+        CanResize="False"
+        ShowInTaskbar="False">
+    
+    <Window.Styles>
+        <Style Selector="TextBlock.Label">
+            <Setter Property="FontSize" Value="12"/>
+            <Setter Property="VerticalAlignment" Value="Center"/>
+            <Setter Property="Margin" Value="0,0,8,0"/>
+            <Setter Property="MinWidth" Value="100"/>
+        </Style>
+        <Style Selector="TextBox.Input">
+            <Setter Property="FontSize" Value="12"/>
+            <Setter Property="Padding" Value="6,4"/>
+        </Style>
+    </Window.Styles>
+    
+    <Grid RowDefinitions="*,Auto" Margin="16">
+        <!-- Form Fields -->
+        <StackPanel Grid.Row="0" Spacing="12">
+            <TextBlock Text="Enter the properties for the new drive:" 
+                       TextWrapping="Wrap" Margin="0,0,0,12"/>
+            
+            <Grid ColumnDefinitions="Auto,*">
+                <TextBlock Grid.Column="0" Text="Drive Name" Classes="Label"/>
+                <TextBox Grid.Column="1" x:Name="NameInput" Classes="Input" Watermark="Drive Name"/>
+            </Grid>
+            
+            <Grid ColumnDefinitions="Auto,*">
+                <TextBlock Grid.Column="0" Text="Manufacturer" Classes="Label"/>
+                <TextBox Grid.Column="1" x:Name="ManufacturerInput" Classes="Input" Watermark="Manufacturer"/>
+            </Grid>
+            
+            <Grid ColumnDefinitions="Auto,*">
+                <TextBlock Grid.Column="0" Text="Part Number" Classes="Label"/>
+                <TextBox Grid.Column="1" x:Name="PartNumberInput" Classes="Input" Watermark="Part Number"/>
+            </Grid>
+        </StackPanel>
+        
+        <!-- Buttons -->
+        <StackPanel Grid.Row="1" Orientation="Horizontal" HorizontalAlignment="Right" Spacing="8" Margin="0,16,0,0">
+            <Button Content="Cancel" Width="80" Click="OnCancelClick"/>
+            <Button Content="Add" Width="80" Classes="accent" Click="OnAddClick"/>
+        </StackPanel>
+    </Grid>
+</Window>
