@@ -1,3 +1,8 @@
+---
+layout: default
+title: Terms and Definitions
+---
+
 [Docs Home](index.md) | [Quick Start](QuickStart.md) | [User Guide](UserGuide.md) | [Terms and Definitions](TermsAndDefinitions.md) | [API documentation](api/index.md)
 
 ## Terms and Definitions

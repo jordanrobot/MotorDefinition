@@ -1,3 +1,8 @@
+---
+layout: default
+title: Quick Start
+---
+
 [Docs Home](index.md) | [User Guide](UserGuide.md) | [Terms and Definitions](TermsAndDefinitions.md) | [API documentation](api/index.md)
 
 ## Quick Start

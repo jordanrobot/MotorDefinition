@@ -1,0 +1,52 @@
+# Jekyll configuration for MotorDefinition documentation
+
+# Site settings
+title: MotorDefinition Documentation
+description: >-
+  Documentation for the JordanRobot.MotorDefinition library - 
+  A .NET library for working with motor torque curve definitions in JSON format.
+baseurl: "/MotorDefinition" # the subpath of your site, e.g. /blog
+url: "https://jordanrobot.github.io" # the base hostname & protocol for your site
+
+# Build settings
+markdown: kramdown
+theme: minima
+
+# Exclude from processing
+exclude:
+  - Gemfile
+  - Gemfile.lock
+  - node_modules
+  - vendor/bundle/
+  - vendor/cache/
+  - vendor/gems/
+  - vendor/ruby/
+
+# Collections and defaults
+defaults:
+  - scope:
+      path: ""
+      type: "pages"
+    values:
+      layout: "default"
+
+# Kramdown settings
+kramdown:
+  input: GFM
+  syntax_highlighter: rouge
+  syntax_highlighter_opts:
+    css_class: 'highlight'
+
+# Plugins
+plugins:
+  - jekyll-feed
+  - jekyll-seo-tag
+  - jekyll-sitemap
+
+# Navigation
+header_pages:
+  - index.md
+  - QuickStart.md
+  - UserGuide.md
+  - TermsAndDefinitions.md
+  - api/index.md

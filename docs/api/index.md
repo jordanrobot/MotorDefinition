@@ -1,3 +1,8 @@
+---
+layout: default
+title: API Documentation
+---
+
 #### [MotorDefinition](index.md 'index')
 
 ## MotorDefinition Assembly
