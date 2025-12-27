@@ -90,6 +90,9 @@ public partial class CurveDataPanel : UserControl
         // Use LayoutUpdated to ensure visual tree is fully constructed
         LayoutUpdated += OnLayoutUpdatedForScrollSync;
         
+        // Intercept wheel events at the UserControl level to handle all scrolling
+        AddHandler(PointerWheelChangedEvent, OnPanelPointerWheelChanged, Avalonia.Interactivity.RoutingStrategies.Tunnel);
+        
         _eventHandlersRegistered = true;
     }
 
@@ -110,13 +113,9 @@ public partial class CurveDataPanel : UserControl
         
         if (_dataGridScrollViewer is not null)
         {
-            // Attach scroll change handlers for syncing
+            // Attach scroll change handlers for syncing (for scrollbar dragging)
             _dataGridScrollViewer.ScrollChanged += OnDataGridScrollChanged;
             HeaderScrollViewer.ScrollChanged += OnHeaderScrollChanged;
-            
-            // Intercept mouse wheel events on both controls to sync scrolling
-            HeaderScrollViewer.AddHandler(PointerWheelChangedEvent, OnHeaderPointerWheelChanged, Avalonia.Interactivity.RoutingStrategies.Tunnel);
-            DataTable.AddHandler(PointerWheelChangedEvent, OnDataTablePointerWheelChanged, Avalonia.Interactivity.RoutingStrategies.Tunnel);
             
             _scrollSyncAttached = true;
             
@@ -193,57 +192,28 @@ public partial class CurveDataPanel : UserControl
         }
     }
 
-    private void OnHeaderPointerWheelChanged(object? sender, PointerWheelEventArgs e)
+    private void OnPanelPointerWheelChanged(object? sender, PointerWheelEventArgs e)
     {
-        // When mouse wheel is used over the header, scroll both header and data grid
+        // Intercept ALL wheel events at the panel level for synchronized scrolling
         if (_dataGridScrollViewer is null || HeaderScrollViewer is null)
         {
             return;
         }
 
-        // Get the horizontal scroll delta (positive = scroll right, negative = scroll left)
         var delta = e.Delta;
         
-        // Only handle horizontal scrolling (when shift is held or touchpad horizontal scroll)
+        // Handle horizontal scrolling (touchpad horizontal gesture or shift+wheel)
         if (Math.Abs(delta.X) > 0.01)
         {
-            // Calculate new offset (delta.X is opposite direction, so subtract)
-            var newOffset = HeaderScrollViewer.Offset.X - (delta.X * 50); // Multiply for smoother scrolling
-            newOffset = Math.Max(0, Math.Min(newOffset, HeaderScrollViewer.Extent.Width - HeaderScrollViewer.Viewport.Width));
+            // Calculate new horizontal offset
+            var currentOffset = _dataGridScrollViewer.Offset.X;
+            var newOffset = currentOffset - (delta.X * 50); // 50 is scroll multiplier
             
-            _isSyncing = true;
-            try
-            {
-                HeaderScrollViewer.Offset = new Vector(newOffset, HeaderScrollViewer.Offset.Y);
-                _dataGridScrollViewer.Offset = new Vector(newOffset, _dataGridScrollViewer.Offset.Y);
-            }
-            finally
-            {
-                _isSyncing = false;
-            }
+            // Clamp to valid range
+            var maxOffset = Math.Max(0, _dataGridScrollViewer.Extent.Width - _dataGridScrollViewer.Viewport.Width);
+            newOffset = Math.Max(0, Math.Min(newOffset, maxOffset));
             
-            e.Handled = true;
-        }
-    }
-
-    private void OnDataTablePointerWheelChanged(object? sender, PointerWheelEventArgs e)
-    {
-        // When mouse wheel is used over the data table, scroll both header and data grid
-        if (_dataGridScrollViewer is null || HeaderScrollViewer is null)
-        {
-            return;
-        }
-
-        // Get the scroll delta
-        var delta = e.Delta;
-        
-        // Only handle horizontal scrolling (when shift is held or touchpad horizontal scroll)
-        if (Math.Abs(delta.X) > 0.01)
-        {
-            // Calculate new offset
-            var newOffset = _dataGridScrollViewer.Offset.X - (delta.X * 50);
-            newOffset = Math.Max(0, Math.Min(newOffset, _dataGridScrollViewer.Extent.Width - _dataGridScrollViewer.Viewport.Width));
-            
+            // Apply to both scroll viewers simultaneously
             _isSyncing = true;
             try
             {
@@ -255,8 +225,10 @@ public partial class CurveDataPanel : UserControl
                 _isSyncing = false;
             }
             
+            // Mark as handled to prevent default scroll behavior
             e.Handled = true;
         }
+        // For vertical scrolling, let it pass through to the DataGrid normally
     }
 
     private void OnUnloaded(object? sender, RoutedEventArgs e)
@@ -289,13 +261,10 @@ public partial class CurveDataPanel : UserControl
             if (HeaderScrollViewer is not null)
             {
                 HeaderScrollViewer.ScrollChanged -= OnHeaderScrollChanged;
-                HeaderScrollViewer.RemoveHandler(PointerWheelChangedEvent, OnHeaderPointerWheelChanged);
             }
             
-            if (DataTable is not null)
-            {
-                DataTable.RemoveHandler(PointerWheelChangedEvent, OnDataTablePointerWheelChanged);
-            }
+            // Remove panel-level wheel handler
+            RemoveHandler(PointerWheelChangedEvent, OnPanelPointerWheelChanged);
             
             // Unsubscribe from LayoutUpdated if still attached
             LayoutUpdated -= OnLayoutUpdatedForScrollSync;
