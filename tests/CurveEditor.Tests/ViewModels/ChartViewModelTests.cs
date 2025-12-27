@@ -39,7 +39,7 @@ public class ChartViewModelTests
     {
         // Arrange
         var viewModel = new ChartViewModel();
-        var voltage = CreateTestVoltageConfiguration();
+        var voltage = CreateTestVoltage();
 
         // Act
         viewModel.CurrentVoltage = voltage;
@@ -53,7 +53,7 @@ public class ChartViewModelTests
     {
         // Arrange
         var viewModel = new ChartViewModel();
-        var voltage = CreateTestVoltageConfiguration();
+        var voltage = CreateTestVoltage();
 
         // Act
         viewModel.CurrentVoltage = voltage;
@@ -67,7 +67,7 @@ public class ChartViewModelTests
     {
         // Arrange
         var viewModel = new ChartViewModel();
-        var voltage = CreateTestVoltageConfiguration();
+        var voltage = CreateTestVoltage();
         viewModel.CurrentVoltage = voltage;
 
         // Act
@@ -82,7 +82,7 @@ public class ChartViewModelTests
     {
         // Arrange
         var viewModel = new ChartViewModel();
-        var voltage = CreateTestVoltageConfiguration();
+        var voltage = CreateTestVoltage();
         viewModel.CurrentVoltage = voltage;
         viewModel.SetSeriesVisibility("Peak", false);
 
@@ -108,12 +108,12 @@ public class ChartViewModelTests
     {
         // Arrange
         var viewModel = new ChartViewModel();
-        var voltage = CreateTestVoltageConfiguration();
+        var voltage = CreateTestVoltage();
         viewModel.CurrentVoltage = voltage;
         var initialCount = viewModel.Series.Count;
 
         // Add a new series to the voltage
-        voltage.Series.Add(new CurveSeries("New Series"));
+        voltage.Curves.Add(new Curve("New Curves"));
 
         // Act
         viewModel.RefreshChart();
@@ -127,7 +127,7 @@ public class ChartViewModelTests
     {
         // Arrange
         var viewModel = new ChartViewModel();
-        var voltage = CreateTestVoltageConfiguration();
+        var voltage = CreateTestVoltage();
         viewModel.CurrentVoltage = voltage;
         var eventRaised = false;
         viewModel.DataChanged += (s, e) => eventRaised = true;
@@ -144,7 +144,7 @@ public class ChartViewModelTests
     {
         // Arrange
         var viewModel = new ChartViewModel();
-        var voltage = CreateTestVoltageConfiguration();
+        var voltage = CreateTestVoltage();
         viewModel.CurrentVoltage = voltage;
 
         // Act & Assert - should not throw
@@ -156,7 +156,7 @@ public class ChartViewModelTests
     {
         // Arrange
         var viewModel = new ChartViewModel();
-        var voltage = CreateTestVoltageConfiguration();
+        var voltage = CreateTestVoltage();
         viewModel.CurrentVoltage = voltage;
 
         // Act & Assert - should not throw
@@ -181,7 +181,7 @@ public class ChartViewModelTests
 
         // Act
         viewModel.TorqueUnit = "lbf-in";
-        viewModel.CurrentVoltage = CreateTestVoltageConfiguration();
+        viewModel.CurrentVoltage = CreateTestVoltage();
 
         // Assert
         Assert.Contains("lbf-in", viewModel.YAxes[0].Name);
@@ -195,7 +195,7 @@ public class ChartViewModelTests
         {
             MotorMaxSpeed = 6500
         };
-        viewModel.CurrentVoltage = CreateTestVoltageConfiguration();
+        viewModel.CurrentVoltage = CreateTestVoltage();
 
         // Act
         var xAxis = viewModel.XAxes[0];
@@ -212,7 +212,7 @@ public class ChartViewModelTests
         {
             MotorMaxSpeed = 6500
         };
-        var voltage = CreateTestVoltageConfiguration();
+        var voltage = CreateTestVoltage();
         voltage.MaxSpeed = 4800;
 
         // Act
@@ -231,7 +231,7 @@ public class ChartViewModelTests
         {
             MotorMaxSpeed = 4000
         };
-        var voltage = CreateTestVoltageConfiguration();
+        var voltage = CreateTestVoltage();
         voltage.MaxSpeed = 7200;
 
         // Act
@@ -242,9 +242,9 @@ public class ChartViewModelTests
         Assert.Equal(7200, xAxis.MaxLimit);
     }
 
-    private static VoltageConfiguration CreateTestVoltageConfiguration()
+    private static Voltage CreateTestVoltage()
     {
-        var voltage = new VoltageConfiguration(220)
+        var voltage = new Voltage(220)
         {
             MaxSpeed = 5000,
             Power = 1500,
@@ -252,14 +252,14 @@ public class ChartViewModelTests
             RatedContinuousTorque = 45
         };
 
-        var peakSeries = new CurveSeries("Peak");
+        var peakSeries = new Curve("Peak");
         peakSeries.InitializeData(5000, 55);
 
-        var continuousSeries = new CurveSeries("Continuous");
+        var continuousSeries = new Curve("Continuous");
         continuousSeries.InitializeData(5000, 45);
 
-        voltage.Series.Add(peakSeries);
-        voltage.Series.Add(continuousSeries);
+        voltage.Curves.Add(peakSeries);
+        voltage.Curves.Add(continuousSeries);
 
         return voltage;
     }

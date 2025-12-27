@@ -4,11 +4,11 @@ using System;
 namespace CurveEditor.Services;
 
 /// <summary>
-/// Command that edits a single data point within a <see cref="CurveSeries"/>.
+/// Command that edits a single data point within a <see cref="Curve"/>.
 /// </summary>
 public sealed class EditPointCommand : IUndoableCommand
 {
-    private readonly CurveSeries _series;
+    private readonly Curve _series;
     private readonly int _index;
     private readonly double _newRpm;
     private readonly double _newTorque;
@@ -18,7 +18,7 @@ public sealed class EditPointCommand : IUndoableCommand
     /// <summary>
     /// Creates a new <see cref="EditPointCommand"/>.
     /// </summary>
-    public EditPointCommand(CurveSeries series, int index, double newRpm, double newTorque)
+    public EditPointCommand(Curve series, int index, double newRpm, double newTorque)
     {
         _series = series ?? throw new ArgumentNullException(nameof(series));
         _index = index;

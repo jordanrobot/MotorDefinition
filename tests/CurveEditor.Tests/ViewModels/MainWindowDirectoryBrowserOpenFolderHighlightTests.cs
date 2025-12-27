@@ -21,7 +21,7 @@ public sealed class MainWindowDirectoryBrowserOpenFolderHighlightTests
 
         var dto = new MotorDefinitionFileDto
         {
-            SchemaVersion = MotorDefinition.CurrentSchemaVersion,
+            SchemaVersion = ServoMotor.CurrentSchemaVersion,
             MotorName = motorName,
             Drives =
             [

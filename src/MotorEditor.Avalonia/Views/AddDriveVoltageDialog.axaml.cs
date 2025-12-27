@@ -38,7 +38,7 @@ public partial class AddDriveVoltageDialog : Window
     private void OnAddClick(object? sender, RoutedEventArgs e)
     {
         // Validate all required numeric inputs
-        if (!TryParsePositive(VoltageInput.Text, out var voltage, "Voltage must be a positive number.") ||
+        if (!TryParsePositive(VoltageInput.Text, out var voltage, "Value must be a positive number.") ||
             !TryParseNonNegative(PowerInput.Text, out var power, "Power must be a non-negative number.") ||
             !TryParseNonNegative(MaxSpeedInput.Text, out var maxSpeed, "Max Speed must be a non-negative number.") ||
             !TryParseNonNegative(PeakTorqueInput.Text, out var peakTorque, "Peak Torque must be a non-negative number.") ||
@@ -52,8 +52,8 @@ public partial class AddDriveVoltageDialog : Window
         Result = new DriveVoltageDialogResult
         {
             Name = NameInput.Text ?? "New Drive",
-            Manufacturer = ManufacturerInput.Text ?? "",
-            PartNumber = ModelInput.Text ?? "",
+            Manufacturer = ManufacturerInput.Text ?? string.Empty,
+            PartNumber = ModelInput.Text ?? string.Empty,
             Voltage = voltage,
             Power = power,
             MaxSpeed = maxSpeed,
@@ -100,9 +100,9 @@ public partial class AddDriveVoltageDialog : Window
 /// </summary>
 public class DriveVoltageDialogResult
 {
-    public string Name { get; set; } = "";
-    public string Manufacturer { get; set; } = "";
-    public string PartNumber { get; set; } = "";
+    public string Name { get; set; } = string.Empty;
+    public string Manufacturer { get; set; } = string.Empty;
+    public string PartNumber { get; set; } = string.Empty;
     public double Voltage { get; set; }
     public double Power { get; set; }
     public double MaxSpeed { get; set; }

@@ -37,11 +37,11 @@ public class MotorFileSizeBenchmarkTests
         }
     }
 
-    private static string SerializeLegacy(MotorDefinition motor)
+    private static string SerializeLegacy(ServoMotor motor)
     {
         var legacy = new
         {
-            schemaVersion = MotorDefinition.CurrentSchemaVersion,
+            schemaVersion = ServoMotor.CurrentSchemaVersion,
             motorName = motor.MotorName,
             manufacturer = motor.Manufacturer,
             partNumber = motor.PartNumber,
@@ -71,7 +71,7 @@ public class MotorFileSizeBenchmarkTests
                 manufacturer = drive.Manufacturer,
                 voltages = drive.Voltages.Select(voltage => new
                 {
-                    voltage = voltage.Voltage,
+                    voltage = voltage.Value,
                     power = voltage.Power,
                     maxSpeed = voltage.MaxSpeed,
                     ratedSpeed = voltage.RatedSpeed,
@@ -79,7 +79,7 @@ public class MotorFileSizeBenchmarkTests
                     ratedPeakTorque = voltage.RatedPeakTorque,
                     continuousAmperage = voltage.ContinuousAmperage,
                     peakAmperage = voltage.PeakAmperage,
-                    series = voltage.Series.Select(series => new
+                    series = voltage.Curves.Select(series => new
                     {
                         name = series.Name,
                         notes = series.Notes,
@@ -99,9 +99,9 @@ public class MotorFileSizeBenchmarkTests
         return JsonSerializer.Serialize(legacy, SaveOptions);
     }
 
-    private static MotorDefinition CreateSampleMotor()
+    private static ServoMotor CreateSampleMotor()
     {
-        var motor = new MotorDefinition("Sample")
+        var motor = new ServoMotor("Sample")
         {
             Manufacturer = "Sample Corp",
             PartNumber = "SC-1",
@@ -120,7 +120,7 @@ public class MotorFileSizeBenchmarkTests
         };
 
         var drive = motor.AddDrive("Drive A");
-        var voltage = drive.AddVoltageConfiguration(220);
+        var voltage = drive.AddVoltage(220);
         voltage.MaxSpeed = 5000;
         voltage.RatedSpeed = 3000;
         voltage.RatedContinuousTorque = 45;
@@ -129,13 +129,13 @@ public class MotorFileSizeBenchmarkTests
         voltage.ContinuousAmperage = 10;
         voltage.PeakAmperage = 25;
 
-        var peak = new CurveSeries("Peak") { Locked = false, Notes = "peak" };
+        var peak = new Curve("Peak") { Locked = false, Notes = "peak" };
         peak.InitializeData(voltage.MaxSpeed, 55);
-        var continuous = new CurveSeries("Continuous") { Locked = true, Notes = "continuous" };
+        var continuous = new Curve("Continuous") { Locked = true, Notes = "continuous" };
         continuous.InitializeData(voltage.MaxSpeed, 45);
 
-        voltage.Series.Add(peak);
-        voltage.Series.Add(continuous);
+        voltage.Curves.Add(peak);
+        voltage.Curves.Add(continuous);
 
         return motor;
     }

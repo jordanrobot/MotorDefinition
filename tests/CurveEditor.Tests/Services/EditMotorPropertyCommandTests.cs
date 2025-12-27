@@ -9,12 +9,12 @@ public class EditMotorPropertyCommandTests
     [Fact]
     public void Execute_UpdatesMotorProperty()
     {
-        var motor = new MotorDefinition
+        var motor = new ServoMotor
         {
             MaxSpeed = 3000
         };
 
-        var command = new EditMotorPropertyCommand(motor, nameof(MotorDefinition.MaxSpeed), 3000d, 3500d);
+        var command = new EditMotorPropertyCommand(motor, nameof(ServoMotor.MaxSpeed), 3000d, 3500d);
 
         command.Execute();
 
@@ -24,12 +24,12 @@ public class EditMotorPropertyCommandTests
     [Fact]
     public void Undo_RestoresPreviousMotorPropertyValue()
     {
-        var motor = new MotorDefinition
+        var motor = new ServoMotor
         {
             MaxSpeed = 3000
         };
 
-        var command = new EditMotorPropertyCommand(motor, nameof(MotorDefinition.MaxSpeed), 3000d, 3500d);
+        var command = new EditMotorPropertyCommand(motor, nameof(ServoMotor.MaxSpeed), 3000d, 3500d);
 
         command.Execute();
         command.Undo();

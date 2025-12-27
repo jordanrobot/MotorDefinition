@@ -20,19 +20,19 @@ public interface IValidationService
     /// </summary>
     /// <param name="series">The curve series to validate.</param>
     /// <returns>A list of validation errors, or empty if valid.</returns>
-    IReadOnlyList<string> ValidateCurveSeries(CurveSeries series);
+    IReadOnlyList<string> ValidateCurve(Curve series);
 
     /// <summary>
     /// Validates a voltage configuration.
     /// </summary>
     /// <param name="voltageConfig">The voltage configuration to validate.</param>
     /// <returns>A list of validation errors, or empty if valid.</returns>
-    IReadOnlyList<string> ValidateVoltageConfiguration(VoltageConfiguration voltageConfig);
+    IReadOnlyList<string> ValidateVoltage(Voltage voltageConfig);
 
     /// <summary>
     /// Validates a motor definition.
     /// </summary>
     /// <param name="motor">The motor definition to validate.</param>
     /// <returns>A list of validation errors, or empty if valid.</returns>
-    IReadOnlyList<string> ValidateMotorDefinition(MotorDefinition motor);
+    IReadOnlyList<string> ValidateServoMotor(ServoMotor motor);
 }

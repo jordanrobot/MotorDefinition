@@ -14,7 +14,7 @@ public class MainWindowViewModelDirtyPromptTests
         var fileServiceMock = new Mock<IFileService>();
         var curveGeneratorMock = new Mock<ICurveGeneratorService>();
 
-        var motor = new MotorDefinition { MotorName = "New Motor" };
+        var motor = new ServoMotor { MotorName = "New Motor" };
         fileServiceMock
             .Setup(f => f.CreateNew(It.IsAny<string>(), It.IsAny<int>(), It.IsAny<double>(), It.IsAny<double>()))
             .Returns(motor);

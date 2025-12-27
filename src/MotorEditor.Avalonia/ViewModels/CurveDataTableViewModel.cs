@@ -29,7 +29,7 @@ public readonly record struct CellPosition(int RowIndex, int ColumnIndex)
 /// </summary>
 public class CurveDataRow : INotifyPropertyChanged
 {
-    private readonly VoltageConfiguration _voltage;
+    private readonly Voltage _voltage;
     private readonly int _rowIndex;
 
     public event PropertyChangedEventHandler? PropertyChanged;
@@ -37,7 +37,7 @@ public class CurveDataRow : INotifyPropertyChanged
     /// <summary>
     /// Creates a new CurveDataRow for the specified row index.
     /// </summary>
-    public CurveDataRow(VoltageConfiguration voltage, int rowIndex)
+    public CurveDataRow(Voltage voltage, int rowIndex)
     {
         _voltage = voltage ?? throw new ArgumentNullException(nameof(voltage));
         _rowIndex = rowIndex;
@@ -50,7 +50,7 @@ public class CurveDataRow : INotifyPropertyChanged
     {
         get
         {
-            var firstSeries = _voltage.Series.FirstOrDefault();
+            var firstSeries = _voltage.Curves.FirstOrDefault();
             if (firstSeries is not null && _rowIndex < firstSeries.Data.Count)
             {
                 return firstSeries.Data[_rowIndex].Percent;
@@ -67,7 +67,7 @@ public class CurveDataRow : INotifyPropertyChanged
     {
         get
         {
-            var firstSeries = _voltage.Series.FirstOrDefault();
+            var firstSeries = _voltage.Curves.FirstOrDefault();
             if (firstSeries is not null && _rowIndex < firstSeries.Data.Count)
             {
                 return firstSeries.Data[_rowIndex].DisplayRpm;
@@ -90,7 +90,7 @@ public class CurveDataRow : INotifyPropertyChanged
     /// </summary>
     public double GetTorque(string seriesName)
     {
-        var series = _voltage.Series.FirstOrDefault(s => s.Name == seriesName);
+        var series = _voltage.Curves.FirstOrDefault(s => s.Name == seriesName);
         if (series is not null && _rowIndex < series.Data.Count)
         {
             return series.Data[_rowIndex].Torque;
@@ -103,7 +103,7 @@ public class CurveDataRow : INotifyPropertyChanged
     /// </summary>
     public void SetTorque(string seriesName, double value)
     {
-        var series = _voltage.Series.FirstOrDefault(s => s.Name == seriesName);
+        var series = _voltage.Curves.FirstOrDefault(s => s.Name == seriesName);
         if (series is not null && _rowIndex < series.Data.Count)
         {
             series.Data[_rowIndex].Torque = value;
@@ -122,20 +122,20 @@ public class CurveDataRow : INotifyPropertyChanged
 /// </summary>
 public partial class CurveDataTableViewModel : ViewModelBase
 {
-    private VoltageConfiguration? _currentVoltage;
+    private Voltage? _currentVoltage;
     private CellPosition? _anchorCell;
 
     [ObservableProperty]
     private ObservableCollection<CurveDataRow> _rows = [];
 
     [ObservableProperty]
-    private ObservableCollection<CurveSeries> _seriesColumns = [];
+    private ObservableCollection<Curve> _seriesColumns = [];
 
     [ObservableProperty]
     private CurveDataRow? _selectedRow;
 
     [ObservableProperty]
-    private CurveSeries? _selectedSeries;
+    private Curve? _selectedSeries;
 
     [ObservableProperty]
     private int _selectedRowIndex = -1;
@@ -214,7 +214,7 @@ public partial class CurveDataTableViewModel : ViewModelBase
     /// <summary>
     /// Gets or sets the current voltage configuration.
     /// </summary>
-    public VoltageConfiguration? CurrentVoltage
+    public Voltage? CurrentVoltage
     {
         get => _currentVoltage;
         set
@@ -248,19 +248,19 @@ public partial class CurveDataTableViewModel : ViewModelBase
         Rows.Clear();
         SeriesColumns.Clear();
 
-        if (_currentVoltage is null || _currentVoltage.Series.Count == 0)
+        if (_currentVoltage is null || _currentVoltage.Curves.Count == 0)
         {
             return;
         }
 
         // Add series columns
-        foreach (var series in _currentVoltage.Series)
+        foreach (var series in _currentVoltage.Curves)
         {
             SeriesColumns.Add(series);
         }
 
         // Determine number of rows (should be 101 for 0-100%)
-        var rowCount = _currentVoltage.Series.FirstOrDefault()?.Data.Count ?? 0;
+        var rowCount = _currentVoltage.Curves.FirstOrDefault()?.Data.Count ?? 0;
 
         // Create rows
         for (var i = 0; i < rowCount; i++)
@@ -284,7 +284,7 @@ public partial class CurveDataTableViewModel : ViewModelBase
             return;
         }
 
-        var series = _currentVoltage.Series.FirstOrDefault(s => s.Name == seriesName);
+        var series = _currentVoltage.Curves.FirstOrDefault(s => s.Name == seriesName);
         if (series is null)
         {
             return;
@@ -320,7 +320,7 @@ public partial class CurveDataTableViewModel : ViewModelBase
     /// </summary>
     public bool IsSeriesLocked(string seriesName)
     {
-        var series = _currentVoltage?.Series.FirstOrDefault(s => s.Name == seriesName);
+        var series = _currentVoltage?.Curves.FirstOrDefault(s => s.Name == seriesName);
         return series?.Locked ?? false;
     }
 
@@ -571,7 +571,7 @@ public partial class CurveDataTableViewModel : ViewModelBase
                 continue;
             }
 
-            var series = _currentVoltage.Series.FirstOrDefault(s => s.Name == seriesName);
+            var series = _currentVoltage.Curves.FirstOrDefault(s => s.Name == seriesName);
             if (series is null)
             {
                 continue;
@@ -773,7 +773,7 @@ public partial class CurveDataTableViewModel : ViewModelBase
                 continue;
             }
 
-            var series = _currentVoltage.Series.FirstOrDefault(s => s.Name == seriesName);
+            var series = _currentVoltage.Curves.FirstOrDefault(s => s.Name == seriesName);
             if (series is null)
             {
                 continue;
@@ -1131,7 +1131,7 @@ public partial class CurveDataTableViewModel : ViewModelBase
             return false;
         }
 
-        var series = _currentVoltage.Series.FirstOrDefault(s => s.Name == seriesName);
+        var series = _currentVoltage.Curves.FirstOrDefault(s => s.Name == seriesName);
         if (series is null)
         {
             return false;

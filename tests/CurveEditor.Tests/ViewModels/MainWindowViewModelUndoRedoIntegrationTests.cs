@@ -19,10 +19,10 @@ public class MainWindowViewModelUndoRedoIntegrationTests
 
         var vm = new MainWindowViewModel(fileServiceMock.Object, curveGeneratorMock.Object);
 
-        var motor = new MotorDefinition
+        var motor = new ServoMotor
         {
             MotorName = "Original Name",
-            Drives = new List<DriveConfiguration>
+            Drives = new List<Drive>
             {
                 new()
             }
@@ -60,20 +60,20 @@ public class MainWindowViewModelUndoRedoIntegrationTests
 
         var vm = new MainWindowViewModel(fileServiceMock.Object, curveGeneratorMock.Object);
 
-        var motor = new MotorDefinition
+        var motor = new ServoMotor
         {
             MotorName = "Test Motor",
-            Drives = new List<DriveConfiguration>
+            Drives = new List<Drive>
             {
                 new()
                 {
                     Name = "Drive A",
-                    Voltages = new List<VoltageConfiguration>
+                    Voltages = new List<Voltage>
                     {
                         new()
                         {
-                            Voltage = 208,
-                            Series = new List<CurveSeries>
+                            Value = 208,
+                            Curves = new List<Curve>
                             {
                                 new()
                                 {
@@ -98,11 +98,11 @@ public class MainWindowViewModelUndoRedoIntegrationTests
         vm.CurveDataTableViewModel.UpdateTorque(1, "Peak", 2.5);
 
         Assert.True(vm.IsDirty);
-        Assert.Equal(2.5, motor.Drives[0].Voltages[0].Series[0].Data[1].Torque);
+        Assert.Equal(2.5, motor.Drives[0].Voltages[0].Curves[0].Data[1].Torque);
 
         vm.UndoCommand.Execute(null);
 
-        Assert.Equal(2.0, motor.Drives[0].Voltages[0].Series[0].Data[1].Torque);
+        Assert.Equal(2.0, motor.Drives[0].Voltages[0].Curves[0].Data[1].Torque);
 
         vm.MarkCleanCheckpoint();
 
@@ -114,7 +114,7 @@ public class MainWindowViewModelUndoRedoIntegrationTests
 
         vm.UndoCommand.Execute(null);
 
-        Assert.Equal(2.0, motor.Drives[0].Voltages[0].Series[0].Data[1].Torque);
+        Assert.Equal(2.0, motor.Drives[0].Voltages[0].Curves[0].Data[1].Torque);
     }
 
     [Fact]
@@ -127,20 +127,20 @@ public class MainWindowViewModelUndoRedoIntegrationTests
 
         var vm = new MainWindowViewModel(fileServiceMock.Object, curveGeneratorMock.Object);
 
-        var motor = new MotorDefinition
+        var motor = new ServoMotor
         {
             MotorName = "Test Motor",
-            Drives = new List<DriveConfiguration>
+            Drives = new List<Drive>
             {
                 new()
                 {
                     Name = "Drive A",
-                    Voltages = new List<VoltageConfiguration>
+                    Voltages = new List<Voltage>
                     {
                         new()
                         {
-                            Voltage = 208,
-                            Series = new List<CurveSeries>
+                            Value = 208,
+                            Curves = new List<Curve>
                             {
                                 new()
                                 {
@@ -166,12 +166,12 @@ public class MainWindowViewModelUndoRedoIntegrationTests
         vm.CurveDataTableViewModel.SelectCell(1, 2);
         vm.CurveDataTableViewModel.ClearSelectedTorqueCells();
 
-        Assert.Equal(0.0, motor.Drives[0].Voltages[0].Series[0].Data[1].Torque);
+        Assert.Equal(0.0, motor.Drives[0].Voltages[0].Curves[0].Data[1].Torque);
         Assert.True(vm.CanUndo);
 
         vm.UndoCommand.Execute(null);
 
-        Assert.Equal(2.0, motor.Drives[0].Voltages[0].Series[0].Data[1].Torque);
+        Assert.Equal(2.0, motor.Drives[0].Voltages[0].Curves[0].Data[1].Torque);
     }
 
     [Fact]
@@ -184,20 +184,20 @@ public class MainWindowViewModelUndoRedoIntegrationTests
 
         var vm = new MainWindowViewModel(fileServiceMock.Object, curveGeneratorMock.Object);
 
-        var motor = new MotorDefinition
+        var motor = new ServoMotor
         {
             MotorName = "Test Motor",
-            Drives = new List<DriveConfiguration>
+            Drives = new List<Drive>
             {
                 new()
                 {
                     Name = "Drive A",
-                    Voltages = new List<VoltageConfiguration>
+                    Voltages = new List<Voltage>
                     {
                         new()
                         {
-                            Voltage = 208,
-                            Series = new List<CurveSeries>
+                            Value = 208,
+                            Curves = new List<Curve>
                             {
                                 new()
                                 {
@@ -215,7 +215,7 @@ public class MainWindowViewModelUndoRedoIntegrationTests
         vm.SelectedDrive = motor.Drives[0];
         vm.SelectedVoltage = motor.Drives[0].Voltages[0];
 
-        var series = motor.Drives[0].Voltages[0].Series[0];
+        var series = motor.Drives[0].Voltages[0].Curves[0];
 
         Assert.False(series.Locked);
 

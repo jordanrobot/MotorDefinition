@@ -314,18 +314,26 @@ See ADR-0006 (`../../docs/adr/adr-0006-motor-file-schema-and-versioning.md`) for
 ---
 
 ## Phase 3.7: Rename objects for clarity
-- [ ] Rename `MotorDefinition` to `ServoMotor` throughout codebase
-- [ ] Rename `CurveSeries` to `Curve` throughout codebase
-- [ ] Rename `DriveConfiguration` to `Drive` throughout codebase
-- [ ] Rename `VoltageConfiguration` to `Voltage` throughout codebase
-- [ ] Rename collection object accessors/properties accordingly:
+- [X] Rename `MotorDefinition` to `ServoMotor` throughout codebase
+- [X] Rename `CurveSeries` to `Curve` throughout codebase
+- [X] Rename `DriveConfiguration` to `Drive` throughout codebase
+- [X] Rename `VoltageConfiguration.Voltage` to `VoltageConfiguration.Value` throughout codebase
+- [X] Rename `VoltageConfiguration` to `Voltage` throughout codebase
+- [X] Rename collection object accessors/properties accordingly:
   - `ServoMotor.DriveConfigurations` -> `Motor.Drives`
   - `DriveConfiguration.VoltageConfigurations` -> `Drive.Voltages`
   - `VoltageConfiguration.CurveSeries` -> `Voltage.Curves`
-- [ ] Update all related files, namespaces, and references accordingly
-- [ ] Update all /docs/ to reflect new names
-- [ ] Update Readme.md to reflect new names
-- [ ] Update unit tests to reflect new names
+- [X] Remove IEnumerable wrappers where not needed in `ServoMotor`, `Drive`, and `Voltage` classes 
+- [ ] Update all /docs/ to reflect these new names and removed IEnumerable wrapper methods
+  - [ ] (ignore files in /docs/api/*)
+  - [ ] Index.md
+  - [ ] QuickStart.md
+  - [ ] UserGuide.md
+- [ ] Update Readme.md in /src/MotorDefinition/ as well
+- [ ] Update Readme.md in / as well
+- [ ] Update `00-terms-and-definitions.md` in /docs/planning/ to reflect these new names
+- [ ] Update planning files (`.github/planning/`) not listed here that reference these old names
+- [ ] Update adrs (`/docs/adr/`) not listed here that reference these old names
 
 ## Phase 4: Advanced Editing
 

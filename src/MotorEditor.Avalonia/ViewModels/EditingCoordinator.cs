@@ -13,7 +13,7 @@ public class EditingCoordinator
     /// <summary>
     /// Represents a selected data point in a specific series.
     /// </summary>
-    public readonly record struct PointSelection(CurveSeries Series, int Index);
+    public readonly record struct PointSelection(Curve Series, int Index);
 
     private readonly List<PointSelection> _selectedPoints = [];
 

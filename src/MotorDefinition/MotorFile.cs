@@ -45,7 +45,7 @@ public static class MotorFile
     /// </summary>
     /// <param name="path">The file path to read.</param>
     /// <returns>The parsed motor definition.</returns>
-    public static Model.MotorDefinition Load(string path)
+    public static Model.ServoMotor Load(string path)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(path);
         using var stream = File.OpenRead(path);
@@ -58,7 +58,7 @@ public static class MotorFile
     /// <param name="path">The file path to read.</param>
     /// <param name="cancellationToken">The cancellation token to observe.</param>
     /// <returns>The parsed motor definition.</returns>
-    public static async Task<Model.MotorDefinition> LoadAsync(string path, CancellationToken cancellationToken = default)
+    public static async Task<Model.ServoMotor> LoadAsync(string path, CancellationToken cancellationToken = default)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(path);
         await using var stream = File.OpenRead(path);
@@ -70,7 +70,7 @@ public static class MotorFile
     /// </summary>
     /// <param name="motor">The motor definition to persist.</param>
     /// <param name="path">The destination file path.</param>
-    public static void Save(Model.MotorDefinition motor, string path)
+    public static void Save(Model.ServoMotor motor, string path)
     {
         ArgumentNullException.ThrowIfNull(motor);
         ArgumentException.ThrowIfNullOrWhiteSpace(path);
@@ -86,7 +86,7 @@ public static class MotorFile
     /// <param name="motor">The motor definition to persist.</param>
     /// <param name="path">The destination file path.</param>
     /// <param name="cancellationToken">The cancellation token to observe.</param>
-    public static async Task SaveAsync(Model.MotorDefinition motor, string path, CancellationToken cancellationToken = default)
+    public static async Task SaveAsync(Model.ServoMotor motor, string path, CancellationToken cancellationToken = default)
     {
         ArgumentNullException.ThrowIfNull(motor);
         ArgumentException.ThrowIfNullOrWhiteSpace(path);
@@ -96,7 +96,7 @@ public static class MotorFile
         await JsonSerializer.SerializeAsync(stream, dto, JsonOptions, cancellationToken).ConfigureAwait(false);
     }
 
-    private static Model.MotorDefinition Load(Stream stream)
+    private static Model.ServoMotor Load(Stream stream)
     {
         var dto = JsonSerializer.Deserialize<MotorDefinitionFileDto>(stream, JsonOptions);
         if (dto is null)
@@ -107,7 +107,7 @@ public static class MotorFile
         return MotorFileMapper.ToRuntimeModel(dto);
     }
 
-    private static async Task<Model.MotorDefinition> LoadAsync(Stream stream, CancellationToken cancellationToken)
+    private static async Task<Model.ServoMotor> LoadAsync(Stream stream, CancellationToken cancellationToken)
     {
         var dto = await JsonSerializer.DeserializeAsync<MotorDefinitionFileDto>(stream, JsonOptions, cancellationToken).ConfigureAwait(false);
         if (dto is null)

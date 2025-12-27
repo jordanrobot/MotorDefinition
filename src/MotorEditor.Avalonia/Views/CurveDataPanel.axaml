@@ -84,7 +84,7 @@
                             </ItemsPanelTemplate>
                         </ItemsControl.ItemsPanel>
                         <ItemsControl.ItemTemplate>
-                            <DataTemplate DataType="models:CurveSeries">
+                            <DataTemplate DataType="models:Curve">
                                 <Border Width="80" BorderThickness="0,0,1,0" 
                                         BorderBrush="{DynamicResource SystemControlBackgroundBaseMediumBrush}">
                                     <StackPanel Margin="2,2">

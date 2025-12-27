@@ -20,7 +20,7 @@ public sealed class MainWindowViewModelOpenAndNewDirtyPromptTests
         var curveGeneratorMock = new Mock<ICurveGeneratorService>(MockBehavior.Loose);
         var validationServiceMock = new Mock<IValidationService>(MockBehavior.Strict);
         validationServiceMock
-            .Setup(v => v.ValidateMotorDefinition(It.IsAny<MotorDefinition>()))
+            .Setup(v => v.ValidateServoMotor(It.IsAny<ServoMotor>()))
             .Returns(Array.Empty<string>());
         var driveVoltageSeriesServiceMock = new Mock<IDriveVoltageSeriesService>(MockBehavior.Loose);
         var workflowMock = new Mock<IMotorConfigurationWorkflow>(MockBehavior.Loose);
@@ -53,7 +53,7 @@ public sealed class MainWindowViewModelOpenAndNewDirtyPromptTests
         var curveGeneratorMock = new Mock<ICurveGeneratorService>(MockBehavior.Loose);
         var validationServiceMock = new Mock<IValidationService>(MockBehavior.Strict);
         validationServiceMock
-            .Setup(v => v.ValidateMotorDefinition(It.IsAny<MotorDefinition>()))
+            .Setup(v => v.ValidateServoMotor(It.IsAny<ServoMotor>()))
             .Returns(Array.Empty<string>());
         var driveVoltageSeriesServiceMock = new Mock<IDriveVoltageSeriesService>(MockBehavior.Loose);
         var workflowMock = new Mock<IMotorConfigurationWorkflow>(MockBehavior.Loose);
@@ -69,7 +69,7 @@ public sealed class MainWindowViewModelOpenAndNewDirtyPromptTests
             settingsStore: null,
             unsavedChangesPromptAsync: _ => Task.FromResult(MainWindowViewModel.UnsavedChangesChoice.Cancel));
 
-        var existing = new MotorDefinition { MotorName = "Existing" };
+        var existing = new ServoMotor { MotorName = "Existing" };
         vm.CurrentMotor = existing;
         vm.IsDirty = true;
 

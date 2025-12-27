@@ -11,7 +11,7 @@ namespace JordanRobot.MotorDefinition.Model;
 /// Represents voltage-specific configuration and performance data for a motor/drive combination.
 /// Contains the curve series for this specific voltage setting.
 /// </summary>
-public class VoltageConfiguration : INotifyPropertyChanged
+public class Voltage : INotifyPropertyChanged
 {
     private double _voltage;
 
@@ -19,14 +19,14 @@ public class VoltageConfiguration : INotifyPropertyChanged
     /// The operating voltage (V).
     /// </summary>
     [JsonPropertyName("voltage")]
-    public double Voltage
+    public double Value
     {
         get => _voltage;
         set
         {
             if (value <= 0)
             {
-                throw new ArgumentOutOfRangeException(nameof(value), value, "Voltage must be positive.");
+                throw new ArgumentOutOfRangeException(nameof(value), value, "Value must be positive.");
             }
             if (Math.Abs(_voltage - value) < double.Epsilon)
             {
@@ -43,7 +43,7 @@ public class VoltageConfiguration : INotifyPropertyChanged
     /// Useful for populating UI lists and combo-boxes.
     /// </summary>
     [JsonIgnore]
-    public string DisplayName => string.Create(CultureInfo.InvariantCulture, $"{Voltage:0.##} V");
+    public string DisplayName => string.Create(CultureInfo.InvariantCulture, $"{Value:0.##} V");
 
     /// <summary>
     /// The power output at this voltage (in the unit specified by Units.Power).
@@ -91,29 +91,22 @@ public class VoltageConfiguration : INotifyPropertyChanged
     /// The collection of curve series for this voltage configuration (e.g., "Peak", "Continuous").
     /// </summary>
     [JsonPropertyName("series")]
-    public List<CurveSeries> Series { get; set; } = [];
+    public List<Curve> Curves { get; set; } = [];
 
     /// <summary>
-    /// Gets a LINQ-friendly enumeration of Curve Series.
-    /// This is a convenience alias for <see cref="Series"/>.
+    /// Creates a new Voltage with default values.
     /// </summary>
-    [JsonIgnore]
-    public IEnumerable<CurveSeries> CurveSeries => Series;
-
-    /// <summary>
-    /// Creates a new VoltageConfiguration with default values.
-    /// </summary>
-    public VoltageConfiguration()
+    public Voltage()
     {
     }
 
     /// <summary>
-    /// Creates a new VoltageConfiguration with the specified voltage.
+    /// Creates a new Voltage with the specified voltage.
     /// </summary>
     /// <param name="voltage">The operating voltage.</param>
-    public VoltageConfiguration(double voltage)
+    public Voltage(double voltage)
     {
-        Voltage = voltage;
+        Value = voltage;
     }
 
     /// <summary>
@@ -121,9 +114,9 @@ public class VoltageConfiguration : INotifyPropertyChanged
     /// </summary>
     /// <param name="name">The name of the series to find.</param>
     /// <returns>The matching series, or null if not found.</returns>
-    public CurveSeries? GetSeriesByName(string name)
+    public Curve? GetSeriesByName(string name)
     {
-        return Series.Find(s => s.Name.Equals(name, StringComparison.Ordinal));
+        return Curves.Find(s => s.Name.Equals(name, StringComparison.Ordinal));
     }
 
     /// <summary>
@@ -133,16 +126,16 @@ public class VoltageConfiguration : INotifyPropertyChanged
     /// <param name="initializeTorque">The default torque value for all points.</param>
     /// <returns>The newly created series.</returns>
     /// <exception cref="InvalidOperationException">Thrown if a series with the same name already exists.</exception>
-    public CurveSeries AddSeries(string name, double initializeTorque = 0)
+    public Curve AddSeries(string name, double initializeTorque = 0)
     {
         if (GetSeriesByName(name) is not null)
         {
             throw new InvalidOperationException($"A series with the name '{name}' already exists.");
         }
 
-        var series = new CurveSeries(name);
+        var series = new Curve(name);
         series.InitializeData(MaxSpeed, initializeTorque);
-        Series.Add(series);
+        Curves.Add(series);
         return series;
     }
 

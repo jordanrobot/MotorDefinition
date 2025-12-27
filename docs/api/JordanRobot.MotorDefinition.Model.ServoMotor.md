@@ -1,49 +1,49 @@
 #### [MotorDefinition](index.md 'index')
 ### [JordanRobot\.MotorDefinition\.Model](JordanRobot.MotorDefinition.Model.md 'JordanRobot\.MotorDefinition\.Model')
 
-## MotorDefinition Class
+## ServoMotor Class
 
 Represents a complete motor definition including all properties, drive configurations, and metadata\.
-Structure: Motor → Drive\(s\) → Voltage\(s\) → CurveSeries
+Structure: Motor → Drive\(s\) → Value\(s\) → Curve
 
 ```csharp
-public class MotorDefinition
+public class ServoMotor
 ```
 
-Inheritance [System\.Object](https://learn.microsoft.com/en-us/dotnet/api/system.object 'System\.Object') &#129106; MotorDefinition
+Inheritance [System\.Object](https://learn.microsoft.com/en-us/dotnet/api/system.object 'System\.Object') &#129106; ServoMotor
 ### Constructors
 
-<a name='JordanRobot.MotorDefinition.Model.MotorDefinition.MotorDefinition()'></a>
+<a name='JordanRobot.MotorDefinition.Model.ServoMotor.ServoMotor()'></a>
 
-## MotorDefinition\(\) Constructor
+## ServoMotor\(\) Constructor
 
-Creates a new MotorDefinition with default values\.
+Creates a new ServoMotor with default values\.
 
 ```csharp
-public MotorDefinition();
+public ServoMotor();
 ```
 
-<a name='JordanRobot.MotorDefinition.Model.MotorDefinition.MotorDefinition(string)'></a>
+<a name='JordanRobot.MotorDefinition.Model.ServoMotor.ServoMotor(string)'></a>
 
-## MotorDefinition\(string\) Constructor
+## ServoMotor\(string\) Constructor
 
-Creates a new MotorDefinition with the specified motor name\.
+Creates a new ServoMotor with the specified motor name\.
 
 ```csharp
-public MotorDefinition(string motorName);
+public ServoMotor(string motorName);
 ```
 #### Parameters
 
-<a name='JordanRobot.MotorDefinition.Model.MotorDefinition.MotorDefinition(string).motorName'></a>
+<a name='JordanRobot.MotorDefinition.Model.ServoMotor.ServoMotor(string).motorName'></a>
 
 `motorName` [System\.String](https://learn.microsoft.com/en-us/dotnet/api/system.string 'System\.String')
 
 The name of the motor\.
 ### Fields
 
-<a name='JordanRobot.MotorDefinition.Model.MotorDefinition.CurrentSchemaVersion'></a>
+<a name='JordanRobot.MotorDefinition.Model.ServoMotor.CurrentSchemaVersion'></a>
 
-## MotorDefinition\.CurrentSchemaVersion Field
+## ServoMotor\.CurrentSchemaVersion Field
 
 The current schema version for motor definition files\.
 
@@ -55,9 +55,9 @@ public const string CurrentSchemaVersion = "1.0.0";
 [System\.String](https://learn.microsoft.com/en-us/dotnet/api/system.string 'System\.String')
 ### Properties
 
-<a name='JordanRobot.MotorDefinition.Model.MotorDefinition.BrakeAmperage'></a>
+<a name='JordanRobot.MotorDefinition.Model.ServoMotor.BrakeAmperage'></a>
 
-## MotorDefinition\.BrakeAmperage Property
+## ServoMotor\.BrakeAmperage Property
 
 The current draw of the brake \(if present\) \(A\)\.
 
@@ -68,9 +68,9 @@ public double BrakeAmperage { get; set; }
 #### Property Value
 [System\.Double](https://learn.microsoft.com/en-us/dotnet/api/system.double 'System\.Double')
 
-<a name='JordanRobot.MotorDefinition.Model.MotorDefinition.BrakeBacklash'></a>
+<a name='JordanRobot.MotorDefinition.Model.ServoMotor.BrakeBacklash'></a>
 
-## MotorDefinition\.BrakeBacklash Property
+## ServoMotor\.BrakeBacklash Property
 
 The backlash of the brake mechanism\.
 
@@ -81,9 +81,9 @@ public double BrakeBacklash { get; set; }
 #### Property Value
 [System\.Double](https://learn.microsoft.com/en-us/dotnet/api/system.double 'System\.Double')
 
-<a name='JordanRobot.MotorDefinition.Model.MotorDefinition.BrakeEngageTimeDiode'></a>
+<a name='JordanRobot.MotorDefinition.Model.ServoMotor.BrakeEngageTimeDiode'></a>
 
-## MotorDefinition\.BrakeEngageTimeDiode Property
+## ServoMotor\.BrakeEngageTimeDiode Property
 
 The brake engage time when using a diode\.
 
@@ -94,9 +94,9 @@ public double BrakeEngageTimeDiode { get; set; }
 #### Property Value
 [System\.Double](https://learn.microsoft.com/en-us/dotnet/api/system.double 'System\.Double')
 
-<a name='JordanRobot.MotorDefinition.Model.MotorDefinition.BrakeEngageTimeMov'></a>
+<a name='JordanRobot.MotorDefinition.Model.ServoMotor.BrakeEngageTimeMov'></a>
 
-## MotorDefinition\.BrakeEngageTimeMov Property
+## ServoMotor\.BrakeEngageTimeMov Property
 
 The brake engage time when using an MOV\.
 
@@ -107,9 +107,9 @@ public double BrakeEngageTimeMov { get; set; }
 #### Property Value
 [System\.Double](https://learn.microsoft.com/en-us/dotnet/api/system.double 'System\.Double')
 
-<a name='JordanRobot.MotorDefinition.Model.MotorDefinition.BrakeReleaseTime'></a>
+<a name='JordanRobot.MotorDefinition.Model.ServoMotor.BrakeReleaseTime'></a>
 
-## MotorDefinition\.BrakeReleaseTime Property
+## ServoMotor\.BrakeReleaseTime Property
 
 The release time of the brake\.
 
@@ -120,9 +120,9 @@ public double BrakeReleaseTime { get; set; }
 #### Property Value
 [System\.Double](https://learn.microsoft.com/en-us/dotnet/api/system.double 'System\.Double')
 
-<a name='JordanRobot.MotorDefinition.Model.MotorDefinition.BrakeTorque'></a>
+<a name='JordanRobot.MotorDefinition.Model.ServoMotor.BrakeTorque'></a>
 
-## MotorDefinition\.BrakeTorque Property
+## ServoMotor\.BrakeTorque Property
 
 The holding torque of the integral brake \(if present\)\.
 
@@ -133,9 +133,9 @@ public double BrakeTorque { get; set; }
 #### Property Value
 [System\.Double](https://learn.microsoft.com/en-us/dotnet/api/system.double 'System\.Double')
 
-<a name='JordanRobot.MotorDefinition.Model.MotorDefinition.BrakeVoltage'></a>
+<a name='JordanRobot.MotorDefinition.Model.ServoMotor.BrakeVoltage'></a>
 
-## MotorDefinition\.BrakeVoltage Property
+## ServoMotor\.BrakeVoltage Property
 
 The voltage requirement of the brake \(if present\) \(V\)\.
 
@@ -146,23 +146,9 @@ public double BrakeVoltage { get; set; }
 #### Property Value
 [System\.Double](https://learn.microsoft.com/en-us/dotnet/api/system.double 'System\.Double')
 
-<a name='JordanRobot.MotorDefinition.Model.MotorDefinition.DriveConfigurations'></a>
+<a name='JordanRobot.MotorDefinition.Model.ServoMotor.DriveNames'></a>
 
-## MotorDefinition\.DriveConfigurations Property
-
-Gets a LINQ\-friendly enumeration of all drive configurations\.
-This is a convenience alias for [Drives](JordanRobot.MotorDefinition.Model.MotorDefinition.md#JordanRobot.MotorDefinition.Model.MotorDefinition.Drives 'JordanRobot\.MotorDefinition\.Model\.MotorDefinition\.Drives')\.
-
-```csharp
-public System.Collections.Generic.IEnumerable<JordanRobot.MotorDefinition.Model.DriveConfiguration> DriveConfigurations { get; }
-```
-
-#### Property Value
-[System\.Collections\.Generic\.IEnumerable&lt;](https://learn.microsoft.com/en-us/dotnet/api/system.collections.generic.ienumerable-1 'System\.Collections\.Generic\.IEnumerable\`1')[DriveConfiguration](JordanRobot.MotorDefinition.Model.DriveConfiguration.md 'JordanRobot\.MotorDefinition\.Model\.DriveConfiguration')[&gt;](https://learn.microsoft.com/en-us/dotnet/api/system.collections.generic.ienumerable-1 'System\.Collections\.Generic\.IEnumerable\`1')
-
-<a name='JordanRobot.MotorDefinition.Model.MotorDefinition.DriveNames'></a>
-
-## MotorDefinition\.DriveNames Property
+## ServoMotor\.DriveNames Property
 
 Gets the drive names in this motor definition\.
 Useful for populating UI lists and combo\-boxes\.
@@ -174,23 +160,23 @@ public System.Collections.Generic.IEnumerable<string> DriveNames { get; }
 #### Property Value
 [System\.Collections\.Generic\.IEnumerable&lt;](https://learn.microsoft.com/en-us/dotnet/api/system.collections.generic.ienumerable-1 'System\.Collections\.Generic\.IEnumerable\`1')[System\.String](https://learn.microsoft.com/en-us/dotnet/api/system.string 'System\.String')[&gt;](https://learn.microsoft.com/en-us/dotnet/api/system.collections.generic.ienumerable-1 'System\.Collections\.Generic\.IEnumerable\`1')
 
-<a name='JordanRobot.MotorDefinition.Model.MotorDefinition.Drives'></a>
+<a name='JordanRobot.MotorDefinition.Model.ServoMotor.Drives'></a>
 
-## MotorDefinition\.Drives Property
+## ServoMotor\.Drives Property
 
 The collection of drive configurations for this motor\.
 Each drive can have multiple voltage configurations with their own curve series\.
 
 ```csharp
-public System.Collections.Generic.List<JordanRobot.MotorDefinition.Model.DriveConfiguration> Drives { get; set; }
+public System.Collections.Generic.List<JordanRobot.MotorDefinition.Model.Drive> Drives { get; set; }
 ```
 
 #### Property Value
-[System\.Collections\.Generic\.List&lt;](https://learn.microsoft.com/en-us/dotnet/api/system.collections.generic.list-1 'System\.Collections\.Generic\.List\`1')[DriveConfiguration](JordanRobot.MotorDefinition.Model.DriveConfiguration.md 'JordanRobot\.MotorDefinition\.Model\.DriveConfiguration')[&gt;](https://learn.microsoft.com/en-us/dotnet/api/system.collections.generic.list-1 'System\.Collections\.Generic\.List\`1')
+[System\.Collections\.Generic\.List&lt;](https://learn.microsoft.com/en-us/dotnet/api/system.collections.generic.list-1 'System\.Collections\.Generic\.List\`1')[Drive](JordanRobot.MotorDefinition.Model.Drive.md 'JordanRobot\.MotorDefinition\.Model\.Drive')[&gt;](https://learn.microsoft.com/en-us/dotnet/api/system.collections.generic.list-1 'System\.Collections\.Generic\.List\`1')
 
-<a name='JordanRobot.MotorDefinition.Model.MotorDefinition.FeedbackPpr'></a>
+<a name='JordanRobot.MotorDefinition.Model.ServoMotor.FeedbackPpr'></a>
 
-## MotorDefinition\.FeedbackPpr Property
+## ServoMotor\.FeedbackPpr Property
 
 The feedback device pulses per revolution \(PPR\)\.
 Used for encoder or resolver feedback resolution\.
@@ -202,9 +188,9 @@ public int FeedbackPpr { get; set; }
 #### Property Value
 [System\.Int32](https://learn.microsoft.com/en-us/dotnet/api/system.int32 'System\.Int32')
 
-<a name='JordanRobot.MotorDefinition.Model.MotorDefinition.HasBrake'></a>
+<a name='JordanRobot.MotorDefinition.Model.ServoMotor.HasBrake'></a>
 
-## MotorDefinition\.HasBrake Property
+## ServoMotor\.HasBrake Property
 
 Indicates whether the motor includes an integral holding brake\.
 
@@ -215,9 +201,9 @@ public bool HasBrake { get; set; }
 #### Property Value
 [System\.Boolean](https://learn.microsoft.com/en-us/dotnet/api/system.boolean 'System\.Boolean')
 
-<a name='JordanRobot.MotorDefinition.Model.MotorDefinition.Manufacturer'></a>
+<a name='JordanRobot.MotorDefinition.Model.ServoMotor.Manufacturer'></a>
 
-## MotorDefinition\.Manufacturer Property
+## ServoMotor\.Manufacturer Property
 
 The company that manufactures the motor\.
 
@@ -228,9 +214,9 @@ public string Manufacturer { get; set; }
 #### Property Value
 [System\.String](https://learn.microsoft.com/en-us/dotnet/api/system.string 'System\.String')
 
-<a name='JordanRobot.MotorDefinition.Model.MotorDefinition.MaxSpeed'></a>
+<a name='JordanRobot.MotorDefinition.Model.ServoMotor.MaxSpeed'></a>
 
-## MotorDefinition\.MaxSpeed Property
+## ServoMotor\.MaxSpeed Property
 
 The theoretical maximum rotational speed of the motor \(RPM\)\.
 
@@ -241,9 +227,9 @@ public double MaxSpeed { get; set; }
 #### Property Value
 [System\.Double](https://learn.microsoft.com/en-us/dotnet/api/system.double 'System\.Double')
 
-<a name='JordanRobot.MotorDefinition.Model.MotorDefinition.Metadata'></a>
+<a name='JordanRobot.MotorDefinition.Model.ServoMotor.Metadata'></a>
 
-## MotorDefinition\.Metadata Property
+## ServoMotor\.Metadata Property
 
 Metadata about the motor definition file\.
 
@@ -254,9 +240,9 @@ public JordanRobot.MotorDefinition.Model.MotorMetadata Metadata { get; set; }
 #### Property Value
 [MotorMetadata](JordanRobot.MotorDefinition.Model.MotorMetadata.md 'JordanRobot\.MotorDefinition\.Model\.MotorMetadata')
 
-<a name='JordanRobot.MotorDefinition.Model.MotorDefinition.MotorName'></a>
+<a name='JordanRobot.MotorDefinition.Model.ServoMotor.MotorName'></a>
 
-## MotorDefinition\.MotorName Property
+## ServoMotor\.MotorName Property
 
 The model name or identifier for the motor\.
 
@@ -267,9 +253,9 @@ public string MotorName { get; set; }
 #### Property Value
 [System\.String](https://learn.microsoft.com/en-us/dotnet/api/system.string 'System\.String')
 
-<a name='JordanRobot.MotorDefinition.Model.MotorDefinition.PartNumber'></a>
+<a name='JordanRobot.MotorDefinition.Model.ServoMotor.PartNumber'></a>
 
-## MotorDefinition\.PartNumber Property
+## ServoMotor\.PartNumber Property
 
 The manufacturer's part number for the motor\.
 
@@ -280,9 +266,9 @@ public string PartNumber { get; set; }
 #### Property Value
 [System\.String](https://learn.microsoft.com/en-us/dotnet/api/system.string 'System\.String')
 
-<a name='JordanRobot.MotorDefinition.Model.MotorDefinition.Power'></a>
+<a name='JordanRobot.MotorDefinition.Model.ServoMotor.Power'></a>
 
-## MotorDefinition\.Power Property
+## ServoMotor\.Power Property
 
 The theoretical maximum power output of the motor \(in the unit specified by Units\.Power\)\.
 
@@ -293,9 +279,9 @@ public double Power { get; set; }
 #### Property Value
 [System\.Double](https://learn.microsoft.com/en-us/dotnet/api/system.double 'System\.Double')
 
-<a name='JordanRobot.MotorDefinition.Model.MotorDefinition.RatedContinuousTorque'></a>
+<a name='JordanRobot.MotorDefinition.Model.ServoMotor.RatedContinuousTorque'></a>
 
-## MotorDefinition\.RatedContinuousTorque Property
+## ServoMotor\.RatedContinuousTorque Property
 
 The theoretical maximum torque the motor can produce continuously without overheating\.
 
@@ -306,9 +292,9 @@ public double RatedContinuousTorque { get; set; }
 #### Property Value
 [System\.Double](https://learn.microsoft.com/en-us/dotnet/api/system.double 'System\.Double')
 
-<a name='JordanRobot.MotorDefinition.Model.MotorDefinition.RatedPeakTorque'></a>
+<a name='JordanRobot.MotorDefinition.Model.ServoMotor.RatedPeakTorque'></a>
 
-## MotorDefinition\.RatedPeakTorque Property
+## ServoMotor\.RatedPeakTorque Property
 
 The theoretical maximum torque the motor can produce for short periods\.
 
@@ -319,9 +305,9 @@ public double RatedPeakTorque { get; set; }
 #### Property Value
 [System\.Double](https://learn.microsoft.com/en-us/dotnet/api/system.double 'System\.Double')
 
-<a name='JordanRobot.MotorDefinition.Model.MotorDefinition.RatedSpeed'></a>
+<a name='JordanRobot.MotorDefinition.Model.ServoMotor.RatedSpeed'></a>
 
-## MotorDefinition\.RatedSpeed Property
+## ServoMotor\.RatedSpeed Property
 
 The rated continuous operating speed of the motor \(RPM\)\.
 
@@ -332,9 +318,9 @@ public double RatedSpeed { get; set; }
 #### Property Value
 [System\.Double](https://learn.microsoft.com/en-us/dotnet/api/system.double 'System\.Double')
 
-<a name='JordanRobot.MotorDefinition.Model.MotorDefinition.RotorInertia'></a>
+<a name='JordanRobot.MotorDefinition.Model.ServoMotor.RotorInertia'></a>
 
-## MotorDefinition\.RotorInertia Property
+## ServoMotor\.RotorInertia Property
 
 The moment of inertia of the motor's rotor, affecting acceleration response\.
 
@@ -345,9 +331,9 @@ public double RotorInertia { get; set; }
 #### Property Value
 [System\.Double](https://learn.microsoft.com/en-us/dotnet/api/system.double 'System\.Double')
 
-<a name='JordanRobot.MotorDefinition.Model.MotorDefinition.SchemaVersion'></a>
+<a name='JordanRobot.MotorDefinition.Model.ServoMotor.SchemaVersion'></a>
 
-## MotorDefinition\.SchemaVersion Property
+## ServoMotor\.SchemaVersion Property
 
 Schema version for JSON compatibility\.
 
@@ -358,9 +344,9 @@ public string SchemaVersion { get; set; }
 #### Property Value
 [System\.String](https://learn.microsoft.com/en-us/dotnet/api/system.string 'System\.String')
 
-<a name='JordanRobot.MotorDefinition.Model.MotorDefinition.Units'></a>
+<a name='JordanRobot.MotorDefinition.Model.ServoMotor.Units'></a>
 
-## MotorDefinition\.Units Property
+## ServoMotor\.Units Property
 
 The unit settings for this motor definition\.
 
@@ -371,9 +357,9 @@ public JordanRobot.MotorDefinition.Model.UnitSettings Units { get; set; }
 #### Property Value
 [UnitSettings](JordanRobot.MotorDefinition.Model.UnitSettings.md 'JordanRobot\.MotorDefinition\.Model\.UnitSettings')
 
-<a name='JordanRobot.MotorDefinition.Model.MotorDefinition.Weight'></a>
+<a name='JordanRobot.MotorDefinition.Model.ServoMotor.Weight'></a>
 
-## MotorDefinition\.Weight Property
+## ServoMotor\.Weight Property
 
 The mass of the motor \(in the unit specified by Units\.Weight\)\.
 
@@ -385,25 +371,25 @@ public double Weight { get; set; }
 [System\.Double](https://learn.microsoft.com/en-us/dotnet/api/system.double 'System\.Double')
 ### Methods
 
-<a name='JordanRobot.MotorDefinition.Model.MotorDefinition.AddDrive(string)'></a>
+<a name='JordanRobot.MotorDefinition.Model.ServoMotor.AddDrive(string)'></a>
 
-## MotorDefinition\.AddDrive\(string\) Method
+## ServoMotor\.AddDrive\(string\) Method
 
 Adds a new drive configuration with the specified name\.
 
 ```csharp
-public JordanRobot.MotorDefinition.Model.DriveConfiguration AddDrive(string name);
+public JordanRobot.MotorDefinition.Model.Drive AddDrive(string name);
 ```
 #### Parameters
 
-<a name='JordanRobot.MotorDefinition.Model.MotorDefinition.AddDrive(string).name'></a>
+<a name='JordanRobot.MotorDefinition.Model.ServoMotor.AddDrive(string).name'></a>
 
 `name` [System\.String](https://learn.microsoft.com/en-us/dotnet/api/system.string 'System\.String')
 
 The name for the new drive\.
 
 #### Returns
-[DriveConfiguration](JordanRobot.MotorDefinition.Model.DriveConfiguration.md 'JordanRobot\.MotorDefinition\.Model\.DriveConfiguration')  
+[Drive](JordanRobot.MotorDefinition.Model.Drive.md 'JordanRobot\.MotorDefinition\.Model\.Drive')  
 The newly created drive configuration\.
 
 #### Exceptions
@@ -411,30 +397,30 @@ The newly created drive configuration\.
 [System\.InvalidOperationException](https://learn.microsoft.com/en-us/dotnet/api/system.invalidoperationexception 'System\.InvalidOperationException')  
 Thrown if a drive with the same name already exists\.
 
-<a name='JordanRobot.MotorDefinition.Model.MotorDefinition.GetDriveByName(string)'></a>
+<a name='JordanRobot.MotorDefinition.Model.ServoMotor.GetDriveByName(string)'></a>
 
-## MotorDefinition\.GetDriveByName\(string\) Method
+## ServoMotor\.GetDriveByName\(string\) Method
 
 Gets a drive configuration by name\.
 
 ```csharp
-public JordanRobot.MotorDefinition.Model.DriveConfiguration? GetDriveByName(string name);
+public JordanRobot.MotorDefinition.Model.Drive? GetDriveByName(string name);
 ```
 #### Parameters
 
-<a name='JordanRobot.MotorDefinition.Model.MotorDefinition.GetDriveByName(string).name'></a>
+<a name='JordanRobot.MotorDefinition.Model.ServoMotor.GetDriveByName(string).name'></a>
 
 `name` [System\.String](https://learn.microsoft.com/en-us/dotnet/api/system.string 'System\.String')
 
 The name of the drive to find\.
 
 #### Returns
-[DriveConfiguration](JordanRobot.MotorDefinition.Model.DriveConfiguration.md 'JordanRobot\.MotorDefinition\.Model\.DriveConfiguration')  
+[Drive](JordanRobot.MotorDefinition.Model.Drive.md 'JordanRobot\.MotorDefinition\.Model\.Drive')  
 The matching drive configuration, or null if not found\.
 
-<a name='JordanRobot.MotorDefinition.Model.MotorDefinition.HasValidConfiguration()'></a>
+<a name='JordanRobot.MotorDefinition.Model.ServoMotor.HasValidConfiguration()'></a>
 
-## MotorDefinition\.HasValidConfiguration\(\) Method
+## ServoMotor\.HasValidConfiguration\(\) Method
 
 Validates that the motor definition has at least one drive with a valid configuration\.
 
@@ -446,9 +432,9 @@ public bool HasValidConfiguration();
 [System\.Boolean](https://learn.microsoft.com/en-us/dotnet/api/system.boolean 'System\.Boolean')  
 True if valid; otherwise false\.
 
-<a name='JordanRobot.MotorDefinition.Model.MotorDefinition.RemoveDrive(string)'></a>
+<a name='JordanRobot.MotorDefinition.Model.ServoMotor.RemoveDrive(string)'></a>
 
-## MotorDefinition\.RemoveDrive\(string\) Method
+## ServoMotor\.RemoveDrive\(string\) Method
 
 Removes a drive configuration by name\.
 
@@ -457,7 +443,7 @@ public bool RemoveDrive(string name);
 ```
 #### Parameters
 
-<a name='JordanRobot.MotorDefinition.Model.MotorDefinition.RemoveDrive(string).name'></a>
+<a name='JordanRobot.MotorDefinition.Model.ServoMotor.RemoveDrive(string).name'></a>
 
 `name` [System\.String](https://learn.microsoft.com/en-us/dotnet/api/system.string 'System\.String')
 

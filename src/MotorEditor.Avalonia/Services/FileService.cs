@@ -51,7 +51,7 @@ public class FileService : IFileService
     public bool IsDirty { get; private set; }
 
     /// <inheritdoc />
-    public async Task<MotorDefinition> LoadAsync(string filePath)
+    public async Task<ServoMotor> LoadAsync(string filePath)
     {
         ArgumentNullException.ThrowIfNull(filePath);
 
@@ -72,7 +72,7 @@ public class FileService : IFileService
 
             var totalSeries = motorDefinition.Drives
                 .SelectMany(d => d.Voltages)
-                .SelectMany(v => v.Series)
+                .SelectMany(v => v.Curves)
                 .Count();
             Log.Debug("Loaded motor: {MotorName} with {DriveCount} drives and {SeriesCount} total series",
                 motorDefinition.MotorName, motorDefinition.Drives.Count, totalSeries);
@@ -92,7 +92,7 @@ public class FileService : IFileService
     }
 
     /// <inheritdoc />
-    public async Task SaveAsync(MotorDefinition motorDefinition)
+    public async Task SaveAsync(ServoMotor motorDefinition)
     {
         if (CurrentFilePath is null)
         {
@@ -104,7 +104,7 @@ public class FileService : IFileService
     }
 
     /// <inheritdoc />
-    public async Task SaveAsAsync(MotorDefinition motorDefinition, string filePath)
+    public async Task SaveAsAsync(ServoMotor motorDefinition, string filePath)
     {
         ArgumentNullException.ThrowIfNull(filePath);
 
@@ -114,7 +114,7 @@ public class FileService : IFileService
     }
 
     /// <inheritdoc />
-    public async Task SaveCopyAsAsync(MotorDefinition motorDefinition, string filePath)
+    public async Task SaveCopyAsAsync(ServoMotor motorDefinition, string filePath)
     {
         ArgumentNullException.ThrowIfNull(filePath);
 
@@ -135,11 +135,11 @@ public class FileService : IFileService
     }
 
     /// <inheritdoc />
-    public MotorDefinition CreateNew(string motorName, double maxSpeed, double maxTorque, double maxPower)
+    public ServoMotor CreateNew(string motorName, double maxSpeed, double maxTorque, double maxPower)
     {
         Log.Information("Creating new motor definition: {MotorName}", motorName);
 
-        var motor = new MotorDefinition(motorName)
+        var motor = new ServoMotor(motorName)
         {
             MaxSpeed = maxSpeed,
             RatedPeakTorque = maxTorque,
@@ -153,20 +153,20 @@ public class FileService : IFileService
 
         var drive = motor.AddDrive("Default Drive");
 
-        var voltageConfig = drive.AddVoltageConfiguration(220);
+        var voltageConfig = drive.AddVoltage(220);
         voltageConfig.MaxSpeed = maxSpeed;
         voltageConfig.RatedPeakTorque = maxTorque;
         voltageConfig.RatedContinuousTorque = maxTorque * 0.8;
         voltageConfig.Power = maxPower;
 
-        var peakSeries = new CurveSeries("Peak");
-        var continuousSeries = new CurveSeries("Continuous");
+        var peakSeries = new Curve("Peak");
+        var continuousSeries = new Curve("Continuous");
 
         peakSeries.Data = _curveGenerator.InterpolateCurve(maxSpeed, maxTorque, maxPower);
         continuousSeries.Data = _curveGenerator.InterpolateCurve(maxSpeed, maxTorque * 0.8, maxPower * 0.8);
 
-        voltageConfig.Series.Add(peakSeries);
-        voltageConfig.Series.Add(continuousSeries);
+        voltageConfig.Curves.Add(peakSeries);
+        voltageConfig.Curves.Add(continuousSeries);
 
         CurrentFilePath = null;
         IsDirty = true;
@@ -181,9 +181,9 @@ public class FileService : IFileService
         IsDirty = false;
     }
 
-    private void ValidateOrThrow(MotorDefinition motorDefinition, string filePath)
+    private void ValidateOrThrow(ServoMotor motorDefinition, string filePath)
     {
-        var errors = _validationService.ValidateMotorDefinition(motorDefinition);
+        var errors = _validationService.ValidateServoMotor(motorDefinition);
         if (errors.Count == 0)
         {
             return;
@@ -194,7 +194,7 @@ public class FileService : IFileService
         throw new InvalidOperationException($"The file '{filePath}' is not valid: {errors[0]}");
     }
 
-    private async Task SaveToFileAsync(MotorDefinition motorDefinition, string filePath)
+    private async Task SaveToFileAsync(ServoMotor motorDefinition, string filePath)
     {
         ArgumentNullException.ThrowIfNull(motorDefinition);
 

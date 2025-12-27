@@ -10,7 +10,7 @@ public class EditSeriesCommandTests
     [Fact]
     public void Execute_UpdatesNameAndLocked()
     {
-        var series = new CurveSeries
+        var series = new Curve
         {
             Name = "Old",
             Locked = false,
@@ -28,7 +28,7 @@ public class EditSeriesCommandTests
     [Fact]
     public void Undo_RestoresPreviousNameAndLocked()
     {
-        var series = new CurveSeries
+        var series = new Curve
         {
             Name = "Old",
             Locked = false,

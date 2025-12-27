@@ -456,7 +456,7 @@
                                   Classes="PropertyComboBox">
                             <ComboBox.ItemTemplate>
                                 <DataTemplate>
-                                    <TextBlock Text="{Binding Voltage, StringFormat={}{0}V}"/>
+                                    <TextBlock Text="{Binding Value, StringFormat={}{0}V}"/>
                                 </DataTemplate>
                             </ComboBox.ItemTemplate>
                         </ComboBox>

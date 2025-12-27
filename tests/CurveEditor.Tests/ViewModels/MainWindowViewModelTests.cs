@@ -10,47 +10,47 @@ namespace CurveEditor.Tests.ViewModels;
 
 public class MainWindowViewModelTests
 {
-    private static (MainWindowViewModel vm, MotorDefinition motor) CreateViewModelWithMotor()
+    private static (MainWindowViewModel vm, ServoMotor motor) CreateViewModelWithMotor()
     {
         var fileServiceMock = new Mock<IFileService>();
         var curveGeneratorMock = new Mock<ICurveGeneratorService>();
 
-        var motor = new MotorDefinition
+        var motor = new ServoMotor
         {
             MotorName = "Test Motor",
             MaxSpeed = 5000,
             Units = new UnitSettings { Torque = "Nm" },
-            Drives = new List<DriveConfiguration>
+            Drives = new List<Drive>
             {
                 new()
                 {
                     Name = "Drive A",
-                    Voltages = new List<VoltageConfiguration>
+                    Voltages = new List<Voltage>
                     {
                         new()
                         {
-                            Voltage = 208,
+                            Value = 208,
                             MaxSpeed = 4000,
-                            Series = new List<CurveSeries>()
+                            Curves = new List<Curve>()
                         },
                         new()
                         {
-                            Voltage = 400,
+                            Value = 400,
                             MaxSpeed = 4500,
-                            Series = new List<CurveSeries>()
+                            Curves = new List<Curve>()
                         }
                     }
                 },
                 new()
                 {
                     Name = "Drive B",
-                    Voltages = new List<VoltageConfiguration>
+                    Voltages = new List<Voltage>
                     {
                         new()
                         {
-                            Voltage = 120,
+                            Value = 120,
                             MaxSpeed = 3500,
-                            Series = new List<CurveSeries>()
+                            Curves = new List<Curve>()
                         }
                     }
                 }
@@ -81,7 +81,7 @@ public class MainWindowViewModelTests
         vm.SelectedDrive = motor.Drives[0];
 
         Assert.Equal(2, vm.AvailableVoltages.Count);
-        Assert.Equal(208, vm.SelectedVoltage?.Voltage);
+        Assert.Equal(208, vm.SelectedVoltage?.Value);
     }
 
     [Fact]
@@ -108,8 +108,8 @@ public class MainWindowViewModelTests
         vm.SelectedDrive = drive;
         vm.SelectedVoltage = voltage;
 
-        voltage.Series.Add(new CurveSeries { Name = "Peak" });
-        voltage.Series.Add(new CurveSeries { Name = "Continuous" });
+        voltage.Curves.Add(new Curve { Name = "Peak" });
+        voltage.Curves.Add(new Curve { Name = "Continuous" });
         vm.RefreshAvailableSeriesPublic();
 
         Assert.Equal(2, vm.AvailableSeries.Count);

@@ -11,7 +11,7 @@ namespace JordanRobot.MotorDefinition.Model;
 /// Represents a named series of motor torque/speed data points.
 /// Each series represents a specific operating condition (e.g., "Peak" or "Continuous").
 /// </summary>
-public class CurveSeries : INotifyPropertyChanged
+public class Curve : INotifyPropertyChanged
 {
     private const int MaxSupportedPointCount = 101;
     private string _name = string.Empty;
@@ -34,7 +34,7 @@ public class CurveSeries : INotifyPropertyChanged
         {
             if (string.IsNullOrWhiteSpace(value))
             {
-                throw new ArgumentException("Series name cannot be null or empty.", nameof(value));
+                throw new ArgumentException("Curves name cannot be null or empty.", nameof(value));
             }
             if (_name != value)
             {
@@ -113,18 +113,18 @@ public class CurveSeries : INotifyPropertyChanged
     public IEnumerable<double> Torques => Data.Select(p => p.Torque);
 
     /// <summary>
-    /// Creates a new CurveSeries with default values.
+    /// Creates a new Curve with default values.
     /// </summary>
-    public CurveSeries()
+    public Curve()
     {
         _name = "Unnamed";
     }
 
     /// <summary>
-    /// Creates a new CurveSeries with the specified name.
+    /// Creates a new Curve with the specified name.
     /// </summary>
     /// <param name="name">The name of the curve series.</param>
-    public CurveSeries(string name)
+    public Curve(string name)
     {
         Name = name;
     }

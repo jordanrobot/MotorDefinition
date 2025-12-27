@@ -40,7 +40,7 @@ True when the document shape matches the motor definition format\.
 Loads a motor definition from the specified path\.
 
 ```csharp
-public static JordanRobot.MotorDefinition.Model.MotorDefinition Load(string path);
+public static JordanRobot.MotorDefinition.Model.ServoMotor Load(string path);
 ```
 #### Parameters
 
@@ -51,7 +51,7 @@ public static JordanRobot.MotorDefinition.Model.MotorDefinition Load(string path
 The file path to read\.
 
 #### Returns
-[MotorDefinition](JordanRobot.MotorDefinition.Model.MotorDefinition.md 'JordanRobot\.MotorDefinition\.Model\.MotorDefinition')  
+[ServoMotor](JordanRobot.MotorDefinition.Model.ServoMotor.md 'JordanRobot\.MotorDefinition\.Model\.ServoMotor')  
 The parsed motor definition\.
 
 <a name='JordanRobot.MotorDefinition.MotorFile.LoadAsync(string,System.Threading.CancellationToken)'></a>
@@ -61,7 +61,7 @@ The parsed motor definition\.
 Loads a motor definition from the specified path asynchronously\.
 
 ```csharp
-public static System.Threading.Tasks.Task<JordanRobot.MotorDefinition.Model.MotorDefinition> LoadAsync(string path, System.Threading.CancellationToken cancellationToken=default(System.Threading.CancellationToken));
+public static System.Threading.Tasks.Task<JordanRobot.MotorDefinition.Model.ServoMotor> LoadAsync(string path, System.Threading.CancellationToken cancellationToken=default(System.Threading.CancellationToken));
 ```
 #### Parameters
 
@@ -78,56 +78,56 @@ The file path to read\.
 The cancellation token to observe\.
 
 #### Returns
-[System\.Threading\.Tasks\.Task&lt;](https://learn.microsoft.com/en-us/dotnet/api/system.threading.tasks.task-1 'System\.Threading\.Tasks\.Task\`1')[MotorDefinition](JordanRobot.MotorDefinition.Model.MotorDefinition.md 'JordanRobot\.MotorDefinition\.Model\.MotorDefinition')[&gt;](https://learn.microsoft.com/en-us/dotnet/api/system.threading.tasks.task-1 'System\.Threading\.Tasks\.Task\`1')  
+[System\.Threading\.Tasks\.Task&lt;](https://learn.microsoft.com/en-us/dotnet/api/system.threading.tasks.task-1 'System\.Threading\.Tasks\.Task\`1')[ServoMotor](JordanRobot.MotorDefinition.Model.ServoMotor.md 'JordanRobot\.MotorDefinition\.Model\.ServoMotor')[&gt;](https://learn.microsoft.com/en-us/dotnet/api/system.threading.tasks.task-1 'System\.Threading\.Tasks\.Task\`1')  
 The parsed motor definition\.
 
-<a name='JordanRobot.MotorDefinition.MotorFile.Save(JordanRobot.MotorDefinition.Model.MotorDefinition,string)'></a>
+<a name='JordanRobot.MotorDefinition.MotorFile.Save(JordanRobot.MotorDefinition.Model.ServoMotor,string)'></a>
 
-## MotorFile\.Save\(MotorDefinition, string\) Method
+## MotorFile\.Save\(ServoMotor, string\) Method
 
 Saves a motor definition to the specified path\.
 
 ```csharp
-public static void Save(JordanRobot.MotorDefinition.Model.MotorDefinition motor, string path);
+public static void Save(JordanRobot.MotorDefinition.Model.ServoMotor motor, string path);
 ```
 #### Parameters
 
-<a name='JordanRobot.MotorDefinition.MotorFile.Save(JordanRobot.MotorDefinition.Model.MotorDefinition,string).motor'></a>
+<a name='JordanRobot.MotorDefinition.MotorFile.Save(JordanRobot.MotorDefinition.Model.ServoMotor,string).motor'></a>
 
-`motor` [MotorDefinition](JordanRobot.MotorDefinition.Model.MotorDefinition.md 'JordanRobot\.MotorDefinition\.Model\.MotorDefinition')
+`motor` [ServoMotor](JordanRobot.MotorDefinition.Model.ServoMotor.md 'JordanRobot\.MotorDefinition\.Model\.ServoMotor')
 
 The motor definition to persist\.
 
-<a name='JordanRobot.MotorDefinition.MotorFile.Save(JordanRobot.MotorDefinition.Model.MotorDefinition,string).path'></a>
+<a name='JordanRobot.MotorDefinition.MotorFile.Save(JordanRobot.MotorDefinition.Model.ServoMotor,string).path'></a>
 
 `path` [System\.String](https://learn.microsoft.com/en-us/dotnet/api/system.string 'System\.String')
 
 The destination file path\.
 
-<a name='JordanRobot.MotorDefinition.MotorFile.SaveAsync(JordanRobot.MotorDefinition.Model.MotorDefinition,string,System.Threading.CancellationToken)'></a>
+<a name='JordanRobot.MotorDefinition.MotorFile.SaveAsync(JordanRobot.MotorDefinition.Model.ServoMotor,string,System.Threading.CancellationToken)'></a>
 
-## MotorFile\.SaveAsync\(MotorDefinition, string, CancellationToken\) Method
+## MotorFile\.SaveAsync\(ServoMotor, string, CancellationToken\) Method
 
 Saves a motor definition to the specified path asynchronously\.
 
 ```csharp
-public static System.Threading.Tasks.Task SaveAsync(JordanRobot.MotorDefinition.Model.MotorDefinition motor, string path, System.Threading.CancellationToken cancellationToken=default(System.Threading.CancellationToken));
+public static System.Threading.Tasks.Task SaveAsync(JordanRobot.MotorDefinition.Model.ServoMotor motor, string path, System.Threading.CancellationToken cancellationToken=default(System.Threading.CancellationToken));
 ```
 #### Parameters
 
-<a name='JordanRobot.MotorDefinition.MotorFile.SaveAsync(JordanRobot.MotorDefinition.Model.MotorDefinition,string,System.Threading.CancellationToken).motor'></a>
+<a name='JordanRobot.MotorDefinition.MotorFile.SaveAsync(JordanRobot.MotorDefinition.Model.ServoMotor,string,System.Threading.CancellationToken).motor'></a>
 
-`motor` [MotorDefinition](JordanRobot.MotorDefinition.Model.MotorDefinition.md 'JordanRobot\.MotorDefinition\.Model\.MotorDefinition')
+`motor` [ServoMotor](JordanRobot.MotorDefinition.Model.ServoMotor.md 'JordanRobot\.MotorDefinition\.Model\.ServoMotor')
 
 The motor definition to persist\.
 
-<a name='JordanRobot.MotorDefinition.MotorFile.SaveAsync(JordanRobot.MotorDefinition.Model.MotorDefinition,string,System.Threading.CancellationToken).path'></a>
+<a name='JordanRobot.MotorDefinition.MotorFile.SaveAsync(JordanRobot.MotorDefinition.Model.ServoMotor,string,System.Threading.CancellationToken).path'></a>
 
 `path` [System\.String](https://learn.microsoft.com/en-us/dotnet/api/system.string 'System\.String')
 
 The destination file path\.
 
-<a name='JordanRobot.MotorDefinition.MotorFile.SaveAsync(JordanRobot.MotorDefinition.Model.MotorDefinition,string,System.Threading.CancellationToken).cancellationToken'></a>
+<a name='JordanRobot.MotorDefinition.MotorFile.SaveAsync(JordanRobot.MotorDefinition.Model.ServoMotor,string,System.Threading.CancellationToken).cancellationToken'></a>
 
 `cancellationToken` [System\.Threading\.CancellationToken](https://learn.microsoft.com/en-us/dotnet/api/system.threading.cancellationtoken 'System\.Threading\.CancellationToken')
 

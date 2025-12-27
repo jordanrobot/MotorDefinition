@@ -1,13 +1,13 @@
-using System;
-using System.IO;
-using System.Collections.Generic;
-using System.Threading.Tasks;
 using CurveEditor.Services;
 using CurveEditor.ViewModels;
 using JordanRobot.MotorDefinition.Model;
 using JordanRobot.MotorDefinition.Persistence.Dtos;
 using MotorEditor.Avalonia.Models;
+using System;
+using System.Collections.Generic;
+using System.IO;
 using System.Linq;
+using System.Threading.Tasks;
 using Xunit;
 
 namespace CurveEditor.Tests.ViewModels;
@@ -21,7 +21,7 @@ public sealed class MainWindowRestoreTests
 
         var dto = new MotorDefinitionFileDto
         {
-            SchemaVersion = MotorDefinition.CurrentSchemaVersion,
+            SchemaVersion = ServoMotor.CurrentSchemaVersion,
             MotorName = motorName,
             Drives =
             [

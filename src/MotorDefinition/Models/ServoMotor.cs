@@ -7,9 +7,9 @@ namespace JordanRobot.MotorDefinition.Model;
 
 /// <summary>
 /// Represents a complete motor definition including all properties, drive configurations, and metadata.
-/// Structure: Motor → Drive(s) → Voltage(s) → CurveSeries
+/// Structure: Motor → Drive(s) → Value(s) → Curve
 /// </summary>
-public class MotorDefinition
+public class ServoMotor
 {
     /// <summary>
     /// The current schema version for motor definition files.
@@ -154,14 +154,7 @@ public class MotorDefinition
     /// Each drive can have multiple voltage configurations with their own curve series.
     /// </summary>
     [JsonPropertyName("drives")]
-    public List<DriveConfiguration> Drives { get; set; } = [];
-
-    /// <summary>
-    /// Gets a LINQ-friendly enumeration of all drive configurations.
-    /// This is a convenience alias for <see cref="Drives"/>.
-    /// </summary>
-    [JsonIgnore]
-    public IEnumerable<DriveConfiguration> DriveConfigurations => Drives;
+    public List<Drive> Drives { get; set; } = [];
 
     /// <summary>
     /// Gets the drive names in this motor definition.
@@ -178,17 +171,17 @@ public class MotorDefinition
     public MotorMetadata Metadata { get; set; } = new();
 
     /// <summary>
-    /// Creates a new MotorDefinition with default values.
+    /// Creates a new ServoMotor with default values.
     /// </summary>
-    public MotorDefinition()
+    public ServoMotor()
     {
     }
 
     /// <summary>
-    /// Creates a new MotorDefinition with the specified motor name.
+    /// Creates a new ServoMotor with the specified motor name.
     /// </summary>
     /// <param name="motorName">The name of the motor.</param>
-    public MotorDefinition(string motorName)
+    public ServoMotor(string motorName)
     {
         MotorName = motorName;
     }
@@ -201,7 +194,7 @@ public class MotorDefinition
     {
         return Drives.Count > 0 &&
                Drives.Any(d => d.Voltages.Count > 0 &&
-                              d.Voltages.Any(v => v.Series.Count > 0));
+                              d.Voltages.Any(v => v.Curves.Count > 0));
     }
 
     /// <summary>
@@ -209,7 +202,7 @@ public class MotorDefinition
     /// </summary>
     /// <param name="name">The name of the drive to find.</param>
     /// <returns>The matching drive configuration, or null if not found.</returns>
-    public DriveConfiguration? GetDriveByName(string name)
+    public Drive? GetDriveByName(string name)
     {
         return Drives.Find(d => d.Name.Equals(name, StringComparison.OrdinalIgnoreCase));
     }
@@ -220,14 +213,14 @@ public class MotorDefinition
     /// <param name="name">The name for the new drive.</param>
     /// <returns>The newly created drive configuration.</returns>
     /// <exception cref="InvalidOperationException">Thrown if a drive with the same name already exists.</exception>
-    public DriveConfiguration AddDrive(string name)
+    public Drive AddDrive(string name)
     {
         if (GetDriveByName(name) is not null)
         {
             throw new InvalidOperationException($"A drive with the name '{name}' already exists.");
         }
 
-        var drive = new DriveConfiguration(name);
+        var drive = new Drive(name);
         Drives.Add(drive);
         Metadata.UpdateModified();
         return drive;

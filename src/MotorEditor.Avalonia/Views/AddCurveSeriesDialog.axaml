@@ -3,8 +3,8 @@
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         mc:Ignorable="d" d:DesignWidth="400" d:DesignHeight="350"
-        x:Class="CurveEditor.Views.AddCurveSeriesDialog"
-        Title="Add New Curve Series"
+        x:Class="CurveEditor.Views.AddCurveDialog"
+        Title="Add New Curve"
         Width="400" Height="350"
         WindowStartupLocation="CenterOwner"
         CanResize="False"
@@ -27,7 +27,7 @@
         <!-- Form Fields -->
         <ScrollViewer Grid.Row="0">
             <StackPanel Spacing="8">
-                <TextBlock Text="Enter the properties for the new curve series:" 
+                <TextBlock Text="Enter the properties for the new curve:" 
                            TextWrapping="Wrap" Margin="0,0,0,12"/>
                 
                 <!-- Name -->

@@ -5,14 +5,14 @@ namespace CurveEditor.Services;
 
 /// <summary>
 /// Encapsulates higher-level workflows for configuring drives, voltages,
-/// and series on a <see cref="MotorDefinition"/>. This keeps orchestration
+/// and series on a <see cref="ServoMotor"/>. This keeps orchestration
 /// logic out of the main window view model while remaining easy to test.
 /// </summary>
 public interface IMotorConfigurationWorkflow
 {
-    (DriveConfiguration Drive, VoltageConfiguration Voltage) CreateDriveWithVoltage(MotorDefinition motor, DriveVoltageDialogResult result);
+    (Drive Drive, Voltage Voltage) CreateDriveWithVoltage(ServoMotor motor, DriveVoltageDialogResult result);
 
-    (bool IsDuplicate, VoltageConfiguration? Voltage) CreateVoltageWithSeries(DriveConfiguration drive, DriveVoltageDialogResult result);
+    (bool IsDuplicate, Voltage? Voltage) CreateVoltageWithSeries(Drive drive, DriveVoltageDialogResult result);
 
-    CurveSeries CreateSeries(VoltageConfiguration voltage, AddCurveSeriesResult result);
+    Curve CreateSeries(Voltage voltage, AddCurveResult result);
 }

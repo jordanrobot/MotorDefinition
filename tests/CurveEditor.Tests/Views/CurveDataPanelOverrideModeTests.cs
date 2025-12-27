@@ -13,26 +13,26 @@ public class CurveDataPanelOverrideModeTests
     [Fact]
     public void ArrowKeys_CommitOverrideAndMoveSelection()
     {
-        var motor = new MotorDefinition
+        var motor = new ServoMotor
         {
             MaxSpeed = 5000,
             Units = new UnitSettings { Torque = "Nm" }
         };
 
-        var voltage = new VoltageConfiguration(220)
+        var voltage = new Voltage(220)
         {
             MaxSpeed = 5000,
             RatedPeakTorque = 50,
             RatedContinuousTorque = 40
         };
 
-        var peak = new CurveSeries("Peak");
+        var peak = new Curve("Peak");
         peak.InitializeData(5000, 50);
-        var cont = new CurveSeries("Continuous");
+        var cont = new Curve("Continuous");
         cont.InitializeData(5000, 40);
-        voltage.Series.Add(peak);
-        voltage.Series.Add(cont);
-        motor.Drives.Add(new DriveConfiguration
+        voltage.Curves.Add(peak);
+        voltage.Curves.Add(cont);
+        motor.Drives.Add(new Drive
         {
             Name = "Drive",
             Voltages = { voltage }
@@ -95,23 +95,23 @@ public class CurveDataPanelOverrideModeTests
     [Fact]
     public void OverrideModeCommit_IsUndoableViaGlobalUndo()
     {
-        var motor = new MotorDefinition
+        var motor = new ServoMotor
         {
             MaxSpeed = 5000,
             Units = new UnitSettings { Torque = "Nm" }
         };
 
-        var voltage = new VoltageConfiguration(220)
+        var voltage = new Voltage(220)
         {
             MaxSpeed = 5000,
             RatedPeakTorque = 50,
             RatedContinuousTorque = 40
         };
 
-        var peak = new CurveSeries("Peak");
+        var peak = new Curve("Peak");
         peak.InitializeData(5000, 50);
-        voltage.Series.Add(peak);
-        motor.Drives.Add(new DriveConfiguration
+        voltage.Curves.Add(peak);
+        motor.Drives.Add(new Drive
         {
             Name = "Drive",
             Voltages = { voltage }
@@ -137,7 +137,7 @@ public class CurveDataPanelOverrideModeTests
 
         // Select a single torque cell
         vm.CurveDataTableViewModel.SelectCell(0, 2);
-        var originalTorque = voltage.Series[0].Data[0].Torque;
+        var originalTorque = voltage.Curves[0].Data[0].Torque;
 
         // Get access to the internal key handler
         var keyDownMethod = typeof(CurveDataPanel)
@@ -162,7 +162,7 @@ public class CurveDataPanelOverrideModeTests
         keyDownMethod.Invoke(panel, new object?[] { dataGrid, key2 });
 
         // Value should now reflect the override
-        Assert.Equal(12, voltage.Series[0].Data[0].Torque, 3);
+        Assert.Equal(12, voltage.Curves[0].Data[0].Torque, 3);
 
         // Press Enter to commit override mode (which should now push an
         // undoable command onto the shared UndoStack)
@@ -179,29 +179,29 @@ public class CurveDataPanelOverrideModeTests
         vm.UndoCommand.Execute(null);
 
         // After undo, the torque should return to its original value
-        Assert.Equal(originalTorque, voltage.Series[0].Data[0].Torque, 3);
+        Assert.Equal(originalTorque, voltage.Curves[0].Data[0].Torque, 3);
     }
 
     [Fact]
     public void OverrideMode_DoesNotStartOnNonNumericFirstCharacter()
     {
-        var motor = new MotorDefinition
+        var motor = new ServoMotor
         {
             MaxSpeed = 5000,
             Units = new UnitSettings { Torque = "Nm" }
         };
 
-        var voltage = new VoltageConfiguration(220)
+        var voltage = new Voltage(220)
         {
             MaxSpeed = 5000,
             RatedPeakTorque = 50,
             RatedContinuousTorque = 40
         };
 
-        var peak = new CurveSeries("Peak");
+        var peak = new Curve("Peak");
         peak.InitializeData(5000, 50);
-        voltage.Series.Add(peak);
-        motor.Drives.Add(new DriveConfiguration
+        voltage.Curves.Add(peak);
+        motor.Drives.Add(new Drive
         {
             Name = "Drive",
             Voltages = { voltage }
@@ -227,7 +227,7 @@ public class CurveDataPanelOverrideModeTests
 
         // Select a single torque cell and capture its original value
         vm.CurveDataTableViewModel.SelectCell(0, 2);
-        var originalTorque = voltage.Series[0].Data[0].Torque;
+        var originalTorque = voltage.Curves[0].Data[0].Torque;
 
         // Get access to the internal TextInput handler
         var textInputMethod = typeof(CurveDataPanel)
@@ -244,6 +244,6 @@ public class CurveDataPanelOverrideModeTests
 
         textInputMethod!.Invoke(panel, new object?[] { dataGrid, textArgs });
 
-        Assert.Equal(originalTorque, voltage.Series[0].Data[0].Torque, 3);
+        Assert.Equal(originalTorque, voltage.Curves[0].Data[0].Torque, 3);
     }
 }

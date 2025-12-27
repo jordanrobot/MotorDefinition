@@ -12,20 +12,20 @@ internal static class MotorFileMapper
 Inheritance [System\.Object](https://learn.microsoft.com/en-us/dotnet/api/system.object 'System\.Object') &#129106; MotorFileMapper
 ### Methods
 
-<a name='JordanRobot.MotorDefinition.Persistence.Mapping.MotorFileMapper.ToFileDto(JordanRobot.MotorDefinition.Model.MotorDefinition)'></a>
+<a name='JordanRobot.MotorDefinition.Persistence.Mapping.MotorFileMapper.ToFileDto(JordanRobot.MotorDefinition.Model.ServoMotor)'></a>
 
-## MotorFileMapper\.ToFileDto\(MotorDefinition\) Method
+## MotorFileMapper\.ToFileDto\(ServoMotor\) Method
 
-Maps a runtime [MotorDefinition](JordanRobot.MotorDefinition.Model.MotorDefinition.md 'JordanRobot\.MotorDefinition\.Model\.MotorDefinition') into a persistence DTO\.
+Maps a runtime [ServoMotor](JordanRobot.MotorDefinition.Model.ServoMotor.md 'JordanRobot\.MotorDefinition\.Model\.ServoMotor') into a persistence DTO\.
 
 ```csharp
-public static JordanRobot.MotorDefinition.Persistence.Dtos.MotorDefinitionFileDto ToFileDto(JordanRobot.MotorDefinition.Model.MotorDefinition motor);
+public static JordanRobot.MotorDefinition.Persistence.Dtos.MotorDefinitionFileDto ToFileDto(JordanRobot.MotorDefinition.Model.ServoMotor motor);
 ```
 #### Parameters
 
-<a name='JordanRobot.MotorDefinition.Persistence.Mapping.MotorFileMapper.ToFileDto(JordanRobot.MotorDefinition.Model.MotorDefinition).motor'></a>
+<a name='JordanRobot.MotorDefinition.Persistence.Mapping.MotorFileMapper.ToFileDto(JordanRobot.MotorDefinition.Model.ServoMotor).motor'></a>
 
-`motor` [MotorDefinition](JordanRobot.MotorDefinition.Model.MotorDefinition.md 'JordanRobot\.MotorDefinition\.Model\.MotorDefinition')
+`motor` [ServoMotor](JordanRobot.MotorDefinition.Model.ServoMotor.md 'JordanRobot\.MotorDefinition\.Model\.ServoMotor')
 
 The runtime motor definition\.
 
@@ -37,10 +37,10 @@ A DTO ready for serialization\.
 
 ## MotorFileMapper\.ToRuntimeModel\(MotorDefinitionFileDto\) Method
 
-Maps a persistence DTO into a runtime [MotorDefinition](JordanRobot.MotorDefinition.Model.MotorDefinition.md 'JordanRobot\.MotorDefinition\.Model\.MotorDefinition')\.
+Maps a persistence DTO into a runtime [ServoMotor](JordanRobot.MotorDefinition.Model.ServoMotor.md 'JordanRobot\.MotorDefinition\.Model\.ServoMotor')\.
 
 ```csharp
-public static JordanRobot.MotorDefinition.Model.MotorDefinition ToRuntimeModel(JordanRobot.MotorDefinition.Persistence.Dtos.MotorDefinitionFileDto dto);
+public static JordanRobot.MotorDefinition.Model.ServoMotor ToRuntimeModel(JordanRobot.MotorDefinition.Persistence.Dtos.MotorDefinitionFileDto dto);
 ```
 #### Parameters
 
@@ -51,5 +51,5 @@ public static JordanRobot.MotorDefinition.Model.MotorDefinition ToRuntimeModel(J
 The deserialized DTO\.
 
 #### Returns
-[MotorDefinition](JordanRobot.MotorDefinition.Model.MotorDefinition.md 'JordanRobot\.MotorDefinition\.Model\.MotorDefinition')  
+[ServoMotor](JordanRobot.MotorDefinition.Model.ServoMotor.md 'JordanRobot\.MotorDefinition\.Model\.ServoMotor')  
 A runtime motor definition model\.

@@ -46,7 +46,7 @@ public partial class MainWindowViewModel : ViewModelBase
 
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(WindowTitle))]
-    private MotorDefinition? _currentMotor;
+    private ServoMotor? _currentMotor;
 
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(WindowTitle))]
@@ -70,15 +70,15 @@ public partial class MainWindowViewModel : ViewModelBase
 
     // Drive selection
     [ObservableProperty]
-    private DriveConfiguration? _selectedDrive;
+    private Drive? _selectedDrive;
 
-    // Voltage selection
+    // Value selection
     [ObservableProperty]
-    private VoltageConfiguration? _selectedVoltage;
+    private Voltage? _selectedVoltage;
 
-    // Series selection
+    // Curves selection
     [ObservableProperty]
-    private CurveSeries? _selectedSeries;
+    private Curve? _selectedSeries;
 
     /// <summary>
     /// Coordinates editing and selection between chart and data table.
@@ -329,19 +329,19 @@ public partial class MainWindowViewModel : ViewModelBase
     /// Cached list of available voltages for the selected drive.
     /// </summary>
     [ObservableProperty]
-    private ObservableCollection<VoltageConfiguration> _availableVoltages = [];
+    private ObservableCollection<Voltage> _availableVoltages = [];
 
     /// <summary>
     /// Cached list of available series for the selected voltage.
     /// </summary>
     [ObservableProperty]
-    private ObservableCollection<CurveSeries> _availableSeries = [];
+    private ObservableCollection<Curve> _availableSeries = [];
 
     /// <summary>
     /// Cached list of available drives from current motor definition.
     /// </summary>
     [ObservableProperty]
-    private ObservableCollection<DriveConfiguration> _availableDrives = [];
+    private ObservableCollection<Drive> _availableDrives = [];
 
     /// <summary>
     /// Gets whether there is at least one operation to undo.
@@ -842,7 +842,7 @@ public partial class MainWindowViewModel : ViewModelBase
         DriveNameEditor = SelectedDrive?.Name ?? string.Empty;
         DrivePartNumberEditor = SelectedDrive?.PartNumber ?? string.Empty;
         DriveManufacturerEditor = SelectedDrive?.Manufacturer ?? string.Empty;
-        VoltageValueEditor = SelectedVoltage?.Voltage.ToString(System.Globalization.CultureInfo.InvariantCulture) ?? string.Empty;
+        VoltageValueEditor = SelectedVoltage?.Value.ToString(System.Globalization.CultureInfo.InvariantCulture) ?? string.Empty;
         VoltagePowerEditor = SelectedVoltage?.Power.ToString(System.Globalization.CultureInfo.InvariantCulture) ?? string.Empty;
         VoltageMaxSpeedEditor = SelectedVoltage?.MaxSpeed.ToString(System.Globalization.CultureInfo.InvariantCulture) ?? string.Empty;
         VoltagePeakTorqueEditor = SelectedVoltage?.RatedPeakTorque.ToString(System.Globalization.CultureInfo.InvariantCulture) ?? string.Empty;
@@ -870,7 +870,7 @@ public partial class MainWindowViewModel : ViewModelBase
             return;
         }
 
-        var command = new EditMotorPropertyCommand(CurrentMotor, nameof(MotorDefinition.MotorName), oldName, newNameValue);
+        var command = new EditMotorPropertyCommand(CurrentMotor, nameof(ServoMotor.MotorName), oldName, newNameValue);
         _undoStack.PushAndExecute(command);
         UpdateDirtyFromUndoDepth();
         MotorNameEditor = CurrentMotor.MotorName ?? string.Empty;
@@ -896,7 +896,7 @@ public partial class MainWindowViewModel : ViewModelBase
             return;
         }
 
-        var command = new EditMotorPropertyCommand(CurrentMotor, nameof(MotorDefinition.Manufacturer), oldManufacturer, newManufacturerValue);
+        var command = new EditMotorPropertyCommand(CurrentMotor, nameof(ServoMotor.Manufacturer), oldManufacturer, newManufacturerValue);
         _undoStack.PushAndExecute(command);
         UpdateDirtyFromUndoDepth();
         ManufacturerEditor = CurrentMotor.Manufacturer ?? string.Empty;
@@ -924,7 +924,7 @@ public partial class MainWindowViewModel : ViewModelBase
             return;
         }
 
-        var command = new EditMotorPropertyCommand(CurrentMotor, nameof(MotorDefinition.MaxSpeed), oldValue, newValue);
+        var command = new EditMotorPropertyCommand(CurrentMotor, nameof(ServoMotor.MaxSpeed), oldValue, newValue);
         _undoStack.PushAndExecute(command);
         MaxSpeedEditor = newValue.ToString(System.Globalization.CultureInfo.InvariantCulture);
         ChartViewModel.MotorMaxSpeed = newValue;
@@ -949,7 +949,7 @@ public partial class MainWindowViewModel : ViewModelBase
             return;
         }
 
-        var command = new EditMotorPropertyCommand(CurrentMotor, nameof(MotorDefinition.PartNumber), oldPartNumber, newPartNumberValue);
+        var command = new EditMotorPropertyCommand(CurrentMotor, nameof(ServoMotor.PartNumber), oldPartNumber, newPartNumberValue);
         _undoStack.PushAndExecute(command);
         UpdateDirtyFromUndoDepth();
         PartNumberEditor = CurrentMotor.PartNumber ?? string.Empty;
@@ -1018,7 +1018,7 @@ public partial class MainWindowViewModel : ViewModelBase
             return;
         }
 
-        var command = new EditDrivePropertyCommand(SelectedDrive, nameof(DriveConfiguration.Name), oldValue, newValue);
+        var command = new EditDrivePropertyCommand(SelectedDrive, nameof(Drive.Name), oldValue, newValue);
         _undoStack.PushAndExecute(command);
         DriveNameEditor = newValue;
         IsDirty = true;
@@ -1039,7 +1039,7 @@ public partial class MainWindowViewModel : ViewModelBase
             return;
         }
 
-        var command = new EditDrivePropertyCommand(SelectedDrive, nameof(DriveConfiguration.PartNumber), oldValue, newValue);
+        var command = new EditDrivePropertyCommand(SelectedDrive, nameof(Drive.PartNumber), oldValue, newValue);
         _undoStack.PushAndExecute(command);
         DrivePartNumberEditor = newValue;
         IsDirty = true;
@@ -1060,7 +1060,7 @@ public partial class MainWindowViewModel : ViewModelBase
             return;
         }
 
-        var command = new EditDrivePropertyCommand(SelectedDrive, nameof(DriveConfiguration.Manufacturer), oldValue, newValue);
+        var command = new EditDrivePropertyCommand(SelectedDrive, nameof(Drive.Manufacturer), oldValue, newValue);
         _undoStack.PushAndExecute(command);
         DriveManufacturerEditor = newValue;
         IsDirty = true;
@@ -1073,7 +1073,7 @@ public partial class MainWindowViewModel : ViewModelBase
             return;
         }
 
-        var oldValue = SelectedVoltage.Voltage;
+        var oldValue = SelectedVoltage.Value;
         if (!TryParseDouble(VoltageValueEditor, oldValue, out var newValue))
         {
             VoltageValueEditor = oldValue.ToString(System.Globalization.CultureInfo.InvariantCulture);
@@ -1086,7 +1086,7 @@ public partial class MainWindowViewModel : ViewModelBase
         }
 
         Log.Debug("EditSelectedVoltageValue: old={Old}, new={New}", oldValue, newValue);
-        var command = new EditVoltagePropertyCommand(SelectedVoltage, nameof(VoltageConfiguration.Voltage), oldValue, newValue);
+        var command = new EditVoltagePropertyCommand(SelectedVoltage, nameof(Voltage.Value), oldValue, newValue);
         _undoStack.PushAndExecute(command);
         VoltageValueEditor = newValue.ToString(System.Globalization.CultureInfo.InvariantCulture);
         ChartViewModel.RefreshChart();
@@ -1114,7 +1114,7 @@ public partial class MainWindowViewModel : ViewModelBase
         }
 
         Log.Debug("EditSelectedVoltagePower: old={Old}, new={New}", oldValue, newValue);
-        var command = new EditVoltagePropertyCommand(SelectedVoltage, nameof(VoltageConfiguration.Power), oldValue, newValue);
+        var command = new EditVoltagePropertyCommand(SelectedVoltage, nameof(Voltage.Power), oldValue, newValue);
         _undoStack.PushAndExecute(command);
         VoltagePowerEditor = newValue.ToString(System.Globalization.CultureInfo.InvariantCulture);
         ChartViewModel.RefreshChart();
@@ -1142,7 +1142,7 @@ public partial class MainWindowViewModel : ViewModelBase
         }
 
         Log.Debug("EditSelectedVoltageMaxSpeed: old={Old}, new={New}", oldValue, newValue);
-        var command = new EditVoltagePropertyCommand(SelectedVoltage, nameof(VoltageConfiguration.MaxSpeed), oldValue, newValue);
+        var command = new EditVoltagePropertyCommand(SelectedVoltage, nameof(Voltage.MaxSpeed), oldValue, newValue);
         _undoStack.PushAndExecute(command);
         VoltageMaxSpeedEditor = newValue.ToString(System.Globalization.CultureInfo.InvariantCulture);
         ChartViewModel.RefreshChart();
@@ -1170,7 +1170,7 @@ public partial class MainWindowViewModel : ViewModelBase
         }
 
         Log.Debug("EditSelectedVoltagePeakTorque: old={Old}, new={New}", oldValue, newValue);
-        var command = new EditVoltagePropertyCommand(SelectedVoltage, nameof(VoltageConfiguration.RatedPeakTorque), oldValue, newValue);
+        var command = new EditVoltagePropertyCommand(SelectedVoltage, nameof(Voltage.RatedPeakTorque), oldValue, newValue);
         _undoStack.PushAndExecute(command);
         VoltagePeakTorqueEditor = newValue.ToString(System.Globalization.CultureInfo.InvariantCulture);
         ChartViewModel.RefreshChart();
@@ -1198,7 +1198,7 @@ public partial class MainWindowViewModel : ViewModelBase
         }
 
         Log.Debug("EditSelectedVoltageContinuousTorque: old={Old}, new={New}", oldValue, newValue);
-        var command = new EditVoltagePropertyCommand(SelectedVoltage, nameof(VoltageConfiguration.RatedContinuousTorque), oldValue, newValue);
+        var command = new EditVoltagePropertyCommand(SelectedVoltage, nameof(Voltage.RatedContinuousTorque), oldValue, newValue);
         _undoStack.PushAndExecute(command);
         VoltageContinuousTorqueEditor = newValue.ToString(System.Globalization.CultureInfo.InvariantCulture);
         ChartViewModel.RefreshChart();
@@ -1226,7 +1226,7 @@ public partial class MainWindowViewModel : ViewModelBase
         }
 
         Log.Debug("EditSelectedVoltageContinuousAmps: old={Old}, new={New}", oldValue, newValue);
-        var command = new EditVoltagePropertyCommand(SelectedVoltage, nameof(VoltageConfiguration.ContinuousAmperage), oldValue, newValue);
+        var command = new EditVoltagePropertyCommand(SelectedVoltage, nameof(Voltage.ContinuousAmperage), oldValue, newValue);
         _undoStack.PushAndExecute(command);
         VoltageContinuousAmpsEditor = newValue.ToString(System.Globalization.CultureInfo.InvariantCulture);
         ChartViewModel.RefreshChart();
@@ -1254,7 +1254,7 @@ public partial class MainWindowViewModel : ViewModelBase
         }
 
         Log.Debug("EditSelectedVoltagePeakAmps: old={Old}, new={New}", oldValue, newValue);
-        var command = new EditVoltagePropertyCommand(SelectedVoltage, nameof(VoltageConfiguration.PeakAmperage), oldValue, newValue);
+        var command = new EditVoltagePropertyCommand(SelectedVoltage, nameof(Voltage.PeakAmperage), oldValue, newValue);
         _undoStack.PushAndExecute(command);
         VoltagePeakAmpsEditor = newValue.ToString(System.Globalization.CultureInfo.InvariantCulture);
         ChartViewModel.RefreshChart();
@@ -1281,7 +1281,7 @@ public partial class MainWindowViewModel : ViewModelBase
             return;
         }
 
-        var command = new EditMotorPropertyCommand(CurrentMotor, nameof(MotorDefinition.RatedSpeed), oldValue, newValue);
+        var command = new EditMotorPropertyCommand(CurrentMotor, nameof(ServoMotor.RatedSpeed), oldValue, newValue);
         _undoStack.PushAndExecute(command);
         RatedSpeedEditor = newValue.ToString(System.Globalization.CultureInfo.InvariantCulture);
         IsDirty = true;
@@ -1306,7 +1306,7 @@ public partial class MainWindowViewModel : ViewModelBase
             return;
         }
 
-        var command = new EditMotorPropertyCommand(CurrentMotor, nameof(MotorDefinition.RatedPeakTorque), oldValue, newValue);
+        var command = new EditMotorPropertyCommand(CurrentMotor, nameof(ServoMotor.RatedPeakTorque), oldValue, newValue);
         _undoStack.PushAndExecute(command);
         RatedPeakTorqueEditor = newValue.ToString(System.Globalization.CultureInfo.InvariantCulture);
         IsDirty = true;
@@ -1331,7 +1331,7 @@ public partial class MainWindowViewModel : ViewModelBase
             return;
         }
 
-        var command = new EditMotorPropertyCommand(CurrentMotor, nameof(MotorDefinition.RatedContinuousTorque), oldValue, newValue);
+        var command = new EditMotorPropertyCommand(CurrentMotor, nameof(ServoMotor.RatedContinuousTorque), oldValue, newValue);
         _undoStack.PushAndExecute(command);
         RatedContinuousTorqueEditor = newValue.ToString(System.Globalization.CultureInfo.InvariantCulture);
         IsDirty = true;
@@ -1356,7 +1356,7 @@ public partial class MainWindowViewModel : ViewModelBase
             return;
         }
 
-        var command = new EditMotorPropertyCommand(CurrentMotor, nameof(MotorDefinition.Power), oldValue, newValue);
+        var command = new EditMotorPropertyCommand(CurrentMotor, nameof(ServoMotor.Power), oldValue, newValue);
         _undoStack.PushAndExecute(command);
         PowerEditor = newValue.ToString(System.Globalization.CultureInfo.InvariantCulture);
         IsDirty = true;
@@ -1381,7 +1381,7 @@ public partial class MainWindowViewModel : ViewModelBase
             return;
         }
 
-        var command = new EditMotorPropertyCommand(CurrentMotor, nameof(MotorDefinition.Weight), oldValue, newValue);
+        var command = new EditMotorPropertyCommand(CurrentMotor, nameof(ServoMotor.Weight), oldValue, newValue);
         _undoStack.PushAndExecute(command);
         WeightEditor = newValue.ToString(System.Globalization.CultureInfo.InvariantCulture);
         IsDirty = true;
@@ -1406,7 +1406,7 @@ public partial class MainWindowViewModel : ViewModelBase
             return;
         }
 
-        var command = new EditMotorPropertyCommand(CurrentMotor, nameof(MotorDefinition.RotorInertia), oldValue, newValue);
+        var command = new EditMotorPropertyCommand(CurrentMotor, nameof(ServoMotor.RotorInertia), oldValue, newValue);
         _undoStack.PushAndExecute(command);
         RotorInertiaEditor = newValue.ToString(System.Globalization.CultureInfo.InvariantCulture);
         IsDirty = true;
@@ -1431,7 +1431,7 @@ public partial class MainWindowViewModel : ViewModelBase
             return;
         }
 
-        var command = new EditMotorPropertyCommand(CurrentMotor, nameof(MotorDefinition.FeedbackPpr), oldValue, newValue);
+        var command = new EditMotorPropertyCommand(CurrentMotor, nameof(ServoMotor.FeedbackPpr), oldValue, newValue);
         _undoStack.PushAndExecute(command);
         FeedbackPprEditor = newValue.ToString(System.Globalization.CultureInfo.InvariantCulture);
         IsDirty = true;
@@ -1452,7 +1452,7 @@ public partial class MainWindowViewModel : ViewModelBase
             return;
         }
 
-        var command = new EditMotorPropertyCommand(CurrentMotor, nameof(MotorDefinition.HasBrake), oldValue, newValue);
+        var command = new EditMotorPropertyCommand(CurrentMotor, nameof(ServoMotor.HasBrake), oldValue, newValue);
         _undoStack.PushAndExecute(command);
         HasBrakeEditor = newValue;
         ChartViewModel.HasBrake = newValue;
@@ -1478,7 +1478,7 @@ public partial class MainWindowViewModel : ViewModelBase
             return;
         }
 
-        var command = new EditMotorPropertyCommand(CurrentMotor, nameof(MotorDefinition.BrakeTorque), oldValue, newValue);
+        var command = new EditMotorPropertyCommand(CurrentMotor, nameof(ServoMotor.BrakeTorque), oldValue, newValue);
         _undoStack.PushAndExecute(command);
         BrakeTorqueEditor = newValue.ToString(System.Globalization.CultureInfo.InvariantCulture);
         ChartViewModel.BrakeTorque = newValue;
@@ -1504,7 +1504,7 @@ public partial class MainWindowViewModel : ViewModelBase
             return;
         }
 
-        var command = new EditMotorPropertyCommand(CurrentMotor, nameof(MotorDefinition.BrakeAmperage), oldValue, newValue);
+        var command = new EditMotorPropertyCommand(CurrentMotor, nameof(ServoMotor.BrakeAmperage), oldValue, newValue);
         _undoStack.PushAndExecute(command);
         BrakeAmperageEditor = newValue.ToString(System.Globalization.CultureInfo.InvariantCulture);
         IsDirty = true;
@@ -1529,7 +1529,7 @@ public partial class MainWindowViewModel : ViewModelBase
             return;
         }
 
-        var command = new EditMotorPropertyCommand(CurrentMotor, nameof(MotorDefinition.BrakeVoltage), oldValue, newValue);
+        var command = new EditMotorPropertyCommand(CurrentMotor, nameof(ServoMotor.BrakeVoltage), oldValue, newValue);
         _undoStack.PushAndExecute(command);
         BrakeVoltageEditor = newValue.ToString(System.Globalization.CultureInfo.InvariantCulture);
         IsDirty = true;
@@ -1554,7 +1554,7 @@ public partial class MainWindowViewModel : ViewModelBase
             return;
         }
 
-        var command = new EditMotorPropertyCommand(CurrentMotor, nameof(MotorDefinition.BrakeReleaseTime), oldValue, newValue);
+        var command = new EditMotorPropertyCommand(CurrentMotor, nameof(ServoMotor.BrakeReleaseTime), oldValue, newValue);
         _undoStack.PushAndExecute(command);
         BrakeReleaseTimeEditor = newValue.ToString(System.Globalization.CultureInfo.InvariantCulture);
         IsDirty = true;
@@ -1579,7 +1579,7 @@ public partial class MainWindowViewModel : ViewModelBase
             return;
         }
 
-        var command = new EditMotorPropertyCommand(CurrentMotor, nameof(MotorDefinition.BrakeEngageTimeMov), oldValue, newValue);
+        var command = new EditMotorPropertyCommand(CurrentMotor, nameof(ServoMotor.BrakeEngageTimeMov), oldValue, newValue);
         _undoStack.PushAndExecute(command);
         BrakeEngageTimeMovEditor = newValue.ToString(System.Globalization.CultureInfo.InvariantCulture);
         IsDirty = true;
@@ -1604,7 +1604,7 @@ public partial class MainWindowViewModel : ViewModelBase
             return;
         }
 
-        var command = new EditMotorPropertyCommand(CurrentMotor, nameof(MotorDefinition.BrakeEngageTimeDiode), oldValue, newValue);
+        var command = new EditMotorPropertyCommand(CurrentMotor, nameof(ServoMotor.BrakeEngageTimeDiode), oldValue, newValue);
         _undoStack.PushAndExecute(command);
         BrakeEngageTimeDiodeEditor = newValue.ToString(System.Globalization.CultureInfo.InvariantCulture);
         IsDirty = true;
@@ -1629,7 +1629,7 @@ public partial class MainWindowViewModel : ViewModelBase
             return;
         }
 
-        var command = new EditMotorPropertyCommand(CurrentMotor, nameof(MotorDefinition.BrakeBacklash), oldValue, newValue);
+        var command = new EditMotorPropertyCommand(CurrentMotor, nameof(ServoMotor.BrakeBacklash), oldValue, newValue);
         _undoStack.PushAndExecute(command);
         BrakeBacklashEditor = newValue.ToString(System.Globalization.CultureInfo.InvariantCulture);
         IsDirty = true;
@@ -1643,7 +1643,7 @@ public partial class MainWindowViewModel : ViewModelBase
         AvailableSeries.Clear();
         if (SelectedVoltage is not null)
         {
-            foreach (var series in SelectedVoltage.Series)
+            foreach (var series in SelectedVoltage.Curves)
             {
                 AvailableSeries.Add(series);
             }
@@ -1658,7 +1658,7 @@ public partial class MainWindowViewModel : ViewModelBase
         RefreshAvailableSeries();
     }
 
-    partial void OnCurrentMotorChanged(MotorDefinition? value)
+    partial void OnCurrentMotorChanged(ServoMotor? value)
     {
         // Refresh the drives collection
         RefreshAvailableDrives();
@@ -1723,7 +1723,7 @@ public partial class MainWindowViewModel : ViewModelBase
             DriveNameEditor = SelectedDrive?.Name ?? string.Empty;
             DrivePartNumberEditor = SelectedDrive?.PartNumber ?? string.Empty;
             DriveManufacturerEditor = SelectedDrive?.Manufacturer ?? string.Empty;
-            VoltageValueEditor = SelectedVoltage?.Voltage.ToString(System.Globalization.CultureInfo.InvariantCulture) ?? string.Empty;
+            VoltageValueEditor = SelectedVoltage?.Value.ToString(System.Globalization.CultureInfo.InvariantCulture) ?? string.Empty;
             VoltagePowerEditor = SelectedVoltage?.Power.ToString(System.Globalization.CultureInfo.InvariantCulture) ?? string.Empty;
             VoltageMaxSpeedEditor = SelectedVoltage?.MaxSpeed.ToString(System.Globalization.CultureInfo.InvariantCulture) ?? string.Empty;
             VoltagePeakTorqueEditor = SelectedVoltage?.RatedPeakTorque.ToString(System.Globalization.CultureInfo.InvariantCulture) ?? string.Empty;
@@ -1733,7 +1733,7 @@ public partial class MainWindowViewModel : ViewModelBase
         }
     }
 
-    partial void OnSelectedDriveChanged(DriveConfiguration? value)
+    partial void OnSelectedDriveChanged(Drive? value)
     {
         // Refresh the available voltages collection
         RefreshAvailableVoltages();
@@ -1745,7 +1745,7 @@ public partial class MainWindowViewModel : ViewModelBase
         }
 
         // Prefer 208V if available, otherwise use the first voltage
-        var preferred = value.Voltages.FirstOrDefault(v => Math.Abs(v.Voltage - 208) < 0.1);
+        var preferred = value.Voltages.FirstOrDefault(v => Math.Abs(v.Value - 208) < 0.1);
         SelectedVoltage = preferred ?? value.Voltages.FirstOrDefault();
 
         DriveNameEditor = value.Name ?? string.Empty;
@@ -1753,13 +1753,13 @@ public partial class MainWindowViewModel : ViewModelBase
         DriveManufacturerEditor = value.Manufacturer ?? string.Empty;
     }
 
-    partial void OnSelectedVoltageChanged(VoltageConfiguration? value)
+    partial void OnSelectedVoltageChanged(Voltage? value)
     {
         // Refresh the available series collection
         RefreshAvailableSeries();
 
         // When voltage changes, update series selection
-        SelectedSeries = value?.Series.FirstOrDefault();
+        SelectedSeries = value?.Curves.FirstOrDefault();
 
         // Update chart with new voltage configuration
         ChartViewModel.TorqueUnit = CurrentMotor?.Units.Torque ?? "Nm";
@@ -1771,7 +1771,7 @@ public partial class MainWindowViewModel : ViewModelBase
         // Update data table with new voltage configuration
         CurveDataTableViewModel.CurrentVoltage = value;
 
-        VoltageValueEditor = value?.Voltage.ToString(System.Globalization.CultureInfo.InvariantCulture) ?? string.Empty;
+        VoltageValueEditor = value?.Value.ToString(System.Globalization.CultureInfo.InvariantCulture) ?? string.Empty;
         VoltagePowerEditor = value?.Power.ToString(System.Globalization.CultureInfo.InvariantCulture) ?? string.Empty;
         VoltageMaxSpeedEditor = value?.MaxSpeed.ToString(System.Globalization.CultureInfo.InvariantCulture) ?? string.Empty;
         VoltagePeakTorqueEditor = value?.RatedPeakTorque.ToString(System.Globalization.CultureInfo.InvariantCulture) ?? string.Empty;
@@ -2113,7 +2113,7 @@ public partial class MainWindowViewModel : ViewModelBase
     }
 
     /// <summary>
-    /// Shows the Add Drive/Voltage dialog and creates the drive with curve series.
+    /// Shows the Add Drive/Value dialog and creates the drive with curve series.
     /// </summary>
     [RelayCommand]
     private async Task AddDriveAsync()
@@ -2166,7 +2166,7 @@ public partial class MainWindowViewModel : ViewModelBase
     private static readonly double[] CommonVoltages = [110, 115, 120, 200, 208, 220, 230, 240, 277, 380, 400, 415, 440, 460, 480, 500, 575, 600, 690];
 
     /// <summary>
-    /// Shows the Add Drive/Voltage dialog for adding a new voltage configuration.
+    /// Shows the Add Drive/Value dialog for adding a new voltage configuration.
     /// </summary>
     [RelayCommand]
     private async Task AddVoltageAsync()
@@ -2183,7 +2183,7 @@ public partial class MainWindowViewModel : ViewModelBase
         var dialog = new Views.MessageDialog
         {
             Title = "Confirm Delete",
-            Message = $"Are you sure you want to delete the selected voltage '{SelectedVoltage.Voltage}V'?"
+            Message = $"Are you sure you want to delete the selected voltage '{SelectedVoltage.Value}V'?"
         };
 
         if (Application.Current?.ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop)
@@ -2201,7 +2201,7 @@ public partial class MainWindowViewModel : ViewModelBase
                 return;
             }
 
-            var voltage = SelectedVoltage.Voltage;
+            var voltage = SelectedVoltage.Value;
             SelectedDrive.Voltages.Remove(SelectedVoltage);
             RefreshAvailableVoltages();
             SelectedVoltage = SelectedDrive.Voltages.FirstOrDefault();
@@ -2215,7 +2215,7 @@ public partial class MainWindowViewModel : ViewModelBase
         }
     }
 
-    // Series management commands
+    // Curves management commands
     [RelayCommand]
     private async Task AddSeriesAsync()
     {
@@ -2292,7 +2292,7 @@ public partial class MainWindowViewModel : ViewModelBase
         {
             var dialog = new Views.AddDriveVoltageDialog
             {
-                Title = "Add New Voltage Configuration"
+                Title = "Add New Value Configuration"
             };
 
             dialog.Initialize(
@@ -2320,7 +2320,7 @@ public partial class MainWindowViewModel : ViewModelBase
             var voltageResult = _motorConfigurationWorkflow.CreateVoltageWithSeries(SelectedDrive, result);
             if (voltageResult.IsDuplicate)
             {
-                StatusMessage = $"Voltage {result.Voltage}V already exists for this drive.";
+                StatusMessage = $"Value {result.Voltage}V already exists for this drive.";
                 return;
             }
 
@@ -2355,7 +2355,7 @@ public partial class MainWindowViewModel : ViewModelBase
 
         try
         {
-            var dialog = new Views.AddCurveSeriesDialog();
+            var dialog = new Views.AddCurveDialog();
             dialog.Initialize(
                 SelectedVoltage.MaxSpeed,
                 SelectedVoltage.RatedContinuousTorque,
@@ -2422,16 +2422,16 @@ public partial class MainWindowViewModel : ViewModelBase
 
         try
         {
-            if (SelectedVoltage.Series.Count <= 1)
+            if (SelectedVoltage.Curves.Count <= 1)
             {
                 StatusMessage = "Cannot remove the last series.";
                 return;
             }
 
             var seriesName = SelectedSeries.Name;
-            SelectedVoltage.Series.Remove(SelectedSeries);
+            SelectedVoltage.Curves.Remove(SelectedSeries);
             RefreshAvailableSeries();
-            SelectedSeries = SelectedVoltage.Series.FirstOrDefault();
+            SelectedSeries = SelectedVoltage.Curves.FirstOrDefault();
             MarkDirty();
             StatusMessage = $"Removed series: {seriesName}";
         }
@@ -2443,7 +2443,7 @@ public partial class MainWindowViewModel : ViewModelBase
     }
 
     [RelayCommand]
-    private void ToggleSeriesLock(CurveSeries? series)
+    private void ToggleSeriesLock(Curve? series)
     {
         if (series is null)
         {
@@ -2472,7 +2472,7 @@ public partial class MainWindowViewModel : ViewModelBase
     /// </summary>
     /// <param name="series">The series to toggle visibility for.</param>
     [RelayCommand]
-    private void ToggleSeriesVisibility(CurveSeries? series)
+    private void ToggleSeriesVisibility(Curve? series)
     {
         if (series is null) return;
 
@@ -2518,7 +2518,7 @@ public partial class MainWindowViewModel : ViewModelBase
             return;
         }
 
-        var errors = _validationService.ValidateMotorDefinition(CurrentMotor);
+        var errors = _validationService.ValidateServoMotor(CurrentMotor);
 
         if (errors.Count > 0)
         {

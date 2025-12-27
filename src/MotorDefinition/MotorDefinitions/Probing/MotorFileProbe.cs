@@ -26,7 +26,7 @@ internal static class MotorFileProbe
             }
 
             if (!TryGetString(root, "schemaVersion", out var schemaVersion) ||
-                !string.Equals(schemaVersion, Model.MotorDefinition.CurrentSchemaVersion, StringComparison.Ordinal))
+                !string.Equals(schemaVersion, Model.ServoMotor.CurrentSchemaVersion, StringComparison.Ordinal))
             {
                 return false;
             }

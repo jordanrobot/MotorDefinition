@@ -10,7 +10,7 @@ namespace JordanRobot.MotorDefinition.Persistence.Dtos;
 internal sealed class MotorDefinitionFileDto
 {
     [JsonPropertyName("schemaVersion")]
-    public string SchemaVersion { get; set; } = Model.MotorDefinition.CurrentSchemaVersion;
+    public string SchemaVersion { get; set; } = Model.ServoMotor.CurrentSchemaVersion;
 
     [JsonPropertyName("motorName")]
     public string MotorName { get; set; } = string.Empty;

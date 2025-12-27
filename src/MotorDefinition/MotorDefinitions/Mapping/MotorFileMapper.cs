@@ -13,17 +13,17 @@ namespace JordanRobot.MotorDefinition.Persistence.Mapping;
 internal static class MotorFileMapper
 {
     /// <summary>
-    /// Maps a runtime <see cref="Model.MotorDefinition"/> into a persistence DTO.
+    /// Maps a runtime <see cref="Model.ServoMotor"/> into a persistence DTO.
     /// </summary>
     /// <param name="motor">The runtime motor definition.</param>
     /// <returns>A DTO ready for serialization.</returns>
-    public static MotorDefinitionFileDto ToFileDto(Model.MotorDefinition motor)
+    public static MotorDefinitionFileDto ToFileDto(Model.ServoMotor motor)
     {
         ArgumentNullException.ThrowIfNull(motor);
 
         var dto = new MotorDefinitionFileDto
         {
-            SchemaVersion = Model.MotorDefinition.CurrentSchemaVersion,
+            SchemaVersion = Model.ServoMotor.CurrentSchemaVersion,
             MotorName = motor.MotorName,
             Manufacturer = motor.Manufacturer,
             PartNumber = motor.PartNumber,
@@ -60,17 +60,17 @@ internal static class MotorFileMapper
             {
                 MotorFileShapeValidator.ValidateRuntimeVoltage(voltage);
 
-                var axisSource = voltage.Series[0];
+                var axisSource = voltage.Curves[0];
                 var pointCount = axisSource.Data.Count;
                 var percentAxis = axisSource.Data.Select(p => p.Percent).ToArray();
                 var rpmAxis = axisSource.Data.Select(p => p.Rpm).ToArray();
 
                 var seriesMap = new Dictionary<string, SeriesEntryDto>(StringComparer.Ordinal);
-                foreach (var series in voltage.Series)
+                foreach (var series in voltage.Curves)
                 {
                     if (seriesMap.ContainsKey(series.Name))
                     {
-                        throw new InvalidOperationException($"Duplicate series name '{series.Name}' found for {voltage.Voltage}V in drive '{drive.Name}'.");
+                        throw new InvalidOperationException($"Duplicate series name '{series.Name}' found for {voltage.Value}V in drive '{drive.Name}'.");
                     }
 
                     var torque = new double[pointCount];
@@ -89,7 +89,7 @@ internal static class MotorFileMapper
 
                 var voltageDto = new VoltageFileDto
                 {
-                    Voltage = voltage.Voltage,
+                    Voltage = voltage.Value,
                     Power = voltage.Power,
                     MaxSpeed = voltage.MaxSpeed,
                     RatedSpeed = voltage.RatedSpeed,
@@ -112,17 +112,17 @@ internal static class MotorFileMapper
     }
 
     /// <summary>
-    /// Maps a persistence DTO into a runtime <see cref="Model.MotorDefinition"/>.
+    /// Maps a persistence DTO into a runtime <see cref="Model.ServoMotor"/>.
     /// </summary>
     /// <param name="dto">The deserialized DTO.</param>
     /// <returns>A runtime motor definition model.</returns>
-    public static Model.MotorDefinition ToRuntimeModel(MotorDefinitionFileDto dto)
+    public static Model.ServoMotor ToRuntimeModel(MotorDefinitionFileDto dto)
     {
         ArgumentNullException.ThrowIfNull(dto);
 
-        var motor = new Model.MotorDefinition(dto.MotorName)
+        var motor = new Model.ServoMotor(dto.MotorName)
         {
-            SchemaVersion = string.IsNullOrWhiteSpace(dto.SchemaVersion) ? Model.MotorDefinition.CurrentSchemaVersion : dto.SchemaVersion,
+            SchemaVersion = string.IsNullOrWhiteSpace(dto.SchemaVersion) ? Model.ServoMotor.CurrentSchemaVersion : dto.SchemaVersion,
             Manufacturer = dto.Manufacturer,
             PartNumber = dto.PartNumber,
             Power = dto.Power,
@@ -157,7 +157,7 @@ internal static class MotorFileMapper
                 throw new InvalidOperationException("Drive entry is missing a name value.");
             }
 
-            var drive = new DriveConfiguration(driveDto.Name)
+            var drive = new Drive(driveDto.Name)
             {
                 Manufacturer = driveDto.Manufacturer ?? string.Empty,
                 PartNumber = driveDto.PartNumber ?? string.Empty
@@ -175,10 +175,10 @@ internal static class MotorFileMapper
 
                 if (voltageDto.Voltage <= 0)
                 {
-                    throw new InvalidOperationException($"Voltage '{driveLabel}' must be positive.");
+                    throw new InvalidOperationException($"Value '{driveLabel}' must be positive.");
                 }
 
-                var voltage = new VoltageConfiguration(voltageDto.Voltage)
+                var voltage = new Voltage(voltageDto.Voltage)
                 {
                     Power = voltageDto.Power,
                     MaxSpeed = voltageDto.MaxSpeed,
@@ -198,10 +198,10 @@ internal static class MotorFileMapper
 
                     if (entry.Torque.Length != pointCount)
                     {
-                        throw new InvalidOperationException($"Series '{seriesName}' torque array length ({entry.Torque.Length}) must match axis length ({pointCount}) for drive '{driveDto.Name}'.");
+                        throw new InvalidOperationException($"Curves '{seriesName}' torque array length ({entry.Torque.Length}) must match axis length ({pointCount}) for drive '{driveDto.Name}'.");
                     }
 
-                    var series = new CurveSeries(seriesName)
+                    var series = new Curve(seriesName)
                     {
                         Locked = entry.Locked,
                         Notes = entry.Notes ?? string.Empty
@@ -212,7 +212,7 @@ internal static class MotorFileMapper
                         series.Data.Add(new DataPoint(voltageDto.Percent[i], voltageDto.Rpm[i], entry.Torque[i]));
                     }
 
-                    voltage.Series.Add(series);
+                    voltage.Curves.Add(series);
                 }
 
                 drive.Voltages.Add(voltage);

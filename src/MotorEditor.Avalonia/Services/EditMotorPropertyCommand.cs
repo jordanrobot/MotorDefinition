@@ -5,11 +5,11 @@ using System.Reflection;
 namespace CurveEditor.Services;
 
 /// <summary>
-/// Command that edits a scalar property directly on <see cref="MotorDefinition"/>.
+/// Command that edits a scalar property directly on <see cref="ServoMotor"/>.
 /// </summary>
 public sealed class EditMotorPropertyCommand : IUndoableCommand
 {
-    private readonly MotorDefinition _motor;
+    private readonly ServoMotor _motor;
     private readonly PropertyInfo _property;
     private readonly object? _newValue;
     private readonly object? _oldValue;
@@ -17,12 +17,12 @@ public sealed class EditMotorPropertyCommand : IUndoableCommand
     /// <summary>
     /// Creates a new <see cref="EditMotorPropertyCommand"/>.
     /// </summary>
-    public EditMotorPropertyCommand(MotorDefinition motor, string propertyName, object? oldValue, object? newValue)
+    public EditMotorPropertyCommand(ServoMotor motor, string propertyName, object? oldValue, object? newValue)
     {
         _motor = motor ?? throw new ArgumentNullException(nameof(motor));
 
         _property = motor.GetType().GetProperty(propertyName, BindingFlags.Instance | BindingFlags.Public)
-            ?? throw new ArgumentException($"Property '{propertyName}' was not found on MotorDefinition.", nameof(propertyName));
+            ?? throw new ArgumentException($"Property '{propertyName}' was not found on ServoMotor.", nameof(propertyName));
 
         if (!_property.CanRead || !_property.CanWrite)
         {
@@ -50,21 +50,21 @@ public sealed class EditMotorPropertyCommand : IUndoableCommand
 }
 
 /// <summary>
-/// Command that edits a scalar property directly on <see cref="DriveConfiguration"/>.
+/// Command that edits a scalar property directly on <see cref="Drive"/>.
 /// </summary>
 public sealed class EditDrivePropertyCommand : IUndoableCommand
 {
-    private readonly DriveConfiguration _drive;
+    private readonly Drive _drive;
     private readonly PropertyInfo _property;
     private readonly object? _newValue;
     private readonly object? _oldValue;
 
-    public EditDrivePropertyCommand(DriveConfiguration drive, string propertyName, object? oldValue, object? newValue)
+    public EditDrivePropertyCommand(Drive drive, string propertyName, object? oldValue, object? newValue)
     {
         _drive = drive ?? throw new ArgumentNullException(nameof(drive));
 
         _property = drive.GetType().GetProperty(propertyName, BindingFlags.Instance | BindingFlags.Public)
-            ?? throw new ArgumentException($"Property '{propertyName}' was not found on DriveConfiguration.", nameof(propertyName));
+            ?? throw new ArgumentException($"Property '{propertyName}' was not found on Drive.", nameof(propertyName));
 
         if (!_property.CanRead || !_property.CanWrite)
         {
@@ -89,21 +89,21 @@ public sealed class EditDrivePropertyCommand : IUndoableCommand
 }
 
 /// <summary>
-/// Command that edits a scalar property directly on <see cref="VoltageConfiguration"/>.
+/// Command that edits a scalar property directly on <see cref="Voltage"/>.
 /// </summary>
 public sealed class EditVoltagePropertyCommand : IUndoableCommand
 {
-    private readonly VoltageConfiguration _voltage;
+    private readonly Voltage _voltage;
     private readonly PropertyInfo _property;
     private readonly object? _newValue;
     private readonly object? _oldValue;
 
-    public EditVoltagePropertyCommand(VoltageConfiguration voltage, string propertyName, object? oldValue, object? newValue)
+    public EditVoltagePropertyCommand(Voltage voltage, string propertyName, object? oldValue, object? newValue)
     {
         _voltage = voltage ?? throw new ArgumentNullException(nameof(voltage));
 
         _property = voltage.GetType().GetProperty(propertyName, BindingFlags.Instance | BindingFlags.Public)
-            ?? throw new ArgumentException($"Property '{propertyName}' was not found on VoltageConfiguration.", nameof(propertyName));
+            ?? throw new ArgumentException($"Property '{propertyName}' was not found on Voltage.", nameof(propertyName));
 
         if (!_property.CanRead || !_property.CanWrite)
         {

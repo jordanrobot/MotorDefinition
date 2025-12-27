@@ -304,7 +304,7 @@ public string TorqueConstant { get; set; }
 
 ## UnitSettings\.Voltage Property
 
-Voltage unit: "V" or "kV"\.
+Value unit: "V" or "kV"\.
 
 ```csharp
 public string Voltage { get; set; }

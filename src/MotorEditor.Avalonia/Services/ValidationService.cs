@@ -37,24 +37,24 @@ public class ValidationService : IValidationService
     }
 
     /// <inheritdoc />
-    public IReadOnlyList<string> ValidateCurveSeries(CurveSeries series)
+    public IReadOnlyList<string> ValidateCurve(Curve series)
     {
         var errors = new List<string>();
 
         if (string.IsNullOrWhiteSpace(series.Name))
         {
-            errors.Add("Series name cannot be empty.");
+            errors.Add("Curves name cannot be empty.");
         }
 
         if (series.Data.Count > MaxSupportedPointCount)
         {
-            errors.Add($"Series must have 0 to {MaxSupportedPointCount} data points (current: {series.Data.Count}).");
+            errors.Add($"Curves must have 0 to {MaxSupportedPointCount} data points (current: {series.Data.Count}).");
         }
 
         // Validate data integrity
         if (!series.ValidateDataIntegrity())
         {
-            errors.Add("Series percent axis must be strictly increasing and contain no negative percents.");
+            errors.Add("Curves percent axis must be strictly increasing and contain no negative percents.");
         }
 
         // Validate ascending RPM
@@ -78,13 +78,13 @@ public class ValidationService : IValidationService
     }
 
     /// <inheritdoc />
-    public IReadOnlyList<string> ValidateVoltageConfiguration(VoltageConfiguration voltageConfig)
+    public IReadOnlyList<string> ValidateVoltage(Voltage voltageConfig)
     {
         var errors = new List<string>();
 
-        if (voltageConfig.Voltage <= 0)
+        if (voltageConfig.Value <= 0)
         {
-            errors.Add($"Voltage must be positive (current: {voltageConfig.Voltage}).");
+            errors.Add($"Value must be positive (current: {voltageConfig.Value}).");
         }
 
         if (voltageConfig.MaxSpeed < 0)
@@ -112,39 +112,39 @@ public class ValidationService : IValidationService
             errors.Add($"Continuous torque ({voltageConfig.RatedContinuousTorque}) cannot exceed peak torque ({voltageConfig.RatedPeakTorque}).");
         }
 
-        if (voltageConfig.Series.Count == 0)
+        if (voltageConfig.Curves.Count == 0)
         {
-            errors.Add("Voltage configuration must have at least one curve series.");
+            errors.Add("Value configuration must have at least one curve series.");
             return errors;
         }
 
-        foreach (var series in voltageConfig.Series)
+        foreach (var series in voltageConfig.Curves)
         {
-            var seriesErrors = ValidateCurveSeries(series);
+            var seriesErrors = ValidateCurve(series);
             foreach (var error in seriesErrors)
             {
-                errors.Add($"Series '{series.Name}': {error}");
+                errors.Add($"Curves '{series.Name}': {error}");
             }
         }
 
-        if (voltageConfig.Series.Count > 1)
+        if (voltageConfig.Curves.Count > 1)
         {
-            var baseline = voltageConfig.Series[0];
-            for (var s = 1; s < voltageConfig.Series.Count; s++)
+            var baseline = voltageConfig.Curves[0];
+            for (var s = 1; s < voltageConfig.Curves.Count; s++)
             {
-                var candidate = voltageConfig.Series[s];
+                var candidate = voltageConfig.Curves[s];
                 var pointCount = Math.Min(baseline.Data.Count, candidate.Data.Count);
                 for (var i = 0; i < pointCount; i++)
                 {
                     if (candidate.Data[i].Percent != baseline.Data[i].Percent)
                     {
-                        errors.Add($"Series '{candidate.Name}' percent axis differs from '{baseline.Name}' at index {i}.");
+                        errors.Add($"Curves '{candidate.Name}' percent axis differs from '{baseline.Name}' at index {i}.");
                         break;
                     }
 
                     if (Math.Abs(candidate.Data[i].Rpm - baseline.Data[i].Rpm) > AxisTolerance)
                     {
-                        errors.Add($"Series '{candidate.Name}' rpm axis differs from '{baseline.Name}' at index {i}.");
+                        errors.Add($"Curves '{candidate.Name}' rpm axis differs from '{baseline.Name}' at index {i}.");
                         break;
                     }
                 }
@@ -155,7 +155,7 @@ public class ValidationService : IValidationService
     }
 
     /// <inheritdoc />
-    public IReadOnlyList<string> ValidateMotorDefinition(MotorDefinition motor)
+    public IReadOnlyList<string> ValidateServoMotor(ServoMotor motor)
     {
         var errors = new List<string>();
 
@@ -224,10 +224,10 @@ public class ValidationService : IValidationService
 
             foreach (var voltage in drive.Voltages)
             {
-                var voltageErrors = ValidateVoltageConfiguration(voltage);
+                var voltageErrors = ValidateVoltage(voltage);
                 foreach (var error in voltageErrors)
                 {
-                    errors.Add($"Drive '{drive.Name}', {voltage.Voltage}V: {error}");
+                    errors.Add($"Drive '{drive.Name}', {voltage.Value}V: {error}");
                 }
             }
         }

@@ -4,23 +4,23 @@ using Xunit;
 
 namespace CurveEditor.Tests.Models;
 
-public class VoltageConfigurationTests
+public class VoltageTests
 {
     [Fact]
-    public void Constructor_Default_CreatesConfiguration()
+    public void Constructor_Default_CreatesVoltage()
     {
-        var voltage = new VoltageConfiguration();
+        var voltage = new Voltage();
 
-        Assert.Empty(voltage.Series);
+        Assert.Empty(voltage.Curves);
     }
 
     [Fact]
-    public void Constructor_WithVoltage_CreatesConfiguration()
+    public void Constructor_WithVoltage_CreatesVoltage()
     {
-        var voltage = new VoltageConfiguration(220);
+        var voltage = new Voltage(220);
 
-        Assert.Equal(220, voltage.Voltage);
-        Assert.Empty(voltage.Series);
+        Assert.Equal(220, voltage.Value);
+        Assert.Empty(voltage.Curves);
     }
 
     [Theory]
@@ -29,9 +29,9 @@ public class VoltageConfigurationTests
     [InlineData(-100)]
     public void Voltage_NonPositive_ThrowsArgumentOutOfRangeException(double invalidVoltage)
     {
-        var voltage = new VoltageConfiguration();
+        var voltage = new Voltage();
 
-        Assert.Throws<ArgumentOutOfRangeException>(() => voltage.Voltage = invalidVoltage);
+        Assert.Throws<ArgumentOutOfRangeException>(() => voltage.Value = invalidVoltage);
     }
 
     [Theory]
@@ -41,15 +41,15 @@ public class VoltageConfigurationTests
     [InlineData(480)]
     public void Voltage_ValidValues_SetsVoltage(double validVoltage)
     {
-        var voltage = new VoltageConfiguration { Voltage = validVoltage };
+        var voltage = new Voltage { Value = validVoltage };
 
-        Assert.Equal(validVoltage, voltage.Voltage);
+        Assert.Equal(validVoltage, voltage.Value);
     }
 
     [Fact]
     public void GetSeriesByName_ExistingSeries_ReturnsSeries()
     {
-        var voltage = new VoltageConfiguration(220) { MaxSpeed = 5000 };
+        var voltage = new Voltage(220) { MaxSpeed = 5000 };
         var series = voltage.AddSeries("Peak", 50);
 
         var result = voltage.GetSeriesByName("Peak");
@@ -60,7 +60,7 @@ public class VoltageConfigurationTests
     [Fact]
     public void GetSeriesByName_CaseMismatch_ReturnsNull()
     {
-        var voltage = new VoltageConfiguration(220) { MaxSpeed = 5000 };
+        var voltage = new Voltage(220) { MaxSpeed = 5000 };
         voltage.AddSeries("Peak", 50);
 
         var result = voltage.GetSeriesByName("PEAK");
@@ -71,7 +71,7 @@ public class VoltageConfigurationTests
     [Fact]
     public void GetSeriesByName_NonExistentSeries_ReturnsNull()
     {
-        var voltage = new VoltageConfiguration(220) { MaxSpeed = 5000 };
+        var voltage = new Voltage(220) { MaxSpeed = 5000 };
         voltage.AddSeries("Peak", 50);
 
         var result = voltage.GetSeriesByName("Continuous");
@@ -82,11 +82,11 @@ public class VoltageConfigurationTests
     [Fact]
     public void AddSeries_NewSeries_AddsAndInitializesSeries()
     {
-        var voltage = new VoltageConfiguration(220) { MaxSpeed = 5000 };
+        var voltage = new Voltage(220) { MaxSpeed = 5000 };
 
         var series = voltage.AddSeries("Peak", 50);
 
-        Assert.Single(voltage.Series);
+        Assert.Single(voltage.Curves);
         Assert.Equal("Peak", series.Name);
         Assert.Equal(101, series.Data.Count);
     }
@@ -94,7 +94,7 @@ public class VoltageConfigurationTests
     [Fact]
     public void AddSeries_DuplicateName_ThrowsInvalidOperationException()
     {
-        var voltage = new VoltageConfiguration(220) { MaxSpeed = 5000 };
+        var voltage = new Voltage(220) { MaxSpeed = 5000 };
         voltage.AddSeries("Peak", 50);
 
         var exception = Assert.Throws<InvalidOperationException>(() => voltage.AddSeries("Peak", 45));
@@ -104,18 +104,18 @@ public class VoltageConfigurationTests
     [Fact]
     public void AddSeries_MultipleSeries_AddsAll()
     {
-        var voltage = new VoltageConfiguration(220) { MaxSpeed = 5000 };
+        var voltage = new Voltage(220) { MaxSpeed = 5000 };
 
         voltage.AddSeries("Peak", 55);
         voltage.AddSeries("Continuous", 45);
 
-        Assert.Equal(2, voltage.Series.Count);
+        Assert.Equal(2, voltage.Curves.Count);
     }
 
     [Fact]
     public void PerformanceProperties_CanBeSet()
     {
-        var voltage = new VoltageConfiguration(220)
+        var voltage = new Voltage(220)
         {
             Power = 1500,
             MaxSpeed = 5000,
@@ -138,7 +138,7 @@ public class VoltageConfigurationTests
     [Fact]
     public void AddSeries_UsesMaxSpeedForRpm()
     {
-        var voltage = new VoltageConfiguration(220) { MaxSpeed = 4000 };
+        var voltage = new Voltage(220) { MaxSpeed = 4000 };
 
         var series = voltage.AddSeries("Peak", 50);
 

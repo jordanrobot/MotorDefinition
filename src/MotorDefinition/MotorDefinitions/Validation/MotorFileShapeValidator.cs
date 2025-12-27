@@ -18,37 +18,37 @@ internal static class MotorFileShapeValidator
     {
         if (voltage.Percent is null)
         {
-            throw new InvalidOperationException($"Voltage '{driveLabel}' is missing the percent axis.");
+            throw new InvalidOperationException($"Value '{driveLabel}' is missing the percent axis.");
         }
 
         if (voltage.Rpm is null)
         {
-            throw new InvalidOperationException($"Voltage '{driveLabel}' is missing the rpm axis.");
+            throw new InvalidOperationException($"Value '{driveLabel}' is missing the rpm axis.");
         }
 
         if (voltage.Series is null)
         {
-            throw new InvalidOperationException($"Voltage '{driveLabel}' is missing the series map.");
+            throw new InvalidOperationException($"Value '{driveLabel}' is missing the series map.");
         }
 
         if (voltage.Percent.Length > MaxSupportedPointCount)
         {
-            throw new InvalidOperationException($"Voltage '{driveLabel}' percent axis must have 0 to {MaxSupportedPointCount} entries (found {voltage.Percent.Length}).");
+            throw new InvalidOperationException($"Value '{driveLabel}' percent axis must have 0 to {MaxSupportedPointCount} entries (found {voltage.Percent.Length}).");
         }
 
         if (voltage.Rpm.Length > MaxSupportedPointCount)
         {
-            throw new InvalidOperationException($"Voltage '{driveLabel}' rpm axis must have 0 to {MaxSupportedPointCount} entries (found {voltage.Rpm.Length}).");
+            throw new InvalidOperationException($"Value '{driveLabel}' rpm axis must have 0 to {MaxSupportedPointCount} entries (found {voltage.Rpm.Length}).");
         }
 
         if (voltage.Rpm.Length != voltage.Percent.Length)
         {
-            throw new InvalidOperationException($"Voltage '{driveLabel}' rpm axis length ({voltage.Rpm.Length}) must match percent axis length ({voltage.Percent.Length}).");
+            throw new InvalidOperationException($"Value '{driveLabel}' rpm axis length ({voltage.Rpm.Length}) must match percent axis length ({voltage.Percent.Length}).");
         }
 
         if (voltage.Series.Count == 0)
         {
-            throw new InvalidOperationException($"Voltage '{driveLabel}' must contain at least one series.");
+            throw new InvalidOperationException($"Value '{driveLabel}' must contain at least one series.");
         }
 
         var previousPercent = -1;
@@ -58,24 +58,24 @@ internal static class MotorFileShapeValidator
 
             if (percent < 0)
             {
-                throw new InvalidOperationException($"Voltage '{driveLabel}' percent axis contains a negative value at index {i}.");
+                throw new InvalidOperationException($"Value '{driveLabel}' percent axis contains a negative value at index {i}.");
             }
 
             if (percent <= previousPercent)
             {
-                throw new InvalidOperationException($"Voltage '{driveLabel}' percent axis must be strictly increasing (index {i}).");
+                throw new InvalidOperationException($"Value '{driveLabel}' percent axis must be strictly increasing (index {i}).");
             }
 
             previousPercent = percent;
 
             if (voltage.Rpm[i] < 0)
             {
-                throw new InvalidOperationException($"Voltage '{driveLabel}' rpm axis contains a negative value at index {i}.");
+                throw new InvalidOperationException($"Value '{driveLabel}' rpm axis contains a negative value at index {i}.");
             }
 
             if (i > 0 && voltage.Rpm[i] + AxisTolerance < voltage.Rpm[i - 1])
             {
-                throw new InvalidOperationException($"Voltage '{driveLabel}' rpm axis must be non-decreasing (index {i}).");
+                throw new InvalidOperationException($"Value '{driveLabel}' rpm axis must be non-decreasing (index {i}).");
             }
         }
 
@@ -83,28 +83,28 @@ internal static class MotorFileShapeValidator
         {
             if (kvp.Value.Torque is null)
             {
-                throw new InvalidOperationException($"Voltage '{driveLabel}' series '{kvp.Key}' is missing torque data.");
+                throw new InvalidOperationException($"Value '{driveLabel}' series '{kvp.Key}' is missing torque data.");
             }
 
             if (kvp.Value.Torque.Length != voltage.Percent.Length)
             {
-                throw new InvalidOperationException($"Voltage '{driveLabel}' series '{kvp.Key}' torque array length ({kvp.Value.Torque.Length}) must match axis length ({voltage.Percent.Length}).");
+                throw new InvalidOperationException($"Value '{driveLabel}' series '{kvp.Key}' torque array length ({kvp.Value.Torque.Length}) must match axis length ({voltage.Percent.Length}).");
             }
         }
     }
 
-    public static void ValidateRuntimeVoltage(VoltageConfiguration voltage)
+    public static void ValidateRuntimeVoltage(Voltage voltage)
     {
-        if (voltage.Series.Count == 0)
+        if (voltage.Curves.Count == 0)
         {
-            throw new InvalidOperationException($"Voltage {voltage.Voltage}V must contain at least one series.");
+            throw new InvalidOperationException($"Value {voltage.Value}V must contain at least one series.");
         }
 
-        var firstSeries = voltage.Series[0];
+        var firstSeries = voltage.Curves[0];
         var pointCount = firstSeries.Data.Count;
         if (pointCount > MaxSupportedPointCount)
         {
-            throw new InvalidOperationException($"Voltage {voltage.Voltage}V series '{firstSeries.Name}' must have 0 to {MaxSupportedPointCount} points.");
+            throw new InvalidOperationException($"Value {voltage.Value}V series '{firstSeries.Name}' must have 0 to {MaxSupportedPointCount} points.");
         }
 
         if (pointCount == 0)
@@ -121,44 +121,44 @@ internal static class MotorFileShapeValidator
         {
             if (percentAxis[i] < 0)
             {
-                throw new InvalidOperationException($"Voltage {voltage.Voltage}V percent axis contains a negative value at index {i}.");
+                throw new InvalidOperationException($"Value {voltage.Value}V percent axis contains a negative value at index {i}.");
             }
 
             if (percentAxis[i] <= previousPercent)
             {
-                throw new InvalidOperationException($"Voltage {voltage.Voltage}V percent axis must be strictly increasing (index {i}).");
+                throw new InvalidOperationException($"Value {voltage.Value}V percent axis must be strictly increasing (index {i}).");
             }
 
             previousPercent = percentAxis[i];
 
             if (rpmAxis[i] < 0)
             {
-                throw new InvalidOperationException($"Voltage {voltage.Voltage}V rpm axis contains a negative value at index {i}.");
+                throw new InvalidOperationException($"Value {voltage.Value}V rpm axis contains a negative value at index {i}.");
             }
 
             if (i > 0 && rpmAxis[i] + AxisTolerance < rpmAxis[i - 1])
             {
-                throw new InvalidOperationException($"Voltage {voltage.Voltage}V rpm axis must be non-decreasing (index {i}).");
+                throw new InvalidOperationException($"Value {voltage.Value}V rpm axis must be non-decreasing (index {i}).");
             }
         }
 
-        foreach (var series in voltage.Series)
+        foreach (var series in voltage.Curves)
         {
             if (series.Data.Count != pointCount)
             {
-                throw new InvalidOperationException($"Voltage {voltage.Voltage}V series '{series.Name}' must have exactly {pointCount} points.");
+                throw new InvalidOperationException($"Value {voltage.Value}V series '{series.Name}' must have exactly {pointCount} points.");
             }
 
             for (var i = 0; i < pointCount; i++)
             {
                 if (series.Data[i].Percent != percentAxis[i])
                 {
-                    throw new InvalidOperationException($"Voltage {voltage.Voltage}V series '{series.Name}' percent axis differs at index {i}.");
+                    throw new InvalidOperationException($"Value {voltage.Value}V series '{series.Name}' percent axis differs at index {i}.");
                 }
 
                 if (Math.Abs(series.Data[i].Rpm - rpmAxis[i]) > AxisTolerance)
                 {
-                    throw new InvalidOperationException($"Voltage {voltage.Voltage}V series '{series.Name}' rpm axis differs at index {i}.");
+                    throw new InvalidOperationException($"Value {voltage.Value}V series '{series.Name}' rpm axis differs at index {i}.");
                 }
             }
         }

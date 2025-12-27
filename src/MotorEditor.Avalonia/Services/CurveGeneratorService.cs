@@ -11,12 +11,12 @@ namespace CurveEditor.Services;
 public class CurveGeneratorService : ICurveGeneratorService
 {
     /// <inheritdoc />
-    public CurveSeries GenerateCurve(string name, double maxRpm, double maxTorque, double maxPower)
+    public Curve GenerateCurve(string name, double maxRpm, double maxTorque, double maxPower)
     {
         Log.Debug("Generating curve '{Name}' with maxRpm={MaxRpm}, maxTorque={MaxTorque}, maxPower={MaxPower}",
             name, maxRpm, maxTorque, maxPower);
 
-        var series = new CurveSeries(name)
+        var series = new Curve(name)
         {
             Data = InterpolateCurve(maxRpm, maxTorque, maxPower)
         };

@@ -16,7 +16,7 @@ public interface ICurveGeneratorService
     /// <param name="maxTorque">The maximum torque of the motor.</param>
     /// <param name="maxPower">The maximum power of the motor.</param>
     /// <returns>A new curve series with interpolated data.</returns>
-    CurveSeries GenerateCurve(string name, double maxRpm, double maxTorque, double maxPower);
+    Curve GenerateCurve(string name, double maxRpm, double maxTorque, double maxPower);
 
     /// <summary>
     /// Interpolates curve data at 1% increments from motor parameters.

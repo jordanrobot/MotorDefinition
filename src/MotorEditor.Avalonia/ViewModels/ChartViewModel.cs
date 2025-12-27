@@ -35,7 +35,7 @@ public partial class ChartViewModel : ViewModelBase
         new SKColor(100, 100, 100),  // Gray
     ];
 
-    private VoltageConfiguration? _currentVoltage;
+    private Voltage? _currentVoltage;
     private readonly Dictionary<string, ObservableCollection<ObservablePoint>> _seriesDataCache = [];
     private readonly Dictionary<string, bool> _seriesVisibility = [];
     private UndoStack? _undoStack;
@@ -110,7 +110,7 @@ public partial class ChartViewModel : ViewModelBase
     private readonly Dictionary<string, HashSet<int>> _highlightedIndices = [];
 
     /// <summary>
-    /// Suffix used to identify selection overlay series in the Series
+    /// Suffix used to identify selection overlay series in the Curves
     /// collection.
     /// </summary>
     private const string SelectionOverlaySuffix = " (SelectionOverlay)";
@@ -169,7 +169,7 @@ public partial class ChartViewModel : ViewModelBase
     /// <summary>
     /// Gets or sets the current voltage configuration whose series are displayed.
     /// </summary>
-    public VoltageConfiguration? CurrentVoltage
+    public Voltage? CurrentVoltage
     {
         get => _currentVoltage;
         set
@@ -222,7 +222,7 @@ public partial class ChartViewModel : ViewModelBase
             return;
         }
 
-        var series = _currentVoltage.Series.FirstOrDefault(s => s.Name == seriesName);
+        var series = _currentVoltage.Curves.FirstOrDefault(s => s.Name == seriesName);
         if (series is null)
         {
             return;
@@ -312,7 +312,7 @@ public partial class ChartViewModel : ViewModelBase
             return;
         }
 
-        var series = _currentVoltage.Series.FirstOrDefault(s => s.Name == seriesName);
+        var series = _currentVoltage.Curves.FirstOrDefault(s => s.Name == seriesName);
         if (series is null || index < 0 || index >= series.Data.Count)
         {
             return;
@@ -342,13 +342,13 @@ public partial class ChartViewModel : ViewModelBase
         Series.Clear();
         _seriesDataCache.Clear();
 
-        if (_currentVoltage is null || _currentVoltage.Series.Count == 0)
+        if (_currentVoltage is null || _currentVoltage.Curves.Count == 0)
         {
             Title = "No Data";
             return;
         }
 
-        Title = $"Torque Curve - {_currentVoltage.Voltage}V";
+        Title = $"Torque Curve - {_currentVoltage.Value}V";
 
         // Use the maximum of Motor Max Speed and Drive (voltage) Max Speed for stand-in lines.
         var standInMaxRpm = Math.Max(MotorMaxSpeed, _currentVoltage.MaxSpeed);
@@ -357,23 +357,23 @@ public partial class ChartViewModel : ViewModelBase
             standInMaxRpm = 6000;
         }
 
-        for (var i = 0; i < _currentVoltage.Series.Count; i++)
+        for (var i = 0; i < _currentVoltage.Curves.Count; i++)
         {
-            var curveSeries = _currentVoltage.Series[i];
+            var curve = _currentVoltage.Curves[i];
             var color = SeriesColors[i % SeriesColors.Length];
-            var isVisible = IsSeriesVisible(curveSeries.Name);
+            var isVisible = IsSeriesVisible(curve.Name);
 
             // Create observable points for the series.
             // If no curve points exist, fall back to rated torque lines so the chart can still render.
             ObservableCollection<ObservablePoint> points;
-            if (curveSeries.Data.Count == 0)
+            if (curve.Data.Count == 0)
             {
                 var torque = 0d;
-                if (curveSeries.Name.Contains("peak", StringComparison.OrdinalIgnoreCase))
+                if (curve.Name.Contains("peak", StringComparison.OrdinalIgnoreCase))
                 {
                     torque = _currentVoltage.RatedPeakTorque;
                 }
-                else if (curveSeries.Name.Contains("cont", StringComparison.OrdinalIgnoreCase))
+                else if (curve.Name.Contains("cont", StringComparison.OrdinalIgnoreCase))
                 {
                     torque = _currentVoltage.RatedContinuousTorque;
                 }
@@ -391,14 +391,14 @@ public partial class ChartViewModel : ViewModelBase
             else
             {
                 points = new ObservableCollection<ObservablePoint>(
-                    curveSeries.Data.Select(dp => new ObservablePoint(dp.Rpm, dp.Torque))
+                    curve.Data.Select(dp => new ObservablePoint(dp.Rpm, dp.Torque))
                 );
             }
-            _seriesDataCache[curveSeries.Name] = points;
+            _seriesDataCache[curve.Name] = points;
 
             var lineSeries = new LineSeries<ObservablePoint>
             {
-                Name = curveSeries.Name,
+                Name = curve.Name,
                 Values = points,
                 Fill = new SolidColorPaint(color.WithAlpha(40)),
                 GeometrySize = 3,
@@ -451,14 +451,14 @@ public partial class ChartViewModel : ViewModelBase
             return;
         }
 
-        foreach (var series in voltage.Series)
+        foreach (var series in voltage.Curves)
         {
             if (!_highlightedIndices.TryGetValue(series.Name, out var indices) || indices.Count == 0)
             {
                 continue;
             }
 
-            var color = SeriesColors[voltage.Series.IndexOf(series) % SeriesColors.Length];
+            var color = SeriesColors[voltage.Curves.IndexOf(series) % SeriesColors.Length];
 
             // Build an overlay points collection containing only the
             // highlighted indices for this series.
@@ -550,7 +550,7 @@ public partial class ChartViewModel : ViewModelBase
             maxRpm = 6000; // Default fallback
         }
 
-        var maxTorque = _currentVoltage.Series
+        var maxTorque = _currentVoltage.Curves
             .SelectMany(s => s.Data)
             .Select(dp => dp.Torque)
             .DefaultIfEmpty(0)

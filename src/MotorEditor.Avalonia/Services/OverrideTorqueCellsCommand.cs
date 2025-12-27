@@ -6,7 +6,7 @@ namespace CurveEditor.Services;
 
 /// <summary>
 /// Command that applies a single torque override value to multiple
-/// data points across one or more <see cref="CurveSeries"/> instances.
+/// data points across one or more <see cref="Curve"/> instances.
 /// </summary>
 public sealed class OverrideTorqueCellsCommand : IUndoableCommand
 {
@@ -15,7 +15,7 @@ public sealed class OverrideTorqueCellsCommand : IUndoableCommand
     /// </summary>
     public readonly struct Target
     {
-        public Target(CurveSeries series, int index, double oldTorque, double newTorque)
+        public Target(Curve series, int index, double oldTorque, double newTorque)
         {
             Series = series ?? throw new ArgumentNullException(nameof(series));
             Index = index;
@@ -23,7 +23,7 @@ public sealed class OverrideTorqueCellsCommand : IUndoableCommand
             NewTorque = newTorque;
         }
 
-        public CurveSeries Series { get; }
+        public Curve Series { get; }
 
         public int Index { get; }
 

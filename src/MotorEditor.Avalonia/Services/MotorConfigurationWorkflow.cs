@@ -19,7 +19,7 @@ public class MotorConfigurationWorkflow : IMotorConfigurationWorkflow
         _driveVoltageSeriesService = driveVoltageSeriesService ?? throw new ArgumentNullException(nameof(driveVoltageSeriesService));
     }
 
-    public (DriveConfiguration Drive, VoltageConfiguration Voltage) CreateDriveWithVoltage(MotorDefinition motor, DriveVoltageDialogResult result)
+    public (Drive Drive, Voltage Voltage) CreateDriveWithVoltage(ServoMotor motor, DriveVoltageDialogResult result)
     {
         ArgumentNullException.ThrowIfNull(motor);
         ArgumentNullException.ThrowIfNull(result);
@@ -38,18 +38,18 @@ public class MotorConfigurationWorkflow : IMotorConfigurationWorkflow
             result.PeakCurrent);
     }
 
-    public (bool IsDuplicate, VoltageConfiguration? Voltage) CreateVoltageWithSeries(DriveConfiguration drive, DriveVoltageDialogResult result)
+    public (bool IsDuplicate, Voltage? Voltage) CreateVoltageWithSeries(Drive drive, DriveVoltageDialogResult result)
     {
         ArgumentNullException.ThrowIfNull(drive);
         ArgumentNullException.ThrowIfNull(result);
 
         // Check if voltage already exists for this drive
-        if (drive.Voltages.Any(v => Math.Abs(v.Voltage - result.Voltage) < DriveConfiguration.DefaultVoltageTolerance))
+        if (drive.Voltages.Any(v => Math.Abs(v.Value - result.Voltage) < Drive.DefaultVoltageTolerance))
         {
             return (true, null);
         }
 
-        var voltage = _driveVoltageSeriesService.CreateVoltageWithSeries(
+        var voltage = _driveVoltageSeriesService.CreateVoltageWithCurve(
             drive,
             result.Voltage,
             result.MaxSpeed,
@@ -62,13 +62,13 @@ public class MotorConfigurationWorkflow : IMotorConfigurationWorkflow
         return (false, voltage);
     }
 
-    public CurveSeries CreateSeries(VoltageConfiguration voltage, AddCurveSeriesResult result)
+    public Curve CreateSeries(Voltage voltage, AddCurveResult result)
     {
         ArgumentNullException.ThrowIfNull(voltage);
         ArgumentNullException.ThrowIfNull(result);
 
         var seriesName = _driveVoltageSeriesService.GenerateUniqueName(
-            voltage.Series.Select(s => s.Name),
+            voltage.Curves.Select(s => s.Name),
             result.Name);
 
         var series = voltage.AddSeries(seriesName, result.BaseTorque);

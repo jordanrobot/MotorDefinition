@@ -4,21 +4,21 @@ using Xunit;
 
 namespace CurveEditor.Tests.Models;
 
-public class CurveSeriesTests
+public class CurveTests
 {
     [Fact]
     public void Constructor_Default_CreatesUnnamedSeries()
     {
-        var series = new CurveSeries();
+        var series = new Curve();
 
         Assert.Equal("Unnamed", series.Name);
         Assert.Empty(series.Data);
     }
 
     [Fact]
-    public void Constructor_WithName_CreatesSeries()
+    public void Constructor_WithName_CreatesCurve()
     {
-        var series = new CurveSeries("Peak");
+        var series = new Curve("Peak");
 
         Assert.Equal("Peak", series.Name);
         Assert.Empty(series.Data);
@@ -27,7 +27,7 @@ public class CurveSeriesTests
     [Fact]
     public void Notes_DefaultsToEmpty()
     {
-        var series = new CurveSeries();
+        var series = new Curve();
 
         Assert.Equal(string.Empty, series.Notes);
     }
@@ -35,7 +35,7 @@ public class CurveSeriesTests
     [Fact]
     public void Notes_CanBeSet()
     {
-        var series = new CurveSeries("Peak")
+        var series = new Curve("Peak")
         {
             Notes = "Measured at 25°C ambient temperature"
         };
@@ -46,7 +46,7 @@ public class CurveSeriesTests
     [Fact]
     public void Locked_DefaultsToFalse()
     {
-        var series = new CurveSeries();
+        var series = new Curve();
 
         Assert.False(series.Locked);
     }
@@ -54,7 +54,7 @@ public class CurveSeriesTests
     [Fact]
     public void Locked_CanBeSetToTrue()
     {
-        var series = new CurveSeries("Peak")
+        var series = new Curve("Peak")
         {
             Locked = true
         };
@@ -68,7 +68,7 @@ public class CurveSeriesTests
     [InlineData("   ")]
     public void Name_NullOrEmpty_ThrowsArgumentException(string? invalidName)
     {
-        var series = new CurveSeries();
+        var series = new Curve();
 
         Assert.Throws<ArgumentException>(() => series.Name = invalidName!);
     }
@@ -76,7 +76,7 @@ public class CurveSeriesTests
     [Fact]
     public void InitializeData_Creates101Points()
     {
-        var series = new CurveSeries("Peak");
+        var series = new Curve("Peak");
 
         series.InitializeData(5000, 50);
 
@@ -87,7 +87,7 @@ public class CurveSeriesTests
     [Fact]
     public void InitializeData_PointsAtExact1PercentIncrements()
     {
-        var series = new CurveSeries("Peak");
+        var series = new Curve("Peak");
 
         series.InitializeData(5000, 50);
 
@@ -100,7 +100,7 @@ public class CurveSeriesTests
     [Fact]
     public void InitializeData_RpmCalculatedCorrectly()
     {
-        var series = new CurveSeries("Peak");
+        var series = new Curve("Peak");
 
         series.InitializeData(5000, 50);
 
@@ -112,7 +112,7 @@ public class CurveSeriesTests
     [Fact]
     public void InitializeData_TorqueSetToDefault()
     {
-        var series = new CurveSeries("Continuous");
+        var series = new Curve("Continuous");
 
         series.InitializeData(3000, 45.5);
 
@@ -125,7 +125,7 @@ public class CurveSeriesTests
     [Fact]
     public void InitializeData_ZeroMaxRpm_CreatesZeroRpmPoints()
     {
-        var series = new CurveSeries("Peak");
+        var series = new Curve("Peak");
 
         series.InitializeData(0, 50);
 
@@ -136,7 +136,7 @@ public class CurveSeriesTests
     [Fact]
     public void InitializeData_NegativeMaxRpm_ThrowsArgumentOutOfRangeException()
     {
-        var series = new CurveSeries("Peak");
+        var series = new Curve("Peak");
 
         Assert.Throws<ArgumentOutOfRangeException>(() => series.InitializeData(-1, 50));
     }
@@ -144,7 +144,7 @@ public class CurveSeriesTests
     [Fact]
     public void InitializeData_ClearsExistingData()
     {
-        var series = new CurveSeries("Peak");
+        var series = new Curve("Peak");
         series.Data.Add(new DataPoint(0, 0, 100));
         series.Data.Add(new DataPoint(1, 50, 100));
 
@@ -157,7 +157,7 @@ public class CurveSeriesTests
     [Fact]
     public void ValidateDataIntegrity_ValidData_ReturnsTrue()
     {
-        var series = new CurveSeries("Peak");
+        var series = new Curve("Peak");
         series.InitializeData(5000, 50);
 
         Assert.True(series.ValidateDataIntegrity());
@@ -166,7 +166,7 @@ public class CurveSeriesTests
     [Fact]
     public void ValidateDataIntegrity_WrongPointCount_ReturnsFalse()
     {
-        var series = new CurveSeries("Peak");
+        var series = new Curve("Peak");
         series.Data.Add(new DataPoint(0, 0, 50));
 
         Assert.True(series.ValidateDataIntegrity());
@@ -175,7 +175,7 @@ public class CurveSeriesTests
     [Fact]
     public void ValidateDataIntegrity_WrongPercentOrder_ReturnsFalse()
     {
-        var series = new CurveSeries("Peak");
+        var series = new Curve("Peak");
         series.InitializeData(5000, 50);
         // Swap two points to break order
         (series.Data[50], series.Data[51]) = (series.Data[51], series.Data[50]);
@@ -186,7 +186,7 @@ public class CurveSeriesTests
     [Fact]
     public void ValidateDataIntegrity_TooManyPoints_ReturnsFalse()
     {
-        var series = new CurveSeries("Peak");
+        var series = new Curve("Peak");
 
         for (var i = 0; i < 102; i++)
         {
@@ -199,7 +199,7 @@ public class CurveSeriesTests
     [Fact]
     public void InitializeData_First_And_LastPercent_AreCorrect()
     {
-        var series = new CurveSeries("Peak");
+        var series = new Curve("Peak");
         series.InitializeData(5000, 50);
 
         Assert.Equal(0, series.Data[0].Percent);
@@ -209,7 +209,7 @@ public class CurveSeriesTests
     [Fact]
     public void InitializeData_FirstRpm_IsZero()
     {
-        var series = new CurveSeries("Peak");
+        var series = new Curve("Peak");
         series.InitializeData(5000, 50);
 
         Assert.Equal(0, series.Data[0].Rpm);
@@ -218,7 +218,7 @@ public class CurveSeriesTests
     [Fact]
     public void InitializeData_LastRpm_EqualsMaxRpm()
     {
-        var series = new CurveSeries("Peak");
+        var series = new Curve("Peak");
         series.InitializeData(5000, 50);
 
         Assert.Equal(5000, series.Data[100].Rpm);
@@ -227,7 +227,7 @@ public class CurveSeriesTests
     [Fact]
     public void IsVisible_DefaultsToTrue()
     {
-        var series = new CurveSeries();
+        var series = new Curve();
 
         Assert.True(series.IsVisible);
     }
@@ -235,7 +235,7 @@ public class CurveSeriesTests
     [Fact]
     public void IsVisible_CanBeSetToFalse()
     {
-        var series = new CurveSeries("Peak")
+        var series = new Curve("Peak")
         {
             IsVisible = false
         };
@@ -246,7 +246,7 @@ public class CurveSeriesTests
     [Fact]
     public void IsVisible_CanBeToggled()
     {
-        var series = new CurveSeries("Peak");
+        var series = new Curve("Peak");
 
         series.IsVisible = false;
         Assert.False(series.IsVisible);

@@ -47,7 +47,7 @@ public class MainWindowViewModelCloseFileTests
         var curveGeneratorMock = new Mock<ICurveGeneratorService>(MockBehavior.Loose);
         var validationServiceMock = new Mock<IValidationService>(MockBehavior.Strict);
         validationServiceMock
-            .Setup(v => v.ValidateMotorDefinition(It.IsAny<MotorDefinition>()))
+            .Setup(v => v.ValidateServoMotor(It.IsAny<ServoMotor>()))
             .Returns(Array.Empty<string>());
 
         var driveVoltageSeriesServiceMock = new Mock<IDriveVoltageSeriesService>(MockBehavior.Loose);
@@ -86,7 +86,7 @@ public class MainWindowViewModelCloseFileTests
         fileServiceMock.Setup(f => f.Reset());
 
         var vm = CreateViewModel(fileServiceMock, _ => Task.FromResult(MainWindowViewModel.UnsavedChangesChoice.Cancel));
-        vm.CurrentMotor = new MotorDefinition { MotorName = "Loaded" };
+        vm.CurrentMotor = new ServoMotor { MotorName = "Loaded" };
         vm.CurrentFilePath = "c:/tmp/current.json";
         vm.IsDirty = false;
 
@@ -106,7 +106,7 @@ public class MainWindowViewModelCloseFileTests
         fileServiceMock.SetupGet(f => f.CurrentFilePath).Returns("c:/tmp/current.json");
 
         var vm = CreateViewModel(fileServiceMock, _ => Task.FromResult(MainWindowViewModel.UnsavedChangesChoice.Cancel));
-        vm.CurrentMotor = new MotorDefinition { MotorName = "Loaded" };
+        vm.CurrentMotor = new ServoMotor { MotorName = "Loaded" };
         vm.CurrentFilePath = "c:/tmp/current.json";
         vm.IsDirty = true;
 
@@ -124,17 +124,17 @@ public class MainWindowViewModelCloseFileTests
         var fileServiceMock = new Mock<IFileService>(MockBehavior.Strict);
         fileServiceMock.SetupGet(f => f.IsDirty).Returns(false);
         fileServiceMock.SetupGet(f => f.CurrentFilePath).Returns("c:/tmp/current.json");
-        fileServiceMock.Setup(f => f.SaveAsync(It.IsAny<MotorDefinition>())).Returns(Task.CompletedTask);
+        fileServiceMock.Setup(f => f.SaveAsync(It.IsAny<ServoMotor>())).Returns(Task.CompletedTask);
         fileServiceMock.Setup(f => f.Reset());
 
         var vm = CreateViewModel(fileServiceMock, _ => Task.FromResult(MainWindowViewModel.UnsavedChangesChoice.Save));
-        vm.CurrentMotor = new MotorDefinition { MotorName = "Loaded" };
+        vm.CurrentMotor = new ServoMotor { MotorName = "Loaded" };
         vm.CurrentFilePath = "c:/tmp/current.json";
         vm.IsDirty = true;
 
         await (vm.CloseFileCommand).ExecuteAsync(null);
 
-        fileServiceMock.Verify(f => f.SaveAsync(It.IsAny<MotorDefinition>()), Times.Once);
+        fileServiceMock.Verify(f => f.SaveAsync(It.IsAny<ServoMotor>()), Times.Once);
         fileServiceMock.Verify(f => f.Reset(), Times.Once);
         Assert.Null(vm.CurrentMotor);
         Assert.Null(vm.CurrentFilePath);

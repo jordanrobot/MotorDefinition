@@ -1,51 +1,51 @@
 #### [MotorDefinition](index.md 'index')
 ### [JordanRobot\.MotorDefinition\.Model](JordanRobot.MotorDefinition.Model.md 'JordanRobot\.MotorDefinition\.Model')
 
-## CurveSeries Class
+## Curve Class
 
 Represents a named series of motor torque/speed data points\.
 Each series represents a specific operating condition \(e\.g\., "Peak" or "Continuous"\)\.
 
 ```csharp
-public class CurveSeries : System.ComponentModel.INotifyPropertyChanged
+public class Curve : System.ComponentModel.INotifyPropertyChanged
 ```
 
-Inheritance [System\.Object](https://learn.microsoft.com/en-us/dotnet/api/system.object 'System\.Object') &#129106; CurveSeries
+Inheritance [System\.Object](https://learn.microsoft.com/en-us/dotnet/api/system.object 'System\.Object') &#129106; Curve
 
 Implements [System\.ComponentModel\.INotifyPropertyChanged](https://learn.microsoft.com/en-us/dotnet/api/system.componentmodel.inotifypropertychanged 'System\.ComponentModel\.INotifyPropertyChanged')
 ### Constructors
 
-<a name='JordanRobot.MotorDefinition.Model.CurveSeries.CurveSeries()'></a>
+<a name='JordanRobot.MotorDefinition.Model.Curve.Curve()'></a>
 
-## CurveSeries\(\) Constructor
+## Curve\(\) Constructor
 
-Creates a new CurveSeries with default values\.
+Creates a new Curve with default values\.
 
 ```csharp
-public CurveSeries();
+public Curve();
 ```
 
-<a name='JordanRobot.MotorDefinition.Model.CurveSeries.CurveSeries(string)'></a>
+<a name='JordanRobot.MotorDefinition.Model.Curve.Curve(string)'></a>
 
-## CurveSeries\(string\) Constructor
+## Curve\(string\) Constructor
 
-Creates a new CurveSeries with the specified name\.
+Creates a new Curve with the specified name\.
 
 ```csharp
-public CurveSeries(string name);
+public Curve(string name);
 ```
 #### Parameters
 
-<a name='JordanRobot.MotorDefinition.Model.CurveSeries.CurveSeries(string).name'></a>
+<a name='JordanRobot.MotorDefinition.Model.Curve.Curve(string).name'></a>
 
 `name` [System\.String](https://learn.microsoft.com/en-us/dotnet/api/system.string 'System\.String')
 
 The name of the curve series\.
 ### Properties
 
-<a name='JordanRobot.MotorDefinition.Model.CurveSeries.Data'></a>
+<a name='JordanRobot.MotorDefinition.Model.Curve.Data'></a>
 
-## CurveSeries\.Data Property
+## Curve\.Data Property
 
 The data points for this curve\.
 Typically contains 101 points at 1% increments \(0% through 100%\), but may contain fewer points\.
@@ -58,9 +58,9 @@ public System.Collections.Generic.List<JordanRobot.MotorDefinition.Model.DataPoi
 #### Property Value
 [System\.Collections\.Generic\.List&lt;](https://learn.microsoft.com/en-us/dotnet/api/system.collections.generic.list-1 'System\.Collections\.Generic\.List\`1')[DataPoint](JordanRobot.MotorDefinition.Model.DataPoint.md 'JordanRobot\.MotorDefinition\.Model\.DataPoint')[&gt;](https://learn.microsoft.com/en-us/dotnet/api/system.collections.generic.list-1 'System\.Collections\.Generic\.List\`1')
 
-<a name='JordanRobot.MotorDefinition.Model.CurveSeries.IsVisible'></a>
+<a name='JordanRobot.MotorDefinition.Model.Curve.IsVisible'></a>
 
-## CurveSeries\.IsVisible Property
+## Curve\.IsVisible Property
 
 Indicates whether this curve series is visible in the chart\.
 This is a runtime\-only property that is not persisted to JSON\.
@@ -72,9 +72,9 @@ public bool IsVisible { get; set; }
 #### Property Value
 [System\.Boolean](https://learn.microsoft.com/en-us/dotnet/api/system.boolean 'System\.Boolean')
 
-<a name='JordanRobot.MotorDefinition.Model.CurveSeries.Locked'></a>
+<a name='JordanRobot.MotorDefinition.Model.Curve.Locked'></a>
 
-## CurveSeries\.Locked Property
+## Curve\.Locked Property
 
 Indicates whether this curve series is locked for editing\.
 When true, the curve data should not be modified\.
@@ -86,9 +86,9 @@ public bool Locked { get; set; }
 #### Property Value
 [System\.Boolean](https://learn.microsoft.com/en-us/dotnet/api/system.boolean 'System\.Boolean')
 
-<a name='JordanRobot.MotorDefinition.Model.CurveSeries.Name'></a>
+<a name='JordanRobot.MotorDefinition.Model.Curve.Name'></a>
 
-## CurveSeries\.Name Property
+## Curve\.Name Property
 
 The name of this curve series \(e\.g\., "Peak", "Continuous"\)\.
 
@@ -99,9 +99,9 @@ public string Name { get; set; }
 #### Property Value
 [System\.String](https://learn.microsoft.com/en-us/dotnet/api/system.string 'System\.String')
 
-<a name='JordanRobot.MotorDefinition.Model.CurveSeries.Notes'></a>
+<a name='JordanRobot.MotorDefinition.Model.Curve.Notes'></a>
 
-## CurveSeries\.Notes Property
+## Curve\.Notes Property
 
 Notes or comments about this curve series\.
 
@@ -112,9 +112,9 @@ public string Notes { get; set; }
 #### Property Value
 [System\.String](https://learn.microsoft.com/en-us/dotnet/api/system.string 'System\.String')
 
-<a name='JordanRobot.MotorDefinition.Model.CurveSeries.Percents'></a>
+<a name='JordanRobot.MotorDefinition.Model.Curve.Percents'></a>
 
-## CurveSeries\.Percents Property
+## Curve\.Percents Property
 
 Gets the percentage axis \(0\.\.100\) for this series\.
 
@@ -125,9 +125,9 @@ public System.Collections.Generic.IEnumerable<int> Percents { get; }
 #### Property Value
 [System\.Collections\.Generic\.IEnumerable&lt;](https://learn.microsoft.com/en-us/dotnet/api/system.collections.generic.ienumerable-1 'System\.Collections\.Generic\.IEnumerable\`1')[System\.Int32](https://learn.microsoft.com/en-us/dotnet/api/system.int32 'System\.Int32')[&gt;](https://learn.microsoft.com/en-us/dotnet/api/system.collections.generic.ienumerable-1 'System\.Collections\.Generic\.IEnumerable\`1')
 
-<a name='JordanRobot.MotorDefinition.Model.CurveSeries.PointCount'></a>
+<a name='JordanRobot.MotorDefinition.Model.Curve.PointCount'></a>
 
-## CurveSeries\.PointCount Property
+## Curve\.PointCount Property
 
 Gets the number of data points in this series\.
 
@@ -138,9 +138,9 @@ public int PointCount { get; }
 #### Property Value
 [System\.Int32](https://learn.microsoft.com/en-us/dotnet/api/system.int32 'System\.Int32')
 
-<a name='JordanRobot.MotorDefinition.Model.CurveSeries.Rpms'></a>
+<a name='JordanRobot.MotorDefinition.Model.Curve.Rpms'></a>
 
-## CurveSeries\.Rpms Property
+## Curve\.Rpms Property
 
 Gets the RPM values for this series\.
 
@@ -151,9 +151,9 @@ public System.Collections.Generic.IEnumerable<double> Rpms { get; }
 #### Property Value
 [System\.Collections\.Generic\.IEnumerable&lt;](https://learn.microsoft.com/en-us/dotnet/api/system.collections.generic.ienumerable-1 'System\.Collections\.Generic\.IEnumerable\`1')[System\.Double](https://learn.microsoft.com/en-us/dotnet/api/system.double 'System\.Double')[&gt;](https://learn.microsoft.com/en-us/dotnet/api/system.collections.generic.ienumerable-1 'System\.Collections\.Generic\.IEnumerable\`1')
 
-<a name='JordanRobot.MotorDefinition.Model.CurveSeries.Torques'></a>
+<a name='JordanRobot.MotorDefinition.Model.Curve.Torques'></a>
 
-## CurveSeries\.Torques Property
+## Curve\.Torques Property
 
 Gets the torque values for this series\.
 
@@ -165,9 +165,9 @@ public System.Collections.Generic.IEnumerable<double> Torques { get; }
 [System\.Collections\.Generic\.IEnumerable&lt;](https://learn.microsoft.com/en-us/dotnet/api/system.collections.generic.ienumerable-1 'System\.Collections\.Generic\.IEnumerable\`1')[System\.Double](https://learn.microsoft.com/en-us/dotnet/api/system.double 'System\.Double')[&gt;](https://learn.microsoft.com/en-us/dotnet/api/system.collections.generic.ienumerable-1 'System\.Collections\.Generic\.IEnumerable\`1')
 ### Methods
 
-<a name='JordanRobot.MotorDefinition.Model.CurveSeries.GetPointByPercent(int)'></a>
+<a name='JordanRobot.MotorDefinition.Model.Curve.GetPointByPercent(int)'></a>
 
-## CurveSeries\.GetPointByPercent\(int\) Method
+## Curve\.GetPointByPercent\(int\) Method
 
 Gets the data point for a given percent\.
 Prefer this for quick lookups when exporting or rendering tables\.
@@ -177,7 +177,7 @@ public JordanRobot.MotorDefinition.Model.DataPoint GetPointByPercent(int percent
 ```
 #### Parameters
 
-<a name='JordanRobot.MotorDefinition.Model.CurveSeries.GetPointByPercent(int).percent'></a>
+<a name='JordanRobot.MotorDefinition.Model.Curve.GetPointByPercent(int).percent'></a>
 
 `percent` [System\.Int32](https://learn.microsoft.com/en-us/dotnet/api/system.int32 'System\.Int32')
 
@@ -190,14 +190,14 @@ The matching data point\.
 #### Exceptions
 
 [System\.ArgumentOutOfRangeException](https://learn.microsoft.com/en-us/dotnet/api/system.argumentoutofrangeexception 'System\.ArgumentOutOfRangeException')  
-Thrown when [percent](JordanRobot.MotorDefinition.Model.CurveSeries.md#JordanRobot.MotorDefinition.Model.CurveSeries.GetPointByPercent(int).percent 'JordanRobot\.MotorDefinition\.Model\.CurveSeries\.GetPointByPercent\(int\)\.percent') is negative\.
+Thrown when [percent](JordanRobot.MotorDefinition.Model.Curve.md#JordanRobot.MotorDefinition.Model.Curve.GetPointByPercent(int).percent 'JordanRobot\.MotorDefinition\.Model\.Curve\.GetPointByPercent\(int\)\.percent') is negative\.
 
 [System\.Collections\.Generic\.KeyNotFoundException](https://learn.microsoft.com/en-us/dotnet/api/system.collections.generic.keynotfoundexception 'System\.Collections\.Generic\.KeyNotFoundException')  
-Thrown when no point exists for [percent](JordanRobot.MotorDefinition.Model.CurveSeries.md#JordanRobot.MotorDefinition.Model.CurveSeries.GetPointByPercent(int).percent 'JordanRobot\.MotorDefinition\.Model\.CurveSeries\.GetPointByPercent\(int\)\.percent')\.
+Thrown when no point exists for [percent](JordanRobot.MotorDefinition.Model.Curve.md#JordanRobot.MotorDefinition.Model.Curve.GetPointByPercent(int).percent 'JordanRobot\.MotorDefinition\.Model\.Curve\.GetPointByPercent\(int\)\.percent')\.
 
-<a name='JordanRobot.MotorDefinition.Model.CurveSeries.InitializeData(double,double)'></a>
+<a name='JordanRobot.MotorDefinition.Model.Curve.InitializeData(double,double)'></a>
 
-## CurveSeries\.InitializeData\(double, double\) Method
+## Curve\.InitializeData\(double, double\) Method
 
 Initializes the data with the default 101 points \(0% to 100%\) at 1% increments\.
 The file format can store 0\.\.101 points per series; this helper always generates the standard 1% curve\.
@@ -207,21 +207,21 @@ public void InitializeData(double maxRpm, double defaultTorque);
 ```
 #### Parameters
 
-<a name='JordanRobot.MotorDefinition.Model.CurveSeries.InitializeData(double,double).maxRpm'></a>
+<a name='JordanRobot.MotorDefinition.Model.Curve.InitializeData(double,double).maxRpm'></a>
 
 `maxRpm` [System\.Double](https://learn.microsoft.com/en-us/dotnet/api/system.double 'System\.Double')
 
 The maximum RPM of the motor\.
 
-<a name='JordanRobot.MotorDefinition.Model.CurveSeries.InitializeData(double,double).defaultTorque'></a>
+<a name='JordanRobot.MotorDefinition.Model.Curve.InitializeData(double,double).defaultTorque'></a>
 
 `defaultTorque` [System\.Double](https://learn.microsoft.com/en-us/dotnet/api/system.double 'System\.Double')
 
 The default torque value for all points\.
 
-<a name='JordanRobot.MotorDefinition.Model.CurveSeries.OnPropertyChanged(string)'></a>
+<a name='JordanRobot.MotorDefinition.Model.Curve.OnPropertyChanged(string)'></a>
 
-## CurveSeries\.OnPropertyChanged\(string\) Method
+## Curve\.OnPropertyChanged\(string\) Method
 
 Raises the PropertyChanged event\.
 
@@ -230,15 +230,15 @@ protected virtual void OnPropertyChanged(string? propertyName=null);
 ```
 #### Parameters
 
-<a name='JordanRobot.MotorDefinition.Model.CurveSeries.OnPropertyChanged(string).propertyName'></a>
+<a name='JordanRobot.MotorDefinition.Model.Curve.OnPropertyChanged(string).propertyName'></a>
 
 `propertyName` [System\.String](https://learn.microsoft.com/en-us/dotnet/api/system.string 'System\.String')
 
 The name of the property that changed\.
 
-<a name='JordanRobot.MotorDefinition.Model.CurveSeries.ToPercentLookup()'></a>
+<a name='JordanRobot.MotorDefinition.Model.Curve.ToPercentLookup()'></a>
 
-## CurveSeries\.ToPercentLookup\(\) Method
+## Curve\.ToPercentLookup\(\) Method
 
 Creates a lookup dictionary keyed by percent \(0\.\.100\)\.
 This is useful for caching fast lookups in client applications\.
@@ -256,9 +256,9 @@ A dictionary mapping percent to data point\.
 [System\.ArgumentException](https://learn.microsoft.com/en-us/dotnet/api/system.argumentexception 'System\.ArgumentException')  
 Thrown if the series contains duplicate percent values\.
 
-<a name='JordanRobot.MotorDefinition.Model.CurveSeries.TryGetPointByPercent(int,JordanRobot.MotorDefinition.Model.DataPoint)'></a>
+<a name='JordanRobot.MotorDefinition.Model.Curve.TryGetPointByPercent(int,JordanRobot.MotorDefinition.Model.DataPoint)'></a>
 
-## CurveSeries\.TryGetPointByPercent\(int, DataPoint\) Method
+## Curve\.TryGetPointByPercent\(int, DataPoint\) Method
 
 Attempts to get the data point for a given percent\.
 
@@ -267,13 +267,13 @@ public bool TryGetPointByPercent(int percent, out JordanRobot.MotorDefinition.Mo
 ```
 #### Parameters
 
-<a name='JordanRobot.MotorDefinition.Model.CurveSeries.TryGetPointByPercent(int,JordanRobot.MotorDefinition.Model.DataPoint).percent'></a>
+<a name='JordanRobot.MotorDefinition.Model.Curve.TryGetPointByPercent(int,JordanRobot.MotorDefinition.Model.DataPoint).percent'></a>
 
 `percent` [System\.Int32](https://learn.microsoft.com/en-us/dotnet/api/system.int32 'System\.Int32')
 
 The percent \(non\-negative\)\.
 
-<a name='JordanRobot.MotorDefinition.Model.CurveSeries.TryGetPointByPercent(int,JordanRobot.MotorDefinition.Model.DataPoint).point'></a>
+<a name='JordanRobot.MotorDefinition.Model.Curve.TryGetPointByPercent(int,JordanRobot.MotorDefinition.Model.DataPoint).point'></a>
 
 `point` [DataPoint](JordanRobot.MotorDefinition.Model.DataPoint.md 'JordanRobot\.MotorDefinition\.Model\.DataPoint')
 
@@ -283,9 +283,9 @@ When this method returns, contains the matching point if found; otherwise null\.
 [System\.Boolean](https://learn.microsoft.com/en-us/dotnet/api/system.boolean 'System\.Boolean')  
 True if found; otherwise false\.
 
-<a name='JordanRobot.MotorDefinition.Model.CurveSeries.ValidateDataIntegrity()'></a>
+<a name='JordanRobot.MotorDefinition.Model.Curve.ValidateDataIntegrity()'></a>
 
-## CurveSeries\.ValidateDataIntegrity\(\) Method
+## Curve\.ValidateDataIntegrity\(\) Method
 
 Validates that the series has a supported shape\.
 A valid series has 0\.\.101 points, non\-negative percent values, and a strictly increasing percent axis\.
@@ -299,9 +299,9 @@ public bool ValidateDataIntegrity();
 True if the series has valid data structure; otherwise false\.
 ### Events
 
-<a name='JordanRobot.MotorDefinition.Model.CurveSeries.PropertyChanged'></a>
+<a name='JordanRobot.MotorDefinition.Model.Curve.PropertyChanged'></a>
 
-## CurveSeries\.PropertyChanged Event
+## Curve\.PropertyChanged Event
 
 Occurs when a property value changes\.
 

@@ -12,8 +12,8 @@ namespace CurveEditor.Services;
 /// </summary>
 public interface IDriveVoltageSeriesService
 {
-    (DriveConfiguration drive, VoltageConfiguration voltage) CreateDriveWithVoltage(
-        MotorDefinition motor,
+    (Drive drive, Voltage voltage) CreateDriveWithVoltage(
+        ServoMotor motor,
         string? name,
         string? partNumber,
         string? manufacturer,
@@ -25,8 +25,8 @@ public interface IDriveVoltageSeriesService
         double continuousCurrent,
         double peakCurrent);
 
-    VoltageConfiguration CreateVoltageWithSeries(
-        DriveConfiguration drive,
+    Voltage CreateVoltageWithCurve(
+        Drive drive,
         double voltageValue,
         double maxSpeed,
         double power,
@@ -40,8 +40,8 @@ public interface IDriveVoltageSeriesService
 
 public sealed class DriveVoltageSeriesService : IDriveVoltageSeriesService
 {
-    public (DriveConfiguration drive, VoltageConfiguration voltage) CreateDriveWithVoltage(
-        MotorDefinition motor,
+    public (Drive drive, Voltage voltage) CreateDriveWithVoltage(
+        ServoMotor motor,
         string? name,
         string? partNumber,
         string? manufacturer,
@@ -63,7 +63,7 @@ public sealed class DriveVoltageSeriesService : IDriveVoltageSeriesService
         drive.PartNumber = partNumber ?? string.Empty;
         drive.Manufacturer = manufacturer ?? string.Empty;
 
-        var voltage = CreateVoltageWithSeries(
+        var voltage = CreateVoltageWithCurve(
             drive,
             voltageValue,
             maxSpeed,
@@ -76,8 +76,8 @@ public sealed class DriveVoltageSeriesService : IDriveVoltageSeriesService
         return (drive, voltage);
     }
 
-    public VoltageConfiguration CreateVoltageWithSeries(
-        DriveConfiguration drive,
+    public Voltage CreateVoltageWithCurve(
+        Drive drive,
         double voltageValue,
         double maxSpeed,
         double power,
@@ -88,7 +88,7 @@ public sealed class DriveVoltageSeriesService : IDriveVoltageSeriesService
     {
         if (drive is null) throw new ArgumentNullException(nameof(drive));
 
-        var voltage = drive.AddVoltageConfiguration(voltageValue);
+        var voltage = drive.AddVoltage(voltageValue);
         voltage.MaxSpeed = maxSpeed;
         voltage.Power = power;
         voltage.RatedPeakTorque = peakTorque;
@@ -97,12 +97,12 @@ public sealed class DriveVoltageSeriesService : IDriveVoltageSeriesService
         voltage.PeakAmperage = peakCurrent;
 
         // Create Peak and Continuous torque series
-        var peakSeries = new CurveSeries("Peak");
-        var continuousSeries = new CurveSeries("Continuous");
+        var peakSeries = new Curve("Peak");
+        var continuousSeries = new Curve("Continuous");
         peakSeries.InitializeData(voltage.MaxSpeed, voltage.RatedPeakTorque);
         continuousSeries.InitializeData(voltage.MaxSpeed, voltage.RatedContinuousTorque);
-        voltage.Series.Add(peakSeries);
-        voltage.Series.Add(continuousSeries);
+        voltage.Curves.Add(peakSeries);
+        voltage.Curves.Add(continuousSeries);
 
         return voltage;
     }

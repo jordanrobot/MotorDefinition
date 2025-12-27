@@ -23,27 +23,27 @@ public interface IFileService
     /// </summary>
     /// <param name="filePath">The path to the JSON file.</param>
     /// <returns>The loaded motor definition.</returns>
-    Task<MotorDefinition> LoadAsync(string filePath);
+    Task<ServoMotor> LoadAsync(string filePath);
 
     /// <summary>
     /// Saves a motor definition to the current file path.
     /// </summary>
     /// <param name="motorDefinition">The motor definition to save.</param>
-    Task SaveAsync(MotorDefinition motorDefinition);
+    Task SaveAsync(ServoMotor motorDefinition);
 
     /// <summary>
     /// Saves a motor definition to a new file path and makes it the current file.
     /// </summary>
     /// <param name="motorDefinition">The motor definition to save.</param>
     /// <param name="filePath">The path to save to.</param>
-    Task SaveAsAsync(MotorDefinition motorDefinition, string filePath);
+    Task SaveAsAsync(ServoMotor motorDefinition, string filePath);
 
     /// <summary>
     /// Saves a copy of the motor definition to a new file without changing the current file.
     /// </summary>
     /// <param name="motorDefinition">The motor definition to save.</param>
     /// <param name="filePath">The path to save the copy to.</param>
-    Task SaveCopyAsAsync(MotorDefinition motorDefinition, string filePath);
+    Task SaveCopyAsAsync(ServoMotor motorDefinition, string filePath);
 
     /// <summary>
     /// Marks the current file as having unsaved changes.
@@ -63,7 +63,7 @@ public interface IFileService
     /// <param name="maxTorque">The maximum torque.</param>
     /// <param name="maxPower">The maximum power.</param>
     /// <returns>The new motor definition.</returns>
-    MotorDefinition CreateNew(string motorName, double maxRpm, double maxTorque, double maxPower);
+    ServoMotor CreateNew(string motorName, double maxRpm, double maxTorque, double maxPower);
 
     /// <summary>
     /// Resets the service state (clears current file path and dirty flag).

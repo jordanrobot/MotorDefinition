@@ -8,7 +8,7 @@ using System.Text.Json.Nodes;
 using System.Text.Json.Serialization;
 using Xunit;
 
-namespace CurveEditor.Tests.MotorDefinitions;
+namespace CurveEditor.Tests.MotorDefinition;
 
 public class MotorFileMapperTests
 {
@@ -44,8 +44,8 @@ public class MotorFileMapperTests
             Assert.Equal(motor.Units.Percentage, roundTrip.Units.Percentage);
             Assert.Equal(motor.Units.Temperature, roundTrip.Units.Temperature);
 
-            var originalSeries = motor.Drives[0].Voltages[0].Series[0];
-            var mappedSeries = roundTrip.Drives[0].Voltages[0].Series[0];
+            var originalSeries = motor.Drives[0].Voltages[0].Curves[0];
+            var mappedSeries = roundTrip.Drives[0].Voltages[0].Curves[0];
             Assert.Equal(originalSeries.Name, mappedSeries.Name);
             Assert.Equal(originalSeries.Locked, mappedSeries.Locked);
             Assert.Equal(originalSeries.Data.Count, mappedSeries.Data.Count);
@@ -72,8 +72,8 @@ public class MotorFileMapperTests
 
             Assert.Equal(1, roundTrip.Drives.Count);
             Assert.Equal(2, roundTrip.Drives[0].Voltages.Count);
-            Assert.Equal(motor.Drives[0].Voltages[1].Voltage, roundTrip.Drives[0].Voltages[1].Voltage);
-            Assert.Equal(motor.Drives[0].Voltages[1].Series.Count, roundTrip.Drives[0].Voltages[1].Series.Count);
+            Assert.Equal(motor.Drives[0].Voltages[1].Value, roundTrip.Drives[0].Voltages[1].Value);
+            Assert.Equal(motor.Drives[0].Voltages[1].Curves.Count, roundTrip.Drives[0].Voltages[1].Curves.Count);
         }
         finally
         {
@@ -85,7 +85,7 @@ public class MotorFileMapperTests
     public void Save_WithMismatchedAxes_ThrowsInvalidOperationException()
     {
         var motor = CreateMotorDefinition();
-        motor.Drives[0].Voltages[0].Series[1].Data[100].Percent = 99;
+        motor.Drives[0].Voltages[0].Curves[1].Data[100].Percent = 99;
 
         var tempPath = Path.GetTempFileName();
         try
@@ -134,9 +134,9 @@ public class MotorFileMapperTests
         }
     }
 
-    private static MotorDefinition CreateMotorDefinition(bool withSecondVoltage = false)
+    private static ServoMotor CreateMotorDefinition(bool withSecondVoltage = false)
     {
-        var motor = new MotorDefinition("Test Motor")
+        var motor = new ServoMotor("Test Motor")
         {
             Manufacturer = "Test Mfg",
             PartNumber = "TM-1",
@@ -158,7 +158,7 @@ public class MotorFileMapperTests
         };
 
         var drive = motor.AddDrive("Drive A");
-        var voltage = drive.AddVoltageConfiguration(220);
+        var voltage = drive.AddVoltage(220);
         voltage.MaxSpeed = 5000;
         voltage.RatedSpeed = 3000;
         voltage.RatedContinuousTorque = 45;
@@ -167,17 +167,17 @@ public class MotorFileMapperTests
         voltage.ContinuousAmperage = 10;
         voltage.PeakAmperage = 25;
 
-        var peak = new CurveSeries("Peak") { Locked = false, Notes = "peak" };
+        var peak = new Curve("Peak") { Locked = false, Notes = "peak" };
         peak.InitializeData(voltage.MaxSpeed, 55);
-        var continuous = new CurveSeries("Continuous") { Locked = true, Notes = "continuous" };
+        var continuous = new Curve("Continuous") { Locked = true, Notes = "continuous" };
         continuous.InitializeData(voltage.MaxSpeed, 45);
 
-        voltage.Series.Add(peak);
-        voltage.Series.Add(continuous);
+        voltage.Curves.Add(peak);
+        voltage.Curves.Add(continuous);
 
         if (withSecondVoltage)
         {
-            var voltage2 = drive.AddVoltageConfiguration(208);
+            var voltage2 = drive.AddVoltage(208);
             voltage2.MaxSpeed = 4800;
             voltage2.RatedSpeed = 2800;
             voltage2.RatedContinuousTorque = 42;
@@ -186,9 +186,9 @@ public class MotorFileMapperTests
             voltage2.ContinuousAmperage = 9.5;
             voltage2.PeakAmperage = 22;
 
-            var peak2 = new CurveSeries("Peak") { Locked = false };
+            var peak2 = new Curve("Peak") { Locked = false };
             peak2.InitializeData(voltage2.MaxSpeed, 52);
-            voltage2.Series.Add(peak2);
+            voltage2.Curves.Add(peak2);
         }
 
         return motor;

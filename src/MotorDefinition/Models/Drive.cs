@@ -11,7 +11,7 @@ namespace JordanRobot.MotorDefinition.Model;
 /// Represents a servo drive configuration for a motor.
 /// Contains voltage-specific configurations and their associated curve series.
 /// </summary>
-public class DriveConfiguration : INotifyPropertyChanged
+public class Drive : INotifyPropertyChanged
 {
     private string _name = string.Empty;
 
@@ -57,14 +57,7 @@ public class DriveConfiguration : INotifyPropertyChanged
     /// The collection of voltage configurations for this drive.
     /// </summary>
     [JsonPropertyName("voltages")]
-    public List<VoltageConfiguration> Voltages { get; set; } = [];
-
-    /// <summary>
-    /// Gets a LINQ-friendly enumeration of voltage configurations.
-    /// This is a convenience alias for <see cref="Voltages"/>.
-    /// </summary>
-    [JsonIgnore]
-    public IEnumerable<VoltageConfiguration> VoltageConfigurations => Voltages;
+    public List<Voltage> Voltages { get; set; } = [];
 
     /// <summary>
     /// Gets display-friendly voltage names (e.g., "208 V").
@@ -78,21 +71,21 @@ public class DriveConfiguration : INotifyPropertyChanged
     /// Useful for populating UI lists and combo-boxes.
     /// </summary>
     [JsonIgnore]
-    public IEnumerable<double> VoltageValues => Voltages.Select(v => v.Voltage);
+    public IEnumerable<double> VoltageValues => Voltages.Select(v => v.Value);
 
     /// <summary>
-    /// Creates a new DriveConfiguration with default values.
+    /// Creates a new Drive with default values.
     /// </summary>
-    public DriveConfiguration()
+    public Drive()
     {
         _name = "Unnamed Drive";
     }
 
     /// <summary>
-    /// Creates a new DriveConfiguration with the specified name.
+    /// Creates a new Drive with the specified name.
     /// </summary>
     /// <param name="name">The name of the drive.</param>
-    public DriveConfiguration(string name)
+    public Drive(string name)
     {
         Name = name;
     }
@@ -108,9 +101,9 @@ public class DriveConfiguration : INotifyPropertyChanged
     /// <param name="voltage">The voltage to find.</param>
     /// <param name="tolerance">The tolerance for matching voltage values (default 0.1V).</param>
     /// <returns>The matching voltage configuration, or null if not found.</returns>
-    public VoltageConfiguration? GetVoltageConfiguration(double voltage, double tolerance = DefaultVoltageTolerance)
+    public Voltage? GetVoltage(double voltage, double tolerance = DefaultVoltageTolerance)
     {
-        return Voltages.Find(v => Math.Abs(v.Voltage - voltage) < tolerance);
+        return Voltages.Find(v => Math.Abs(v.Value - voltage) < tolerance);
     }
 
     /// <summary>
@@ -119,14 +112,14 @@ public class DriveConfiguration : INotifyPropertyChanged
     /// <param name="voltage">The voltage value.</param>
     /// <returns>The newly created voltage configuration.</returns>
     /// <exception cref="InvalidOperationException">Thrown if a configuration with the same voltage already exists.</exception>
-    public VoltageConfiguration AddVoltageConfiguration(double voltage)
+    public Voltage AddVoltage(double voltage)
     {
-        if (GetVoltageConfiguration(voltage) is not null)
+        if (GetVoltage(voltage) is not null)
         {
             throw new InvalidOperationException($"A voltage configuration for {voltage}V already exists.");
         }
 
-        var config = new VoltageConfiguration(voltage);
+        var config = new Voltage(voltage);
         Voltages.Add(config);
         return config;
     }

@@ -68,7 +68,7 @@ public class UnitSettings : INotifyPropertyChanged
     }
 
     /// <summary>
-    /// Voltage unit: "V" or "kV".
+    /// Value unit: "V" or "kV".
     /// </summary>
     [JsonPropertyName("voltage")]
     public string Voltage

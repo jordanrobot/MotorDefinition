@@ -817,14 +817,14 @@ public class CurveDataTableViewModelTests
     private static CurveDataTableViewModel CreateViewModelWithData()
     {
         var viewModel = new CurveDataTableViewModel();
-        var voltage = CreateTestVoltageConfiguration();
+        var voltage = CreateTestVoltage();
         viewModel.CurrentVoltage = voltage;
         return viewModel;
     }
 
-    private static VoltageConfiguration CreateTestVoltageConfiguration()
+    private static Voltage CreateTestVoltage()
     {
-        var voltage = new VoltageConfiguration(220)
+        var voltage = new Voltage(220)
         {
             MaxSpeed = 5000,
             Power = 1500,
@@ -832,14 +832,14 @@ public class CurveDataTableViewModelTests
             RatedContinuousTorque = 45
         };
 
-        var peakSeries = new CurveSeries("Peak");
+        var peakSeries = new Curve("Peak");
         peakSeries.InitializeData(5000, 55);
 
-        var continuousSeries = new CurveSeries("Continuous");
+        var continuousSeries = new Curve("Continuous");
         continuousSeries.InitializeData(5000, 45);
 
-        voltage.Series.Add(peakSeries);
-        voltage.Series.Add(continuousSeries);
+        voltage.Curves.Add(peakSeries);
+        voltage.Curves.Add(continuousSeries);
 
         return voltage;
     }

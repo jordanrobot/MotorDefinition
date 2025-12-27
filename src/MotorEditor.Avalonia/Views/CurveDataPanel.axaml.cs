@@ -653,12 +653,12 @@ public partial class CurveDataPanel : UserControl
     /// </summary>
     private async void OnSeriesNameDoubleTapped(object? sender, TappedEventArgs e)
     {
-        if (sender is TextBlock textBlock && textBlock.DataContext is CurveSeries series)
+        if (sender is TextBlock textBlock && textBlock.DataContext is Curve series)
         {
             // Show a simple input dialog for renaming
             var dialog = new Window
             {
-                Title = "Rename Series",
+                Title = "Rename Curves",
                 Width = 300,
                 Height = 120,
                 WindowStartupLocation = WindowStartupLocation.CenterOwner,
@@ -730,7 +730,7 @@ public partial class CurveDataPanel : UserControl
     /// </summary>
     private void OnSeriesVisibilityCheckboxClick(object? sender, RoutedEventArgs e)
     {
-        if (sender is CheckBox checkBox && checkBox.DataContext is CurveSeries series)
+        if (sender is CheckBox checkBox && checkBox.DataContext is Curve series)
         {
             if (DataContext is MainWindowViewModel viewModel)
             {
@@ -747,7 +747,7 @@ public partial class CurveDataPanel : UserControl
     /// </summary>
     private void OnSeriesLockToggleClick(object? sender, RoutedEventArgs e)
     {
-        if (sender is not ToggleButton toggleButton || toggleButton.DataContext is not CurveSeries series)
+        if (sender is not ToggleButton toggleButton || toggleButton.DataContext is not Curve series)
         {
             return;
         }
@@ -768,7 +768,7 @@ public partial class CurveDataPanel : UserControl
     /// </summary>
     private async void OnDeleteSeriesClick(object? sender, RoutedEventArgs e)
     {
-        if (sender is Button button && button.DataContext is CurveSeries series)
+        if (sender is Button button && button.DataContext is Curve series)
         {
             if (DataContext is MainWindowViewModel viewModel && viewModel.SelectedVoltage is not null)
             {
@@ -795,12 +795,12 @@ public partial class CurveDataPanel : UserControl
 
                 // Remove the series from the voltage configuration (allow removing last series)
                 var seriesName = series.Name;
-                viewModel.SelectedVoltage.Series.Remove(series);
+                viewModel.SelectedVoltage.Curves.Remove(series);
                 // IMPORTANT: RefreshData BEFORE RefreshAvailableSeriesPublic to prevent DataGrid column sync issues
                 // The column rebuild is triggered by AvailableSeries collection change, so data must be ready first
                 viewModel.CurveDataTableViewModel.RefreshData();
                 viewModel.RefreshAvailableSeriesPublic();
-                viewModel.SelectedSeries = viewModel.SelectedVoltage.Series.FirstOrDefault();
+                viewModel.SelectedSeries = viewModel.SelectedVoltage.Curves.FirstOrDefault();
                 viewModel.ChartViewModel.RefreshChart();
                 viewModel.MarkDirty();
                 viewModel.StatusMessage = $"Removed series: {seriesName}";

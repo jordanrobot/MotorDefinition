@@ -1,14 +1,14 @@
-using System;
 using Avalonia.Controls;
 using Avalonia.Interactivity;
 using Avalonia.Media;
+using System;
 
 namespace CurveEditor.Views;
 
 /// <summary>
 /// Dialog for adding a new curve series.
 /// </summary>
-public partial class AddCurveSeriesDialog : Window
+public partial class AddCurveDialog : Window
 {
     /// <summary>
     /// Conversion factor from horsepower to watts.
@@ -23,11 +23,11 @@ public partial class AddCurveSeriesDialog : Window
     /// <summary>
     /// Gets the result of the dialog.
     /// </summary>
-    public AddCurveSeriesResult? Result { get; private set; }
+    public AddCurveResult? Result { get; private set; }
 
     private double _maxSpeed;
 
-    public AddCurveSeriesDialog()
+    public AddCurveDialog()
     {
         InitializeComponent();
         ColorInput.TextChanged += OnColorInputChanged;
@@ -73,7 +73,7 @@ public partial class AddCurveSeriesDialog : Window
             var name = NameInput?.Text?.Trim();
             if (string.IsNullOrWhiteSpace(name))
             {
-                name = "New Series";
+                name = "New Curves";
             }
 
             // Validate color
@@ -129,7 +129,7 @@ public partial class AddCurveSeriesDialog : Window
                 }
             }
 
-            Result = new AddCurveSeriesResult
+            Result = new AddCurveResult
             {
                 Name = name,
                 Color = colorText,
@@ -144,9 +144,9 @@ public partial class AddCurveSeriesDialog : Window
         catch (Exception ex)
         {
             // If any error occurs during result creation, set a default result
-            Result = new AddCurveSeriesResult
+            Result = new AddCurveResult
             {
-                Name = "New Series",
+                Name = "New Curves",
                 Color = "#FF5050",
                 BaseTorque = 40,
                 UsePowerCalculation = false,
@@ -163,11 +163,11 @@ public partial class AddCurveSeriesDialog : Window
 }
 
 /// <summary>
-/// Result data from the AddCurveSeriesDialog.
+/// Result data from the AddCurveDialog.
 /// </summary>
-public class AddCurveSeriesResult
+public class AddCurveResult
 {
-    public string Name { get; set; } = "";
+    public string Name { get; set; } = string.Empty;
     public string Color { get; set; } = "#FF5050";
     public double BaseTorque { get; set; }
     public bool UsePowerCalculation { get; set; }

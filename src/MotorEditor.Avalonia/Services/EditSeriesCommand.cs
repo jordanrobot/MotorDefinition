@@ -4,12 +4,12 @@ using System;
 namespace CurveEditor.Services;
 
 /// <summary>
-/// Command that changes simple properties on a <see cref="CurveSeries"/>.
+/// Command that changes simple properties on a <see cref="Curve"/>.
 /// Currently supports renaming and locked-state changes.
 /// </summary>
 public sealed class EditSeriesCommand : IUndoableCommand
 {
-    private readonly CurveSeries _series;
+    private readonly Curve _series;
     private readonly string? _newName;
     private readonly bool? _newLocked;
     private string? _oldName;
@@ -18,7 +18,7 @@ public sealed class EditSeriesCommand : IUndoableCommand
     /// <summary>
     /// Creates a new <see cref="EditSeriesCommand"/>.
     /// </summary>
-    public EditSeriesCommand(CurveSeries series, string? newName = null, bool? newLocked = null)
+    public EditSeriesCommand(Curve series, string? newName = null, bool? newLocked = null)
     {
         _series = series ?? throw new ArgumentNullException(nameof(series));
         _newName = newName;
