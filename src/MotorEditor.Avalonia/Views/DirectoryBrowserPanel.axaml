@@ -16,27 +16,9 @@
         <PathGeometry x:Key="CurveEditor.DirectoryBrowser.ChevronDownGeometry">M4.293,8.293 C4.684,7.902 5.317,7.902 5.707,8.293 L12,14.586 L18.293,8.293 C18.684,7.902 19.317,7.902 19.707,8.293 C20.098,8.684 20.098,9.317 19.707,9.707 L12.707,16.707 C12.317,17.098 11.684,17.098 11.293,16.707 L4.293,9.707 C3.902,9.317 3.902,8.684 4.293,8.293 Z</PathGeometry>
     </UserControl.Resources>
 
-    <Grid RowDefinitions="Auto,*" Margin="12" RowSpacing="6">
-        <!-- Explorer header: root path + refresh -->
-        <Grid Grid.Row="0" ColumnDefinitions="*,Auto" ColumnSpacing="6">
-            <TextBlock Grid.Column="0"
-                       Text="{Binding RootDirectoryDisplayName}"
-                       TextWrapping="NoWrap"
-                       TextTrimming="CharacterEllipsis"
-                       VerticalAlignment="Center"
-                       FontFamily="{DynamicResource CurveEditor.Fonts.Monospace}"
-                       ToolTip.Tip="{Binding RootDirectoryPath}"/>
-
-            <Button Grid.Column="1"
-                    Content="↻"
-                    ToolTip.Tip="Refresh Explorer"
-                    Command="{Binding RefreshCommand}"
-                    IsEnabled="{Binding RootDirectoryPath, Converter={x:Static ObjectConverters.IsNotNull}}"
-                    Padding="6,2"/>
-        </Grid>
-
-        <!-- Explorer tree placeholder (bound, can be empty in PR2) -->
-        <TreeView Grid.Row="1"
+    <!-- Explorer tree (root node remains part of the listings) -->
+    <Grid RowDefinitions="*" Margin="12">
+        <TreeView Grid.Row="0"
                   x:Name="ExplorerTree"
                   x:CompileBindings="False"
                   ItemsSource="{Binding RootItems}"
