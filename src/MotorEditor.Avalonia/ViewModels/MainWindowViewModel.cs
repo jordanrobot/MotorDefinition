@@ -186,6 +186,16 @@ public partial class MainWindowViewModel : ViewModelBase
     }
 
     /// <summary>
+    /// Toggles the power curves overlay on/off.
+    /// </summary>
+    [RelayCommand]
+    private void ToggleShowPowerCurves()
+    {
+        ChartViewModel.ShowPowerCurves = !ChartViewModel.ShowPowerCurves;
+        _settingsStore.SaveBool("ShowPowerCurves", ChartViewModel.ShowPowerCurves);
+    }
+
+    /// <summary>
     /// Toggles a panel by its ID, implementing zone-based exclusivity.
     /// Panels only collapse others in the same zone.
     /// </summary>
@@ -507,6 +517,9 @@ public partial class MainWindowViewModel : ViewModelBase
         WireEditingCoordinator();
         WireUndoInfrastructure();
         WireDirectoryBrowserIntegration();
+
+        // Load saved power curves preference
+        ChartViewModel.ShowPowerCurves = _settingsStore.LoadBool("ShowPowerCurves", false);
     }
 
     private void WireDirectoryBrowserIntegration()

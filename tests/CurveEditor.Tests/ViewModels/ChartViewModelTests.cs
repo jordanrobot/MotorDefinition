@@ -263,4 +263,87 @@ public class ChartViewModelTests
 
         return voltage;
     }
+
+    [Fact]
+    public void ShowPowerCurves_DefaultsToFalse()
+    {
+        // Arrange & Act
+        var viewModel = new ChartViewModel();
+
+        // Assert
+        Assert.False(viewModel.ShowPowerCurves);
+    }
+
+    [Fact]
+    public void ShowPowerCurves_WhenEnabled_AddsPowerSeriesToChart()
+    {
+        // Arrange
+        var viewModel = new ChartViewModel();
+        var voltage = CreateTestVoltage();
+        viewModel.CurrentVoltage = voltage;
+        var initialCount = viewModel.Series.Count;
+
+        // Act
+        viewModel.ShowPowerCurves = true;
+
+        // Assert - should have original torque series + power series
+        Assert.True(viewModel.Series.Count > initialCount);
+        Assert.Contains(viewModel.Series, s => s.Name != null && s.Name.Contains("(Power)"));
+    }
+
+    [Fact]
+    public void ShowPowerCurves_WhenDisabled_RemovesPowerSeriesFromChart()
+    {
+        // Arrange
+        var viewModel = new ChartViewModel();
+        var voltage = CreateTestVoltage();
+        viewModel.ShowPowerCurves = true;
+        viewModel.CurrentVoltage = voltage;
+
+        // Act
+        viewModel.ShowPowerCurves = false;
+
+        // Assert - should only have torque series
+        Assert.DoesNotContain(viewModel.Series, s => s.Name != null && s.Name.Contains("(Power)"));
+    }
+
+    [Fact]
+    public void PowerUnit_DefaultsToKw()
+    {
+        // Arrange & Act
+        var viewModel = new ChartViewModel();
+
+        // Assert
+        Assert.Equal("kW", viewModel.PowerUnit);
+    }
+
+    [Fact]
+    public void ShowPowerCurves_AddsSecondaryYAxis()
+    {
+        // Arrange
+        var viewModel = new ChartViewModel();
+        var voltage = CreateTestVoltage();
+        viewModel.CurrentVoltage = voltage;
+
+        // Act
+        viewModel.ShowPowerCurves = true;
+
+        // Assert - should have 2 Y-axes (torque and power)
+        Assert.Equal(2, viewModel.YAxes.Length);
+        Assert.Contains(viewModel.YAxes, axis => axis.Name != null && axis.Name.Contains("Power"));
+    }
+
+    [Fact]
+    public void ShowPowerCurves_WhenDisabled_HasOnlyOneYAxis()
+    {
+        // Arrange
+        var viewModel = new ChartViewModel();
+        var voltage = CreateTestVoltage();
+        viewModel.ShowPowerCurves = false;
+        viewModel.CurrentVoltage = voltage;
+
+        // Act & Assert - should only have 1 Y-axis (torque)
+        Assert.Single(viewModel.YAxes);
+        Assert.Contains("Torque", viewModel.YAxes[0].Name);
+    }
 }

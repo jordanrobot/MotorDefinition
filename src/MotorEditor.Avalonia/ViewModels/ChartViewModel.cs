@@ -56,6 +56,12 @@ public partial class ChartViewModel : ViewModelBase
     private string _torqueUnit = "Nm";
 
     [ObservableProperty]
+    private string _powerUnit = "kW";
+
+    [ObservableProperty]
+    private bool _showPowerCurves;
+
+    [ObservableProperty]
     private double _motorMaxSpeed;
 
     [ObservableProperty]
@@ -143,6 +149,25 @@ public partial class ChartViewModel : ViewModelBase
         if (HasBrake)
         {
             UpdateChart();
+        }
+    }
+
+    /// <summary>
+    /// Called when ShowPowerCurves changes to update the chart.
+    /// </summary>
+    partial void OnShowPowerCurvesChanged(bool value)
+    {
+        UpdateChart();
+    }
+
+    /// <summary>
+    /// Called when PowerUnit changes to update the chart axes.
+    /// </summary>
+    partial void OnPowerUnitChanged(string value)
+    {
+        if (_currentVoltage is not null)
+        {
+            UpdateAxes();
         }
     }
 
@@ -410,6 +435,12 @@ public partial class ChartViewModel : ViewModelBase
             };
 
             Series.Add(lineSeries);
+
+            // Add power curve if enabled
+            if (ShowPowerCurves)
+            {
+                AddPowerCurve(curve.Name, points, color, isVisible);
+            }
         }
 
         // Rebuild selection overlays on top of the base series so that
@@ -424,6 +455,76 @@ public partial class ChartViewModel : ViewModelBase
 
         // Update axes based on data
         UpdateAxes();
+    }
+
+    /// <summary>
+    /// Adds a power curve series derived from a torque curve.
+    /// </summary>
+    /// <param name="curveName">Name of the source torque curve.</param>
+    /// <param name="torquePoints">Torque data points (RPM, Torque).</param>
+    /// <param name="color">Color to use for the power curve (matches torque curve).</param>
+    /// <param name="isVisible">Whether the power curve should be visible.</param>
+    private void AddPowerCurve(string curveName, ObservableCollection<ObservablePoint> torquePoints, SKColor color, bool isVisible)
+    {
+        // Calculate power from torque and speed: P = T × ω
+        // Where ω = RPM × 2π / 60 (convert RPM to rad/s)
+        var powerPoints = new ObservableCollection<ObservablePoint>();
+        
+        foreach (var point in torquePoints)
+        {
+            var rpm = point.X ?? 0;
+            var torque = point.Y ?? 0;
+            var power = CalculatePower(torque, rpm);
+            powerPoints.Add(new ObservablePoint(rpm, power));
+        }
+
+        var powerSeries = new LineSeries<ObservablePoint>
+        {
+            Name = $"{curveName} (Power)",
+            Values = powerPoints,
+            Fill = null, // No fill for power curves
+            GeometrySize = 0, // No points on power curves
+                GeometryStroke = new SolidColorPaint(color) { StrokeThickness = 0 },
+                GeometryFill = new SolidColorPaint(SKColors.Red),
+
+            Stroke = new SolidColorPaint(color)
+            {
+                StrokeThickness = 1,
+                PathEffect = new DashEffect([3, 3]) // Dotted line
+            },
+            
+            LineSmoothness = 0.3,
+            IsVisible = isVisible,
+            ScalesYAt = 1, // Use secondary Y-axis
+            IsHoverable = false // Disable tooltips for power curves
+        };
+
+        Series.Add(powerSeries);
+    }
+
+    /// <summary>
+    /// Calculates power from torque and RPM.
+    /// </summary>
+    /// <param name="torque">Torque in Nm.</param>
+    /// <param name="rpm">Speed in RPM.</param>
+    /// <returns>Power in the current power unit (kW or HP).</returns>
+    private double CalculatePower(double torque, double rpm)
+    {
+        // P = T × ω, where ω = RPM × 2π / 60
+        // P (Watts) = Torque (Nm) × RPM × 2π / 60
+        var powerWatts = torque * rpm * Math.PI * 2.0 / 60.0;
+
+        // Convert to kW or HP based on current unit
+        if (PowerUnit == "HP")
+        {
+            // 1 HP = 745.7 W
+            return powerWatts / 745.7;
+        }
+        else
+        {
+            // Default to kW
+            return powerWatts / 1000.0;
+        }
     }
 
     /// <summary>
@@ -569,8 +670,30 @@ public partial class ChartViewModel : ViewModelBase
         // Use exact max RPM (no rounding), but round torque for nice Y-axis
         var yMax = RoundToNiceValue(maxTorque * 1.1, true); // Add 10% margin
 
+        // Calculate max power if showing power curves
+        double? maxPower = null;
+        if (ShowPowerCurves)
+        {
+            maxPower = _currentVoltage.Curves
+                .SelectMany(s => s.Data)
+                .Select(dp => CalculatePower(dp.Torque, dp.Rpm))
+                .DefaultIfEmpty(0)
+                .Max();
+
+            if (maxPower <= 0)
+            {
+                // Calculate from rated values
+                maxPower = Math.Max(
+                    CalculatePower(_currentVoltage.RatedPeakTorque, maxRpm),
+                    CalculatePower(_currentVoltage.RatedContinuousTorque, maxRpm)
+                );
+            }
+
+            maxPower = RoundToNiceValue(maxPower.Value * 1.1, true); // Add 10% margin
+        }
+
         XAxes = CreateXAxes(maxRpm);
-        YAxes = CreateYAxes(yMax);
+        YAxes = CreateYAxes(yMax, maxPower);
     }
 
     private static Axis[] CreateXAxes(double? maxValue = null)
@@ -592,10 +715,10 @@ public partial class ChartViewModel : ViewModelBase
         ];
     }
 
-    private Axis[] CreateYAxes(double? maxValue = null)
+    private Axis[] CreateYAxes(double? torqueMaxValue = null, double? powerMaxValue = null)
     {
-        return
-        [
+        var axes = new List<Axis>
+        {
             new Axis
             {
                 Name = $"Torque ({TorqueUnit})",
@@ -603,12 +726,49 @@ public partial class ChartViewModel : ViewModelBase
                 LabelsPaint = new SolidColorPaint(SKColors.Gray),
                 SeparatorsPaint = new SolidColorPaint(new SKColor(200, 200, 200)) { StrokeThickness = 1, PathEffect = new DashEffect([3, 3]) },
                 MinLimit = 0,
-                MaxLimit = maxValue ?? 100,
-                MinStep = CalculateTorqueStep(maxValue ?? 100),
+                MaxLimit = torqueMaxValue ?? 100,
+                MinStep = CalculateTorqueStep(torqueMaxValue ?? 100),
                 ForceStepToMin = true,
-                Labeler = value => value.ToString("N0")
+                Labeler = value => value.ToString("N0"),
+                Position = LiveChartsCore.Measure.AxisPosition.Start
             }
-        ];
+        };
+
+        // Add secondary Y-axis for power if power curves are shown
+        if (ShowPowerCurves && powerMaxValue.HasValue)
+        {
+            axes.Add(new Axis
+            {
+                Name = $"Power ({PowerUnit})",
+                NamePaint = new SolidColorPaint(SKColors.DarkGray),
+                LabelsPaint = new SolidColorPaint(SKColors.DarkGray),
+                SeparatorsPaint = null, // Don't draw separators for secondary axis
+                MinLimit = 0,
+                MaxLimit = powerMaxValue.Value,
+                MinStep = CalculatePowerStep(powerMaxValue.Value),
+                ForceStepToMin = true,
+                Labeler = value => value.ToString("N1"),
+                Position = LiveChartsCore.Measure.AxisPosition.End,
+                ShowSeparatorLines = false
+            });
+        }
+
+        return [.. axes];
+    }
+
+    private static double CalculatePowerStep(double maxValue)
+    {
+        // Calculate a nice step value based on max power
+        if (maxValue <= 1) return 0.1;
+        if (maxValue <= 2.5) return 0.25;
+        if (maxValue <= 5) return 0.5;
+        if (maxValue <= 10) return 1;
+        if (maxValue <= 25) return 2.5;
+        if (maxValue <= 50) return 5;
+        if (maxValue <= 100) return 10;
+        if (maxValue <= 250) return 25;
+        if (maxValue <= 500) return 50;
+        return 100;
     }
 
     private static double CalculateTorqueStep(double maxValue)

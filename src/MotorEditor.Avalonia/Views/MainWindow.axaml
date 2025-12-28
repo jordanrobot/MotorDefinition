@@ -145,6 +145,10 @@
                           IsChecked="{Binding IsCurveDataExpanded}"
                           Command="{Binding ToggleCurveDataPanelCommand}"
                           InputGesture="Ctrl+G"/>
+                <Separator/>
+                <MenuItem Header="Show _Power Curves"
+                          IsChecked="{Binding ChartViewModel.ShowPowerCurves}"
+                          Command="{Binding ToggleShowPowerCurvesCommand}"/>
             </MenuItem>
             <MenuItem Header="_Help">
                 <MenuItem Header="Open _Logs Folder" Command="{Binding OpenLogsFolderCommand}"/>
