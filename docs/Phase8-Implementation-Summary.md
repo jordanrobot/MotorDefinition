@@ -145,7 +145,7 @@ Passed!  - Failed: 0, Passed: 297, Skipped: 0, Total: 297
 5. Hover over power lines to see RPM and power values
 
 ### Disable Power Curves
-1. Navigate to **View** → **Show Power Curves** (uncheck)
+1. Navigate to **View** → **Hide Power Curves** (uncheck)
 2. Power curves and secondary Y-axis disappear
 3. Chart returns to torque-only view
 

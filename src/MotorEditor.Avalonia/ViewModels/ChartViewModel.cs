@@ -484,11 +484,15 @@ public partial class ChartViewModel : ViewModelBase
             Values = powerPoints,
             Fill = null, // No fill for power curves
             GeometrySize = 0, // No points on power curves
+                GeometryStroke = new SolidColorPaint(color) { StrokeThickness = 0 },
+                GeometryFill = new SolidColorPaint(SKColors.Red),
+
             Stroke = new SolidColorPaint(color)
             {
                 StrokeThickness = 1,
-                PathEffect = new DashEffect([5, 5]) // Dotted line
+                PathEffect = new DashEffect([3, 3]) // Dotted line
             },
+            
             LineSmoothness = 0.3,
             IsVisible = isVisible,
             ScalesYAt = 1, // Use secondary Y-axis
