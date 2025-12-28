@@ -491,7 +491,8 @@ public partial class ChartViewModel : ViewModelBase
             },
             LineSmoothness = 0.3,
             IsVisible = isVisible,
-            ScalesYAt = 1 // Use secondary Y-axis
+            ScalesYAt = 1, // Use secondary Y-axis
+            IsHoverable = false // Disable tooltips for power curves
         };
 
         Series.Add(powerSeries);

@@ -159,6 +159,11 @@ public partial class MainWindowViewModel : ViewModelBase
     private PanelBarDockSide _panelBarDockSide = PanelBarDockSide.Left;
 
     /// <summary>
+    /// Gets the menu text for the power curves toggle based on current visibility state.
+    /// </summary>
+    public string PowerCurvesMenuText => ChartViewModel.ShowPowerCurves ? "Hide _Power Curves" : "Show _Power Curves";
+
+    /// <summary>
     /// Toggles the browser panel visibility.
     /// </summary>
     [RelayCommand]
@@ -520,6 +525,17 @@ public partial class MainWindowViewModel : ViewModelBase
 
         // Load saved power curves preference
         ChartViewModel.ShowPowerCurves = _settingsStore.LoadBool("ShowPowerCurves", false);
+
+        // Subscribe to ChartViewModel property changes for menu text updates
+        ChartViewModel.PropertyChanged += OnChartViewModelPropertyChanged;
+    }
+
+    private void OnChartViewModelPropertyChanged(object? sender, System.ComponentModel.PropertyChangedEventArgs e)
+    {
+        if (e.PropertyName == nameof(ChartViewModel.ShowPowerCurves))
+        {
+            OnPropertyChanged(nameof(PowerCurvesMenuText));
+        }
     }
 
     private void WireDirectoryBrowserIntegration()

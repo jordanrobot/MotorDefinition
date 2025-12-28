@@ -146,7 +146,7 @@
                           Command="{Binding ToggleCurveDataPanelCommand}"
                           InputGesture="Ctrl+G"/>
                 <Separator/>
-                <MenuItem Header="Show _Power Curves"
+                <MenuItem Header="{Binding PowerCurvesMenuText}"
                           IsChecked="{Binding ChartViewModel.ShowPowerCurves}"
                           Command="{Binding ToggleShowPowerCurvesCommand}"/>
             </MenuItem>
