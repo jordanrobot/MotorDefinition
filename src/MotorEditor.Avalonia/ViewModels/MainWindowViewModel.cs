@@ -38,6 +38,10 @@ public partial class MainWindowViewModel : ViewModelBase
     private readonly UndoStack _undoStack = new();
     private int _cleanCheckpoint;
 
+    // Tab management
+    private readonly ObservableCollection<DocumentTab> _tabs = new();
+    private DocumentTab? _activeTab;
+
     private static readonly FilePickerFileType JsonFileType = new("JSON Files")
     {
         Patterns = ["*.json"],
@@ -354,6 +358,29 @@ public partial class MainWindowViewModel : ViewModelBase
     private ObservableCollection<Drive> _availableDrives = [];
 
     /// <summary>
+    /// Collection of all open document tabs.
+    /// </summary>
+    [ObservableProperty]
+    private ObservableCollection<DocumentTab> tabs;
+
+    /// <summary>
+    /// The currently active document tab.
+    /// </summary>
+    public DocumentTab? ActiveTab
+    {
+        get => _activeTab;
+        set
+        {
+            if (_activeTab != value)
+            {
+                _activeTab = value;
+                OnPropertyChanged();
+                OnActiveTabChanged();
+            }
+        }
+    }
+
+    /// <summary>
     /// Gets whether there is at least one operation to undo.
     /// </summary>
     public bool CanUndo => _undoStack.CanUndo;
@@ -470,6 +497,17 @@ public partial class MainWindowViewModel : ViewModelBase
         WireEditingCoordinator();
         WireUndoInfrastructure();
         WireDirectoryBrowserIntegration();
+
+        // Initialize tabs (currently with single shared view models for backward compatibility)
+        var initialTab = new DocumentTab
+        {
+            ChartViewModel = _chartViewModel,
+            CurveDataTableViewModel = _curveDataTableViewModel,
+            EditingCoordinator = _editingCoordinator
+        };
+        _tabs.Add(initialTab);
+        ActiveTab = initialTab;
+        Tabs = _tabs;
     }
 
     public MainWindowViewModel(IFileService fileService, ICurveGeneratorService curveGeneratorService)
@@ -486,6 +524,17 @@ public partial class MainWindowViewModel : ViewModelBase
         WireEditingCoordinator();
         WireUndoInfrastructure();
         WireDirectoryBrowserIntegration();
+
+        // Initialize tabs (currently with single shared view models for backward compatibility)
+        var initialTab = new DocumentTab
+        {
+            ChartViewModel = _chartViewModel,
+            CurveDataTableViewModel = _curveDataTableViewModel,
+            EditingCoordinator = _editingCoordinator
+        };
+        _tabs.Add(initialTab);
+        ActiveTab = initialTab;
+        Tabs = _tabs;
     }
 
     /// <summary>
@@ -520,6 +569,17 @@ public partial class MainWindowViewModel : ViewModelBase
 
         // Load saved power curves preference
         ChartViewModel.ShowPowerCurves = _settingsStore.LoadBool("ShowPowerCurves", false);
+
+        // Initialize tabs (currently with single shared view models for backward compatibility)
+        var initialTab = new DocumentTab
+        {
+            ChartViewModel = _chartViewModel,
+            CurveDataTableViewModel = _curveDataTableViewModel,
+            EditingCoordinator = _editingCoordinator
+        };
+        _tabs.Add(initialTab);
+        ActiveTab = initialTab;
+        Tabs = _tabs;
     }
 
     private void WireDirectoryBrowserIntegration()
@@ -532,6 +592,73 @@ public partial class MainWindowViewModel : ViewModelBase
 
         CurrentFilePath = _fileService.CurrentFilePath;
         DirectoryBrowser.UpdateActiveFileState(CurrentFilePath, IsDirty);
+    }
+
+    /// <summary>
+    /// Creates a new document tab with initialized view models and wiring.
+    /// </summary>
+    private DocumentTab CreateNewTab()
+    {
+        var tab = new DocumentTab
+        {
+            ChartViewModel = new ChartViewModel(),
+            CurveDataTableViewModel = new CurveDataTableViewModel(),
+            EditingCoordinator = new EditingCoordinator()
+        };
+
+        // Wire up the view models
+        tab.ChartViewModel.EditingCoordinator = tab.EditingCoordinator;
+        tab.CurveDataTableViewModel.EditingCoordinator = tab.EditingCoordinator;
+        tab.ChartViewModel.UndoStack = tab.UndoStack;
+        tab.CurveDataTableViewModel.UndoStack = tab.UndoStack;
+
+        tab.ChartViewModel.DataChanged += (s, e) => tab.MarkDirty();
+        tab.CurveDataTableViewModel.DataChanged += (s, e) =>
+        {
+            tab.MarkDirty();
+            tab.ChartViewModel?.RefreshChart();
+        };
+
+        tab.UndoStack.UndoStackChanged += (s, e) =>
+        {
+            tab.UpdateDirtyFromUndoDepth();
+            if (tab == ActiveTab)
+            {
+                OnPropertyChanged(nameof(CanUndo));
+                OnPropertyChanged(nameof(CanRedo));
+            }
+        };
+
+        return tab;
+    }
+
+    /// <summary>
+    /// Handles active tab changes by notifying all dependent properties.
+    /// </summary>
+    private void OnActiveTabChanged()
+    {
+        // Notify all properties that depend on active tab
+        OnPropertyChanged(nameof(CurrentMotor));
+        OnPropertyChanged(nameof(IsDirty));
+        OnPropertyChanged(nameof(CurrentFilePath));
+        OnPropertyChanged(nameof(SelectedDrive));
+        OnPropertyChanged(nameof(SelectedVoltage));
+        OnPropertyChanged(nameof(SelectedSeries));
+        OnPropertyChanged(nameof(ChartViewModel));
+        OnPropertyChanged(nameof(CurveDataTableViewModel));
+        OnPropertyChanged(nameof(EditingCoordinator));
+        OnPropertyChanged(nameof(AvailableDrives));
+        OnPropertyChanged(nameof(AvailableVoltages));
+        OnPropertyChanged(nameof(AvailableSeries));
+        OnPropertyChanged(nameof(CanUndo));
+        OnPropertyChanged(nameof(CanRedo));
+        OnPropertyChanged(nameof(WindowTitle));
+
+        // Update directory browser
+        DirectoryBrowser.UpdateActiveFileState(CurrentFilePath, IsDirty);
+
+        // Refresh property editors
+        RefreshMotorEditorsFromCurrentMotor();
     }
 
     private void OnDirectoryBrowserPropertyChanged(object? sender, System.ComponentModel.PropertyChangedEventArgs e)
@@ -2505,6 +2632,39 @@ public partial class MainWindowViewModel : ViewModelBase
         StatusMessage = series.IsVisible
             ? $"Showing series: {series.Name}"
             : $"Hiding series: {series.Name}";
+    }
+
+    [RelayCommand]
+    private async Task CloseTabAsync(DocumentTab? tab)
+    {
+        if (tab == null) return;
+
+        // Prompt if dirty
+        if (tab.IsDirty)
+        {
+            // Temporarily make it active for the prompt
+            var wasActive = ActiveTab;
+            ActiveTab = tab;
+
+            if (!await ConfirmLoseUnsavedChangesOrCancelAsync("close this tab", "Close cancelled."))
+            {
+                ActiveTab = wasActive;
+                return;
+            }
+
+            ActiveTab = wasActive;
+        }
+
+        // Remove the tab
+        _tabs.Remove(tab);
+
+        // If we closed the active tab, activate another
+        if (ActiveTab == tab)
+        {
+            ActiveTab = _tabs.LastOrDefault();
+        }
+
+        StatusMessage = $"Closed tab: {tab.DisplayName}";
     }
 
     [RelayCommand]

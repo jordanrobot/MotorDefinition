@@ -251,45 +251,70 @@
             <!-- Left GridSplitter -->
             <GridSplitter x:Name="LeftSplitter" Grid.Column="1" Width="4" ResizeDirection="Columns"/>
 
-            <!-- Center: Chart Area -->
+            <!-- Center: Tabbed Document Area -->
             <Grid x:Name="CenterGrid" Grid.Column="2">
-                <!-- Chart Area -->
-                <Border Margin="4"
-                    Background="{DynamicResource CurveEditor.Editor.BackgroundBrush}"
-                    BorderBrush="{DynamicResource CurveEditor.Editor.BorderBrush}"
-                        BorderThickness="1"
-                        CornerRadius="4">
-                    <Grid>
-                        <!-- Welcome screen when no motor loaded -->
-                        <StackPanel VerticalAlignment="Center" 
-                                    HorizontalAlignment="Center"
-                                    IsVisible="{Binding CurrentMotor, Converter={x:Static ObjectConverters.IsNull}}">
-                            <TextBlock Text="Motor Torque Curve Editor" 
-                                       FontSize="24" 
-                                       FontWeight="Bold"
-                                       HorizontalAlignment="Center"/>
-                            <TextBlock Text="Create a new motor definition or open an existing file to get started."
-                                       Margin="0,16,0,0"
-                                       Foreground="{DynamicResource SystemControlForegroundBaseMediumBrush}"
-                                       HorizontalAlignment="Center"/>
-                            <StackPanel Orientation="Horizontal" 
-                                        HorizontalAlignment="Center" 
-                                        Margin="0,24,0,0"
-                                        Spacing="16">
-                                <Button Content="New Motor" 
-                                        Command="{Binding NewMotorCommand}"
-                                        Padding="16,8"/>
-                                <Button Content="Open File" 
-                                        Command="{Binding OpenFileCommand}"
-                                        Padding="16,8"/>
+                <TabControl ItemsSource="{Binding Tabs}"
+                            SelectedItem="{Binding ActiveTab}"
+                            Background="{DynamicResource CurveEditor.Editor.BackgroundBrush}">
+                    
+                    <!-- Tab Header Template -->
+                    <TabControl.ItemTemplate>
+                        <DataTemplate DataType="vm:DocumentTab">
+                            <StackPanel Orientation="Horizontal" Spacing="8">
+                                <TextBlock Text="{Binding DisplayName}" 
+                                           VerticalAlignment="Center"/>
+                                <Button Content="×" 
+                                        Command="{Binding $parent[Window].((vm:MainWindowViewModel)DataContext).CloseTabCommand}"
+                                        CommandParameter="{Binding}"
+                                        Padding="6,0"
+                                        FontSize="16"
+                                        ToolTip.Tip="Close tab"/>
                             </StackPanel>
-                        </StackPanel>
+                        </DataTemplate>
+                    </TabControl.ItemTemplate>
+                    
+                    <!-- Tab Content Template -->
+                    <TabControl.ContentTemplate>
+                        <DataTemplate DataType="vm:DocumentTab">
+                            <Border Margin="4"
+                                    Background="{DynamicResource CurveEditor.Editor.BackgroundBrush}"
+                                    BorderBrush="{DynamicResource CurveEditor.Editor.BorderBrush}"
+                                    BorderThickness="1"
+                                    CornerRadius="4">
+                                <Grid>
+                                    <!-- Welcome screen when no motor loaded -->
+                                    <StackPanel VerticalAlignment="Center" 
+                                                HorizontalAlignment="Center"
+                                                IsVisible="{Binding Motor, Converter={x:Static ObjectConverters.IsNull}}">
+                                        <TextBlock Text="Motor Torque Curve Editor" 
+                                                   FontSize="24" 
+                                                   FontWeight="Bold"
+                                                   HorizontalAlignment="Center"/>
+                                        <TextBlock Text="Create a new motor definition or open an existing file to get started."
+                                                   Margin="0,16,0,0"
+                                                   Foreground="{DynamicResource SystemControlForegroundBaseMediumBrush}"
+                                                   HorizontalAlignment="Center"/>
+                                        <StackPanel Orientation="Horizontal" 
+                                                    HorizontalAlignment="Center" 
+                                                    Margin="0,24,0,0"
+                                                    Spacing="16">
+                                            <Button Content="New Motor" 
+                                                    Command="{Binding $parent[Window].((vm:MainWindowViewModel)DataContext).NewMotorCommand}"
+                                                    Padding="16,8"/>
+                                            <Button Content="Open File" 
+                                                    Command="{Binding $parent[Window].((vm:MainWindowViewModel)DataContext).OpenFileCommand}"
+                                                    Padding="16,8"/>
+                                        </StackPanel>
+                                    </StackPanel>
 
-                        <!-- Chart when motor is loaded -->
-                        <views:ChartView DataContext="{Binding ChartViewModel}"
-                                         IsVisible="{Binding $parent[Window].((vm:MainWindowViewModel)DataContext).CurrentMotor, Converter={x:Static ObjectConverters.IsNotNull}}"/>
-                    </Grid>
-                </Border>
+                                    <!-- Chart when motor is loaded -->
+                                    <views:ChartView DataContext="{Binding ChartViewModel}"
+                                                     IsVisible="{Binding $parent[Grid].DataContext.Motor, Converter={x:Static ObjectConverters.IsNotNull}}"/>
+                                </Grid>
+                            </Border>
+                        </DataTemplate>
+                    </TabControl.ContentTemplate>
+                </TabControl>
             </Grid>
             
             <!-- Right GridSplitter -->
