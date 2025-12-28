@@ -523,17 +523,38 @@ public partial class MainWindowViewModel : ViewModelBase
         WireUndoInfrastructure();
         WireDirectoryBrowserIntegration();
 
+        // Subscribe to ChartViewModel property changes for menu text updates
+        // This is needed because _chartViewModel is set directly in the constructor
+        ChartViewModel.PropertyChanged += OnChartViewModelPropertyChanged;
+
         // Load saved power curves preference
         ChartViewModel.ShowPowerCurves = _settingsStore.LoadBool("ShowPowerCurves", false);
-
-        // Subscribe to ChartViewModel property changes for menu text updates
-        ChartViewModel.PropertyChanged += OnChartViewModelPropertyChanged;
     }
 
     private void OnChartViewModelPropertyChanged(object? sender, System.ComponentModel.PropertyChangedEventArgs e)
     {
         if (e.PropertyName == nameof(ChartViewModel.ShowPowerCurves))
         {
+            OnPropertyChanged(nameof(PowerCurvesMenuText));
+        }
+    }
+
+    /// <summary>
+    /// Called when ChartViewModel property changes. Handles event subscription for menu text updates.
+    /// </summary>
+    partial void OnChartViewModelChanged(ChartViewModel? oldValue, ChartViewModel newValue)
+    {
+        // Unsubscribe from old view model
+        if (oldValue is not null)
+        {
+            oldValue.PropertyChanged -= OnChartViewModelPropertyChanged;
+        }
+
+        // Subscribe to new view model
+        if (newValue is not null)
+        {
+            newValue.PropertyChanged += OnChartViewModelPropertyChanged;
+            // Update menu text immediately
             OnPropertyChanged(nameof(PowerCurvesMenuText));
         }
     }
