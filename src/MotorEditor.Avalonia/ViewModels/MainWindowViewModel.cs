@@ -1297,6 +1297,7 @@ public partial class MainWindowViewModel : ViewModelBase
         var command = new EditMotorPropertyCommand(CurrentMotor, nameof(ServoMotor.RatedSpeed), oldValue, newValue);
         _undoStack.PushAndExecute(command);
         RatedSpeedEditor = newValue.ToString(System.Globalization.CultureInfo.InvariantCulture);
+        ChartViewModel.MotorRatedSpeed = newValue;
         IsDirty = true;
     }
 
@@ -1777,6 +1778,7 @@ public partial class MainWindowViewModel : ViewModelBase
         // Update chart with new voltage configuration
         ChartViewModel.TorqueUnit = CurrentMotor?.Units.Torque ?? "Nm";
         ChartViewModel.MotorMaxSpeed = CurrentMotor?.MaxSpeed ?? 0;
+        ChartViewModel.MotorRatedSpeed = CurrentMotor?.RatedSpeed ?? 0;
         ChartViewModel.HasBrake = CurrentMotor?.HasBrake ?? false;
         ChartViewModel.BrakeTorque = CurrentMotor?.BrakeTorque ?? 0;
         ChartViewModel.CurrentVoltage = value;

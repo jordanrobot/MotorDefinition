@@ -44,8 +44,11 @@ public class ChartViewModelTests
         // Act
         viewModel.CurrentVoltage = voltage;
 
-        // Assert
-        Assert.Equal(2, viewModel.Series.Count);
+        // Assert - 2 curves + 1 vertical line for Voltage Max Speed
+        Assert.Equal(3, viewModel.Series.Count);
+        Assert.Contains(viewModel.Series, s => s.Name == "Peak");
+        Assert.Contains(viewModel.Series, s => s.Name == "Continuous");
+        Assert.Contains(viewModel.Series, s => s.Name == "Voltage Max Speed");
     }
 
     [Fact]
@@ -240,6 +243,165 @@ public class ChartViewModelTests
 
         // Assert - exact max, no rounding
         Assert.Equal(7200, xAxis.MaxLimit);
+    }
+
+    [Fact]
+    public void UpdateAxes_IncludesMotorRatedSpeedInMaxCalculation()
+    {
+        // Arrange
+        var viewModel = new ChartViewModel
+        {
+            MotorMaxSpeed = 4000,
+            MotorRatedSpeed = 8000  // Higher than motor max speed
+        };
+        var voltage = CreateTestVoltage();
+        voltage.MaxSpeed = 5000;
+
+        // Act
+        viewModel.CurrentVoltage = voltage;
+        var xAxis = viewModel.XAxes[0];
+
+        // Assert - should use Motor Rated Speed as the max
+        Assert.Equal(8000, xAxis.MaxLimit);
+    }
+
+    [Fact]
+    public void UpdateAxes_IncludesVoltageRatedSpeedInMaxCalculation()
+    {
+        // Arrange
+        var viewModel = new ChartViewModel
+        {
+            MotorMaxSpeed = 4000,
+            MotorRatedSpeed = 5000
+        };
+        var voltage = CreateTestVoltage();
+        voltage.MaxSpeed = 6000;
+        voltage.RatedSpeed = 9000;  // Higher than all other speeds
+
+        // Act
+        viewModel.CurrentVoltage = voltage;
+        var xAxis = viewModel.XAxes[0];
+
+        // Assert - should use Voltage Rated Speed as the max
+        Assert.Equal(9000, xAxis.MaxLimit);
+    }
+
+    [Fact]
+    public void UpdateAxes_IncludesMaxRpmFromCurveDataInMaxCalculation()
+    {
+        // Arrange
+        var viewModel = new ChartViewModel
+        {
+            MotorMaxSpeed = 4000,
+            MotorRatedSpeed = 5000
+        };
+        var voltage = CreateTestVoltage();
+        voltage.MaxSpeed = 6000;
+        voltage.RatedSpeed = 7000;
+        
+        // Add curve data with a higher max RPM
+        voltage.Curves[0].Data.Add(new DataPoint { Rpm = 10000, Torque = 10 });
+
+        // Act
+        viewModel.CurrentVoltage = voltage;
+        var xAxis = viewModel.XAxes[0];
+
+        // Assert - should use max RPM from curve data
+        Assert.Equal(10000, xAxis.MaxLimit);
+    }
+
+    [Fact]
+    public void UpdateChart_AddsMotorRatedSpeedVerticalLine_WhenMotorRatedSpeedIsPositive()
+    {
+        // Arrange
+        var viewModel = new ChartViewModel
+        {
+            MotorMaxSpeed = 6000,
+            MotorRatedSpeed = 3000
+        };
+        var voltage = CreateTestVoltage();
+
+        // Act
+        viewModel.CurrentVoltage = voltage;
+
+        // Assert
+        Assert.Contains(viewModel.Series, s => s.Name == "Motor Rated Speed");
+    }
+
+    [Fact]
+    public void UpdateChart_DoesNotAddMotorRatedSpeedVerticalLine_WhenMotorRatedSpeedIsZero()
+    {
+        // Arrange
+        var viewModel = new ChartViewModel
+        {
+            MotorMaxSpeed = 6000,
+            MotorRatedSpeed = 0
+        };
+        var voltage = CreateTestVoltage();
+
+        // Act
+        viewModel.CurrentVoltage = voltage;
+
+        // Assert
+        Assert.DoesNotContain(viewModel.Series, s => s.Name == "Motor Rated Speed");
+    }
+
+    [Fact]
+    public void UpdateChart_AddsVoltageMaxSpeedVerticalLine_WhenVoltageMaxSpeedIsPositive()
+    {
+        // Arrange
+        var viewModel = new ChartViewModel
+        {
+            MotorMaxSpeed = 6000
+        };
+        var voltage = CreateTestVoltage();
+        voltage.MaxSpeed = 5000;
+
+        // Act
+        viewModel.CurrentVoltage = voltage;
+
+        // Assert
+        Assert.Contains(viewModel.Series, s => s.Name == "Voltage Max Speed");
+    }
+
+    [Fact]
+    public void UpdateChart_DoesNotAddVoltageMaxSpeedVerticalLine_WhenVoltageMaxSpeedIsZero()
+    {
+        // Arrange
+        var viewModel = new ChartViewModel
+        {
+            MotorMaxSpeed = 6000
+        };
+        var voltage = CreateTestVoltage();
+        voltage.MaxSpeed = 0;
+
+        // Act
+        viewModel.CurrentVoltage = voltage;
+
+        // Assert
+        Assert.DoesNotContain(viewModel.Series, s => s.Name == "Voltage Max Speed");
+    }
+
+    [Fact]
+    public void MotorRatedSpeed_WhenChanged_UpdatesAxes()
+    {
+        // Arrange
+        var viewModel = new ChartViewModel
+        {
+            MotorMaxSpeed = 4000
+        };
+        var voltage = CreateTestVoltage();
+        voltage.MaxSpeed = 5000;
+        viewModel.CurrentVoltage = voltage;
+        var oldMaxLimit = viewModel.XAxes[0].MaxLimit;
+
+        // Act
+        viewModel.MotorRatedSpeed = 8000;  // Higher than all other speeds
+        var newMaxLimit = viewModel.XAxes[0].MaxLimit;
+
+        // Assert
+        Assert.NotEqual(oldMaxLimit, newMaxLimit);
+        Assert.Equal(8000, newMaxLimit);
     }
 
     private static Voltage CreateTestVoltage()

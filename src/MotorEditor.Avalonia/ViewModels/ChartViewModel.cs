@@ -65,6 +65,9 @@ public partial class ChartViewModel : ViewModelBase
     private double _motorMaxSpeed;
 
     [ObservableProperty]
+    private double _motorRatedSpeed;
+
+    [ObservableProperty]
     private bool _hasBrake;
 
     [ObservableProperty]
@@ -127,6 +130,18 @@ public partial class ChartViewModel : ViewModelBase
     partial void OnMotorMaxSpeedChanged(double value)
     {
         // Update chart axes when motor max speed changes
+        if (_currentVoltage is not null)
+        {
+            UpdateAxes();
+        }
+    }
+
+    /// <summary>
+    /// Called when MotorRatedSpeed changes to update the chart axes.
+    /// </summary>
+    partial void OnMotorRatedSpeedChanged(double value)
+    {
+        // Update chart axes when motor rated speed changes
         if (_currentVoltage is not null)
         {
             UpdateAxes();
@@ -375,11 +390,25 @@ public partial class ChartViewModel : ViewModelBase
 
         Title = $"Torque Curve - {_currentVoltage.Value}V";
 
-        // Use the maximum of Motor Max Speed and Drive (voltage) Max Speed for stand-in lines.
-        var standInMaxRpm = Math.Max(MotorMaxSpeed, _currentVoltage.MaxSpeed);
-        if (standInMaxRpm <= 0)
+        // Calculate the maximum RPM from all relevant sources
+        var maxRpmFromData = _currentVoltage.Curves
+            .SelectMany(c => c.Data)
+            .Select(dp => dp.Rpm)
+            .DefaultIfEmpty(0)
+            .Max();
+
+        var maxRpm = new[]
         {
-            standInMaxRpm = 6000;
+            MotorMaxSpeed,
+            MotorRatedSpeed,
+            _currentVoltage.MaxSpeed,
+            _currentVoltage.RatedSpeed,
+            maxRpmFromData
+        }.Max();
+
+        if (maxRpm <= 0)
+        {
+            maxRpm = 6000;
         }
 
         for (var i = 0; i < _currentVoltage.Curves.Count; i++)
@@ -410,7 +439,7 @@ public partial class ChartViewModel : ViewModelBase
                 points = new ObservableCollection<ObservablePoint>
                 {
                     new(0, torque),
-                    new(standInMaxRpm, torque)
+                    new(maxRpm, torque)
                 };
             }
             else
@@ -452,6 +481,9 @@ public partial class ChartViewModel : ViewModelBase
         {
             AddBrakeTorqueLine();
         }
+
+        // Add vertical lines for Motor Rated Speed and Voltage Max Speed
+        AddVerticalReferenceLines(maxRpm);
 
         // Update axes based on data
         UpdateAxes();
@@ -639,13 +671,113 @@ public partial class ChartViewModel : ViewModelBase
         Series.Add(brakeLine);
     }
 
+    /// <summary>
+    /// Adds vertical reference lines for Motor Rated Speed and Voltage Max Speed.
+    /// </summary>
+    /// <param name="maxRpm">The maximum RPM value for determining line height.</param>
+    private void AddVerticalReferenceLines(double maxRpm)
+    {
+        if (_currentVoltage is null)
+        {
+            return;
+        }
+
+        // Get max torque for determining line height
+        var maxTorque = _currentVoltage.Curves
+            .SelectMany(s => s.Data)
+            .Select(dp => dp.Torque)
+            .DefaultIfEmpty(0)
+            .Max();
+
+        if (maxTorque <= 0)
+        {
+            maxTorque = new[]
+            {
+                _currentVoltage.RatedPeakTorque,
+                _currentVoltage.RatedContinuousTorque,
+                HasBrake ? BrakeTorque : 0d
+            }.Max();
+        }
+
+        var lineTorqueHeight = maxTorque * 1.1; // Extend slightly above max torque
+
+        // Add Motor Rated Speed line
+        if (MotorRatedSpeed > 0)
+        {
+            var motorRatedSpeedPoints = new ObservableCollection<ObservablePoint>
+            {
+                new(MotorRatedSpeed, 0),
+                new(MotorRatedSpeed, lineTorqueHeight)
+            };
+
+            var motorRatedSpeedLine = new LineSeries<ObservablePoint>
+            {
+                Name = "Motor Rated Speed",
+                Values = motorRatedSpeedPoints,
+                Fill = null,
+                GeometrySize = 0,
+                Stroke = new SolidColorPaint(new SKColor(100, 100, 255)) // Blue
+                {
+                    StrokeThickness = 2,
+                    PathEffect = new DashEffect([10, 5]) // Dashed line
+                },
+                LineSmoothness = 0,
+                IsVisible = true,
+                IsHoverable = false
+            };
+
+            Series.Add(motorRatedSpeedLine);
+        }
+
+        // Add Voltage Max Speed line
+        if (_currentVoltage.MaxSpeed > 0)
+        {
+            var voltageMaxSpeedPoints = new ObservableCollection<ObservablePoint>
+            {
+                new(_currentVoltage.MaxSpeed, 0),
+                new(_currentVoltage.MaxSpeed, lineTorqueHeight)
+            };
+
+            var voltageMaxSpeedLine = new LineSeries<ObservablePoint>
+            {
+                Name = "Voltage Max Speed",
+                Values = voltageMaxSpeedPoints,
+                Fill = null,
+                GeometrySize = 0,
+                Stroke = new SolidColorPaint(new SKColor(255, 100, 100)) // Red
+                {
+                    StrokeThickness = 2,
+                    PathEffect = new DashEffect([10, 5]) // Dashed line
+                },
+                LineSmoothness = 0,
+                IsVisible = true,
+                IsHoverable = false
+            };
+
+            Series.Add(voltageMaxSpeedLine);
+        }
+    }
+
     private void UpdateAxes()
     {
         if (_currentVoltage is null) return;
 
-        // Use the maximum of Motor Max Speed and Drive (voltage) Max Speed for the x-axis
-        // Do NOT round the x-axis maximum - use the exact value
-        var maxRpm = Math.Max(MotorMaxSpeed, _currentVoltage.MaxSpeed);
+        // Calculate the maximum RPM from all relevant sources
+        var maxRpmFromData = _currentVoltage.Curves
+            .SelectMany(c => c.Data)
+            .Select(dp => dp.Rpm)
+            .DefaultIfEmpty(0)
+            .Max();
+
+        var maxRpm = new[]
+        {
+            MotorMaxSpeed,
+            MotorRatedSpeed,
+            _currentVoltage.MaxSpeed,
+            _currentVoltage.RatedSpeed,
+            maxRpmFromData
+        }.Max();
+
         if (maxRpm <= 0)
         {
             maxRpm = 6000; // Default fallback
