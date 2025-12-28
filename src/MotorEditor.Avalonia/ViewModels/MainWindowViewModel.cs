@@ -35,8 +35,6 @@ public partial class MainWindowViewModel : ViewModelBase
     private readonly IDriveVoltageSeriesService _driveVoltageSeriesService;
     private readonly IMotorConfigurationWorkflow _motorConfigurationWorkflow;
     private readonly IUserSettingsStore _settingsStore;
-    private readonly UndoStack _undoStack = new();
-    private int _cleanCheckpoint;
 
     // Tab management
     private readonly ObservableCollection<DocumentTab> _tabs = new();
@@ -844,12 +842,37 @@ public partial class MainWindowViewModel : ViewModelBase
             return;
         }
 
-        if (!await ConfirmLoseUnsavedChangesOrCancelAsync("open another file", "Open cancelled.").ConfigureAwait(true))
+        try
         {
-            return;
+            // Check if file is already open in a tab
+            var existingTab = _tabs.FirstOrDefault(t => 
+                string.Equals(t.FilePath, filePath, StringComparison.OrdinalIgnoreCase));
+            
+            if (existingTab != null)
+            {
+                // Switch to existing tab
+                ActiveTab = existingTab;
+                StatusMessage = $"Switched to already open file: {Path.GetFileName(filePath)}";
+                return;
+            }
+            
+            // Create new tab for the file
+            var newTab = CreateNewTab();
+            newTab.Motor = await _fileService.LoadAsync(filePath);
+            newTab.FilePath = filePath;
+            newTab.UndoStack.Clear();
+            newTab.MarkClean();
+            
+            _tabs.Add(newTab);
+            ActiveTab = newTab;
+            
+            StatusMessage = $"Opened: {Path.GetFileName(filePath)}";
         }
-
-        await OpenMotorFileInternalAsync(filePath, updateExplorerSelection: false).ConfigureAwait(true);
+        catch (Exception ex)
+        {
+            Log.Error(ex, "Failed to open file from directory browser");
+            StatusMessage = $"Error: {ex.Message}";
+        }
     }
 
     private static async Task<UnsavedChangesChoice> ShowUnsavedChangesPromptAsync(string actionDescription)
@@ -915,7 +938,7 @@ public partial class MainWindowViewModel : ViewModelBase
         try
         {
             CurrentMotor = await _fileService.LoadAsync(filePath).ConfigureAwait(true);
-            _undoStack.Clear();
+            ActiveTab?.UndoStack.Clear();
             MarkCleanCheckpoint();
             IsDirty = _fileService.IsDirty;
             CurrentFilePath = _fileService.CurrentFilePath;
@@ -947,15 +970,8 @@ public partial class MainWindowViewModel : ViewModelBase
 
     private void WireUndoInfrastructure()
     {
-        ChartViewModel.UndoStack = _undoStack;
-        CurveDataTableViewModel.UndoStack = _undoStack;
-
-        _undoStack.UndoStackChanged += (_, _) =>
-        {
-            OnPropertyChanged(nameof(CanUndo));
-            OnPropertyChanged(nameof(CanRedo));
-            UpdateDirtyFromUndoDepth();
-        };
+        // Undo infrastructure is now wired per-tab in CreateNewTab
+        // This method is kept for backward compatibility but does nothing
     }
 
     public string WindowTitle
@@ -977,27 +993,17 @@ public partial class MainWindowViewModel : ViewModelBase
     /// </summary>
     public void MarkCleanCheckpoint()
     {
-        _cleanCheckpoint = GetUndoDepth();
-        IsDirty = false;
+        ActiveTab?.MarkClean();
     }
 
     private int GetUndoDepth()
     {
-        return _undoStack.UndoDepth;
+        return ActiveTab?.UndoStack.UndoDepth ?? 0;
     }
 
     private void UpdateDirtyFromUndoDepth()
     {
-        var depth = GetUndoDepth();
-
-        if (depth == _cleanCheckpoint && !_fileService.IsDirty)
-        {
-            IsDirty = false;
-        }
-        else if (depth != _cleanCheckpoint || _fileService.IsDirty)
-        {
-            IsDirty = true;
-        }
+        ActiveTab?.UpdateDirtyFromUndoDepth();
     }
 
     private void RefreshMotorEditorsFromCurrentMotor()
@@ -1087,7 +1093,7 @@ public partial class MainWindowViewModel : ViewModelBase
         }
 
         var command = new EditMotorPropertyCommand(CurrentMotor, nameof(ServoMotor.MotorName), oldName, newNameValue);
-        _undoStack.PushAndExecute(command);
+        ActiveTab?.UndoStack.PushAndExecute(command);
         UpdateDirtyFromUndoDepth();
         MotorNameEditor = CurrentMotor.MotorName ?? string.Empty;
         OnPropertyChanged(nameof(WindowTitle));
@@ -1113,7 +1119,7 @@ public partial class MainWindowViewModel : ViewModelBase
         }
 
         var command = new EditMotorPropertyCommand(CurrentMotor, nameof(ServoMotor.Manufacturer), oldManufacturer, newManufacturerValue);
-        _undoStack.PushAndExecute(command);
+        ActiveTab?.UndoStack.PushAndExecute(command);
         UpdateDirtyFromUndoDepth();
         ManufacturerEditor = CurrentMotor.Manufacturer ?? string.Empty;
     }
@@ -1141,7 +1147,7 @@ public partial class MainWindowViewModel : ViewModelBase
         }
 
         var command = new EditMotorPropertyCommand(CurrentMotor, nameof(ServoMotor.MaxSpeed), oldValue, newValue);
-        _undoStack.PushAndExecute(command);
+        ActiveTab?.UndoStack.PushAndExecute(command);
         MaxSpeedEditor = newValue.ToString(System.Globalization.CultureInfo.InvariantCulture);
         ChartViewModel.MotorMaxSpeed = newValue;
         IsDirty = true;
@@ -1166,7 +1172,7 @@ public partial class MainWindowViewModel : ViewModelBase
         }
 
         var command = new EditMotorPropertyCommand(CurrentMotor, nameof(ServoMotor.PartNumber), oldPartNumber, newPartNumberValue);
-        _undoStack.PushAndExecute(command);
+        ActiveTab?.UndoStack.PushAndExecute(command);
         UpdateDirtyFromUndoDepth();
         PartNumberEditor = CurrentMotor.PartNumber ?? string.Empty;
     }
@@ -1235,7 +1241,7 @@ public partial class MainWindowViewModel : ViewModelBase
         }
 
         var command = new EditDrivePropertyCommand(SelectedDrive, nameof(Drive.Name), oldValue, newValue);
-        _undoStack.PushAndExecute(command);
+        ActiveTab?.UndoStack.PushAndExecute(command);
         DriveNameEditor = newValue;
         IsDirty = true;
     }
@@ -1256,7 +1262,7 @@ public partial class MainWindowViewModel : ViewModelBase
         }
 
         var command = new EditDrivePropertyCommand(SelectedDrive, nameof(Drive.PartNumber), oldValue, newValue);
-        _undoStack.PushAndExecute(command);
+        ActiveTab?.UndoStack.PushAndExecute(command);
         DrivePartNumberEditor = newValue;
         IsDirty = true;
     }
@@ -1277,7 +1283,7 @@ public partial class MainWindowViewModel : ViewModelBase
         }
 
         var command = new EditDrivePropertyCommand(SelectedDrive, nameof(Drive.Manufacturer), oldValue, newValue);
-        _undoStack.PushAndExecute(command);
+        ActiveTab?.UndoStack.PushAndExecute(command);
         DriveManufacturerEditor = newValue;
         IsDirty = true;
     }
@@ -1303,7 +1309,7 @@ public partial class MainWindowViewModel : ViewModelBase
 
         Log.Debug("EditSelectedVoltageValue: old={Old}, new={New}", oldValue, newValue);
         var command = new EditVoltagePropertyCommand(SelectedVoltage, nameof(Voltage.Value), oldValue, newValue);
-        _undoStack.PushAndExecute(command);
+        ActiveTab?.UndoStack.PushAndExecute(command);
         VoltageValueEditor = newValue.ToString(System.Globalization.CultureInfo.InvariantCulture);
         ChartViewModel.RefreshChart();
         CurveDataTableViewModel.RefreshData();
@@ -1331,7 +1337,7 @@ public partial class MainWindowViewModel : ViewModelBase
 
         Log.Debug("EditSelectedVoltagePower: old={Old}, new={New}", oldValue, newValue);
         var command = new EditVoltagePropertyCommand(SelectedVoltage, nameof(Voltage.Power), oldValue, newValue);
-        _undoStack.PushAndExecute(command);
+        ActiveTab?.UndoStack.PushAndExecute(command);
         VoltagePowerEditor = newValue.ToString(System.Globalization.CultureInfo.InvariantCulture);
         ChartViewModel.RefreshChart();
         CurveDataTableViewModel.RefreshData();
@@ -1359,7 +1365,7 @@ public partial class MainWindowViewModel : ViewModelBase
 
         Log.Debug("EditSelectedVoltageMaxSpeed: old={Old}, new={New}", oldValue, newValue);
         var command = new EditVoltagePropertyCommand(SelectedVoltage, nameof(Voltage.MaxSpeed), oldValue, newValue);
-        _undoStack.PushAndExecute(command);
+        ActiveTab?.UndoStack.PushAndExecute(command);
         VoltageMaxSpeedEditor = newValue.ToString(System.Globalization.CultureInfo.InvariantCulture);
         ChartViewModel.RefreshChart();
         CurveDataTableViewModel.RefreshData();
@@ -1387,7 +1393,7 @@ public partial class MainWindowViewModel : ViewModelBase
 
         Log.Debug("EditSelectedVoltagePeakTorque: old={Old}, new={New}", oldValue, newValue);
         var command = new EditVoltagePropertyCommand(SelectedVoltage, nameof(Voltage.RatedPeakTorque), oldValue, newValue);
-        _undoStack.PushAndExecute(command);
+        ActiveTab?.UndoStack.PushAndExecute(command);
         VoltagePeakTorqueEditor = newValue.ToString(System.Globalization.CultureInfo.InvariantCulture);
         ChartViewModel.RefreshChart();
         CurveDataTableViewModel.RefreshData();
@@ -1415,7 +1421,7 @@ public partial class MainWindowViewModel : ViewModelBase
 
         Log.Debug("EditSelectedVoltageContinuousTorque: old={Old}, new={New}", oldValue, newValue);
         var command = new EditVoltagePropertyCommand(SelectedVoltage, nameof(Voltage.RatedContinuousTorque), oldValue, newValue);
-        _undoStack.PushAndExecute(command);
+        ActiveTab?.UndoStack.PushAndExecute(command);
         VoltageContinuousTorqueEditor = newValue.ToString(System.Globalization.CultureInfo.InvariantCulture);
         ChartViewModel.RefreshChart();
         CurveDataTableViewModel.RefreshData();
@@ -1443,7 +1449,7 @@ public partial class MainWindowViewModel : ViewModelBase
 
         Log.Debug("EditSelectedVoltageContinuousAmps: old={Old}, new={New}", oldValue, newValue);
         var command = new EditVoltagePropertyCommand(SelectedVoltage, nameof(Voltage.ContinuousAmperage), oldValue, newValue);
-        _undoStack.PushAndExecute(command);
+        ActiveTab?.UndoStack.PushAndExecute(command);
         VoltageContinuousAmpsEditor = newValue.ToString(System.Globalization.CultureInfo.InvariantCulture);
         ChartViewModel.RefreshChart();
         CurveDataTableViewModel.RefreshData();
@@ -1471,7 +1477,7 @@ public partial class MainWindowViewModel : ViewModelBase
 
         Log.Debug("EditSelectedVoltagePeakAmps: old={Old}, new={New}", oldValue, newValue);
         var command = new EditVoltagePropertyCommand(SelectedVoltage, nameof(Voltage.PeakAmperage), oldValue, newValue);
-        _undoStack.PushAndExecute(command);
+        ActiveTab?.UndoStack.PushAndExecute(command);
         VoltagePeakAmpsEditor = newValue.ToString(System.Globalization.CultureInfo.InvariantCulture);
         ChartViewModel.RefreshChart();
         CurveDataTableViewModel.RefreshData();
@@ -1498,7 +1504,7 @@ public partial class MainWindowViewModel : ViewModelBase
         }
 
         var command = new EditMotorPropertyCommand(CurrentMotor, nameof(ServoMotor.RatedSpeed), oldValue, newValue);
-        _undoStack.PushAndExecute(command);
+        ActiveTab?.UndoStack.PushAndExecute(command);
         RatedSpeedEditor = newValue.ToString(System.Globalization.CultureInfo.InvariantCulture);
         ChartViewModel.MotorRatedSpeed = newValue;
         IsDirty = true;
@@ -1524,7 +1530,7 @@ public partial class MainWindowViewModel : ViewModelBase
         }
 
         var command = new EditMotorPropertyCommand(CurrentMotor, nameof(ServoMotor.RatedPeakTorque), oldValue, newValue);
-        _undoStack.PushAndExecute(command);
+        ActiveTab?.UndoStack.PushAndExecute(command);
         RatedPeakTorqueEditor = newValue.ToString(System.Globalization.CultureInfo.InvariantCulture);
         IsDirty = true;
     }
@@ -1549,7 +1555,7 @@ public partial class MainWindowViewModel : ViewModelBase
         }
 
         var command = new EditMotorPropertyCommand(CurrentMotor, nameof(ServoMotor.RatedContinuousTorque), oldValue, newValue);
-        _undoStack.PushAndExecute(command);
+        ActiveTab?.UndoStack.PushAndExecute(command);
         RatedContinuousTorqueEditor = newValue.ToString(System.Globalization.CultureInfo.InvariantCulture);
         IsDirty = true;
     }
@@ -1574,7 +1580,7 @@ public partial class MainWindowViewModel : ViewModelBase
         }
 
         var command = new EditMotorPropertyCommand(CurrentMotor, nameof(ServoMotor.Power), oldValue, newValue);
-        _undoStack.PushAndExecute(command);
+        ActiveTab?.UndoStack.PushAndExecute(command);
         PowerEditor = newValue.ToString(System.Globalization.CultureInfo.InvariantCulture);
         IsDirty = true;
     }
@@ -1599,7 +1605,7 @@ public partial class MainWindowViewModel : ViewModelBase
         }
 
         var command = new EditMotorPropertyCommand(CurrentMotor, nameof(ServoMotor.Weight), oldValue, newValue);
-        _undoStack.PushAndExecute(command);
+        ActiveTab?.UndoStack.PushAndExecute(command);
         WeightEditor = newValue.ToString(System.Globalization.CultureInfo.InvariantCulture);
         IsDirty = true;
     }
@@ -1624,7 +1630,7 @@ public partial class MainWindowViewModel : ViewModelBase
         }
 
         var command = new EditMotorPropertyCommand(CurrentMotor, nameof(ServoMotor.RotorInertia), oldValue, newValue);
-        _undoStack.PushAndExecute(command);
+        ActiveTab?.UndoStack.PushAndExecute(command);
         RotorInertiaEditor = newValue.ToString(System.Globalization.CultureInfo.InvariantCulture);
         IsDirty = true;
     }
@@ -1649,7 +1655,7 @@ public partial class MainWindowViewModel : ViewModelBase
         }
 
         var command = new EditMotorPropertyCommand(CurrentMotor, nameof(ServoMotor.FeedbackPpr), oldValue, newValue);
-        _undoStack.PushAndExecute(command);
+        ActiveTab?.UndoStack.PushAndExecute(command);
         FeedbackPprEditor = newValue.ToString(System.Globalization.CultureInfo.InvariantCulture);
         IsDirty = true;
     }
@@ -1670,7 +1676,7 @@ public partial class MainWindowViewModel : ViewModelBase
         }
 
         var command = new EditMotorPropertyCommand(CurrentMotor, nameof(ServoMotor.HasBrake), oldValue, newValue);
-        _undoStack.PushAndExecute(command);
+        ActiveTab?.UndoStack.PushAndExecute(command);
         HasBrakeEditor = newValue;
         ChartViewModel.HasBrake = newValue;
         IsDirty = true;
@@ -1696,7 +1702,7 @@ public partial class MainWindowViewModel : ViewModelBase
         }
 
         var command = new EditMotorPropertyCommand(CurrentMotor, nameof(ServoMotor.BrakeTorque), oldValue, newValue);
-        _undoStack.PushAndExecute(command);
+        ActiveTab?.UndoStack.PushAndExecute(command);
         BrakeTorqueEditor = newValue.ToString(System.Globalization.CultureInfo.InvariantCulture);
         ChartViewModel.BrakeTorque = newValue;
         IsDirty = true;
@@ -1722,7 +1728,7 @@ public partial class MainWindowViewModel : ViewModelBase
         }
 
         var command = new EditMotorPropertyCommand(CurrentMotor, nameof(ServoMotor.BrakeAmperage), oldValue, newValue);
-        _undoStack.PushAndExecute(command);
+        ActiveTab?.UndoStack.PushAndExecute(command);
         BrakeAmperageEditor = newValue.ToString(System.Globalization.CultureInfo.InvariantCulture);
         IsDirty = true;
     }
@@ -1747,7 +1753,7 @@ public partial class MainWindowViewModel : ViewModelBase
         }
 
         var command = new EditMotorPropertyCommand(CurrentMotor, nameof(ServoMotor.BrakeVoltage), oldValue, newValue);
-        _undoStack.PushAndExecute(command);
+        ActiveTab?.UndoStack.PushAndExecute(command);
         BrakeVoltageEditor = newValue.ToString(System.Globalization.CultureInfo.InvariantCulture);
         IsDirty = true;
     }
@@ -1772,7 +1778,7 @@ public partial class MainWindowViewModel : ViewModelBase
         }
 
         var command = new EditMotorPropertyCommand(CurrentMotor, nameof(ServoMotor.BrakeReleaseTime), oldValue, newValue);
-        _undoStack.PushAndExecute(command);
+        ActiveTab?.UndoStack.PushAndExecute(command);
         BrakeReleaseTimeEditor = newValue.ToString(System.Globalization.CultureInfo.InvariantCulture);
         IsDirty = true;
     }
@@ -1797,7 +1803,7 @@ public partial class MainWindowViewModel : ViewModelBase
         }
 
         var command = new EditMotorPropertyCommand(CurrentMotor, nameof(ServoMotor.BrakeEngageTimeMov), oldValue, newValue);
-        _undoStack.PushAndExecute(command);
+        ActiveTab?.UndoStack.PushAndExecute(command);
         BrakeEngageTimeMovEditor = newValue.ToString(System.Globalization.CultureInfo.InvariantCulture);
         IsDirty = true;
     }
@@ -1822,7 +1828,7 @@ public partial class MainWindowViewModel : ViewModelBase
         }
 
         var command = new EditMotorPropertyCommand(CurrentMotor, nameof(ServoMotor.BrakeEngageTimeDiode), oldValue, newValue);
-        _undoStack.PushAndExecute(command);
+        ActiveTab?.UndoStack.PushAndExecute(command);
         BrakeEngageTimeDiodeEditor = newValue.ToString(System.Globalization.CultureInfo.InvariantCulture);
         IsDirty = true;
     }
@@ -1847,7 +1853,7 @@ public partial class MainWindowViewModel : ViewModelBase
         }
 
         var command = new EditMotorPropertyCommand(CurrentMotor, nameof(ServoMotor.BrakeBacklash), oldValue, newValue);
-        _undoStack.PushAndExecute(command);
+        ActiveTab?.UndoStack.PushAndExecute(command);
         BrakeBacklashEditor = newValue.ToString(System.Globalization.CultureInfo.InvariantCulture);
         IsDirty = true;
     }
@@ -2015,10 +2021,10 @@ public partial class MainWindowViewModel : ViewModelBase
     [RelayCommand(CanExecute = nameof(CanUndo))]
     private void Undo()
     {
-        _undoStack.Undo();
+        ActiveTab?.UndoStack.Undo();
         RefreshMotorEditorsFromCurrentMotor();
-        ChartViewModel.RefreshChart();
-        CurveDataTableViewModel.RefreshData();
+        ActiveTab?.ChartViewModel?.RefreshChart();
+        ActiveTab?.CurveDataTableViewModel?.RefreshData();
     }
 
     /// <summary>
@@ -2027,36 +2033,35 @@ public partial class MainWindowViewModel : ViewModelBase
     [RelayCommand(CanExecute = nameof(CanRedo))]
     private void Redo()
     {
-        _undoStack.Redo();
+        ActiveTab?.UndoStack.Redo();
         RefreshMotorEditorsFromCurrentMotor();
-        ChartViewModel.RefreshChart();
-        CurveDataTableViewModel.RefreshData();
+        ActiveTab?.ChartViewModel?.RefreshChart();
+        ActiveTab?.CurveDataTableViewModel?.RefreshData();
     }
 
     [RelayCommand]
     private async Task NewMotorAsync()
     {
-        Log.Information("Creating new motor definition");
+        Log.Information("Creating new motor definition in new tab");
 
-        if (!await ConfirmLoseUnsavedChangesOrCancelAsync("create a new file", "New file cancelled.").ConfigureAwait(true))
-        {
-            return;
-        }
-
-        // Create a new motor with default values
-        CurrentMotor = _fileService.CreateNew(
+        // Create a new tab with a new motor
+        var newTab = CreateNewTab();
+        
+        // Create motor using existing file service
+        newTab.Motor = _fileService.CreateNew(
             motorName: "New Motor",
             maxRpm: 5000,
             maxTorque: 50,
             maxPower: 1500);
-
-        _undoStack.Clear();
-        MarkCleanCheckpoint();
-
-        IsDirty = _fileService.IsDirty;
-        CurrentFilePath = _fileService.CurrentFilePath;
-        await DirectoryBrowser.SyncSelectionToFilePathAsync(CurrentFilePath).ConfigureAwait(true);
-        StatusMessage = "Created new motor definition";
+        
+        newTab.FilePath = null;
+        newTab.UndoStack.Clear();
+        newTab.MarkClean();
+        
+        _tabs.Add(newTab);
+        ActiveTab = newTab;
+        
+        StatusMessage = "Created new motor definition in new tab";
     }
 
     [RelayCommand]
@@ -2066,11 +2071,6 @@ public partial class MainWindowViewModel : ViewModelBase
 
         try
         {
-            if (!await ConfirmLoseUnsavedChangesOrCancelAsync("open another file", "Open cancelled.").ConfigureAwait(true))
-            {
-                return;
-            }
-
             var storageProvider = GetStorageProvider();
             if (storageProvider is null)
             {
@@ -2094,7 +2094,30 @@ public partial class MainWindowViewModel : ViewModelBase
             var file = files[0];
             var filePath = file.Path.LocalPath;
 
-            await OpenMotorFileInternalAsync(filePath, updateExplorerSelection: true).ConfigureAwait(true);
+            // Check if file is already open in a tab
+            var existingTab = _tabs.FirstOrDefault(t => 
+                string.Equals(t.FilePath, filePath, StringComparison.OrdinalIgnoreCase));
+            
+            if (existingTab != null)
+            {
+                // Switch to existing tab
+                ActiveTab = existingTab;
+                StatusMessage = $"Switched to already open file: {Path.GetFileName(filePath)}";
+                return;
+            }
+            
+            // Create new tab for the file
+            var newTab = CreateNewTab();
+            newTab.Motor = await _fileService.LoadAsync(filePath);
+            newTab.FilePath = filePath;
+            newTab.UndoStack.Clear();
+            newTab.MarkClean();
+            
+            _tabs.Add(newTab);
+            ActiveTab = newTab;
+            
+            await DirectoryBrowser.SyncSelectionToFilePathAsync(filePath).ConfigureAwait(true);
+            StatusMessage = $"Opened: {Path.GetFileName(filePath)}";
         }
         catch (Exception ex)
         {
@@ -2126,7 +2149,7 @@ public partial class MainWindowViewModel : ViewModelBase
     {
         _fileService.Reset();
 
-        _undoStack.Clear();
+        ActiveTab?.UndoStack.Clear();
         MarkCleanCheckpoint();
 
         CurrentFilePath = null;
@@ -2135,8 +2158,14 @@ public partial class MainWindowViewModel : ViewModelBase
         SelectedVoltage = null;
         SelectedSeries = null;
 
-        ChartViewModel.CurrentVoltage = null;
-        CurveDataTableViewModel.CurrentVoltage = null;
+        if (ChartViewModel != null)
+        {
+            ChartViewModel.CurrentVoltage = null;
+        }
+        if (CurveDataTableViewModel != null)
+        {
+            CurveDataTableViewModel.CurrentVoltage = null;
+        }
 
         ValidationErrors = string.Empty;
         HasValidationErrors = false;
@@ -2679,7 +2708,7 @@ public partial class MainWindowViewModel : ViewModelBase
         var newLocked = !series.Locked;
 
         var command = new EditSeriesCommand(series, newLocked: newLocked);
-        _undoStack.PushAndExecute(command);
+        ActiveTab?.UndoStack.PushAndExecute(command);
         UpdateDirtyFromUndoDepth();
 
         // Refresh the curve data table so that the DataGrid columns
