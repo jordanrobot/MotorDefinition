@@ -48,13 +48,46 @@ public partial class MainWindowViewModel : ViewModelBase
         MimeTypes = ["application/json"]
     };
 
-    [ObservableProperty]
-    [NotifyPropertyChangedFor(nameof(WindowTitle))]
-    private ServoMotor? _currentMotor;
+    /// <summary>
+    /// Current motor definition (delegates to active tab).
+    /// </summary>
+    public ServoMotor? CurrentMotor
+    {
+        get => ActiveTab?.Motor;
+        set
+        {
+            if (ActiveTab != null && ActiveTab.Motor != value)
+            {
+                ActiveTab.Motor = value;
+                OnPropertyChanged();
+                OnPropertyChanged(nameof(WindowTitle));
+                OnCurrentMotorChanged(value);
+            }
+        }
+    }
 
-    [ObservableProperty]
-    [NotifyPropertyChangedFor(nameof(WindowTitle))]
-    private bool _isDirty;
+    /// <summary>
+    /// Whether the current document has unsaved changes (delegates to active tab).
+    /// </summary>
+    public bool IsDirty
+    {
+        get => ActiveTab?.IsDirty ?? false;
+        set
+        {
+            if (ActiveTab != null && ActiveTab.IsDirty != value)
+            {
+                ActiveTab.IsDirty = value;
+                OnPropertyChanged();
+                OnPropertyChanged(nameof(WindowTitle));
+                OnIsDirtyChanged(value);
+            }
+        }
+    }
+
+    private void OnIsDirtyChanged(bool value)
+    {
+        DirectoryBrowser.UpdateActiveFileState(CurrentFilePath, value);
+    }
 
     [ObservableProperty]
     private string _statusMessage = "Ready";
@@ -72,35 +105,70 @@ public partial class MainWindowViewModel : ViewModelBase
     [NotifyPropertyChangedFor(nameof(CanSaveWithValidation))]
     private bool _hasValidationErrors;
 
-    // Drive selection
-    [ObservableProperty]
-    private Drive? _selectedDrive;
-
-    // Value selection
-    [ObservableProperty]
-    private Voltage? _selectedVoltage;
-
-    // Curves selection
-    [ObservableProperty]
-    private Curve? _selectedSeries;
+    /// <summary>
+    /// Selected drive (delegates to active tab).
+    /// </summary>
+    public Drive? SelectedDrive
+    {
+        get => ActiveTab?.SelectedDrive;
+        set
+        {
+            if (ActiveTab != null && ActiveTab.SelectedDrive != value)
+            {
+                ActiveTab.SelectedDrive = value;
+                OnPropertyChanged();
+                OnSelectedDriveChanged(value);
+            }
+        }
+    }
 
     /// <summary>
-    /// Coordinates editing and selection between chart and data table.
+    /// Selected voltage (delegates to active tab).
     /// </summary>
-    [ObservableProperty]
-    private EditingCoordinator _editingCoordinator = new();
+    public Voltage? SelectedVoltage
+    {
+        get => ActiveTab?.SelectedVoltage;
+        set
+        {
+            if (ActiveTab != null && ActiveTab.SelectedVoltage != value)
+            {
+                ActiveTab.SelectedVoltage = value;
+                OnPropertyChanged();
+                OnSelectedVoltageChanged(value);
+            }
+        }
+    }
 
     /// <summary>
-    /// ViewModel for the chart component.
+    /// Selected series/curve (delegates to active tab).
     /// </summary>
-    [ObservableProperty]
-    private ChartViewModel _chartViewModel;
+    public Curve? SelectedSeries
+    {
+        get => ActiveTab?.SelectedSeries;
+        set
+        {
+            if (ActiveTab != null && ActiveTab.SelectedSeries != value)
+            {
+                ActiveTab.SelectedSeries = value;
+                OnPropertyChanged();
+            }
+        }
+    }
 
     /// <summary>
-    /// ViewModel for the curve data table.
+    /// Editing coordinator (delegates to active tab).
     /// </summary>
-    [ObservableProperty]
-    private CurveDataTableViewModel _curveDataTableViewModel;
+    public EditingCoordinator? EditingCoordinator => ActiveTab?.EditingCoordinator;
+
+    /// <summary>
+    /// Chart view model (delegates to active tab).
+    /// </summary>
+    public ChartViewModel? ChartViewModel => ActiveTab?.ChartViewModel;
+
+    /// <summary>
+    /// Curve data table view model (delegates to active tab).
+    /// </summary>
+    public CurveDataTableViewModel? CurveDataTableViewModel => ActiveTab?.CurveDataTableViewModel;
 
     /// <summary>
     /// ViewModel for the Directory Browser explorer panel.
@@ -108,9 +176,29 @@ public partial class MainWindowViewModel : ViewModelBase
     [ObservableProperty]
     private DirectoryBrowserViewModel _directoryBrowser = new();
 
-    [ObservableProperty]
-    [NotifyPropertyChangedFor(nameof(WindowTitle))]
-    private string? _currentFilePath;
+    /// <summary>
+    /// Current file path (delegates to active tab).
+    /// </summary>
+    public string? CurrentFilePath
+    {
+        get => ActiveTab?.FilePath;
+        set
+        {
+            if (ActiveTab != null && ActiveTab.FilePath != value)
+            {
+                ActiveTab.FilePath = value;
+                OnPropertyChanged();
+                OnPropertyChanged(nameof(WindowTitle));
+                OnCurrentFilePathChanged(value);
+            }
+        }
+    }
+
+    private void OnCurrentFilePathChanged(string? value)
+    {
+        _ = DirectoryBrowser.SyncSelectionToFilePathAsync(value);
+        DirectoryBrowser.UpdateActiveFileState(value, IsDirty);
+    }
 
     /// <summary>
     /// Whether the units section is expanded.
@@ -340,22 +428,19 @@ public partial class MainWindowViewModel : ViewModelBase
     private string _voltagePeakAmpsEditor = string.Empty;
 
     /// <summary>
-    /// Cached list of available voltages for the selected drive.
+    /// Available voltages for the selected drive (delegates to active tab).
     /// </summary>
-    [ObservableProperty]
-    private ObservableCollection<Voltage> _availableVoltages = [];
+    public ObservableCollection<Voltage> AvailableVoltages => ActiveTab?.AvailableVoltages ?? [];
 
     /// <summary>
-    /// Cached list of available series for the selected voltage.
+    /// Available series for the selected voltage (delegates to active tab).
     /// </summary>
-    [ObservableProperty]
-    private ObservableCollection<Curve> _availableSeries = [];
+    public ObservableCollection<Curve> AvailableSeries => ActiveTab?.AvailableSeries ?? [];
 
     /// <summary>
-    /// Cached list of available drives from current motor definition.
+    /// Available drives from current motor definition (delegates to active tab).
     /// </summary>
-    [ObservableProperty]
-    private ObservableCollection<Drive> _availableDrives = [];
+    public ObservableCollection<Drive> AvailableDrives => ActiveTab?.AvailableDrives ?? [];
 
     /// <summary>
     /// Collection of all open document tabs.
@@ -383,12 +468,12 @@ public partial class MainWindowViewModel : ViewModelBase
     /// <summary>
     /// Gets whether there is at least one operation to undo.
     /// </summary>
-    public bool CanUndo => _undoStack.CanUndo;
+    public bool CanUndo => ActiveTab?.UndoStack.CanUndo ?? false;
 
     /// <summary>
     /// Gets whether there is at least one operation to redo.
     /// </summary>
-    public bool CanRedo => _undoStack.CanRedo;
+    public bool CanRedo => ActiveTab?.UndoStack.CanRedo ?? false;
 
     /// <summary>
     /// Whether save is enabled (motor exists and no validation errors).
@@ -489,25 +574,27 @@ public partial class MainWindowViewModel : ViewModelBase
         _fileService = new FileService(_curveGeneratorService);
         _validationService = new ValidationService();
         _driveVoltageSeriesService = new DriveVoltageSeriesService();
-        _chartViewModel = new ChartViewModel();
-        _curveDataTableViewModel = new CurveDataTableViewModel();
+        var chartViewModel = new ChartViewModel();
+        var curveDataTableViewModel = new CurveDataTableViewModel();
+        var editingCoordinator = new EditingCoordinator();
         _motorConfigurationWorkflow = new MotorConfigurationWorkflow(_driveVoltageSeriesService);
         _settingsStore = new PanelLayoutUserSettingsStore();
         UnsavedChangesPromptAsync = ShowUnsavedChangesPromptAsync;
-        WireEditingCoordinator();
-        WireUndoInfrastructure();
-        WireDirectoryBrowserIntegration();
-
+        
         // Initialize tabs (currently with single shared view models for backward compatibility)
         var initialTab = new DocumentTab
         {
-            ChartViewModel = _chartViewModel,
-            CurveDataTableViewModel = _curveDataTableViewModel,
-            EditingCoordinator = _editingCoordinator
+            ChartViewModel = chartViewModel,
+            CurveDataTableViewModel = curveDataTableViewModel,
+            EditingCoordinator = editingCoordinator
         };
         _tabs.Add(initialTab);
         ActiveTab = initialTab;
         Tabs = _tabs;
+        
+        WireEditingCoordinator();
+        WireUndoInfrastructure();
+        WireDirectoryBrowserIntegration();
     }
 
     public MainWindowViewModel(IFileService fileService, ICurveGeneratorService curveGeneratorService)
@@ -516,25 +603,27 @@ public partial class MainWindowViewModel : ViewModelBase
         _curveGeneratorService = curveGeneratorService ?? throw new ArgumentNullException(nameof(curveGeneratorService));
         _validationService = new ValidationService();
         _driveVoltageSeriesService = new DriveVoltageSeriesService();
-        _chartViewModel = new ChartViewModel();
-        _curveDataTableViewModel = new CurveDataTableViewModel();
+        var chartViewModel = new ChartViewModel();
+        var curveDataTableViewModel = new CurveDataTableViewModel();
+        var editingCoordinator = new EditingCoordinator();
         _motorConfigurationWorkflow = new MotorConfigurationWorkflow(_driveVoltageSeriesService);
         _settingsStore = new PanelLayoutUserSettingsStore();
         UnsavedChangesPromptAsync = ShowUnsavedChangesPromptAsync;
-        WireEditingCoordinator();
-        WireUndoInfrastructure();
-        WireDirectoryBrowserIntegration();
-
+        
         // Initialize tabs (currently with single shared view models for backward compatibility)
         var initialTab = new DocumentTab
         {
-            ChartViewModel = _chartViewModel,
-            CurveDataTableViewModel = _curveDataTableViewModel,
-            EditingCoordinator = _editingCoordinator
+            ChartViewModel = chartViewModel,
+            CurveDataTableViewModel = curveDataTableViewModel,
+            EditingCoordinator = editingCoordinator
         };
         _tabs.Add(initialTab);
         ActiveTab = initialTab;
         Tabs = _tabs;
+        
+        WireEditingCoordinator();
+        WireUndoInfrastructure();
+        WireDirectoryBrowserIntegration();
     }
 
     /// <summary>
@@ -558,28 +647,27 @@ public partial class MainWindowViewModel : ViewModelBase
         _validationService = validationService ?? throw new ArgumentNullException(nameof(validationService));
         _driveVoltageSeriesService = driveVoltageSeriesService ?? throw new ArgumentNullException(nameof(driveVoltageSeriesService));
         _motorConfigurationWorkflow = motorConfigurationWorkflow ?? throw new ArgumentNullException(nameof(motorConfigurationWorkflow));
-        _chartViewModel = chartViewModel ?? throw new ArgumentNullException(nameof(chartViewModel));
-        _curveDataTableViewModel = curveDataTableViewModel ?? throw new ArgumentNullException(nameof(curveDataTableViewModel));
         _settingsStore = settingsStore ?? new PanelLayoutUserSettingsStore();
         UnsavedChangesPromptAsync = unsavedChangesPromptAsync ?? ShowUnsavedChangesPromptAsync;
+
+        // Initialize tabs (currently with single shared view models for backward compatibility)
+        var editingCoordinator = new EditingCoordinator();
+        var initialTab = new DocumentTab
+        {
+            ChartViewModel = chartViewModel,
+            CurveDataTableViewModel = curveDataTableViewModel,
+            EditingCoordinator = editingCoordinator
+        };
+        _tabs.Add(initialTab);
+        ActiveTab = initialTab;
+        Tabs = _tabs;
 
         WireEditingCoordinator();
         WireUndoInfrastructure();
         WireDirectoryBrowserIntegration();
 
         // Load saved power curves preference
-        ChartViewModel.ShowPowerCurves = _settingsStore.LoadBool("ShowPowerCurves", false);
-
-        // Initialize tabs (currently with single shared view models for backward compatibility)
-        var initialTab = new DocumentTab
-        {
-            ChartViewModel = _chartViewModel,
-            CurveDataTableViewModel = _curveDataTableViewModel,
-            EditingCoordinator = _editingCoordinator
-        };
-        _tabs.Add(initialTab);
-        ActiveTab = initialTab;
-        Tabs = _tabs;
+        ChartViewModel!.ShowPowerCurves = _settingsStore.LoadBool("ShowPowerCurves", false);
     }
 
     private void WireDirectoryBrowserIntegration()
@@ -881,18 +969,6 @@ public partial class MainWindowViewModel : ViewModelBase
             var dirtyIndicator = IsDirty ? " *" : string.Empty;
             return $"{fileName}{dirtyIndicator} - Curve Editor";
         }
-    }
-
-    partial void OnCurrentFilePathChanged(string? value)
-    {
-        _ = DirectoryBrowser.SyncSelectionToFilePathAsync(value);
-        DirectoryBrowser.UpdateActiveFileState(value, IsDirty);
-        OnPropertyChanged(nameof(WindowTitle));
-    }
-
-    partial void OnIsDirtyChanged(bool value)
-    {
-        DirectoryBrowser.UpdateActiveFileState(CurrentFilePath, value);
     }
 
     /// <summary>
@@ -1799,7 +1875,7 @@ public partial class MainWindowViewModel : ViewModelBase
         RefreshAvailableSeries();
     }
 
-    partial void OnCurrentMotorChanged(ServoMotor? value)
+    private void OnCurrentMotorChanged(ServoMotor? value)
     {
         // Refresh the drives collection
         RefreshAvailableDrives();
@@ -1874,7 +1950,7 @@ public partial class MainWindowViewModel : ViewModelBase
         }
     }
 
-    partial void OnSelectedDriveChanged(Drive? value)
+    private void OnSelectedDriveChanged(Drive? value)
     {
         // Refresh the available voltages collection
         RefreshAvailableVoltages();
@@ -1894,7 +1970,7 @@ public partial class MainWindowViewModel : ViewModelBase
         DriveManufacturerEditor = value.Manufacturer ?? string.Empty;
     }
 
-    partial void OnSelectedVoltageChanged(Voltage? value)
+    private void OnSelectedVoltageChanged(Voltage? value)
     {
         // Refresh the available series collection
         RefreshAvailableSeries();
