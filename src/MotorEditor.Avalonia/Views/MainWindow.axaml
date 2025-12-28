@@ -262,12 +262,13 @@
                         <DataTemplate DataType="vm:DocumentTab">
                             <StackPanel Orientation="Horizontal" Spacing="8">
                                 <TextBlock Text="{Binding DisplayName}" 
-                                           VerticalAlignment="Center"/>
+                                           VerticalAlignment="Center"
+                                           FontSize="12"/>
                                 <Button Content="×" 
                                         Command="{Binding $parent[Window].((vm:MainWindowViewModel)DataContext).CloseTabCommand}"
                                         CommandParameter="{Binding}"
-                                        Padding="6,0"
-                                        FontSize="16"
+                                        Padding="4,0"
+                                        FontSize="14"
                                         ToolTip.Tip="Close tab"/>
                             </StackPanel>
                         </DataTemplate>

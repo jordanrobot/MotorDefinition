@@ -719,6 +719,80 @@ public partial class MainWindowViewModel : ViewModelBase
     }
 
     /// <summary>
+    /// Initializes a tab's collections and selections after a motor has been loaded into it.
+    /// </summary>
+    private void InitializeTabWithMotor(DocumentTab tab)
+    {
+        if (tab.Motor == null)
+        {
+            return;
+        }
+
+        // Populate AvailableDrives from the motor
+        tab.AvailableDrives.Clear();
+        foreach (var drive in tab.Motor.Drives)
+        {
+            tab.AvailableDrives.Add(drive);
+        }
+
+        // Select the first drive (or restore previous selection if switching back to this tab)
+        if (tab.SelectedDrive == null && tab.AvailableDrives.Count > 0)
+        {
+            tab.SelectedDrive = tab.AvailableDrives.FirstOrDefault();
+        }
+
+        // Populate AvailableVoltages from the selected drive
+        if (tab.SelectedDrive != null)
+        {
+            tab.AvailableVoltages.Clear();
+            foreach (var voltage in tab.SelectedDrive.Voltages)
+            {
+                tab.AvailableVoltages.Add(voltage);
+            }
+
+            // Select preferred voltage (208V if available, otherwise first)
+            if (tab.SelectedVoltage == null && tab.AvailableVoltages.Count > 0)
+            {
+                var preferred = tab.AvailableVoltages.FirstOrDefault(v => Math.Abs(v.Value - 208) < 0.1);
+                tab.SelectedVoltage = preferred ?? tab.AvailableVoltages.FirstOrDefault();
+            }
+        }
+
+        // Populate AvailableSeries from the selected voltage
+        if (tab.SelectedVoltage != null)
+        {
+            tab.AvailableSeries.Clear();
+            foreach (var series in tab.SelectedVoltage.Curves)
+            {
+                tab.AvailableSeries.Add(series);
+            }
+
+            // Select first series
+            if (tab.SelectedSeries == null && tab.AvailableSeries.Count > 0)
+            {
+                tab.SelectedSeries = tab.AvailableSeries.FirstOrDefault();
+            }
+        }
+
+        // Update chart view model
+        if (tab.ChartViewModel != null)
+        {
+            tab.ChartViewModel.TorqueUnit = tab.Motor.Units.Torque ?? "Nm";
+            tab.ChartViewModel.MotorMaxSpeed = tab.Motor.MaxSpeed;
+            tab.ChartViewModel.MotorRatedSpeed = tab.Motor.RatedSpeed;
+            tab.ChartViewModel.HasBrake = tab.Motor.HasBrake;
+            tab.ChartViewModel.BrakeTorque = tab.Motor.BrakeTorque;
+            tab.ChartViewModel.CurrentVoltage = tab.SelectedVoltage;
+        }
+
+        // Update data table view model
+        if (tab.CurveDataTableViewModel != null)
+        {
+            tab.CurveDataTableViewModel.CurrentVoltage = tab.SelectedVoltage;
+        }
+    }
+
+    /// <summary>
     /// Handles active tab changes by notifying all dependent properties.
     /// </summary>
     private void OnActiveTabChanged()
@@ -862,6 +936,9 @@ public partial class MainWindowViewModel : ViewModelBase
             newTab.FilePath = filePath;
             newTab.UndoStack.Clear();
             newTab.MarkClean();
+            
+            // Initialize the tab's collections and selections
+            InitializeTabWithMotor(newTab);
             
             _tabs.Add(newTab);
             ActiveTab = newTab;
@@ -1200,12 +1277,14 @@ public partial class MainWindowViewModel : ViewModelBase
     /// </summary>
     private void RefreshAvailableDrives()
     {
-        AvailableDrives.Clear();
-        if (CurrentMotor is not null)
+        if (ActiveTab == null) return;
+        
+        ActiveTab.AvailableDrives.Clear();
+        if (ActiveTab.Motor is not null)
         {
-            foreach (var drive in CurrentMotor.Drives)
+            foreach (var drive in ActiveTab.Motor.Drives)
             {
-                AvailableDrives.Add(drive);
+                ActiveTab.AvailableDrives.Add(drive);
             }
         }
     }
@@ -1215,12 +1294,14 @@ public partial class MainWindowViewModel : ViewModelBase
     /// </summary>
     private void RefreshAvailableVoltages()
     {
-        AvailableVoltages.Clear();
-        if (SelectedDrive is not null)
+        if (ActiveTab == null) return;
+        
+        ActiveTab.AvailableVoltages.Clear();
+        if (ActiveTab.SelectedDrive is not null)
         {
-            foreach (var voltage in SelectedDrive.Voltages)
+            foreach (var voltage in ActiveTab.SelectedDrive.Voltages)
             {
-                AvailableVoltages.Add(voltage);
+                ActiveTab.AvailableVoltages.Add(voltage);
             }
         }
     }
@@ -1863,12 +1944,14 @@ public partial class MainWindowViewModel : ViewModelBase
     /// </summary>
     private void RefreshAvailableSeries()
     {
-        AvailableSeries.Clear();
-        if (SelectedVoltage is not null)
+        if (ActiveTab == null) return;
+        
+        ActiveTab.AvailableSeries.Clear();
+        if (ActiveTab.SelectedVoltage is not null)
         {
-            foreach (var series in SelectedVoltage.Curves)
+            foreach (var series in ActiveTab.SelectedVoltage.Curves)
             {
-                AvailableSeries.Add(series);
+                ActiveTab.AvailableSeries.Add(series);
             }
         }
     }
@@ -2058,6 +2141,9 @@ public partial class MainWindowViewModel : ViewModelBase
         newTab.UndoStack.Clear();
         newTab.MarkClean();
         
+        // Initialize the tab's collections and selections
+        InitializeTabWithMotor(newTab);
+        
         _tabs.Add(newTab);
         ActiveTab = newTab;
         
@@ -2112,6 +2198,9 @@ public partial class MainWindowViewModel : ViewModelBase
             newTab.FilePath = filePath;
             newTab.UndoStack.Clear();
             newTab.MarkClean();
+            
+            // Initialize the tab's collections and selections
+            InitializeTabWithMotor(newTab);
             
             _tabs.Add(newTab);
             ActiveTab = newTab;
