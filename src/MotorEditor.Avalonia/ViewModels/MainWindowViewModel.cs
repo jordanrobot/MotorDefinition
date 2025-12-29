@@ -735,8 +735,8 @@ public partial class MainWindowViewModel : ViewModelBase
             tab.AvailableDrives.Add(drive);
         }
 
-        // Select the first drive (or restore previous selection if switching back to this tab)
-        if (tab.SelectedDrive == null && tab.AvailableDrives.Count > 0)
+        // Always select the first drive for newly loaded motors
+        if (tab.AvailableDrives.Count > 0)
         {
             tab.SelectedDrive = tab.AvailableDrives.FirstOrDefault();
         }
@@ -750,8 +750,8 @@ public partial class MainWindowViewModel : ViewModelBase
                 tab.AvailableVoltages.Add(voltage);
             }
 
-            // Select preferred voltage (208V if available, otherwise first)
-            if (tab.SelectedVoltage == null && tab.AvailableVoltages.Count > 0)
+            // Always select preferred voltage (208V if available, otherwise first)
+            if (tab.AvailableVoltages.Count > 0)
             {
                 var preferred = tab.AvailableVoltages.FirstOrDefault(v => Math.Abs(v.Value - 208) < 0.1);
                 tab.SelectedVoltage = preferred ?? tab.AvailableVoltages.FirstOrDefault();
@@ -767,8 +767,8 @@ public partial class MainWindowViewModel : ViewModelBase
                 tab.AvailableSeries.Add(series);
             }
 
-            // Select first series
-            if (tab.SelectedSeries == null && tab.AvailableSeries.Count > 0)
+            // Always select first series
+            if (tab.AvailableSeries.Count > 0)
             {
                 tab.SelectedSeries = tab.AvailableSeries.FirstOrDefault();
             }

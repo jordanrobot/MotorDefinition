@@ -257,6 +257,25 @@
                             SelectedItem="{Binding ActiveTab}"
                             Background="{DynamicResource CurveEditor.Editor.BackgroundBrush}">
                     
+                    <!-- Custom TabItem Style -->
+                    <TabControl.Styles>
+                        <Style Selector="TabItem">
+                            <Setter Property="Background" Value="#1E1E1E"/>
+                            <Setter Property="Foreground" Value="#D4D4AA"/>
+                            <Setter Property="BorderBrush" Value="#3C3C3C"/>
+                            <Setter Property="BorderThickness" Value="0,0,1,0"/>
+                            <Setter Property="Padding" Value="12,6"/>
+                            <Setter Property="FontSize" Value="12"/>
+                        </Style>
+                        <Style Selector="TabItem:selected">
+                            <Setter Property="Background" Value="#252526"/>
+                            <Setter Property="Foreground" Value="#D7BA7D"/>
+                        </Style>
+                        <Style Selector="TabItem:pointerover">
+                            <Setter Property="Background" Value="#2A2D2E"/>
+                        </Style>
+                    </TabControl.Styles>
+                    
                     <!-- Tab Header Template -->
                     <TabControl.ItemTemplate>
                         <DataTemplate DataType="vm:DocumentTab">
@@ -269,6 +288,8 @@
                                         CommandParameter="{Binding}"
                                         Padding="4,0"
                                         FontSize="14"
+                                        Background="Transparent"
+                                        BorderThickness="0"
                                         ToolTip.Tip="Close tab"/>
                             </StackPanel>
                         </DataTemplate>
