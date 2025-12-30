@@ -149,6 +149,12 @@ public partial class MainWindowViewModel : ViewModelBase
     private string _validationErrors = string.Empty;
 
     /// <summary>
+    /// List of validation errors for display in the validation panel.
+    /// </summary>
+    [ObservableProperty]
+    private ObservableCollection<string> _validationErrorsList = new();
+
+    /// <summary>
     /// Whether there are validation errors.
     /// </summary>
     [ObservableProperty]
@@ -377,6 +383,13 @@ public partial class MainWindowViewModel : ViewModelBase
         ActivePanelBarPanelId == PanelRegistry.PanelIds.MotorProperties;
 
     /// <summary>
+    /// Whether the validation panel is expanded.
+    /// Defaults to collapsed and is not persisted between sessions.
+    /// </summary>
+    [ObservableProperty]
+    private bool _isValidationPanelExpanded;
+
+    /// <summary>
     /// The ID of the currently active panel in the Panel Bar, or null if all are collapsed.
     /// </summary>
     [ObservableProperty]
@@ -424,6 +437,24 @@ public partial class MainWindowViewModel : ViewModelBase
     private void ToggleCurveDataPanel()
     {
         TogglePanel(PanelRegistry.PanelIds.CurveData);
+    }
+
+    /// <summary>
+    /// Toggles the validation panel visibility.
+    /// </summary>
+    [RelayCommand]
+    private void ToggleValidationPanel()
+    {
+        TogglePanel(PanelRegistry.PanelIds.ValidationErrors);
+    }
+
+    /// <summary>
+    /// Refreshes the validation for the current motor.
+    /// </summary>
+    [RelayCommand]
+    private void RefreshValidation()
+    {
+        ValidateMotor();
     }
 
     /// <summary>
@@ -476,6 +507,14 @@ public partial class MainWindowViewModel : ViewModelBase
                 break;
 
             case PanelZone.Bottom:
+                // Bottom zone toggle (validation panel)
+                // For now, we only have one bottom panel, so just toggle it
+                if (panelId == PanelRegistry.PanelIds.ValidationErrors)
+                {
+                    IsValidationPanelExpanded = !IsValidationPanelExpanded;
+                }
+                break;
+
             case PanelZone.Center:
                 // Not used in current configuration
                 break;
@@ -3193,6 +3232,7 @@ public partial class MainWindowViewModel : ViewModelBase
         {
             HasValidationErrors = false;
             ValidationErrors = string.Empty;
+            ValidationErrorsList.Clear();
             return;
         }
 
@@ -3215,6 +3255,13 @@ public partial class MainWindowViewModel : ViewModelBase
         ValidationErrors = errors.Count > 0
             ? string.Join("\n", errors)
             : string.Empty;
+        
+        // Update the list for the validation panel
+        ValidationErrorsList.Clear();
+        foreach (var error in errors)
+        {
+            ValidationErrorsList.Add(error);
+        }
     }
 
     /// <summary>

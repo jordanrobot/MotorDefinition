@@ -196,10 +196,12 @@
             <!-- Main Layout Grid with all panels -->
             <Grid x:Name="MainLayoutGrid" 
                   Grid.Column="1"
+                  RowDefinitions="*,Auto,Auto"
                   ColumnDefinitions="200,4,*,4,280">
             
+            <!-- Top Row: Left, Center, Right panels -->
             <!-- Left Zone: Browser and Data panels (zone exclusivity: only one visible at a time) -->
-            <Grid Grid.Column="0" RowDefinitions="*">
+            <Grid Grid.Row="0" Grid.Column="0" RowDefinitions="*">
                 <!-- Browser Panel -->
                 <Border Grid.Row="0"
                         IsVisible="{Binding IsBrowserPanelExpanded}"
@@ -249,10 +251,10 @@
             </Grid>
             
             <!-- Left GridSplitter -->
-            <GridSplitter x:Name="LeftSplitter" Grid.Column="1" Width="4" ResizeDirection="Columns"/>
+            <GridSplitter x:Name="LeftSplitter" Grid.Row="0" Grid.Column="1" Width="4" ResizeDirection="Columns"/>
 
             <!-- Center: Tabbed Document Area -->
-            <Grid x:Name="CenterGrid" Grid.Column="2">
+            <Grid x:Name="CenterGrid" Grid.Row="0" Grid.Column="2">
                 <TabControl ItemsSource="{Binding Tabs}"
                             SelectedItem="{Binding ActiveTab}"
                             Background="{DynamicResource CurveEditor.Editor.BackgroundBrush}">
@@ -340,10 +342,34 @@
             </Grid>
             
             <!-- Right GridSplitter -->
-            <GridSplitter x:Name="RightSplitter" Grid.Column="3" Width="4" ResizeDirection="Columns"/>
+            <GridSplitter x:Name="RightSplitter" Grid.Row="0" Grid.Column="3" Width="4" ResizeDirection="Columns"/>
 
             <!-- Right: Motor Properties Panel -->
-            <views:MotorPropertiesPanel Grid.Column="4"/>
+            <views:MotorPropertiesPanel Grid.Row="0" Grid.Column="4"/>
+            
+            <!-- Bottom GridSplitter (horizontal) -->
+            <GridSplitter x:Name="BottomSplitter" 
+                          Grid.Row="1" 
+                          Grid.Column="0" 
+                          Grid.ColumnSpan="5" 
+                          Height="4" 
+                          ResizeDirection="Rows"
+                          IsVisible="{Binding IsValidationPanelExpanded}"/>
+            
+            <!-- Bottom: Validation Panel -->
+            <Border Grid.Row="2" 
+                    Grid.Column="0" 
+                    Grid.ColumnSpan="5"
+                    IsVisible="{Binding IsValidationPanelExpanded}"
+                    Background="{DynamicResource CurveEditor.SideBar.BackgroundBrush}"
+                    BorderBrush="{DynamicResource CurveEditor.SideBar.BorderBrush}"
+                    BorderThickness="0,1,0,0"
+                    MinHeight="100"
+                    MaxHeight="400">
+                <Grid x:Name="ValidationPanelGrid" RowDefinitions="Auto,*">
+                    <views:ValidationPanel Grid.Row="0" Grid.RowSpan="2" DataContext="{Binding}"/>
+                </Grid>
+            </Border>
         </Grid>
         
         </Grid> <!-- Close RootLayoutGrid -->

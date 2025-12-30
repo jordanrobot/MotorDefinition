@@ -1,0 +1,72 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:vm="using:CurveEditor.ViewModels"
+             mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="200"
+             x:Class="CurveEditor.Views.ValidationPanel"
+             x:DataType="vm:MainWindowViewModel">
+    
+    <UserControl.Styles>
+        <Style Selector="TextBlock.ErrorItem">
+            <Setter Property="Foreground" Value="Orange"/>
+            <Setter Property="FontSize" Value="12"/>
+            <Setter Property="Padding" Value="4,2"/>
+            <Setter Property="TextWrapping" Value="Wrap"/>
+        </Style>
+        
+        <Style Selector="TextBlock.NoErrors">
+            <Setter Property="Foreground" Value="{DynamicResource SystemControlForegroundBaseMediumBrush}"/>
+            <Setter Property="FontSize" Value="12"/>
+            <Setter Property="FontStyle" Value="Italic"/>
+        </Style>
+    </UserControl.Styles>
+    
+    <Grid RowDefinitions="Auto,*">
+        <!-- Header with Refresh Button -->
+        <Border Grid.Row="0" Classes="PanelHeaderContainer">
+            <Grid ColumnDefinitions="*,Auto" ColumnSpacing="8">
+                <TextBlock Grid.Column="0"
+                           Text="Validation"
+                           Classes="PanelHeader"/>
+
+                <Button Grid.Column="1"
+                        Content="↻"
+                        ToolTip.Tip="Refresh Validation"
+                        Command="{Binding RefreshValidationCommand}"
+                        IsEnabled="{Binding CurrentMotor, Converter={x:Static ObjectConverters.IsNotNull}}"
+                        Padding="6,2"
+                        VerticalAlignment="Center"/>
+            </Grid>
+        </Border>
+        
+        <!-- Errors List -->
+        <ScrollViewer Grid.Row="1" 
+                      Background="{DynamicResource CurveEditor.SideBar.BackgroundBrush}">
+            <StackPanel Margin="8">
+                <!-- Show message when no motor is loaded -->
+                <TextBlock Text="No motor loaded"
+                           Classes="NoErrors"
+                           IsVisible="{Binding CurrentMotor, Converter={x:Static ObjectConverters.IsNull}}"/>
+                
+                <!-- Show message when motor is valid -->
+                <TextBlock Text="No validation errors"
+                           Classes="NoErrors"
+                           IsVisible="{Binding !HasValidationErrors}"/>
+                
+                <!-- Show errors list -->
+                <ItemsControl ItemsSource="{Binding ValidationErrorsList}"
+                              IsVisible="{Binding HasValidationErrors}">
+                    <ItemsControl.ItemTemplate>
+                        <DataTemplate>
+                            <StackPanel Orientation="Horizontal" Margin="0,2">
+                                <TextBlock Text="⚠️ " FontSize="12" VerticalAlignment="Top"/>
+                                <TextBlock Text="{Binding}" Classes="ErrorItem"/>
+                            </StackPanel>
+                        </DataTemplate>
+                    </ItemsControl.ItemTemplate>
+                </ItemsControl>
+            </StackPanel>
+        </ScrollViewer>
+    </Grid>
+</UserControl>

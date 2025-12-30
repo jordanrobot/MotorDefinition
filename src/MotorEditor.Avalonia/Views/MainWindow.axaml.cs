@@ -14,6 +14,7 @@ public partial class MainWindow : Window
 {
     private const string LeftZoneWidthKey = "MainWindow.LeftZone.Width";
     private const string RightZoneWidthKey = "MainWindow.RightZone.Width";
+    private const string BottomZoneHeightKey = "MainWindow.BottomZone.Height";
     private const string LegacyLeftZoneWidthKey = "MainWindow.LeftPanel";
     private const string LegacyRightZoneWidthKey = "MainWindow.PropertiesPanel";
 
@@ -55,7 +56,8 @@ public partial class MainWindow : Window
             viewModel.PropertyChanged += (_, args) =>
             {
                 if (args.PropertyName == nameof(MainWindowViewModel.ActivePanelBarPanelId) ||
-                    args.PropertyName == nameof(MainWindowViewModel.ActiveLeftPanelId))
+                    args.PropertyName == nameof(MainWindowViewModel.ActiveLeftPanelId) ||
+                    args.PropertyName == nameof(MainWindowViewModel.IsValidationPanelExpanded))
                 {
                     panelBar.ActivePanelIds = GetPanelBarActivePanelIds(viewModel);
                 }
@@ -101,6 +103,7 @@ public partial class MainWindow : Window
         // Apply initial layout for expanded/collapsed state and per-zone widths.
         ApplyLeftZoneLayout(mainGrid, viewModel);
         ApplyRightZoneLayout(mainGrid, viewModel);
+        ApplyBottomZoneLayout(mainGrid, viewModel);
 
         _mainGrid = mainGrid;
 
@@ -119,6 +122,11 @@ public partial class MainWindow : Window
             {
                 PersistRightZoneWidthIfNeeded(mainGrid);
                 ApplyRightZoneLayout(mainGrid, viewModel);
+            }
+            else if (args.PropertyName == nameof(MainWindowViewModel.IsValidationPanelExpanded))
+            {
+                PersistBottomZoneHeightIfNeeded(mainGrid);
+                ApplyBottomZoneLayout(mainGrid, viewModel);
             }
         };
 
@@ -197,7 +205,7 @@ public partial class MainWindow : Window
 
     private static IReadOnlyCollection<string> GetPanelBarActivePanelIds(MainWindowViewModel viewModel)
     {
-        var ids = new List<string>(capacity: 2);
+        var ids = new List<string>(capacity: 3);
 
         if (!string.IsNullOrWhiteSpace(viewModel.ActiveLeftPanelId))
         {
@@ -207,6 +215,11 @@ public partial class MainWindow : Window
         if (!string.IsNullOrWhiteSpace(viewModel.ActivePanelBarPanelId))
         {
             ids.Add(viewModel.ActivePanelBarPanelId);
+        }
+
+        if (viewModel.IsValidationPanelExpanded)
+        {
+            ids.Add(PanelRegistry.PanelIds.ValidationErrors);
         }
 
         return ids.Distinct(StringComparer.Ordinal).ToArray();
@@ -338,6 +351,52 @@ public partial class MainWindow : Window
                 PanelLayoutPersistence.UpdateColumnWidth(RightZoneWidthKey, width);
             }
         }
+
+        // Persist bottom zone height if validation panel is expanded
+        if (viewModel.IsValidationPanelExpanded)
+        {
+            var bottomRow = mainGrid.RowDefinitions[2];
+            var height = GetRowHeight(bottomRow.Height, bottomRow.ActualHeight);
+            if (height > 0)
+            {
+                PanelLayoutPersistence.UpdateRowHeight(BottomZoneHeightKey, height);
+            }
+        }
+    }
+
+    private static double GetRowHeight(GridLength rowHeight, double actualHeight)
+    {
+        var height = actualHeight > 0 ? actualHeight : rowHeight.Value;
+        return height;
+    }
+
+    private void ApplyBottomZoneLayout(Grid mainGrid, MainWindowViewModel viewModel)
+    {
+        var splitterRow = mainGrid.RowDefinitions[1];
+        var bottomRow = mainGrid.RowDefinitions[2];
+
+        if (!viewModel.IsValidationPanelExpanded)
+        {
+            bottomRow.Height = new GridLength(0, GridUnitType.Pixel);
+            splitterRow.Height = new GridLength(0, GridUnitType.Pixel);
+            return;
+        }
+
+        var height = PanelLayoutPersistence.LoadHeight(BottomZoneHeightKey) ?? 150;
+        bottomRow.Height = new GridLength(height, GridUnitType.Pixel);
+        splitterRow.Height = new GridLength(4, GridUnitType.Pixel);
+    }
+
+    private void PersistBottomZoneHeightIfNeeded(Grid mainGrid)
+    {
+        var bottomRow = mainGrid.RowDefinitions[2];
+        var currentHeight = GetRowHeight(bottomRow.Height, bottomRow.ActualHeight);
+        if (currentHeight <= 0)
+        {
+            return;
+        }
+
+        PanelLayoutPersistence.UpdateRowHeight(BottomZoneHeightKey, currentHeight);
     }
 
     // Motor properties edit handlers moved to MotorPropertiesPanel.

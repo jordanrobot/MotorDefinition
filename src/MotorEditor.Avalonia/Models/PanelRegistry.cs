@@ -18,6 +18,7 @@ public static class PanelRegistry
         public const string MotorProperties = "MotorProperties";
         public const string CurveData = "CurveData";
         public const string CurveGraph = "CurveGraph";
+        public const string ValidationErrors = "ValidationErrors";
     }
 
     /// <summary>
@@ -67,6 +68,17 @@ public static class PanelRegistry
             EnableCollapse = false,
             Zone = PanelZone.Center,
             MinSize = 400
+        },
+        new PanelDescriptor
+        {
+            PanelId = PanelIds.ValidationErrors,
+            DisplayName = "Validation",
+            PanelBarLabel = "Validation",
+            EnableIcon = true,
+            EnableCollapse = true,
+            Zone = PanelZone.Bottom,
+            DefaultHeight = 150,
+            IconGlyph = "Validation"
         }
     };
 
