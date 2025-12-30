@@ -2,6 +2,7 @@ using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Controls.ApplicationLifetimes;
 using Avalonia.Platform.Storage;
+using Avalonia.Threading;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using CurveEditor.Services;
@@ -39,6 +40,57 @@ public partial class MainWindowViewModel : ViewModelBase
     // Tab management
     private readonly ObservableCollection<DocumentTab> _tabs = new();
     private DocumentTab? _activeTab;
+
+    // During ActiveTab switches, Avalonia ComboBox can temporarily rebind ItemsSource/SelectedItem
+    // and push null back through a TwoWay SelectedItem binding. If we accept that null, we destroy
+    // the per-tab selection state. We suppress selection setters only while the tab change pipeline
+    // is notifying dependent properties.
+    private bool _suppressSelectionWriteBack;
+
+    // ComboBox display selections are decoupled from per-tab state.
+    // Reason: Avalonia may clear ComboBox.SelectedItem during ItemsSource rebinding while switching tabs.
+    // We suppress the null write-back to preserve tab state, but the control can remain visually blank if
+    // the binding engine decides the source value "didn't change" (same reference) and doesn't push it back.
+    // These properties can be pulsed null -> actual to force the display to refresh.
+    private Drive? _selectedDriveForDisplay;
+    public Drive? SelectedDriveForDisplay
+    {
+        get => _selectedDriveForDisplay;
+        set
+        {
+            if (!ReferenceEquals(_selectedDriveForDisplay, value))
+            {
+                _selectedDriveForDisplay = value;
+                OnPropertyChanged();
+            }
+
+            // Only propagate user changes when we're not in the middle of a tab switch.
+            if (!_suppressSelectionWriteBack && ActiveTab is not null && ActiveTab.SelectedDrive != value)
+            {
+                SelectedDrive = value;
+            }
+        }
+    }
+
+    private Voltage? _selectedVoltageForDisplay;
+    public Voltage? SelectedVoltageForDisplay
+    {
+        get => _selectedVoltageForDisplay;
+        set
+        {
+            if (!ReferenceEquals(_selectedVoltageForDisplay, value))
+            {
+                _selectedVoltageForDisplay = value;
+                OnPropertyChanged();
+            }
+
+            // Only propagate user changes when we're not in the middle of a tab switch.
+            if (!_suppressSelectionWriteBack && ActiveTab is not null && ActiveTab.SelectedVoltage != value)
+            {
+                SelectedVoltage = value;
+            }
+        }
+    }
 
     private static readonly FilePickerFileType JsonFileType = new("JSON Files")
     {
@@ -111,6 +163,16 @@ public partial class MainWindowViewModel : ViewModelBase
         get => ActiveTab?.SelectedDrive;
         set
         {
+            if (_suppressSelectionWriteBack)
+            {
+                Log.Debug(
+                    "[SELECTION] SelectedDrive setter suppressed during tab change: Tab={Tab} FilePath={FilePath} RequestedDrive={RequestedDrive}",
+                    ActiveTab?.DisplayName,
+                    ActiveTab?.FilePath,
+                    value?.Name);
+                return;
+            }
+
             if (ActiveTab != null && ActiveTab.SelectedDrive != value)
             {
                 var oldDrive = ActiveTab.SelectedDrive;
@@ -131,6 +193,12 @@ public partial class MainWindowViewModel : ViewModelBase
                 // Notify AFTER dependent collections and editor buffers are updated.
                 // This keeps ComboBox SelectedItem and IsVisible bindings in sync.
                 NotifySelectionRelatedPropertiesChanged(selectionChanged: true, voltageChanged: true, seriesChanged: true);
+
+                // Keep ComboBox display selection in sync with tab state.
+                _selectedDriveForDisplay = ActiveTab.SelectedDrive;
+                OnPropertyChanged(nameof(SelectedDriveForDisplay));
+                _selectedVoltageForDisplay = ActiveTab.SelectedVoltage;
+                OnPropertyChanged(nameof(SelectedVoltageForDisplay));
             }
             else
             {
@@ -150,6 +218,17 @@ public partial class MainWindowViewModel : ViewModelBase
         get => ActiveTab?.SelectedVoltage;
         set
         {
+            if (_suppressSelectionWriteBack)
+            {
+                Log.Debug(
+                    "[SELECTION] SelectedVoltage setter suppressed during tab change: Tab={Tab} FilePath={FilePath} RequestedVoltage={RequestedVoltage} RequestedDrive={DriveName}",
+                    ActiveTab?.DisplayName,
+                    ActiveTab?.FilePath,
+                    value?.Value,
+                    ActiveTab?.SelectedDrive?.Name);
+                return;
+            }
+
             if (ActiveTab != null && ActiveTab.SelectedVoltage != value)
             {
                 var oldVoltage = ActiveTab.SelectedVoltage;
@@ -170,6 +249,10 @@ public partial class MainWindowViewModel : ViewModelBase
 
                 // Notify AFTER dependent collections and editor buffers are updated.
                 NotifySelectionRelatedPropertiesChanged(selectionChanged: false, voltageChanged: true, seriesChanged: true);
+
+                // Keep ComboBox display selection in sync with tab state.
+                _selectedVoltageForDisplay = ActiveTab.SelectedVoltage;
+                OnPropertyChanged(nameof(SelectedVoltageForDisplay));
             }
             else
             {
@@ -837,6 +920,8 @@ public partial class MainWindowViewModel : ViewModelBase
     /// </summary>
     private void OnActiveTabChanged()
     {
+        _suppressSelectionWriteBack = true;
+
         Log.Information(
             "[TAB_CHANGE] OnActiveTabChanged() - START Tab={Tab} FilePath={FilePath} MotorName={MotorName} SelectedDrive={SelectedDrive} SelectedVoltage={SelectedVoltage} SelectedSeries={SelectedSeries}",
             ActiveTab?.DisplayName,
@@ -845,57 +930,73 @@ public partial class MainWindowViewModel : ViewModelBase
             ActiveTab?.SelectedDrive?.Name,
             ActiveTab?.SelectedVoltage?.Value,
             ActiveTab?.SelectedSeries?.Name);
-        
-        // Notify all properties that depend on active tab
-        OnPropertyChanged(nameof(CurrentMotor));
-        OnPropertyChanged(nameof(IsDirty));
-        OnPropertyChanged(nameof(CurrentFilePath));
-        // DO NOT notify SelectedDrive/SelectedVoltage/SelectedSeries here!
-        // DO NOT notify AvailableDrives/AvailableVoltages/AvailableSeries here!
-        // The property change notifications can trigger combo-box bindings to re-evaluate
-        // with stale cached values (null from previous tab), which call the setters and
-        // call OnSelectedDriveChanged/OnSelectedVoltageChanged, corrupting tab state.
-        // The collections are already bound to ActiveTab's collections and will update
-        // automatically. The Refresh* methods below will update the editor fields.
-        OnPropertyChanged(nameof(ChartViewModel));
-        OnPropertyChanged(nameof(CurveDataTableViewModel));
-        OnPropertyChanged(nameof(EditingCoordinator));
-        OnPropertyChanged(nameof(CanUndo));
-        OnPropertyChanged(nameof(CanRedo));
-        OnPropertyChanged(nameof(WindowTitle));
 
-        // Update directory browser
-        DirectoryBrowser.UpdateActiveFileState(CurrentFilePath, IsDirty);
+        try
+        {
+            // Notify all properties that depend on active tab
+            OnPropertyChanged(nameof(CurrentMotor));
+            OnPropertyChanged(nameof(IsDirty));
+            OnPropertyChanged(nameof(CurrentFilePath));
+            OnPropertyChanged(nameof(ChartViewModel));
+            OnPropertyChanged(nameof(CurveDataTableViewModel));
+            OnPropertyChanged(nameof(EditingCoordinator));
+            OnPropertyChanged(nameof(CanUndo));
+            OnPropertyChanged(nameof(CanRedo));
+            OnPropertyChanged(nameof(WindowTitle));
 
-        Log.Information("[TAB_CHANGE] Calling RefreshMotorEditorsFromCurrentMotor()");
-        // Refresh property editors to display current tab's drive/voltage/series values
-        RefreshMotorEditorsFromCurrentMotor();
-        Log.Information("[TAB_CHANGE] Calling RefreshDriveEditorsFromSelectedDrive()");
-        RefreshDriveEditorsFromSelectedDrive();
-        Log.Information("[TAB_CHANGE] Calling RefreshVoltageEditorsFromSelectedVoltage()");
-        RefreshVoltageEditorsFromSelectedVoltage();
-        
-        // NOW notify the combo-box bindings to update their display.
-        // This is safe AFTER the refresh methods have completed, as the getters will
-        // return the correct values from ActiveTab, and no setters will be called
-        // (bindings only read, they don't write back during a property change notification).
-        Log.Information("[TAB_CHANGE] Notifying combo-box bindings to refresh display");
-        OnPropertyChanged(nameof(SelectedDrive));
-        OnPropertyChanged(nameof(SelectedVoltage));
-        OnPropertyChanged(nameof(SelectedSeries));
-        OnPropertyChanged(nameof(AvailableDrives));
-        OnPropertyChanged(nameof(AvailableVoltages));
-        OnPropertyChanged(nameof(AvailableSeries));
+            // Update directory browser
+            DirectoryBrowser.UpdateActiveFileState(CurrentFilePath, IsDirty);
 
-        Log.Information(
-            "[TAB_CHANGE] Post-notify snapshot: AvailableDrives={AvailableDrives} AvailableVoltages={AvailableVoltages} AvailableSeries={AvailableSeries} SelectedDrive={SelectedDrive} SelectedVoltage={SelectedVoltage}",
-            ActiveTab?.AvailableDrives.Count ?? 0,
-            ActiveTab?.AvailableVoltages.Count ?? 0,
-            ActiveTab?.AvailableSeries.Count ?? 0,
-            ActiveTab?.SelectedDrive?.Name,
-            ActiveTab?.SelectedVoltage?.Value);
-        
-        Log.Information("[TAB_CHANGE] OnActiveTabChanged() - END");
+            Log.Information("[TAB_CHANGE] Calling RefreshMotorEditorsFromCurrentMotor()");
+            // Refresh property editors to display current tab's drive/voltage/series values
+            RefreshMotorEditorsFromCurrentMotor();
+            Log.Information("[TAB_CHANGE] Calling RefreshDriveEditorsFromSelectedDrive()");
+            RefreshDriveEditorsFromSelectedDrive();
+            Log.Information("[TAB_CHANGE] Calling RefreshVoltageEditorsFromSelectedVoltage()");
+            RefreshVoltageEditorsFromSelectedVoltage();
+
+            // Notify bindings that depend on ActiveTab. While we notify these, the ComboBox may
+            // briefly push null back through SelectedItem due to ItemsSource churn; the selection
+            // setters are suppressed until we exit this method.
+            Log.Information("[TAB_CHANGE] Notifying combo-box bindings to refresh display");
+            OnPropertyChanged(nameof(AvailableDrives));
+            OnPropertyChanged(nameof(AvailableVoltages));
+            OnPropertyChanged(nameof(AvailableSeries));
+            OnPropertyChanged(nameof(SelectedDrive));
+            OnPropertyChanged(nameof(SelectedVoltage));
+            OnPropertyChanged(nameof(SelectedSeries));
+
+            Log.Information(
+                "[TAB_CHANGE] Post-notify snapshot: AvailableDrives={AvailableDrives} AvailableVoltages={AvailableVoltages} AvailableSeries={AvailableSeries} SelectedDrive={SelectedDrive} SelectedVoltage={SelectedVoltage}",
+                ActiveTab?.AvailableDrives.Count ?? 0,
+                ActiveTab?.AvailableVoltages.Count ?? 0,
+                ActiveTab?.AvailableSeries.Count ?? 0,
+                ActiveTab?.SelectedDrive?.Name,
+                ActiveTab?.SelectedVoltage?.Value);
+
+            Log.Information("[TAB_CHANGE] OnActiveTabChanged() - END");
+        }
+        finally
+        {
+            _suppressSelectionWriteBack = false;
+
+            // Force ComboBox display to refresh after tab switch churn.
+            // Pulse null -> actual so the binding engine must push the value back into the control.
+            _selectedDriveForDisplay = null;
+            OnPropertyChanged(nameof(SelectedDriveForDisplay));
+            _selectedVoltageForDisplay = null;
+            OnPropertyChanged(nameof(SelectedVoltageForDisplay));
+
+            Dispatcher.UIThread.Post(
+                () =>
+                {
+                    _selectedDriveForDisplay = ActiveTab?.SelectedDrive;
+                    OnPropertyChanged(nameof(SelectedDriveForDisplay));
+                    _selectedVoltageForDisplay = ActiveTab?.SelectedVoltage;
+                    OnPropertyChanged(nameof(SelectedVoltageForDisplay));
+                },
+                DispatcherPriority.Background);
+        }
     }
 
     private void OnDirectoryBrowserPropertyChanged(object? sender, System.ComponentModel.PropertyChangedEventArgs e)

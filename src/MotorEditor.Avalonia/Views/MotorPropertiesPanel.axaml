@@ -417,7 +417,7 @@
                         <TextBlock Grid.Column="0" Text="Drive" Classes="PropertyLabel"/>
                         <ComboBox Grid.Column="1"
                                   ItemsSource="{Binding AvailableDrives}"
-                                  SelectedItem="{Binding SelectedDrive}"
+                                  SelectedItem="{Binding SelectedDriveForDisplay}"
                                   Classes="PropertyComboBox">
                             <ComboBox.ItemTemplate>
                                 <DataTemplate>
@@ -479,7 +479,7 @@
                             <TextBlock Grid.Column="0" Text="Voltage" Classes="PropertyLabel"/>
                             <ComboBox Grid.Column="1"
                                       ItemsSource="{Binding AvailableVoltages}"
-                                      SelectedItem="{Binding SelectedVoltage}"
+                                      SelectedItem="{Binding SelectedVoltageForDisplay}"
                                       Classes="PropertyComboBox">
                                 <ComboBox.ItemTemplate>
                                     <DataTemplate>
