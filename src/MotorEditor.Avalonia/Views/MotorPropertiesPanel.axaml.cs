@@ -2,6 +2,7 @@ using System;
 using Avalonia.Controls;
 using Avalonia.Interactivity;
 using CurveEditor.ViewModels;
+using Serilog;
 
 namespace CurveEditor.Views;
 
@@ -10,9 +11,32 @@ public partial class MotorPropertiesPanel : UserControl
     private const double MaxSpeedChangeTolerance = 0.1;
     private double _previousMaxSpeed;
 
+    private static readonly ILogger LogPanel = Log.ForContext<MotorPropertiesPanel>();
+
     public MotorPropertiesPanel()
     {
         InitializeComponent();
+    }
+
+    protected override void OnDataContextChanged(EventArgs e)
+    {
+        base.OnDataContextChanged(e);
+
+        if (DataContext is MainWindowViewModel vm)
+        {
+            LogPanel.Information(
+                "[UI] MotorPropertiesPanel DataContext set: ActiveTab={Tab} FilePath={FilePath} SelectedDrive={SelectedDrive} SelectedVoltage={SelectedVoltage}",
+                vm.ActiveTab?.DisplayName,
+                vm.CurrentFilePath,
+                vm.SelectedDrive?.Name,
+                vm.SelectedVoltage?.Value);
+        }
+        else
+        {
+            LogPanel.Information(
+                "[UI] MotorPropertiesPanel DataContext set: DataContextType={Type}",
+                DataContext?.GetType().FullName ?? "<null>");
+        }
     }
 
     private void OnMotorNameLostFocus(object? sender, RoutedEventArgs e)
@@ -193,6 +217,10 @@ public partial class MotorPropertiesPanel : UserControl
     {
         if (DataContext is MainWindowViewModel viewModel)
         {
+            LogPanel.Debug(
+                "[UI] DriveName LostFocus: SelectedDrive={SelectedDrive} DriveNameEditor={DriveNameEditor}",
+                viewModel.SelectedDrive?.Name,
+                viewModel.DriveNameEditor);
             viewModel.EditDriveName();
         }
     }
@@ -201,6 +229,10 @@ public partial class MotorPropertiesPanel : UserControl
     {
         if (DataContext is MainWindowViewModel viewModel)
         {
+            LogPanel.Debug(
+                "[UI] DrivePartNumber LostFocus: SelectedDrive={SelectedDrive} DrivePartNumberEditor={DrivePartNumberEditor}",
+                viewModel.SelectedDrive?.Name,
+                viewModel.DrivePartNumberEditor);
             viewModel.EditDrivePartNumber();
         }
     }
@@ -209,6 +241,10 @@ public partial class MotorPropertiesPanel : UserControl
     {
         if (DataContext is MainWindowViewModel viewModel)
         {
+            LogPanel.Debug(
+                "[UI] DriveManufacturer LostFocus: SelectedDrive={SelectedDrive} DriveManufacturerEditor={DriveManufacturerEditor}",
+                viewModel.SelectedDrive?.Name,
+                viewModel.DriveManufacturerEditor);
             viewModel.EditDriveManufacturer();
         }
     }

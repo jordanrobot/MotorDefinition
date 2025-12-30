@@ -2,6 +2,7 @@ using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Controls.ApplicationLifetimes;
 using Avalonia.Platform.Storage;
+using Avalonia.Threading;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using CurveEditor.Services;
@@ -35,8 +36,61 @@ public partial class MainWindowViewModel : ViewModelBase
     private readonly IDriveVoltageSeriesService _driveVoltageSeriesService;
     private readonly IMotorConfigurationWorkflow _motorConfigurationWorkflow;
     private readonly IUserSettingsStore _settingsStore;
-    private readonly UndoStack _undoStack = new();
-    private int _cleanCheckpoint;
+
+    // Tab management
+    private readonly ObservableCollection<DocumentTab> _tabs = new();
+    private DocumentTab? _activeTab;
+
+    // During ActiveTab switches, Avalonia ComboBox can temporarily rebind ItemsSource/SelectedItem
+    // and push null back through a TwoWay SelectedItem binding. If we accept that null, we destroy
+    // the per-tab selection state. We suppress selection setters only while the tab change pipeline
+    // is notifying dependent properties.
+    private bool _suppressSelectionWriteBack;
+
+    // ComboBox display selections are decoupled from per-tab state.
+    // Reason: Avalonia may clear ComboBox.SelectedItem during ItemsSource rebinding while switching tabs.
+    // We suppress the null write-back to preserve tab state, but the control can remain visually blank if
+    // the binding engine decides the source value "didn't change" (same reference) and doesn't push it back.
+    // These properties can be pulsed null -> actual to force the display to refresh.
+    private Drive? _selectedDriveForDisplay;
+    public Drive? SelectedDriveForDisplay
+    {
+        get => _selectedDriveForDisplay;
+        set
+        {
+            if (!ReferenceEquals(_selectedDriveForDisplay, value))
+            {
+                _selectedDriveForDisplay = value;
+                OnPropertyChanged();
+            }
+
+            // Only propagate user changes when we're not in the middle of a tab switch.
+            if (!_suppressSelectionWriteBack && ActiveTab is not null && ActiveTab.SelectedDrive != value)
+            {
+                SelectedDrive = value;
+            }
+        }
+    }
+
+    private Voltage? _selectedVoltageForDisplay;
+    public Voltage? SelectedVoltageForDisplay
+    {
+        get => _selectedVoltageForDisplay;
+        set
+        {
+            if (!ReferenceEquals(_selectedVoltageForDisplay, value))
+            {
+                _selectedVoltageForDisplay = value;
+                OnPropertyChanged();
+            }
+
+            // Only propagate user changes when we're not in the middle of a tab switch.
+            if (!_suppressSelectionWriteBack && ActiveTab is not null && ActiveTab.SelectedVoltage != value)
+            {
+                SelectedVoltage = value;
+            }
+        }
+    }
 
     private static readonly FilePickerFileType JsonFileType = new("JSON Files")
     {
@@ -44,13 +98,46 @@ public partial class MainWindowViewModel : ViewModelBase
         MimeTypes = ["application/json"]
     };
 
-    [ObservableProperty]
-    [NotifyPropertyChangedFor(nameof(WindowTitle))]
-    private ServoMotor? _currentMotor;
+    /// <summary>
+    /// Current motor definition (delegates to active tab).
+    /// </summary>
+    public ServoMotor? CurrentMotor
+    {
+        get => ActiveTab?.Motor;
+        set
+        {
+            if (ActiveTab != null && ActiveTab.Motor != value)
+            {
+                ActiveTab.Motor = value;
+                OnPropertyChanged();
+                OnPropertyChanged(nameof(WindowTitle));
+                OnCurrentMotorChanged(value);
+            }
+        }
+    }
 
-    [ObservableProperty]
-    [NotifyPropertyChangedFor(nameof(WindowTitle))]
-    private bool _isDirty;
+    /// <summary>
+    /// Whether the current document has unsaved changes (delegates to active tab).
+    /// </summary>
+    public bool IsDirty
+    {
+        get => ActiveTab?.IsDirty ?? false;
+        set
+        {
+            if (ActiveTab != null && ActiveTab.IsDirty != value)
+            {
+                ActiveTab.IsDirty = value;
+                OnPropertyChanged();
+                OnPropertyChanged(nameof(WindowTitle));
+                OnIsDirtyChanged(value);
+            }
+        }
+    }
+
+    private void OnIsDirtyChanged(bool value)
+    {
+        DirectoryBrowser.UpdateActiveFileState(CurrentFilePath, value);
+    }
 
     [ObservableProperty]
     private string _statusMessage = "Ready";
@@ -68,35 +155,169 @@ public partial class MainWindowViewModel : ViewModelBase
     [NotifyPropertyChangedFor(nameof(CanSaveWithValidation))]
     private bool _hasValidationErrors;
 
-    // Drive selection
-    [ObservableProperty]
-    private Drive? _selectedDrive;
+    /// <summary>
+    /// Selected drive (delegates to active tab).
+    /// </summary>
+    public Drive? SelectedDrive
+    {
+        get => ActiveTab?.SelectedDrive;
+        set
+        {
+            if (_suppressSelectionWriteBack)
+            {
+                Log.Debug(
+                    "[SELECTION] SelectedDrive setter suppressed during tab change: Tab={Tab} FilePath={FilePath} RequestedDrive={RequestedDrive}",
+                    ActiveTab?.DisplayName,
+                    ActiveTab?.FilePath,
+                    value?.Name);
+                return;
+            }
 
-    // Value selection
-    [ObservableProperty]
-    private Voltage? _selectedVoltage;
+            if (ActiveTab != null && ActiveTab.SelectedDrive != value)
+            {
+                var oldDrive = ActiveTab.SelectedDrive;
 
-    // Curves selection
-    [ObservableProperty]
-    private Curve? _selectedSeries;
+                Log.Information(
+                    "[SELECTION] SelectedDrive setter: Tab={Tab} FilePath={FilePath} OldDrive={OldDrive} NewDrive={NewDrive} AvailableDrives={AvailableDrives}",
+                    ActiveTab.DisplayName,
+                    ActiveTab.FilePath,
+                    oldDrive?.Name,
+                    value?.Name,
+                    ActiveTab.AvailableDrives.Count);
+
+                ActiveTab.SelectedDrive = value;
+                // Don't call OnPropertyChanged() here - it causes the binding system to re-evaluate
+                // with stale values, which triggers the setter again with null, destroying tab state
+                OnSelectedDriveChanged(value);
+
+                // Notify AFTER dependent collections and editor buffers are updated.
+                // This keeps ComboBox SelectedItem and IsVisible bindings in sync.
+                NotifySelectionRelatedPropertiesChanged(selectionChanged: true, voltageChanged: true, seriesChanged: true);
+
+                // Keep ComboBox display selection in sync with tab state.
+                _selectedDriveForDisplay = ActiveTab.SelectedDrive;
+                OnPropertyChanged(nameof(SelectedDriveForDisplay));
+                _selectedVoltageForDisplay = ActiveTab.SelectedVoltage;
+                OnPropertyChanged(nameof(SelectedVoltageForDisplay));
+            }
+            else
+            {
+                Log.Debug(
+                    "[SELECTION] SelectedDrive setter ignored: ActiveTabNull={ActiveTabNull} SameValue={SameValue}",
+                    ActiveTab is null,
+                    ActiveTab is not null && ReferenceEquals(ActiveTab.SelectedDrive, value));
+            }
+        }
+    }
 
     /// <summary>
-    /// Coordinates editing and selection between chart and data table.
+    /// Selected voltage (delegates to active tab).
     /// </summary>
-    [ObservableProperty]
-    private EditingCoordinator _editingCoordinator = new();
+    public Voltage? SelectedVoltage
+    {
+        get => ActiveTab?.SelectedVoltage;
+        set
+        {
+            if (_suppressSelectionWriteBack)
+            {
+                Log.Debug(
+                    "[SELECTION] SelectedVoltage setter suppressed during tab change: Tab={Tab} FilePath={FilePath} RequestedVoltage={RequestedVoltage} RequestedDrive={DriveName}",
+                    ActiveTab?.DisplayName,
+                    ActiveTab?.FilePath,
+                    value?.Value,
+                    ActiveTab?.SelectedDrive?.Name);
+                return;
+            }
+
+            if (ActiveTab != null && ActiveTab.SelectedVoltage != value)
+            {
+                var oldVoltage = ActiveTab.SelectedVoltage;
+
+                Log.Information(
+                    "[SELECTION] SelectedVoltage setter: Tab={Tab} FilePath={FilePath} OldVoltage={OldVoltage} NewVoltage={NewVoltage} Drive={DriveName} AvailableVoltages={AvailableVoltages}",
+                    ActiveTab.DisplayName,
+                    ActiveTab.FilePath,
+                    oldVoltage?.Value,
+                    value?.Value,
+                    ActiveTab.SelectedDrive?.Name,
+                    ActiveTab.AvailableVoltages.Count);
+
+                ActiveTab.SelectedVoltage = value;
+                // Don't call OnPropertyChanged() here - it causes the binding system to re-evaluate
+                // with stale values, which triggers the setter again with null, destroying tab state
+                OnSelectedVoltageChanged(value);
+
+                // Notify AFTER dependent collections and editor buffers are updated.
+                NotifySelectionRelatedPropertiesChanged(selectionChanged: false, voltageChanged: true, seriesChanged: true);
+
+                // Keep ComboBox display selection in sync with tab state.
+                _selectedVoltageForDisplay = ActiveTab.SelectedVoltage;
+                OnPropertyChanged(nameof(SelectedVoltageForDisplay));
+            }
+            else
+            {
+                Log.Debug(
+                    "[SELECTION] SelectedVoltage setter ignored: ActiveTabNull={ActiveTabNull} SameValue={SameValue}",
+                    ActiveTab is null,
+                    ActiveTab is not null && ReferenceEquals(ActiveTab.SelectedVoltage, value));
+            }
+        }
+    }
+
+    private void NotifySelectionRelatedPropertiesChanged(bool selectionChanged, bool voltageChanged, bool seriesChanged)
+    {
+        // Note: AvailableDrives/AvailableVoltages/AvailableSeries are ObservableCollections.
+        // Their *contents* update via collection change notifications.
+        // We still raise property-changed for the Selected* properties so other bindings
+        // (e.g., IsVisible, SelectedItem display) update immediately.
+
+        if (selectionChanged)
+        {
+            OnPropertyChanged(nameof(SelectedDrive));
+        }
+
+        if (voltageChanged)
+        {
+            OnPropertyChanged(nameof(SelectedVoltage));
+        }
+
+        if (seriesChanged)
+        {
+            OnPropertyChanged(nameof(SelectedSeries));
+        }
+    }
 
     /// <summary>
-    /// ViewModel for the chart component.
+    /// Selected series/curve (delegates to active tab).
     /// </summary>
-    [ObservableProperty]
-    private ChartViewModel _chartViewModel;
+    public Curve? SelectedSeries
+    {
+        get => ActiveTab?.SelectedSeries;
+        set
+        {
+            if (ActiveTab != null && ActiveTab.SelectedSeries != value)
+            {
+                ActiveTab.SelectedSeries = value;
+                // Don't call OnPropertyChanged() here - it causes the binding system to re-evaluate
+                // with stale values, which triggers the setter again with null, destroying tab state
+            }
+        }
+    }
 
     /// <summary>
-    /// ViewModel for the curve data table.
+    /// Editing coordinator (delegates to active tab).
     /// </summary>
-    [ObservableProperty]
-    private CurveDataTableViewModel _curveDataTableViewModel;
+    public EditingCoordinator? EditingCoordinator => ActiveTab?.EditingCoordinator;
+
+    /// <summary>
+    /// Chart view model (delegates to active tab).
+    /// </summary>
+    public ChartViewModel? ChartViewModel => ActiveTab?.ChartViewModel;
+
+    /// <summary>
+    /// Curve data table view model (delegates to active tab).
+    /// </summary>
+    public CurveDataTableViewModel? CurveDataTableViewModel => ActiveTab?.CurveDataTableViewModel;
 
     /// <summary>
     /// ViewModel for the Directory Browser explorer panel.
@@ -104,9 +325,29 @@ public partial class MainWindowViewModel : ViewModelBase
     [ObservableProperty]
     private DirectoryBrowserViewModel _directoryBrowser = new();
 
-    [ObservableProperty]
-    [NotifyPropertyChangedFor(nameof(WindowTitle))]
-    private string? _currentFilePath;
+    /// <summary>
+    /// Current file path (delegates to active tab).
+    /// </summary>
+    public string? CurrentFilePath
+    {
+        get => ActiveTab?.FilePath;
+        set
+        {
+            if (ActiveTab != null && ActiveTab.FilePath != value)
+            {
+                ActiveTab.FilePath = value;
+                OnPropertyChanged();
+                OnPropertyChanged(nameof(WindowTitle));
+                OnCurrentFilePathChanged(value);
+            }
+        }
+    }
+
+    private void OnCurrentFilePathChanged(string? value)
+    {
+        _ = DirectoryBrowser.SyncSelectionToFilePathAsync(value);
+        DirectoryBrowser.UpdateActiveFileState(value, IsDirty);
+    }
 
     /// <summary>
     /// Whether the units section is expanded.
@@ -336,32 +577,52 @@ public partial class MainWindowViewModel : ViewModelBase
     private string _voltagePeakAmpsEditor = string.Empty;
 
     /// <summary>
-    /// Cached list of available voltages for the selected drive.
+    /// Available voltages for the selected drive (delegates to active tab).
     /// </summary>
-    [ObservableProperty]
-    private ObservableCollection<Voltage> _availableVoltages = [];
+    public ObservableCollection<Voltage> AvailableVoltages => ActiveTab?.AvailableVoltages ?? [];
 
     /// <summary>
-    /// Cached list of available series for the selected voltage.
+    /// Available series for the selected voltage (delegates to active tab).
     /// </summary>
-    [ObservableProperty]
-    private ObservableCollection<Curve> _availableSeries = [];
+    public ObservableCollection<Curve> AvailableSeries => ActiveTab?.AvailableSeries ?? [];
 
     /// <summary>
-    /// Cached list of available drives from current motor definition.
+    /// Available drives from current motor definition (delegates to active tab).
+    /// </summary>
+    public ObservableCollection<Drive> AvailableDrives => ActiveTab?.AvailableDrives ?? [];
+
+    /// <summary>
+    /// Collection of all open document tabs.
     /// </summary>
     [ObservableProperty]
-    private ObservableCollection<Drive> _availableDrives = [];
+    private ObservableCollection<DocumentTab> tabs;
+
+    /// <summary>
+    /// The currently active document tab.
+    /// </summary>
+    public DocumentTab? ActiveTab
+    {
+        get => _activeTab;
+        set
+        {
+            if (_activeTab != value)
+            {
+                _activeTab = value;
+                OnPropertyChanged();
+                OnActiveTabChanged();
+            }
+        }
+    }
 
     /// <summary>
     /// Gets whether there is at least one operation to undo.
     /// </summary>
-    public bool CanUndo => _undoStack.CanUndo;
+    public bool CanUndo => ActiveTab?.UndoStack.CanUndo ?? false;
 
     /// <summary>
     /// Gets whether there is at least one operation to redo.
     /// </summary>
-    public bool CanRedo => _undoStack.CanRedo;
+    public bool CanRedo => ActiveTab?.UndoStack.CanRedo ?? false;
 
     /// <summary>
     /// Whether save is enabled (motor exists and no validation errors).
@@ -426,10 +687,7 @@ public partial class MainWindowViewModel : ViewModelBase
     {
         try
         {
-            var logDirectory = Path.Combine(
-                Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData),
-                "CurveEditor",
-                "logs");
+            var logDirectory = Program.GetLogDirectory();
 
             if (!Directory.Exists(logDirectory))
             {
@@ -462,11 +720,24 @@ public partial class MainWindowViewModel : ViewModelBase
         _fileService = new FileService(_curveGeneratorService);
         _validationService = new ValidationService();
         _driveVoltageSeriesService = new DriveVoltageSeriesService();
-        _chartViewModel = new ChartViewModel();
-        _curveDataTableViewModel = new CurveDataTableViewModel();
+        var chartViewModel = new ChartViewModel();
+        var curveDataTableViewModel = new CurveDataTableViewModel();
+        var editingCoordinator = new EditingCoordinator();
         _motorConfigurationWorkflow = new MotorConfigurationWorkflow(_driveVoltageSeriesService);
         _settingsStore = new PanelLayoutUserSettingsStore();
         UnsavedChangesPromptAsync = ShowUnsavedChangesPromptAsync;
+        
+        // Initialize tabs (currently with single shared view models for backward compatibility)
+        var initialTab = new DocumentTab
+        {
+            ChartViewModel = chartViewModel,
+            CurveDataTableViewModel = curveDataTableViewModel,
+            EditingCoordinator = editingCoordinator
+        };
+        _tabs.Add(initialTab);
+        ActiveTab = initialTab;
+        Tabs = _tabs;
+        
         WireEditingCoordinator();
         WireUndoInfrastructure();
         WireDirectoryBrowserIntegration();
@@ -478,11 +749,24 @@ public partial class MainWindowViewModel : ViewModelBase
         _curveGeneratorService = curveGeneratorService ?? throw new ArgumentNullException(nameof(curveGeneratorService));
         _validationService = new ValidationService();
         _driveVoltageSeriesService = new DriveVoltageSeriesService();
-        _chartViewModel = new ChartViewModel();
-        _curveDataTableViewModel = new CurveDataTableViewModel();
+        var chartViewModel = new ChartViewModel();
+        var curveDataTableViewModel = new CurveDataTableViewModel();
+        var editingCoordinator = new EditingCoordinator();
         _motorConfigurationWorkflow = new MotorConfigurationWorkflow(_driveVoltageSeriesService);
         _settingsStore = new PanelLayoutUserSettingsStore();
         UnsavedChangesPromptAsync = ShowUnsavedChangesPromptAsync;
+        
+        // Initialize tabs (currently with single shared view models for backward compatibility)
+        var initialTab = new DocumentTab
+        {
+            ChartViewModel = chartViewModel,
+            CurveDataTableViewModel = curveDataTableViewModel,
+            EditingCoordinator = editingCoordinator
+        };
+        _tabs.Add(initialTab);
+        ActiveTab = initialTab;
+        Tabs = _tabs;
+        
         WireEditingCoordinator();
         WireUndoInfrastructure();
         WireDirectoryBrowserIntegration();
@@ -509,17 +793,27 @@ public partial class MainWindowViewModel : ViewModelBase
         _validationService = validationService ?? throw new ArgumentNullException(nameof(validationService));
         _driveVoltageSeriesService = driveVoltageSeriesService ?? throw new ArgumentNullException(nameof(driveVoltageSeriesService));
         _motorConfigurationWorkflow = motorConfigurationWorkflow ?? throw new ArgumentNullException(nameof(motorConfigurationWorkflow));
-        _chartViewModel = chartViewModel ?? throw new ArgumentNullException(nameof(chartViewModel));
-        _curveDataTableViewModel = curveDataTableViewModel ?? throw new ArgumentNullException(nameof(curveDataTableViewModel));
         _settingsStore = settingsStore ?? new PanelLayoutUserSettingsStore();
         UnsavedChangesPromptAsync = unsavedChangesPromptAsync ?? ShowUnsavedChangesPromptAsync;
+
+        // Initialize tabs (currently with single shared view models for backward compatibility)
+        var editingCoordinator = new EditingCoordinator();
+        var initialTab = new DocumentTab
+        {
+            ChartViewModel = chartViewModel,
+            CurveDataTableViewModel = curveDataTableViewModel,
+            EditingCoordinator = editingCoordinator
+        };
+        _tabs.Add(initialTab);
+        ActiveTab = initialTab;
+        Tabs = _tabs;
 
         WireEditingCoordinator();
         WireUndoInfrastructure();
         WireDirectoryBrowserIntegration();
 
         // Load saved power curves preference
-        ChartViewModel.ShowPowerCurves = _settingsStore.LoadBool("ShowPowerCurves", false);
+        ChartViewModel!.ShowPowerCurves = _settingsStore.LoadBool("ShowPowerCurves", false);
     }
 
     private void WireDirectoryBrowserIntegration()
@@ -532,6 +826,177 @@ public partial class MainWindowViewModel : ViewModelBase
 
         CurrentFilePath = _fileService.CurrentFilePath;
         DirectoryBrowser.UpdateActiveFileState(CurrentFilePath, IsDirty);
+    }
+
+    /// <summary>
+    /// Creates a new document tab with initialized view models and wiring.
+    /// </summary>
+    private DocumentTab CreateNewTab()
+    {
+        Log.Information("[TAB] CreateNewTab() - Creating new tab");
+        var tab = new DocumentTab
+        {
+            ChartViewModel = new ChartViewModel(),
+            CurveDataTableViewModel = new CurveDataTableViewModel(),
+            EditingCoordinator = new EditingCoordinator()
+        };
+
+        // Wire up the view models
+        tab.ChartViewModel.EditingCoordinator = tab.EditingCoordinator;
+        tab.CurveDataTableViewModel.EditingCoordinator = tab.EditingCoordinator;
+        tab.ChartViewModel.UndoStack = tab.UndoStack;
+        tab.CurveDataTableViewModel.UndoStack = tab.UndoStack;
+
+        tab.ChartViewModel.DataChanged += (s, e) => tab.MarkDirty();
+        tab.CurveDataTableViewModel.DataChanged += (s, e) =>
+        {
+            tab.MarkDirty();
+            tab.ChartViewModel?.RefreshChart();
+        };
+
+        tab.UndoStack.UndoStackChanged += (s, e) =>
+        {
+            tab.UpdateDirtyFromUndoDepth();
+            if (tab == ActiveTab)
+            {
+                OnPropertyChanged(nameof(CanUndo));
+                OnPropertyChanged(nameof(CanRedo));
+            }
+        };
+
+        Log.Information("[TAB] CreateNewTab() - Tab created");
+        return tab;
+    }
+
+    /// <summary>
+    /// Initializes a tab's collections and selections after a motor has been loaded into it.
+    /// This method should be called AFTER the tab is set as ActiveTab to ensure proper UI binding updates.
+    /// </summary>
+    private void InitializeActiveTabWithMotor()
+    {
+        Log.Information(
+            "[INIT] InitializeActiveTabWithMotor() - START Tab={Tab} FilePath={FilePath}",
+            ActiveTab?.DisplayName,
+            ActiveTab?.FilePath);
+        if (ActiveTab?.Motor == null)
+        {
+            Log.Information("[INIT] InitializeActiveTabWithMotor() - ActiveTab or Motor is null, returning");
+            return;
+        }
+
+        Log.Information(
+            "[INIT] Motor loaded into tab: MotorName={MotorName} DriveCount={DriveCount}",
+            ActiveTab.Motor.MotorName,
+            ActiveTab.Motor.Drives.Count);
+        
+        // Populate AvailableDrives from the motor (this works through the delegating property)
+        Log.Debug("[INIT] Clearing AvailableDrives (before={Count})", AvailableDrives.Count);
+        AvailableDrives.Clear();
+        foreach (var drive in ActiveTab.Motor.Drives)
+        {
+            AvailableDrives.Add(drive);
+            Log.Debug("[INIT] Added drive: DriveName={DriveName}", drive.Name);
+        }
+
+        Log.Information("[INIT] AvailableDrives populated: Count={Count}", AvailableDrives.Count);
+        Log.Information("[INIT] Tab.SelectedDrive BEFORE auto-select: {SelectedDrive}", ActiveTab?.SelectedDrive?.Name);
+        
+        // Select the first drive - this will trigger OnSelectedDriveChanged which will:
+        // - Refresh AvailableVoltages
+        // - Auto-select preferred voltage
+        // - Update chart and editor fields
+        if (AvailableDrives.Count > 0)
+        {
+            SelectedDrive = AvailableDrives.FirstOrDefault();
+            Log.Information("[INIT] Auto-selected drive: {SelectedDrive}", SelectedDrive?.Name);
+        }
+
+        Log.Information("[INIT] Tab.SelectedDrive AFTER auto-select: {SelectedDrive}", ActiveTab?.SelectedDrive?.Name);
+        Log.Information("[INIT] InitializeActiveTabWithMotor() - END");
+    }
+
+    /// <summary>
+    /// Handles active tab changes by notifying all dependent properties.
+    /// </summary>
+    private void OnActiveTabChanged()
+    {
+        _suppressSelectionWriteBack = true;
+
+        Log.Information(
+            "[TAB_CHANGE] OnActiveTabChanged() - START Tab={Tab} FilePath={FilePath} MotorName={MotorName} SelectedDrive={SelectedDrive} SelectedVoltage={SelectedVoltage} SelectedSeries={SelectedSeries}",
+            ActiveTab?.DisplayName,
+            ActiveTab?.FilePath,
+            ActiveTab?.Motor?.MotorName,
+            ActiveTab?.SelectedDrive?.Name,
+            ActiveTab?.SelectedVoltage?.Value,
+            ActiveTab?.SelectedSeries?.Name);
+
+        try
+        {
+            // Notify all properties that depend on active tab
+            OnPropertyChanged(nameof(CurrentMotor));
+            OnPropertyChanged(nameof(IsDirty));
+            OnPropertyChanged(nameof(CurrentFilePath));
+            OnPropertyChanged(nameof(ChartViewModel));
+            OnPropertyChanged(nameof(CurveDataTableViewModel));
+            OnPropertyChanged(nameof(EditingCoordinator));
+            OnPropertyChanged(nameof(CanUndo));
+            OnPropertyChanged(nameof(CanRedo));
+            OnPropertyChanged(nameof(WindowTitle));
+
+            // Update directory browser
+            DirectoryBrowser.UpdateActiveFileState(CurrentFilePath, IsDirty);
+
+            Log.Information("[TAB_CHANGE] Calling RefreshMotorEditorsFromCurrentMotor()");
+            // Refresh property editors to display current tab's drive/voltage/series values
+            RefreshMotorEditorsFromCurrentMotor();
+            Log.Information("[TAB_CHANGE] Calling RefreshDriveEditorsFromSelectedDrive()");
+            RefreshDriveEditorsFromSelectedDrive();
+            Log.Information("[TAB_CHANGE] Calling RefreshVoltageEditorsFromSelectedVoltage()");
+            RefreshVoltageEditorsFromSelectedVoltage();
+
+            // Notify bindings that depend on ActiveTab. While we notify these, the ComboBox may
+            // briefly push null back through SelectedItem due to ItemsSource churn; the selection
+            // setters are suppressed until we exit this method.
+            Log.Information("[TAB_CHANGE] Notifying combo-box bindings to refresh display");
+            OnPropertyChanged(nameof(AvailableDrives));
+            OnPropertyChanged(nameof(AvailableVoltages));
+            OnPropertyChanged(nameof(AvailableSeries));
+            OnPropertyChanged(nameof(SelectedDrive));
+            OnPropertyChanged(nameof(SelectedVoltage));
+            OnPropertyChanged(nameof(SelectedSeries));
+
+            Log.Information(
+                "[TAB_CHANGE] Post-notify snapshot: AvailableDrives={AvailableDrives} AvailableVoltages={AvailableVoltages} AvailableSeries={AvailableSeries} SelectedDrive={SelectedDrive} SelectedVoltage={SelectedVoltage}",
+                ActiveTab?.AvailableDrives.Count ?? 0,
+                ActiveTab?.AvailableVoltages.Count ?? 0,
+                ActiveTab?.AvailableSeries.Count ?? 0,
+                ActiveTab?.SelectedDrive?.Name,
+                ActiveTab?.SelectedVoltage?.Value);
+
+            Log.Information("[TAB_CHANGE] OnActiveTabChanged() - END");
+        }
+        finally
+        {
+            _suppressSelectionWriteBack = false;
+
+            // Force ComboBox display to refresh after tab switch churn.
+            // Pulse null -> actual so the binding engine must push the value back into the control.
+            _selectedDriveForDisplay = null;
+            OnPropertyChanged(nameof(SelectedDriveForDisplay));
+            _selectedVoltageForDisplay = null;
+            OnPropertyChanged(nameof(SelectedVoltageForDisplay));
+
+            Dispatcher.UIThread.Post(
+                () =>
+                {
+                    _selectedDriveForDisplay = ActiveTab?.SelectedDrive;
+                    OnPropertyChanged(nameof(SelectedDriveForDisplay));
+                    _selectedVoltageForDisplay = ActiveTab?.SelectedVoltage;
+                    OnPropertyChanged(nameof(SelectedVoltageForDisplay));
+                },
+                DispatcherPriority.Background);
+        }
     }
 
     private void OnDirectoryBrowserPropertyChanged(object? sender, System.ComponentModel.PropertyChangedEventArgs e)
@@ -629,12 +1094,41 @@ public partial class MainWindowViewModel : ViewModelBase
             return;
         }
 
-        if (!await ConfirmLoseUnsavedChangesOrCancelAsync("open another file", "Open cancelled.").ConfigureAwait(true))
+        try
         {
-            return;
+            // Check if file is already open in a tab
+            var existingTab = _tabs.FirstOrDefault(t => 
+                string.Equals(t.FilePath, filePath, StringComparison.OrdinalIgnoreCase));
+            
+            if (existingTab != null)
+            {
+                // Switch to existing tab
+                ActiveTab = existingTab;
+                StatusMessage = $"Switched to already open file: {Path.GetFileName(filePath)}";
+                return;
+            }
+            
+            // Create new tab for the file
+            var newTab = CreateNewTab();
+            newTab.Motor = await _fileService.LoadAsync(filePath);
+            newTab.FilePath = filePath;
+            newTab.UndoStack.Clear();
+            newTab.MarkClean();
+            
+            _tabs.Add(newTab);
+            
+            // Set as active tab first, then initialize
+            // This ensures all property setters and handlers are triggered correctly
+            ActiveTab = newTab;
+            InitializeActiveTabWithMotor();
+            
+            StatusMessage = $"Opened: {Path.GetFileName(filePath)}";
         }
-
-        await OpenMotorFileInternalAsync(filePath, updateExplorerSelection: false).ConfigureAwait(true);
+        catch (Exception ex)
+        {
+            Log.Error(ex, "Failed to open file from directory browser");
+            StatusMessage = $"Error: {ex.Message}";
+        }
     }
 
     private static async Task<UnsavedChangesChoice> ShowUnsavedChangesPromptAsync(string actionDescription)
@@ -700,7 +1194,7 @@ public partial class MainWindowViewModel : ViewModelBase
         try
         {
             CurrentMotor = await _fileService.LoadAsync(filePath).ConfigureAwait(true);
-            _undoStack.Clear();
+            ActiveTab?.UndoStack.Clear();
             MarkCleanCheckpoint();
             IsDirty = _fileService.IsDirty;
             CurrentFilePath = _fileService.CurrentFilePath;
@@ -732,15 +1226,8 @@ public partial class MainWindowViewModel : ViewModelBase
 
     private void WireUndoInfrastructure()
     {
-        ChartViewModel.UndoStack = _undoStack;
-        CurveDataTableViewModel.UndoStack = _undoStack;
-
-        _undoStack.UndoStackChanged += (_, _) =>
-        {
-            OnPropertyChanged(nameof(CanUndo));
-            OnPropertyChanged(nameof(CanRedo));
-            UpdateDirtyFromUndoDepth();
-        };
+        // Undo infrastructure is now wired per-tab in CreateNewTab
+        // This method is kept for backward compatibility but does nothing
     }
 
     public string WindowTitle
@@ -756,45 +1243,23 @@ public partial class MainWindowViewModel : ViewModelBase
         }
     }
 
-    partial void OnCurrentFilePathChanged(string? value)
-    {
-        _ = DirectoryBrowser.SyncSelectionToFilePathAsync(value);
-        DirectoryBrowser.UpdateActiveFileState(value, IsDirty);
-        OnPropertyChanged(nameof(WindowTitle));
-    }
-
-    partial void OnIsDirtyChanged(bool value)
-    {
-        DirectoryBrowser.UpdateActiveFileState(CurrentFilePath, value);
-    }
-
     /// <summary>
     /// Marks the current undo history position as the clean checkpoint
     /// corresponding to the last successful save.
     /// </summary>
     public void MarkCleanCheckpoint()
     {
-        _cleanCheckpoint = GetUndoDepth();
-        IsDirty = false;
+        ActiveTab?.MarkClean();
     }
 
     private int GetUndoDepth()
     {
-        return _undoStack.UndoDepth;
+        return ActiveTab?.UndoStack.UndoDepth ?? 0;
     }
 
     private void UpdateDirtyFromUndoDepth()
     {
-        var depth = GetUndoDepth();
-
-        if (depth == _cleanCheckpoint && !_fileService.IsDirty)
-        {
-            IsDirty = false;
-        }
-        else if (depth != _cleanCheckpoint || _fileService.IsDirty)
-        {
-            IsDirty = true;
-        }
+        ActiveTab?.UpdateDirtyFromUndoDepth();
     }
 
     private void RefreshMotorEditorsFromCurrentMotor()
@@ -884,7 +1349,7 @@ public partial class MainWindowViewModel : ViewModelBase
         }
 
         var command = new EditMotorPropertyCommand(CurrentMotor, nameof(ServoMotor.MotorName), oldName, newNameValue);
-        _undoStack.PushAndExecute(command);
+        ActiveTab?.UndoStack.PushAndExecute(command);
         UpdateDirtyFromUndoDepth();
         MotorNameEditor = CurrentMotor.MotorName ?? string.Empty;
         OnPropertyChanged(nameof(WindowTitle));
@@ -910,7 +1375,7 @@ public partial class MainWindowViewModel : ViewModelBase
         }
 
         var command = new EditMotorPropertyCommand(CurrentMotor, nameof(ServoMotor.Manufacturer), oldManufacturer, newManufacturerValue);
-        _undoStack.PushAndExecute(command);
+        ActiveTab?.UndoStack.PushAndExecute(command);
         UpdateDirtyFromUndoDepth();
         ManufacturerEditor = CurrentMotor.Manufacturer ?? string.Empty;
     }
@@ -938,7 +1403,7 @@ public partial class MainWindowViewModel : ViewModelBase
         }
 
         var command = new EditMotorPropertyCommand(CurrentMotor, nameof(ServoMotor.MaxSpeed), oldValue, newValue);
-        _undoStack.PushAndExecute(command);
+        ActiveTab?.UndoStack.PushAndExecute(command);
         MaxSpeedEditor = newValue.ToString(System.Globalization.CultureInfo.InvariantCulture);
         ChartViewModel.MotorMaxSpeed = newValue;
         IsDirty = true;
@@ -963,7 +1428,7 @@ public partial class MainWindowViewModel : ViewModelBase
         }
 
         var command = new EditMotorPropertyCommand(CurrentMotor, nameof(ServoMotor.PartNumber), oldPartNumber, newPartNumberValue);
-        _undoStack.PushAndExecute(command);
+        ActiveTab?.UndoStack.PushAndExecute(command);
         UpdateDirtyFromUndoDepth();
         PartNumberEditor = CurrentMotor.PartNumber ?? string.Empty;
     }
@@ -991,14 +1456,26 @@ public partial class MainWindowViewModel : ViewModelBase
     /// </summary>
     private void RefreshAvailableDrives()
     {
-        AvailableDrives.Clear();
-        if (CurrentMotor is not null)
+        if (ActiveTab == null) return;
+
+        Log.Debug(
+            "[REFRESH] RefreshAvailableDrives() Tab={Tab} MotorName={MotorName} Before={Before}",
+            ActiveTab.DisplayName,
+            ActiveTab.Motor?.MotorName,
+            ActiveTab.AvailableDrives.Count);
+
+        ActiveTab.AvailableDrives.Clear();
+        if (ActiveTab.Motor is not null)
         {
-            foreach (var drive in CurrentMotor.Drives)
+            foreach (var drive in ActiveTab.Motor.Drives)
             {
-                AvailableDrives.Add(drive);
+                ActiveTab.AvailableDrives.Add(drive);
             }
         }
+
+        Log.Debug(
+            "[REFRESH] RefreshAvailableDrives() After={After}",
+            ActiveTab.AvailableDrives.Count);
     }
 
     /// <summary>
@@ -1006,14 +1483,26 @@ public partial class MainWindowViewModel : ViewModelBase
     /// </summary>
     private void RefreshAvailableVoltages()
     {
-        AvailableVoltages.Clear();
-        if (SelectedDrive is not null)
+        if (ActiveTab == null) return;
+
+        Log.Debug(
+            "[REFRESH] RefreshAvailableVoltages() Tab={Tab} Drive={DriveName} Before={Before}",
+            ActiveTab.DisplayName,
+            ActiveTab.SelectedDrive?.Name,
+            ActiveTab.AvailableVoltages.Count);
+
+        ActiveTab.AvailableVoltages.Clear();
+        if (ActiveTab.SelectedDrive is not null)
         {
-            foreach (var voltage in SelectedDrive.Voltages)
+            foreach (var voltage in ActiveTab.SelectedDrive.Voltages)
             {
-                AvailableVoltages.Add(voltage);
+                ActiveTab.AvailableVoltages.Add(voltage);
             }
         }
+
+        Log.Debug(
+            "[REFRESH] RefreshAvailableVoltages() After={After}",
+            ActiveTab.AvailableVoltages.Count);
     }
 
     public void EditDriveName()
@@ -1032,7 +1521,7 @@ public partial class MainWindowViewModel : ViewModelBase
         }
 
         var command = new EditDrivePropertyCommand(SelectedDrive, nameof(Drive.Name), oldValue, newValue);
-        _undoStack.PushAndExecute(command);
+        ActiveTab?.UndoStack.PushAndExecute(command);
         DriveNameEditor = newValue;
         IsDirty = true;
     }
@@ -1053,7 +1542,7 @@ public partial class MainWindowViewModel : ViewModelBase
         }
 
         var command = new EditDrivePropertyCommand(SelectedDrive, nameof(Drive.PartNumber), oldValue, newValue);
-        _undoStack.PushAndExecute(command);
+        ActiveTab?.UndoStack.PushAndExecute(command);
         DrivePartNumberEditor = newValue;
         IsDirty = true;
     }
@@ -1074,7 +1563,7 @@ public partial class MainWindowViewModel : ViewModelBase
         }
 
         var command = new EditDrivePropertyCommand(SelectedDrive, nameof(Drive.Manufacturer), oldValue, newValue);
-        _undoStack.PushAndExecute(command);
+        ActiveTab?.UndoStack.PushAndExecute(command);
         DriveManufacturerEditor = newValue;
         IsDirty = true;
     }
@@ -1100,7 +1589,7 @@ public partial class MainWindowViewModel : ViewModelBase
 
         Log.Debug("EditSelectedVoltageValue: old={Old}, new={New}", oldValue, newValue);
         var command = new EditVoltagePropertyCommand(SelectedVoltage, nameof(Voltage.Value), oldValue, newValue);
-        _undoStack.PushAndExecute(command);
+        ActiveTab?.UndoStack.PushAndExecute(command);
         VoltageValueEditor = newValue.ToString(System.Globalization.CultureInfo.InvariantCulture);
         ChartViewModel.RefreshChart();
         CurveDataTableViewModel.RefreshData();
@@ -1128,7 +1617,7 @@ public partial class MainWindowViewModel : ViewModelBase
 
         Log.Debug("EditSelectedVoltagePower: old={Old}, new={New}", oldValue, newValue);
         var command = new EditVoltagePropertyCommand(SelectedVoltage, nameof(Voltage.Power), oldValue, newValue);
-        _undoStack.PushAndExecute(command);
+        ActiveTab?.UndoStack.PushAndExecute(command);
         VoltagePowerEditor = newValue.ToString(System.Globalization.CultureInfo.InvariantCulture);
         ChartViewModel.RefreshChart();
         CurveDataTableViewModel.RefreshData();
@@ -1156,7 +1645,7 @@ public partial class MainWindowViewModel : ViewModelBase
 
         Log.Debug("EditSelectedVoltageMaxSpeed: old={Old}, new={New}", oldValue, newValue);
         var command = new EditVoltagePropertyCommand(SelectedVoltage, nameof(Voltage.MaxSpeed), oldValue, newValue);
-        _undoStack.PushAndExecute(command);
+        ActiveTab?.UndoStack.PushAndExecute(command);
         VoltageMaxSpeedEditor = newValue.ToString(System.Globalization.CultureInfo.InvariantCulture);
         ChartViewModel.RefreshChart();
         CurveDataTableViewModel.RefreshData();
@@ -1184,7 +1673,7 @@ public partial class MainWindowViewModel : ViewModelBase
 
         Log.Debug("EditSelectedVoltagePeakTorque: old={Old}, new={New}", oldValue, newValue);
         var command = new EditVoltagePropertyCommand(SelectedVoltage, nameof(Voltage.RatedPeakTorque), oldValue, newValue);
-        _undoStack.PushAndExecute(command);
+        ActiveTab?.UndoStack.PushAndExecute(command);
         VoltagePeakTorqueEditor = newValue.ToString(System.Globalization.CultureInfo.InvariantCulture);
         ChartViewModel.RefreshChart();
         CurveDataTableViewModel.RefreshData();
@@ -1212,7 +1701,7 @@ public partial class MainWindowViewModel : ViewModelBase
 
         Log.Debug("EditSelectedVoltageContinuousTorque: old={Old}, new={New}", oldValue, newValue);
         var command = new EditVoltagePropertyCommand(SelectedVoltage, nameof(Voltage.RatedContinuousTorque), oldValue, newValue);
-        _undoStack.PushAndExecute(command);
+        ActiveTab?.UndoStack.PushAndExecute(command);
         VoltageContinuousTorqueEditor = newValue.ToString(System.Globalization.CultureInfo.InvariantCulture);
         ChartViewModel.RefreshChart();
         CurveDataTableViewModel.RefreshData();
@@ -1240,7 +1729,7 @@ public partial class MainWindowViewModel : ViewModelBase
 
         Log.Debug("EditSelectedVoltageContinuousAmps: old={Old}, new={New}", oldValue, newValue);
         var command = new EditVoltagePropertyCommand(SelectedVoltage, nameof(Voltage.ContinuousAmperage), oldValue, newValue);
-        _undoStack.PushAndExecute(command);
+        ActiveTab?.UndoStack.PushAndExecute(command);
         VoltageContinuousAmpsEditor = newValue.ToString(System.Globalization.CultureInfo.InvariantCulture);
         ChartViewModel.RefreshChart();
         CurveDataTableViewModel.RefreshData();
@@ -1268,7 +1757,7 @@ public partial class MainWindowViewModel : ViewModelBase
 
         Log.Debug("EditSelectedVoltagePeakAmps: old={Old}, new={New}", oldValue, newValue);
         var command = new EditVoltagePropertyCommand(SelectedVoltage, nameof(Voltage.PeakAmperage), oldValue, newValue);
-        _undoStack.PushAndExecute(command);
+        ActiveTab?.UndoStack.PushAndExecute(command);
         VoltagePeakAmpsEditor = newValue.ToString(System.Globalization.CultureInfo.InvariantCulture);
         ChartViewModel.RefreshChart();
         CurveDataTableViewModel.RefreshData();
@@ -1295,7 +1784,7 @@ public partial class MainWindowViewModel : ViewModelBase
         }
 
         var command = new EditMotorPropertyCommand(CurrentMotor, nameof(ServoMotor.RatedSpeed), oldValue, newValue);
-        _undoStack.PushAndExecute(command);
+        ActiveTab?.UndoStack.PushAndExecute(command);
         RatedSpeedEditor = newValue.ToString(System.Globalization.CultureInfo.InvariantCulture);
         ChartViewModel.MotorRatedSpeed = newValue;
         IsDirty = true;
@@ -1321,7 +1810,7 @@ public partial class MainWindowViewModel : ViewModelBase
         }
 
         var command = new EditMotorPropertyCommand(CurrentMotor, nameof(ServoMotor.RatedPeakTorque), oldValue, newValue);
-        _undoStack.PushAndExecute(command);
+        ActiveTab?.UndoStack.PushAndExecute(command);
         RatedPeakTorqueEditor = newValue.ToString(System.Globalization.CultureInfo.InvariantCulture);
         IsDirty = true;
     }
@@ -1346,7 +1835,7 @@ public partial class MainWindowViewModel : ViewModelBase
         }
 
         var command = new EditMotorPropertyCommand(CurrentMotor, nameof(ServoMotor.RatedContinuousTorque), oldValue, newValue);
-        _undoStack.PushAndExecute(command);
+        ActiveTab?.UndoStack.PushAndExecute(command);
         RatedContinuousTorqueEditor = newValue.ToString(System.Globalization.CultureInfo.InvariantCulture);
         IsDirty = true;
     }
@@ -1371,7 +1860,7 @@ public partial class MainWindowViewModel : ViewModelBase
         }
 
         var command = new EditMotorPropertyCommand(CurrentMotor, nameof(ServoMotor.Power), oldValue, newValue);
-        _undoStack.PushAndExecute(command);
+        ActiveTab?.UndoStack.PushAndExecute(command);
         PowerEditor = newValue.ToString(System.Globalization.CultureInfo.InvariantCulture);
         IsDirty = true;
     }
@@ -1396,7 +1885,7 @@ public partial class MainWindowViewModel : ViewModelBase
         }
 
         var command = new EditMotorPropertyCommand(CurrentMotor, nameof(ServoMotor.Weight), oldValue, newValue);
-        _undoStack.PushAndExecute(command);
+        ActiveTab?.UndoStack.PushAndExecute(command);
         WeightEditor = newValue.ToString(System.Globalization.CultureInfo.InvariantCulture);
         IsDirty = true;
     }
@@ -1421,7 +1910,7 @@ public partial class MainWindowViewModel : ViewModelBase
         }
 
         var command = new EditMotorPropertyCommand(CurrentMotor, nameof(ServoMotor.RotorInertia), oldValue, newValue);
-        _undoStack.PushAndExecute(command);
+        ActiveTab?.UndoStack.PushAndExecute(command);
         RotorInertiaEditor = newValue.ToString(System.Globalization.CultureInfo.InvariantCulture);
         IsDirty = true;
     }
@@ -1446,7 +1935,7 @@ public partial class MainWindowViewModel : ViewModelBase
         }
 
         var command = new EditMotorPropertyCommand(CurrentMotor, nameof(ServoMotor.FeedbackPpr), oldValue, newValue);
-        _undoStack.PushAndExecute(command);
+        ActiveTab?.UndoStack.PushAndExecute(command);
         FeedbackPprEditor = newValue.ToString(System.Globalization.CultureInfo.InvariantCulture);
         IsDirty = true;
     }
@@ -1467,7 +1956,7 @@ public partial class MainWindowViewModel : ViewModelBase
         }
 
         var command = new EditMotorPropertyCommand(CurrentMotor, nameof(ServoMotor.HasBrake), oldValue, newValue);
-        _undoStack.PushAndExecute(command);
+        ActiveTab?.UndoStack.PushAndExecute(command);
         HasBrakeEditor = newValue;
         ChartViewModel.HasBrake = newValue;
         IsDirty = true;
@@ -1493,7 +1982,7 @@ public partial class MainWindowViewModel : ViewModelBase
         }
 
         var command = new EditMotorPropertyCommand(CurrentMotor, nameof(ServoMotor.BrakeTorque), oldValue, newValue);
-        _undoStack.PushAndExecute(command);
+        ActiveTab?.UndoStack.PushAndExecute(command);
         BrakeTorqueEditor = newValue.ToString(System.Globalization.CultureInfo.InvariantCulture);
         ChartViewModel.BrakeTorque = newValue;
         IsDirty = true;
@@ -1519,7 +2008,7 @@ public partial class MainWindowViewModel : ViewModelBase
         }
 
         var command = new EditMotorPropertyCommand(CurrentMotor, nameof(ServoMotor.BrakeAmperage), oldValue, newValue);
-        _undoStack.PushAndExecute(command);
+        ActiveTab?.UndoStack.PushAndExecute(command);
         BrakeAmperageEditor = newValue.ToString(System.Globalization.CultureInfo.InvariantCulture);
         IsDirty = true;
     }
@@ -1544,7 +2033,7 @@ public partial class MainWindowViewModel : ViewModelBase
         }
 
         var command = new EditMotorPropertyCommand(CurrentMotor, nameof(ServoMotor.BrakeVoltage), oldValue, newValue);
-        _undoStack.PushAndExecute(command);
+        ActiveTab?.UndoStack.PushAndExecute(command);
         BrakeVoltageEditor = newValue.ToString(System.Globalization.CultureInfo.InvariantCulture);
         IsDirty = true;
     }
@@ -1569,7 +2058,7 @@ public partial class MainWindowViewModel : ViewModelBase
         }
 
         var command = new EditMotorPropertyCommand(CurrentMotor, nameof(ServoMotor.BrakeReleaseTime), oldValue, newValue);
-        _undoStack.PushAndExecute(command);
+        ActiveTab?.UndoStack.PushAndExecute(command);
         BrakeReleaseTimeEditor = newValue.ToString(System.Globalization.CultureInfo.InvariantCulture);
         IsDirty = true;
     }
@@ -1594,7 +2083,7 @@ public partial class MainWindowViewModel : ViewModelBase
         }
 
         var command = new EditMotorPropertyCommand(CurrentMotor, nameof(ServoMotor.BrakeEngageTimeMov), oldValue, newValue);
-        _undoStack.PushAndExecute(command);
+        ActiveTab?.UndoStack.PushAndExecute(command);
         BrakeEngageTimeMovEditor = newValue.ToString(System.Globalization.CultureInfo.InvariantCulture);
         IsDirty = true;
     }
@@ -1619,7 +2108,7 @@ public partial class MainWindowViewModel : ViewModelBase
         }
 
         var command = new EditMotorPropertyCommand(CurrentMotor, nameof(ServoMotor.BrakeEngageTimeDiode), oldValue, newValue);
-        _undoStack.PushAndExecute(command);
+        ActiveTab?.UndoStack.PushAndExecute(command);
         BrakeEngageTimeDiodeEditor = newValue.ToString(System.Globalization.CultureInfo.InvariantCulture);
         IsDirty = true;
     }
@@ -1644,7 +2133,7 @@ public partial class MainWindowViewModel : ViewModelBase
         }
 
         var command = new EditMotorPropertyCommand(CurrentMotor, nameof(ServoMotor.BrakeBacklash), oldValue, newValue);
-        _undoStack.PushAndExecute(command);
+        ActiveTab?.UndoStack.PushAndExecute(command);
         BrakeBacklashEditor = newValue.ToString(System.Globalization.CultureInfo.InvariantCulture);
         IsDirty = true;
     }
@@ -1654,13 +2143,71 @@ public partial class MainWindowViewModel : ViewModelBase
     /// </summary>
     private void RefreshAvailableSeries()
     {
-        AvailableSeries.Clear();
-        if (SelectedVoltage is not null)
+        if (ActiveTab == null) return;
+        
+        ActiveTab.AvailableSeries.Clear();
+        if (ActiveTab.SelectedVoltage is not null)
         {
-            foreach (var series in SelectedVoltage.Curves)
+            foreach (var series in ActiveTab.SelectedVoltage.Curves)
             {
-                AvailableSeries.Add(series);
+                ActiveTab.AvailableSeries.Add(series);
             }
+        }
+    }
+
+    /// <summary>
+    /// Refreshes the drive editor fields from the currently selected drive.
+    /// Does not modify selections, only updates the UI display fields.
+    /// </summary>
+    private void RefreshDriveEditorsFromSelectedDrive()
+    {
+        Log.Information($"[REFRESH] RefreshDriveEditorsFromSelectedDrive() - ActiveTab.SelectedDrive: {ActiveTab?.SelectedDrive?.Name ?? "null"}");
+        var drive = ActiveTab?.SelectedDrive;
+        if (drive is not null)
+        {
+            DriveNameEditor = drive.Name ?? string.Empty;
+            DrivePartNumberEditor = drive.PartNumber ?? string.Empty;
+            DriveManufacturerEditor = drive.Manufacturer ?? string.Empty;
+            Log.Information($"[REFRESH] Set drive editors - Name: {DriveNameEditor}, PartNumber: {DrivePartNumberEditor}");
+        }
+        else
+        {
+            DriveNameEditor = string.Empty;
+            DrivePartNumberEditor = string.Empty;
+            DriveManufacturerEditor = string.Empty;
+            Log.Information("[REFRESH] Cleared drive editors - drive is null");
+        }
+    }
+
+    /// <summary>
+    /// Refreshes the voltage editor fields from the currently selected voltage.
+    /// Does not modify selections, only updates the UI display fields.
+    /// </summary>
+    private void RefreshVoltageEditorsFromSelectedVoltage()
+    {
+        Log.Information($"[REFRESH] RefreshVoltageEditorsFromSelectedVoltage() - ActiveTab.SelectedVoltage: {ActiveTab?.SelectedVoltage?.Value}");
+        var voltage = ActiveTab?.SelectedVoltage;
+        if (voltage is not null)
+        {
+            VoltageValueEditor = voltage.Value.ToString(System.Globalization.CultureInfo.InvariantCulture);
+            VoltagePowerEditor = voltage.Power.ToString(System.Globalization.CultureInfo.InvariantCulture);
+            VoltageMaxSpeedEditor = voltage.MaxSpeed.ToString(System.Globalization.CultureInfo.InvariantCulture);
+            VoltagePeakTorqueEditor = voltage.RatedPeakTorque.ToString(System.Globalization.CultureInfo.InvariantCulture);
+            VoltageContinuousTorqueEditor = voltage.RatedContinuousTorque.ToString(System.Globalization.CultureInfo.InvariantCulture);
+            VoltageContinuousAmpsEditor = voltage.ContinuousAmperage.ToString(System.Globalization.CultureInfo.InvariantCulture);
+            VoltagePeakAmpsEditor = voltage.PeakAmperage.ToString(System.Globalization.CultureInfo.InvariantCulture);
+            Log.Information($"[REFRESH] Set voltage editors - Value: {VoltageValueEditor}, Power: {VoltagePowerEditor}");
+        }
+        else
+        {
+            VoltageValueEditor = string.Empty;
+            VoltagePowerEditor = string.Empty;
+            VoltageMaxSpeedEditor = string.Empty;
+            VoltagePeakTorqueEditor = string.Empty;
+            VoltageContinuousTorqueEditor = string.Empty;
+            VoltageContinuousAmpsEditor = string.Empty;
+            VoltagePeakAmpsEditor = string.Empty;
+            Log.Information("[REFRESH] Cleared voltage editors - voltage is null");
         }
     }
 
@@ -1672,13 +2219,26 @@ public partial class MainWindowViewModel : ViewModelBase
         RefreshAvailableSeries();
     }
 
-    partial void OnCurrentMotorChanged(ServoMotor? value)
+    private void OnCurrentMotorChanged(ServoMotor? value)
     {
+        Log.Information(
+            "[MOTOR] OnCurrentMotorChanged() Tab={Tab} FilePath={FilePath} MotorName={MotorName} Drives={DriveCount}",
+            ActiveTab?.DisplayName,
+            ActiveTab?.FilePath,
+            value?.MotorName,
+            value?.Drives?.Count ?? 0);
+
         // Refresh the drives collection
         RefreshAvailableDrives();
 
         // When motor changes, select the first drive
         SelectedDrive = value?.Drives.FirstOrDefault();
+
+        Log.Information(
+            "[MOTOR] After motor change: AvailableDrives={AvailableDrives} SelectedDrive={SelectedDrive} SelectedVoltage={SelectedVoltage}",
+            ActiveTab?.AvailableDrives.Count ?? 0,
+            ActiveTab?.SelectedDrive?.Name,
+            ActiveTab?.SelectedVoltage?.Value);
 
         // Update motor editor buffers from the current motor so that
         // the UI reflects the active document while ensuring that
@@ -1747,33 +2307,54 @@ public partial class MainWindowViewModel : ViewModelBase
         }
     }
 
-    partial void OnSelectedDriveChanged(Drive? value)
+    private void OnSelectedDriveChanged(Drive? value)
     {
+        Log.Information(
+            "[SELECTION] OnSelectedDriveChanged() Tab={Tab} FilePath={FilePath} NewDrive={NewDrive}",
+            ActiveTab?.DisplayName,
+            ActiveTab?.FilePath,
+            value?.Name);
+        
         // Refresh the available voltages collection
         RefreshAvailableVoltages();
 
         if (value is null)
         {
             SelectedVoltage = null;
+            Log.Information("[SELECTION] OnSelectedDriveChanged() Drive cleared -> SelectedVoltage set to null");
             return;
         }
 
         // Prefer 208V if available, otherwise use the first voltage
         var preferred = value.Voltages.FirstOrDefault(v => Math.Abs(v.Value - 208) < 0.1);
         SelectedVoltage = preferred ?? value.Voltages.FirstOrDefault();
+        Log.Information("[SELECTION] OnSelectedDriveChanged() Auto-selected voltage: {SelectedVoltage}", SelectedVoltage?.Value);
 
         DriveNameEditor = value.Name ?? string.Empty;
         DrivePartNumberEditor = value.PartNumber ?? string.Empty;
         DriveManufacturerEditor = value.Manufacturer ?? string.Empty;
+        Log.Debug(
+            "[SELECTION] Drive editors refreshed: DriveNameEditor={DriveNameEditor} PartNumberEditor={PartNumberEditor} ManufacturerEditor={ManufacturerEditor}",
+            DriveNameEditor,
+            DrivePartNumberEditor,
+            DriveManufacturerEditor);
     }
 
-    partial void OnSelectedVoltageChanged(Voltage? value)
+    private void OnSelectedVoltageChanged(Voltage? value)
     {
+        Log.Information(
+            "[SELECTION] OnSelectedVoltageChanged() Tab={Tab} FilePath={FilePath} Drive={DriveName} NewVoltage={NewVoltage}",
+            ActiveTab?.DisplayName,
+            ActiveTab?.FilePath,
+            ActiveTab?.SelectedDrive?.Name,
+            value?.Value);
+        
         // Refresh the available series collection
         RefreshAvailableSeries();
 
         // When voltage changes, update series selection
         SelectedSeries = value?.Curves.FirstOrDefault();
+        Log.Information("[SELECTION] OnSelectedVoltageChanged() Auto-selected series: {SelectedSeries}", SelectedSeries?.Name);
 
         // Update chart with new voltage configuration
         ChartViewModel.TorqueUnit = CurrentMotor?.Units.Torque ?? "Nm";
@@ -1793,6 +2374,7 @@ public partial class MainWindowViewModel : ViewModelBase
         VoltageContinuousTorqueEditor = value?.RatedContinuousTorque.ToString(System.Globalization.CultureInfo.InvariantCulture) ?? string.Empty;
         VoltageContinuousAmpsEditor = value?.ContinuousAmperage.ToString(System.Globalization.CultureInfo.InvariantCulture) ?? string.Empty;
         VoltagePeakAmpsEditor = value?.PeakAmperage.ToString(System.Globalization.CultureInfo.InvariantCulture) ?? string.Empty;
+        Log.Information("[SELECTION] OnSelectedVoltageChanged() - END");
     }
 
     private void OnChartDataChanged(object? sender, EventArgs e)
@@ -1812,10 +2394,10 @@ public partial class MainWindowViewModel : ViewModelBase
     [RelayCommand(CanExecute = nameof(CanUndo))]
     private void Undo()
     {
-        _undoStack.Undo();
+        ActiveTab?.UndoStack.Undo();
         RefreshMotorEditorsFromCurrentMotor();
-        ChartViewModel.RefreshChart();
-        CurveDataTableViewModel.RefreshData();
+        ActiveTab?.ChartViewModel?.RefreshChart();
+        ActiveTab?.CurveDataTableViewModel?.RefreshData();
     }
 
     /// <summary>
@@ -1824,50 +2406,48 @@ public partial class MainWindowViewModel : ViewModelBase
     [RelayCommand(CanExecute = nameof(CanRedo))]
     private void Redo()
     {
-        _undoStack.Redo();
+        ActiveTab?.UndoStack.Redo();
         RefreshMotorEditorsFromCurrentMotor();
-        ChartViewModel.RefreshChart();
-        CurveDataTableViewModel.RefreshData();
+        ActiveTab?.ChartViewModel?.RefreshChart();
+        ActiveTab?.CurveDataTableViewModel?.RefreshData();
     }
 
     [RelayCommand]
     private async Task NewMotorAsync()
     {
-        Log.Information("Creating new motor definition");
+        Log.Information("Creating new motor definition in new tab");
 
-        if (!await ConfirmLoseUnsavedChangesOrCancelAsync("create a new file", "New file cancelled.").ConfigureAwait(true))
-        {
-            return;
-        }
-
-        // Create a new motor with default values
-        CurrentMotor = _fileService.CreateNew(
+        // Create a new tab with a new motor
+        var newTab = CreateNewTab();
+        
+        // Create motor using existing file service
+        newTab.Motor = _fileService.CreateNew(
             motorName: "New Motor",
             maxRpm: 5000,
             maxTorque: 50,
             maxPower: 1500);
-
-        _undoStack.Clear();
-        MarkCleanCheckpoint();
-
-        IsDirty = _fileService.IsDirty;
-        CurrentFilePath = _fileService.CurrentFilePath;
-        await DirectoryBrowser.SyncSelectionToFilePathAsync(CurrentFilePath).ConfigureAwait(true);
-        StatusMessage = "Created new motor definition";
+        
+        newTab.FilePath = null;
+        newTab.UndoStack.Clear();
+        newTab.MarkClean();
+        
+        _tabs.Add(newTab);
+        
+        // Set as active tab first, then initialize
+        // This ensures all property setters and handlers are triggered correctly
+        ActiveTab = newTab;
+        InitializeActiveTabWithMotor();
+        
+        StatusMessage = "Created new motor definition in new tab";
     }
 
     [RelayCommand]
     private async Task OpenFileAsync()
     {
-        Log.Information("Opening file dialog");
+        Log.Information("[FILE_OP] OpenFileAsync() - START");
 
         try
         {
-            if (!await ConfirmLoseUnsavedChangesOrCancelAsync("open another file", "Open cancelled.").ConfigureAwait(true))
-            {
-                return;
-            }
-
             var storageProvider = GetStorageProvider();
             if (storageProvider is null)
             {
@@ -1890,13 +2470,49 @@ public partial class MainWindowViewModel : ViewModelBase
 
             var file = files[0];
             var filePath = file.Path.LocalPath;
+            Log.Information($"[FILE_OP] Selected file: {filePath}");
 
-            await OpenMotorFileInternalAsync(filePath, updateExplorerSelection: true).ConfigureAwait(true);
+            // Check if file is already open in a tab
+            var existingTab = _tabs.FirstOrDefault(t => 
+                string.Equals(t.FilePath, filePath, StringComparison.OrdinalIgnoreCase));
+            
+            if (existingTab != null)
+            {
+                Log.Information($"[FILE_OP] File already open in tab: {existingTab.DisplayName}, switching to it");
+                // Switch to existing tab
+                ActiveTab = existingTab;
+                StatusMessage = $"Switched to already open file: {Path.GetFileName(filePath)}";
+                return;
+            }
+            
+            // Create new tab for the file
+            Log.Information("[FILE_OP] Creating new tab for file");
+            var newTab = CreateNewTab();
+            newTab.Motor = await _fileService.LoadAsync(filePath);
+            newTab.FilePath = filePath;
+            newTab.UndoStack.Clear();
+            newTab.MarkClean();
+            Log.Information($"[FILE_OP] Loaded motor with {newTab.Motor.Drives.Count} drives");
+            
+            _tabs.Add(newTab);
+            Log.Information($"[FILE_OP] Added tab to collection, total tabs: {_tabs.Count}");
+            
+            // Set as active tab first, then initialize
+            // This ensures all property setters and handlers are triggered correctly
+            Log.Information("[FILE_OP] Setting ActiveTab");
+            ActiveTab = newTab;
+            Log.Information("[FILE_OP] Calling InitializeActiveTabWithMotor()");
+            InitializeActiveTabWithMotor();
+            
+            await DirectoryBrowser.SyncSelectionToFilePathAsync(filePath).ConfigureAwait(true);
+            StatusMessage = $"Opened: {Path.GetFileName(filePath)}";
+            Log.Information("[FILE_OP] OpenFileAsync() - END");
         }
         catch (Exception ex)
         {
             Log.Error(ex, "Failed to open file");
             StatusMessage = $"Error: {ex.Message}";
+            Log.Information($"[FILE_OP] ERROR: {ex.Message}");
         }
     }
 
@@ -1923,7 +2539,7 @@ public partial class MainWindowViewModel : ViewModelBase
     {
         _fileService.Reset();
 
-        _undoStack.Clear();
+        ActiveTab?.UndoStack.Clear();
         MarkCleanCheckpoint();
 
         CurrentFilePath = null;
@@ -1932,8 +2548,14 @@ public partial class MainWindowViewModel : ViewModelBase
         SelectedVoltage = null;
         SelectedSeries = null;
 
-        ChartViewModel.CurrentVoltage = null;
-        CurveDataTableViewModel.CurrentVoltage = null;
+        if (ChartViewModel != null)
+        {
+            ChartViewModel.CurrentVoltage = null;
+        }
+        if (CurveDataTableViewModel != null)
+        {
+            CurveDataTableViewModel.CurrentVoltage = null;
+        }
 
         ValidationErrors = string.Empty;
         HasValidationErrors = false;
@@ -2476,7 +3098,7 @@ public partial class MainWindowViewModel : ViewModelBase
         var newLocked = !series.Locked;
 
         var command = new EditSeriesCommand(series, newLocked: newLocked);
-        _undoStack.PushAndExecute(command);
+        ActiveTab?.UndoStack.PushAndExecute(command);
         UpdateDirtyFromUndoDepth();
 
         // Refresh the curve data table so that the DataGrid columns
@@ -2505,6 +3127,39 @@ public partial class MainWindowViewModel : ViewModelBase
         StatusMessage = series.IsVisible
             ? $"Showing series: {series.Name}"
             : $"Hiding series: {series.Name}";
+    }
+
+    [RelayCommand]
+    private async Task CloseTabAsync(DocumentTab? tab)
+    {
+        if (tab == null) return;
+
+        // Prompt if dirty
+        if (tab.IsDirty)
+        {
+            // Temporarily make it active for the prompt
+            var wasActive = ActiveTab;
+            ActiveTab = tab;
+
+            if (!await ConfirmLoseUnsavedChangesOrCancelAsync("close this tab", "Close cancelled."))
+            {
+                ActiveTab = wasActive;
+                return;
+            }
+
+            ActiveTab = wasActive;
+        }
+
+        // Remove the tab
+        _tabs.Remove(tab);
+
+        // If we closed the active tab, activate another
+        if (ActiveTab == tab)
+        {
+            ActiveTab = _tabs.LastOrDefault();
+        }
+
+        StatusMessage = $"Closed tab: {tab.DisplayName}";
     }
 
     [RelayCommand]
