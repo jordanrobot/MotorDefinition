@@ -64,7 +64,7 @@ sealed class Program
             .CreateLogger();
     }
 
-    private static string GetLogDirectory()
+    public static string GetLogDirectory()
     {
         return Path.Combine(
             Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData),

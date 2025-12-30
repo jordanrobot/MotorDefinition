@@ -448,7 +448,7 @@
                     </Grid>
 
                     <!-- Selected Drive Properties -->
-                    <StackPanel IsVisible="{Binding SelectedDrive, Converter={x:Static ObjectConverters.IsNotNull}}">
+                    <StackPanel>
                         <Grid Classes="PropertyRow" ColumnDefinitions="Auto,*">
                             <TextBlock Grid.Column="0" Text="Drive Name" Classes="PropertyLabel"/>
                             <TextBox Grid.Column="1"
@@ -510,7 +510,7 @@
                         </Grid>
 
                         <!-- Selected Voltage Properties -->
-                        <StackPanel IsVisible="{Binding SelectedVoltage, Converter={x:Static ObjectConverters.IsNotNull}}">
+                        <StackPanel>
                             <Grid Classes="PropertyRow" ColumnDefinitions="Auto,*">
                                 <TextBlock Grid.Column="0" Text="Voltage" Classes="PropertyLabel"/>
                                 <Grid Grid.Column="1">

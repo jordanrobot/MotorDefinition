@@ -1,6 +1,7 @@
 using CommunityToolkit.Mvvm.ComponentModel;
 using CurveEditor.Services;
 using JordanRobot.MotorDefinition.Model;
+using Serilog;
 using System.Collections.ObjectModel;
 using System.IO;
 
@@ -14,6 +15,8 @@ public partial class DocumentTab : ObservableObject
 {
     private readonly UndoStack _undoStack = new();
     private int _cleanCheckpoint;
+
+    private static readonly ILogger LogTab = Log.ForContext<DocumentTab>();
 
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(DisplayName))]
@@ -107,17 +110,53 @@ public partial class DocumentTab : ObservableObject
 
     partial void OnMotorChanged(ServoMotor? value)
     {
+        LogTab.Information(
+            "[TAB] Motor changed: MotorName={MotorName} Drives={DriveCount}",
+            value?.MotorName,
+            value?.Drives?.Count ?? 0);
         OnPropertyChanged(nameof(DisplayName));
     }
 
     partial void OnFilePathChanged(string? value)
     {
+        LogTab.Information("[TAB] FilePath changed: FilePath={FilePath}", value);
         OnPropertyChanged(nameof(DisplayName));
         OnPropertyChanged(nameof(ToolTip));
     }
 
     partial void OnIsDirtyChanged(bool value)
     {
+        LogTab.Debug("[TAB] IsDirty changed: IsDirty={IsDirty} DisplayName={DisplayName}", value, DisplayName);
         OnPropertyChanged(nameof(DisplayName));
+    }
+
+    partial void OnSelectedDriveChanging(Drive? value)
+    {
+        LogTab.Information(
+            "[TAB] SelectedDrive changing: OldDrive={OldDrive} NewDrive={NewDrive} FilePath={FilePath} MotorName={MotorName}",
+            SelectedDrive?.Name,
+            value?.Name,
+            FilePath,
+            Motor?.MotorName);
+    }
+
+    partial void OnSelectedVoltageChanging(Voltage? value)
+    {
+        LogTab.Information(
+            "[TAB] SelectedVoltage changing: OldVoltage={OldVoltage} NewVoltage={NewVoltage} Drive={DriveName} FilePath={FilePath}",
+            SelectedVoltage?.Value,
+            value?.Value,
+            SelectedDrive?.Name,
+            FilePath);
+    }
+
+    partial void OnSelectedSeriesChanging(Curve? value)
+    {
+        LogTab.Information(
+            "[TAB] SelectedSeries changing: OldSeries={OldSeries} NewSeries={NewSeries} Voltage={Voltage} FilePath={FilePath}",
+            SelectedSeries?.Name,
+            value?.Name,
+            SelectedVoltage?.Value,
+            FilePath);
     }
 }
