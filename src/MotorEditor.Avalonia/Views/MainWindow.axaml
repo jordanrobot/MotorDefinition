@@ -28,6 +28,7 @@
         <KeyBinding Gesture="Ctrl+B" Command="{Binding ToggleBrowserPanelCommand}"/>
         <KeyBinding Gesture="Ctrl+R" Command="{Binding TogglePropertiesPanelCommand}"/>
         <KeyBinding Gesture="Ctrl+G" Command="{Binding ToggleCurveDataPanelCommand}"/>
+        <KeyBinding Gesture="Ctrl+E" Command="{Binding ToggleValidationPanelCommand}"/>
 
         <KeyBinding Gesture="F5" Command="{Binding DirectoryBrowser.RefreshCommand}"/>
 
@@ -145,6 +146,10 @@
                           IsChecked="{Binding IsCurveDataExpanded}"
                           Command="{Binding ToggleCurveDataPanelCommand}"
                           InputGesture="Ctrl+G"/>
+                <MenuItem Header="Show _Validation Panel"
+                          IsChecked="{Binding IsValidationPanelExpanded}"
+                          Command="{Binding ToggleValidationPanelCommand}"
+                          InputGesture="Ctrl+E"/>
                 <Separator/>
                 <MenuItem Header="Show _Power Curves"
                           IsChecked="{Binding ChartViewModel.ShowPowerCurves}"
