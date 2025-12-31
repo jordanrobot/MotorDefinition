@@ -39,6 +39,12 @@ public partial class MainWindowViewModel : ViewModelBase
     private readonly UnitConversionService _unitConversionService;
     private readonly UnitPreferencesService _unitPreferencesService;
 
+    // Track previous units for conversion
+    private string? _previousTorqueUnit;
+    private string? _previousSpeedUnit;
+    private string? _previousPowerUnit;
+    private string? _previousWeightUnit;
+
     // Tab management
     private readonly ObservableCollection<DocumentTab> _tabs = new();
     private DocumentTab? _activeTab;
@@ -846,7 +852,8 @@ public partial class MainWindowViewModel : ViewModelBase
         // Initialize unit services
         _unitPreferencesService = new UnitPreferencesService(_settingsStore);
         _unitConversionService = new UnitConversionService(_settingsStore);
-        _unitConversionService.ConvertStoredData = _unitPreferencesService.GetConvertStoredData();
+        // Use Convert Stored Data mode (hard conversion) as per requirements
+        _unitConversionService.ConvertStoredData = true;
         _unitConversionService.DisplayDecimalPlaces = _unitPreferencesService.GetDecimalPlaces();
 
         // Initialize tabs (currently with single shared view models for backward compatibility)
@@ -2291,6 +2298,12 @@ public partial class MainWindowViewModel : ViewModelBase
         if (value != null && value.Units != null)
         {
             value.Units.PropertyChanged += OnUnitsPropertyChanged;
+            
+            // Initialize previous unit values for tracking
+            _previousTorqueUnit = value.Units.Torque;
+            _previousSpeedUnit = value.Units.Speed;
+            _previousPowerUnit = value.Units.Power;
+            _previousWeightUnit = value.Units.Weight;
         }
 
         // Refresh the drives collection
@@ -2467,17 +2480,73 @@ public partial class MainWindowViewModel : ViewModelBase
             return;
         }
 
-        Log.Information("[UNITS] Unit changed: Property={Property}", e.PropertyName);
+        // Determine old and new units
+        string? oldValue = null;
+        string? newValue = null;
 
-        // For now, we'll convert stored data (hard conversion)
-        // Mark as dirty since we're modifying the underlying data
-        MarkDirty();
+        switch (e.PropertyName)
+        {
+            case nameof(UnitSettings.Torque):
+                oldValue = _previousTorqueUnit ?? "Nm";
+                newValue = CurrentMotor.Units.Torque;
+                _previousTorqueUnit = newValue;
+                break;
+            case nameof(UnitSettings.Speed):
+                oldValue = _previousSpeedUnit ?? "rpm";
+                newValue = CurrentMotor.Units.Speed;
+                _previousSpeedUnit = newValue;
+                break;
+            case nameof(UnitSettings.Power):
+                oldValue = _previousPowerUnit ?? "W";
+                newValue = CurrentMotor.Units.Power;
+                _previousPowerUnit = newValue;
+                break;
+            case nameof(UnitSettings.Weight):
+                oldValue = _previousWeightUnit ?? "kg";
+                newValue = CurrentMotor.Units.Weight;
+                _previousWeightUnit = newValue;
+                break;
+        }
 
-        // Refresh UI to show updated values
-        RefreshMotorEditorsFromCurrentMotor();
+        if (oldValue == null || newValue == null || oldValue == newValue)
+        {
+            return;
+        }
 
-        // TODO: Implement actual unit conversion using _unitConversionService
-        // This will require tracking old units to know what to convert from
+        Log.Information(
+            "[UNITS] Unit changed: Property={Property} OldValue={Old} NewValue={New}",
+            e.PropertyName,
+            oldValue,
+            newValue);
+
+        try
+        {
+            // Create old and new unit settings for conversion
+            var oldUnits = new UnitSettings
+            {
+                Torque = e.PropertyName == nameof(UnitSettings.Torque) ? oldValue : CurrentMotor.Units.Torque,
+                Speed = e.PropertyName == nameof(UnitSettings.Speed) ? oldValue : CurrentMotor.Units.Speed,
+                Power = e.PropertyName == nameof(UnitSettings.Power) ? oldValue : CurrentMotor.Units.Power,
+                Weight = e.PropertyName == nameof(UnitSettings.Weight) ? oldValue : CurrentMotor.Units.Weight
+            };
+
+            // Convert motor data with new units (hard conversion)
+            _unitConversionService.ConvertMotorUnits(CurrentMotor, oldUnits, CurrentMotor.Units);
+
+            // Refresh UI to show converted values
+            RefreshMotorEditorsFromCurrentMotor();
+            ChartViewModel.RefreshChart();
+
+            // Mark as dirty since data changed
+            MarkDirty();
+
+            StatusMessage = $"Converted {e.PropertyName} from {oldValue} to {newValue}";
+        }
+        catch (Exception ex)
+        {
+            Log.Error(ex, "[UNITS] Error converting units");
+            StatusMessage = $"Error converting units: {ex.Message}";
+        }
     }
 
     /// <summary>
