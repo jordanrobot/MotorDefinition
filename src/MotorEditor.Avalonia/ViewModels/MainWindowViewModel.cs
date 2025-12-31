@@ -164,70 +164,6 @@ public partial class MainWindowViewModel : ViewModelBase
     private bool _hasValidationErrors;
 
     /// <summary>
-    /// Preferred torque unit for display.
-    /// </summary>
-    public string PreferredTorqueUnit
-    {
-        get => _unitPreferencesService.GetPreferredTorqueUnit();
-        set
-        {
-            if (_unitPreferencesService.GetPreferredTorqueUnit() != value)
-            {
-                _unitPreferencesService.SetPreferredTorqueUnit(value);
-                OnPropertyChanged();
-                OnTorqueUnitChanged(value);
-            }
-        }
-    }
-
-    /// <summary>
-    /// Preferred speed unit for display.
-    /// </summary>
-    public string PreferredSpeedUnit
-    {
-        get => _unitPreferencesService.GetPreferredSpeedUnit();
-        set
-        {
-            if (_unitPreferencesService.GetPreferredSpeedUnit() != value)
-            {
-                _unitPreferencesService.SetPreferredSpeedUnit(value);
-                OnPropertyChanged();
-            }
-        }
-    }
-
-    /// <summary>
-    /// Preferred power unit for display.
-    /// </summary>
-    public string PreferredPowerUnit
-    {
-        get => _unitPreferencesService.GetPreferredPowerUnit();
-        set
-        {
-            if (_unitPreferencesService.GetPreferredPowerUnit() != value)
-            {
-                _unitPreferencesService.SetPreferredPowerUnit(value);
-                OnPropertyChanged();
-            }
-        }
-    }
-
-    /// <summary>
-    /// Available torque units for selection.
-    /// </summary>
-    public string[] AvailableTorqueUnits => JordanRobot.MotorDefinition.Services.UnitService.SupportedTorqueUnits;
-
-    /// <summary>
-    /// Available speed units for selection.
-    /// </summary>
-    public string[] AvailableSpeedUnits => JordanRobot.MotorDefinition.Services.UnitService.SupportedSpeedUnits;
-
-    /// <summary>
-    /// Available power units for selection.
-    /// </summary>
-    public string[] AvailablePowerUnits => JordanRobot.MotorDefinition.Services.UnitService.SupportedPowerUnits;
-
-    /// <summary>
     /// Selected drive (delegates to active tab).
     /// </summary>
     public Drive? SelectedDrive
@@ -2345,6 +2281,18 @@ public partial class MainWindowViewModel : ViewModelBase
             value?.MotorName,
             value?.Drives?.Count ?? 0);
 
+        // Unsubscribe from previous motor's Units PropertyChanged
+        if (CurrentMotor != null && CurrentMotor.Units != null)
+        {
+            CurrentMotor.Units.PropertyChanged -= OnUnitsPropertyChanged;
+        }
+
+        // Subscribe to new motor's Units PropertyChanged
+        if (value != null && value.Units != null)
+        {
+            value.Units.PropertyChanged += OnUnitsPropertyChanged;
+        }
+
         // Refresh the drives collection
         RefreshAvailableDrives();
 
@@ -2510,12 +2458,26 @@ public partial class MainWindowViewModel : ViewModelBase
     }
 
     /// <summary>
-    /// Handles torque unit changes and updates display values.
+    /// Handles changes to unit settings and converts stored motor data.
     /// </summary>
-    private void OnTorqueUnitChanged(string newUnit)
+    private void OnUnitsPropertyChanged(object? sender, System.ComponentModel.PropertyChangedEventArgs e)
     {
-        // Notify that properties dependent on torque unit should refresh
+        if (CurrentMotor == null || CurrentMotor.Units == null)
+        {
+            return;
+        }
+
+        Log.Information("[UNITS] Unit changed: Property={Property}", e.PropertyName);
+
+        // For now, we'll convert stored data (hard conversion)
+        // Mark as dirty since we're modifying the underlying data
+        MarkDirty();
+
+        // Refresh UI to show updated values
         RefreshMotorEditorsFromCurrentMotor();
+
+        // TODO: Implement actual unit conversion using _unitConversionService
+        // This will require tracking old units to know what to convert from
     }
 
     /// <summary>
