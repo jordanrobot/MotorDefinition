@@ -18,6 +18,11 @@ public static class PanelRegistry
         public const string MotorProperties = "MotorProperties";
         public const string CurveData = "CurveData";
         public const string CurveGraph = "CurveGraph";
+        // NOTE: This ID is persisted in user settings. Do not change its string value.
+        public const string ValidationErrors = "ValidationErrors";
+
+        // Alias to reflect current UX naming. Keep the underlying ID stable.
+        public const string BottomPanel = ValidationErrors;
     }
 
     /// <summary>
@@ -67,6 +72,17 @@ public static class PanelRegistry
             EnableCollapse = false,
             Zone = PanelZone.Center,
             MinSize = 400
+        },
+        new PanelDescriptor
+        {
+            PanelId = PanelIds.BottomPanel,
+            DisplayName = "Bottom Panel",
+            PanelBarLabel = "Bottom",
+            EnableIcon = true,
+            EnableCollapse = true,
+            Zone = PanelZone.Bottom,
+            DefaultHeight = 150,
+            IconGlyph = "Bottom"
         }
     };
 

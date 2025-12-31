@@ -11,7 +11,6 @@ using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.IO;
 using System.Linq;
-using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -614,10 +613,13 @@ public partial class DirectoryBrowserViewModel : ObservableObject
                 return false;
             }
 
-            await using var stream = File.OpenRead(filePath);
-            using var document = await JsonDocument.ParseAsync(stream, cancellationToken: cancellationToken).ConfigureAwait(false);
-
-            return MotorFile.IsLikelyMotorDefinition(document);
+            // Treat a motor file as "valid" only if it can be loaded and passes semantic validation.
+            // This keeps the explorer marker aligned with what the user can actually work with.
+            cancellationToken.ThrowIfCancellationRequested();
+            var motor = MotorFile.Load(filePath);
+            var validationService = new ValidationService();
+            var errors = validationService.ValidateServoMotor(motor);
+            return errors.Count == 0;
         }
         catch (OperationCanceledException)
         {

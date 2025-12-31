@@ -1,0 +1,22 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:vm="using:CurveEditor.ViewModels"
+             mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="200"
+             x:Class="CurveEditor.Views.ValidationPanel"
+             x:DataType="vm:MainWindowViewModel">
+
+    <Grid RowDefinitions="Auto,*">
+        <Border Grid.Row="0" Classes="PanelHeaderContainer">
+            <TextBlock Text="Bottom panel" Classes="PanelHeader"/>
+        </Border>
+        
+        <Border Grid.Row="1" Background="{DynamicResource CurveEditor.SideBar.BackgroundBrush}">
+            <TextBlock Margin="8"
+                       Text="(empty)"
+                       Foreground="{DynamicResource SystemControlForegroundBaseMediumBrush}"
+                       FontStyle="Italic"/>
+        </Border>
+    </Grid>
+</UserControl>

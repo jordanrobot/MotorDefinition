@@ -149,6 +149,12 @@ public partial class MainWindowViewModel : ViewModelBase
     private string _validationErrors = string.Empty;
 
     /// <summary>
+    /// List of validation errors for display in the validation panel.
+    /// </summary>
+    [ObservableProperty]
+    private ObservableCollection<string> _validationErrorsList = new();
+
+    /// <summary>
     /// Whether there are validation errors.
     /// </summary>
     [ObservableProperty]
@@ -377,6 +383,13 @@ public partial class MainWindowViewModel : ViewModelBase
         ActivePanelBarPanelId == PanelRegistry.PanelIds.MotorProperties;
 
     /// <summary>
+    /// Whether the bottom panel is expanded.
+    /// Defaults to collapsed and is not persisted between sessions.
+    /// </summary>
+    [ObservableProperty]
+    private bool _isBottomPanelExpanded;
+
+    /// <summary>
     /// The ID of the currently active panel in the Panel Bar, or null if all are collapsed.
     /// </summary>
     [ObservableProperty]
@@ -427,13 +440,37 @@ public partial class MainWindowViewModel : ViewModelBase
     }
 
     /// <summary>
+    /// Toggles the bottom panel visibility.
+    /// </summary>
+    [RelayCommand]
+    private void ToggleBottomPanel()
+    {
+        TogglePanel(PanelRegistry.PanelIds.BottomPanel);
+    }
+
+    /// <summary>
+    /// Refreshes the validation for the current motor.
+    /// </summary>
+    [RelayCommand]
+    private void RefreshValidation()
+    {
+        ValidateMotor();
+    }
+
+    /// <summary>
     /// Toggles the power curves overlay on/off.
     /// </summary>
     [RelayCommand]
     private void ToggleShowPowerCurves()
     {
-        ChartViewModel.ShowPowerCurves = !ChartViewModel.ShowPowerCurves;
-        _settingsStore.SaveBool("ShowPowerCurves", ChartViewModel.ShowPowerCurves);
+        var chartViewModel = ChartViewModel;
+        if (chartViewModel == null)
+        {
+            return;
+        }
+
+        chartViewModel.ShowPowerCurves = !chartViewModel.ShowPowerCurves;
+        _settingsStore.SaveBool("ShowPowerCurves", chartViewModel.ShowPowerCurves);
     }
 
     /// <summary>
@@ -476,6 +513,14 @@ public partial class MainWindowViewModel : ViewModelBase
                 break;
 
             case PanelZone.Bottom:
+                // Bottom zone toggle
+                // For now, we only have one bottom panel, so just toggle it
+                if (panelId == PanelRegistry.PanelIds.BottomPanel)
+                {
+                    IsBottomPanelExpanded = !IsBottomPanelExpanded;
+                }
+                break;
+
             case PanelZone.Center:
                 // Not used in current configuration
                 break;
@@ -2305,6 +2350,10 @@ public partial class MainWindowViewModel : ViewModelBase
             VoltageContinuousAmpsEditor = SelectedVoltage?.ContinuousAmperage.ToString(System.Globalization.CultureInfo.InvariantCulture) ?? string.Empty;
             VoltagePeakAmpsEditor = SelectedVoltage?.PeakAmperage.ToString(System.Globalization.CultureInfo.InvariantCulture) ?? string.Empty;
         }
+
+        // Populate ValidationErrors/ValidationErrorsList immediately when switching or loading motors.
+        // Without this, errors only show up after an edit (MarkDirty) or manual refresh.
+        ValidateMotor();
     }
 
     private void OnSelectedDriveChanged(Drive? value)
@@ -3193,6 +3242,7 @@ public partial class MainWindowViewModel : ViewModelBase
         {
             HasValidationErrors = false;
             ValidationErrors = string.Empty;
+            ValidationErrorsList.Clear();
             return;
         }
 
@@ -3215,6 +3265,16 @@ public partial class MainWindowViewModel : ViewModelBase
         ValidationErrors = errors.Count > 0
             ? string.Join("\n", errors)
             : string.Empty;
+        
+        // Update the list for the validation panel
+        ValidationErrorsList.Clear();
+        foreach (var error in errors)
+        {
+            ValidationErrorsList.Add(error);
+        }
+
+        // If validation fails, open the validation panel so the user can see the full list.
+        // Note: Bottom panel is not tied to validation.
     }
 
     /// <summary>
