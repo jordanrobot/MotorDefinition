@@ -1,0 +1,64 @@
+{
+  "schemaVersion": "1.0.0",
+  "motorName": "Invalid Motor - Negative Scalars",
+  "manufacturer": "Test Fixtures Inc.",
+  "partNumber": "INVALID-MOTOR-NEG",
+  "power": -1,
+  "maxSpeed": -3000,
+  "ratedSpeed": 2500,
+  "ratedContinuousTorque": -5,
+  "ratedPeakTorque": -8,
+  "weight": 1.2,
+  "rotorInertia": 0.0001,
+  "feedbackPpr": 2048,
+  "hasBrake": true,
+  "brakeTorque": 2,
+  "brakeAmperage": 0.5,
+  "brakeVoltage": 24,
+  "brakeReleaseTime": -10,
+  "brakeEngageTimeDiode": -5,
+  "brakeEngageTimeMOV": -7,
+  "brakeBacklash": -0.25,
+  "units": {
+    "torque": "Nm",
+    "speed": "rpm",
+    "power": "W",
+    "weight": "kg",
+    "voltage": "V",
+    "current": "A",
+    "inertia": "kg-m^2",
+    "torqueConstant": "Nm/A",
+    "backlash": "arcmin",
+    "responseTime": "ms",
+    "percentage": "%",
+    "temperature": "C"
+  },
+  "drives": [
+    {
+      "name": "Fixture Drive",
+      "manufacturer": "Fixture Drive Co",
+      "partNumber": "DRV-1",
+      "voltages": [
+        {
+          "voltage": 48,
+          "power": 480,
+          "maxSpeed": 3000,
+          "ratedSpeed": 2500,
+          "ratedContinuousTorque": 5,
+          "ratedPeakTorque": 8,
+          "continuousAmperage": 10,
+          "peakAmperage": 20,
+          "percent": [0, 50, 100],
+          "rpm": [0, 1500, 3000],
+          "series": {
+            "Peak": {
+              "locked": false,
+              "notes": "Fixture series",
+              "torque": [8, 8, 8]
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

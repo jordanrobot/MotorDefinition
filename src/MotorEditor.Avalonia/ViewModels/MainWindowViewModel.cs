@@ -383,11 +383,11 @@ public partial class MainWindowViewModel : ViewModelBase
         ActivePanelBarPanelId == PanelRegistry.PanelIds.MotorProperties;
 
     /// <summary>
-    /// Whether the validation panel is expanded.
+    /// Whether the bottom panel is expanded.
     /// Defaults to collapsed and is not persisted between sessions.
     /// </summary>
     [ObservableProperty]
-    private bool _isValidationPanelExpanded;
+    private bool _isBottomPanelExpanded;
 
     /// <summary>
     /// The ID of the currently active panel in the Panel Bar, or null if all are collapsed.
@@ -440,12 +440,12 @@ public partial class MainWindowViewModel : ViewModelBase
     }
 
     /// <summary>
-    /// Toggles the validation panel visibility.
+    /// Toggles the bottom panel visibility.
     /// </summary>
     [RelayCommand]
-    private void ToggleValidationPanel()
+    private void ToggleBottomPanel()
     {
-        TogglePanel(PanelRegistry.PanelIds.ValidationErrors);
+        TogglePanel(PanelRegistry.PanelIds.BottomPanel);
     }
 
     /// <summary>
@@ -463,8 +463,14 @@ public partial class MainWindowViewModel : ViewModelBase
     [RelayCommand]
     private void ToggleShowPowerCurves()
     {
-        ChartViewModel.ShowPowerCurves = !ChartViewModel.ShowPowerCurves;
-        _settingsStore.SaveBool("ShowPowerCurves", ChartViewModel.ShowPowerCurves);
+        var chartViewModel = ChartViewModel;
+        if (chartViewModel == null)
+        {
+            return;
+        }
+
+        chartViewModel.ShowPowerCurves = !chartViewModel.ShowPowerCurves;
+        _settingsStore.SaveBool("ShowPowerCurves", chartViewModel.ShowPowerCurves);
     }
 
     /// <summary>
@@ -507,11 +513,11 @@ public partial class MainWindowViewModel : ViewModelBase
                 break;
 
             case PanelZone.Bottom:
-                // Bottom zone toggle (validation panel)
+                // Bottom zone toggle
                 // For now, we only have one bottom panel, so just toggle it
-                if (panelId == PanelRegistry.PanelIds.ValidationErrors)
+                if (panelId == PanelRegistry.PanelIds.BottomPanel)
                 {
-                    IsValidationPanelExpanded = !IsValidationPanelExpanded;
+                    IsBottomPanelExpanded = !IsBottomPanelExpanded;
                 }
                 break;
 
@@ -2344,6 +2350,10 @@ public partial class MainWindowViewModel : ViewModelBase
             VoltageContinuousAmpsEditor = SelectedVoltage?.ContinuousAmperage.ToString(System.Globalization.CultureInfo.InvariantCulture) ?? string.Empty;
             VoltagePeakAmpsEditor = SelectedVoltage?.PeakAmperage.ToString(System.Globalization.CultureInfo.InvariantCulture) ?? string.Empty;
         }
+
+        // Populate ValidationErrors/ValidationErrorsList immediately when switching or loading motors.
+        // Without this, errors only show up after an edit (MarkDirty) or manual refresh.
+        ValidateMotor();
     }
 
     private void OnSelectedDriveChanged(Drive? value)
@@ -3262,6 +3272,9 @@ public partial class MainWindowViewModel : ViewModelBase
         {
             ValidationErrorsList.Add(error);
         }
+
+        // If validation fails, open the validation panel so the user can see the full list.
+        // Note: Bottom panel is not tied to validation.
     }
 
     /// <summary>

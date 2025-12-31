@@ -57,7 +57,7 @@ public partial class MainWindow : Window
             {
                 if (args.PropertyName == nameof(MainWindowViewModel.ActivePanelBarPanelId) ||
                     args.PropertyName == nameof(MainWindowViewModel.ActiveLeftPanelId) ||
-                    args.PropertyName == nameof(MainWindowViewModel.IsValidationPanelExpanded))
+                    args.PropertyName == nameof(MainWindowViewModel.IsBottomPanelExpanded))
                 {
                     panelBar.ActivePanelIds = GetPanelBarActivePanelIds(viewModel);
                 }
@@ -123,7 +123,7 @@ public partial class MainWindow : Window
                 PersistRightZoneWidthIfNeeded(mainGrid);
                 ApplyRightZoneLayout(mainGrid, viewModel);
             }
-            else if (args.PropertyName == nameof(MainWindowViewModel.IsValidationPanelExpanded))
+            else if (args.PropertyName == nameof(MainWindowViewModel.IsBottomPanelExpanded))
             {
                 PersistBottomZoneHeightIfNeeded(mainGrid);
                 ApplyBottomZoneLayout(mainGrid, viewModel);
@@ -217,9 +217,9 @@ public partial class MainWindow : Window
             ids.Add(viewModel.ActivePanelBarPanelId);
         }
 
-        if (viewModel.IsValidationPanelExpanded)
+        if (viewModel.IsBottomPanelExpanded)
         {
-            ids.Add(PanelRegistry.PanelIds.ValidationErrors);
+            ids.Add(PanelRegistry.PanelIds.BottomPanel);
         }
 
         return ids.Distinct(StringComparer.Ordinal).ToArray();
@@ -352,8 +352,8 @@ public partial class MainWindow : Window
             }
         }
 
-        // Persist bottom zone height if validation panel is expanded
-        if (viewModel.IsValidationPanelExpanded)
+        // Persist bottom zone height if bottom panel is expanded
+        if (viewModel.IsBottomPanelExpanded)
         {
             var bottomRow = mainGrid.RowDefinitions[2];
             var height = GetRowHeight(bottomRow.Height, bottomRow.ActualHeight);
@@ -375,7 +375,7 @@ public partial class MainWindow : Window
         var splitterRow = mainGrid.RowDefinitions[1];
         var bottomRow = mainGrid.RowDefinitions[2];
 
-        if (!viewModel.IsValidationPanelExpanded)
+        if (!viewModel.IsBottomPanelExpanded)
         {
             bottomRow.Height = new GridLength(0, GridUnitType.Pixel);
             splitterRow.Height = new GridLength(0, GridUnitType.Pixel);

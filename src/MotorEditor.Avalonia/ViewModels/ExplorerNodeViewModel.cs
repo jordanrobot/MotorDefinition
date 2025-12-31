@@ -86,9 +86,9 @@ public partial class ExplorerNodeViewModel : ObservableObject
 
     public string ValidationToolTip => ValidationState switch
     {
-        MotorFileValidationState.Valid => "Valid motor file",
-        MotorFileValidationState.Invalid => "Invalid motor file",
-        _ => "Motor file validation pending"
+        MotorFileValidationState.Valid => "Passes validation",
+        MotorFileValidationState.Invalid => "Fails validation (cannot load or has validation errors)",
+        _ => "Validation pending"
     };
 
     partial void OnValidationStateChanged(MotorFileValidationState value)
