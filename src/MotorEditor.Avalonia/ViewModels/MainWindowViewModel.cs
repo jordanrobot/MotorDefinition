@@ -36,6 +36,8 @@ public partial class MainWindowViewModel : ViewModelBase
     private readonly IDriveVoltageSeriesService _driveVoltageSeriesService;
     private readonly IMotorConfigurationWorkflow _motorConfigurationWorkflow;
     private readonly IUserSettingsStore _settingsStore;
+    private readonly UnitConversionService _unitConversionService;
+    private readonly UnitPreferencesService _unitPreferencesService;
 
     // Tab management
     private readonly ObservableCollection<DocumentTab> _tabs = new();
@@ -160,6 +162,70 @@ public partial class MainWindowViewModel : ViewModelBase
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(CanSaveWithValidation))]
     private bool _hasValidationErrors;
+
+    /// <summary>
+    /// Preferred torque unit for display.
+    /// </summary>
+    public string PreferredTorqueUnit
+    {
+        get => _unitPreferencesService.GetPreferredTorqueUnit();
+        set
+        {
+            if (_unitPreferencesService.GetPreferredTorqueUnit() != value)
+            {
+                _unitPreferencesService.SetPreferredTorqueUnit(value);
+                OnPropertyChanged();
+                OnTorqueUnitChanged(value);
+            }
+        }
+    }
+
+    /// <summary>
+    /// Preferred speed unit for display.
+    /// </summary>
+    public string PreferredSpeedUnit
+    {
+        get => _unitPreferencesService.GetPreferredSpeedUnit();
+        set
+        {
+            if (_unitPreferencesService.GetPreferredSpeedUnit() != value)
+            {
+                _unitPreferencesService.SetPreferredSpeedUnit(value);
+                OnPropertyChanged();
+            }
+        }
+    }
+
+    /// <summary>
+    /// Preferred power unit for display.
+    /// </summary>
+    public string PreferredPowerUnit
+    {
+        get => _unitPreferencesService.GetPreferredPowerUnit();
+        set
+        {
+            if (_unitPreferencesService.GetPreferredPowerUnit() != value)
+            {
+                _unitPreferencesService.SetPreferredPowerUnit(value);
+                OnPropertyChanged();
+            }
+        }
+    }
+
+    /// <summary>
+    /// Available torque units for selection.
+    /// </summary>
+    public string[] AvailableTorqueUnits => JordanRobot.MotorDefinition.Services.UnitService.SupportedTorqueUnits;
+
+    /// <summary>
+    /// Available speed units for selection.
+    /// </summary>
+    public string[] AvailableSpeedUnits => JordanRobot.MotorDefinition.Services.UnitService.SupportedSpeedUnits;
+
+    /// <summary>
+    /// Available power units for selection.
+    /// </summary>
+    public string[] AvailablePowerUnits => JordanRobot.MotorDefinition.Services.UnitService.SupportedPowerUnits;
 
     /// <summary>
     /// Selected drive (delegates to active tab).
@@ -840,6 +906,12 @@ public partial class MainWindowViewModel : ViewModelBase
         _motorConfigurationWorkflow = motorConfigurationWorkflow ?? throw new ArgumentNullException(nameof(motorConfigurationWorkflow));
         _settingsStore = settingsStore ?? new PanelLayoutUserSettingsStore();
         UnsavedChangesPromptAsync = unsavedChangesPromptAsync ?? ShowUnsavedChangesPromptAsync;
+
+        // Initialize unit services
+        _unitPreferencesService = new UnitPreferencesService(_settingsStore);
+        _unitConversionService = new UnitConversionService(_settingsStore);
+        _unitConversionService.ConvertStoredData = _unitPreferencesService.GetConvertStoredData();
+        _unitConversionService.DisplayDecimalPlaces = _unitPreferencesService.GetDecimalPlaces();
 
         // Initialize tabs (currently with single shared view models for backward compatibility)
         var editingCoordinator = new EditingCoordinator();
@@ -2435,6 +2507,15 @@ public partial class MainWindowViewModel : ViewModelBase
     {
         MarkDirty();
         ChartViewModel.RefreshChart();
+    }
+
+    /// <summary>
+    /// Handles torque unit changes and updates display values.
+    /// </summary>
+    private void OnTorqueUnitChanged(string newUnit)
+    {
+        // Notify that properties dependent on torque unit should refresh
+        RefreshMotorEditorsFromCurrentMotor();
     }
 
     /// <summary>
