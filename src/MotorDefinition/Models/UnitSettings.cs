@@ -1,6 +1,7 @@
 using System.ComponentModel;
 using System.Runtime.CompilerServices;
 using System.Text.Json.Serialization;
+using JordanRobot.MotorDefinition.Services;
 
 namespace JordanRobot.MotorDefinition.Model;
 
@@ -199,60 +200,60 @@ public class UnitSettings : INotifyPropertyChanged
     /// <summary>
     /// Gets the supported speed units.
     /// </summary>
-    public static string[] SupportedSpeedUnits => ["rpm"];
+    public static string[] SupportedSpeedUnits => UnitService.SupportedSpeedUnits;
 
     /// <summary>
     /// Gets the supported weight units.
     /// </summary>
-    public static string[] SupportedWeightUnits => ["kg", "g", "lbs", "oz"];
+    public static string[] SupportedWeightUnits => UnitService.SupportedWeightUnits;
 
     /// <summary>
     /// Gets the supported torque units.
     /// </summary>
-    public static string[] SupportedTorqueUnits => ["Nm", "lbf-ft", "lbf-in", "oz-in"];
+    public static string[] SupportedTorqueUnits => UnitService.SupportedTorqueUnits;
 
     /// <summary>
     /// Gets the supported power units.
     /// </summary>
-    public static string[] SupportedPowerUnits => ["kW", "W", "hp"];
+    public static string[] SupportedPowerUnits => UnitService.SupportedPowerUnits;
 
     /// <summary>
     /// Gets the supported voltage units.
     /// </summary>
-    public static string[] SupportedVoltageUnits => ["V", "kV"];
+    public static string[] SupportedVoltageUnits => UnitService.SupportedVoltageUnits;
 
     /// <summary>
     /// Gets the supported current units.
     /// </summary>
-    public static string[] SupportedCurrentUnits => ["A", "mA"];
+    public static string[] SupportedCurrentUnits => UnitService.SupportedCurrentUnits;
 
     /// <summary>
     /// Gets the supported inertia units.
     /// </summary>
-    public static string[] SupportedInertiaUnits => ["kg-m^2", "g-cm^2"];
+    public static string[] SupportedInertiaUnits => UnitService.SupportedInertiaUnits;
 
     /// <summary>
     /// Gets the supported torque constant units.
     /// </summary>
-    public static string[] SupportedTorqueConstantUnits => ["Nm/A"];
+    public static string[] SupportedTorqueConstantUnits => UnitService.SupportedTorqueConstantUnits;
 
     /// <summary>
     /// Gets the supported backlash units.
     /// </summary>
-    public static string[] SupportedBacklashUnits => ["arcmin", "arcsec"];
+    public static string[] SupportedBacklashUnits => UnitService.SupportedBacklashUnits;
 
     /// <summary>
     /// Gets the supported response time units.
     /// </summary>
-    public static string[] SupportedResponseTimeUnits => ["ms", "s"];
+    public static string[] SupportedResponseTimeUnits => UnitService.SupportedResponseTimeUnits;
 
     /// <summary>
     /// Gets the supported percentage units.
     /// </summary>
-    public static string[] SupportedPercentageUnits => ["%"];
+    public static string[] SupportedPercentageUnits => UnitService.SupportedPercentageUnits;
 
     /// <summary>
     /// Gets the supported temperature units.
     /// </summary>
-    public static string[] SupportedTemperatureUnits => ["C"];
+    public static string[] SupportedTemperatureUnits => UnitService.SupportedTemperatureUnits;
 }
