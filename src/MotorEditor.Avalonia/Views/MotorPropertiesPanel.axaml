@@ -103,7 +103,12 @@
                                      Text="{Binding RatedPeakTorqueEditor, Mode=TwoWay, UpdateSourceTrigger=LostFocus}"
                                      IsUndoEnabled="False"
                                      LostFocus="OnRatedPeakTorqueLostFocus"/>
-                            <TextBlock Grid.Column="1" Text="{Binding CurrentMotor.Units.Torque}" Classes="PropertyValue" Margin="4,0,0,0"/>
+                            <ComboBox Grid.Column="1"
+                                      ItemsSource="{Binding AvailableTorqueUnits}"
+                                      SelectedItem="{Binding PreferredTorqueUnit, Mode=TwoWay}"
+                                      MinWidth="80"
+                                      Margin="4,0,0,0"
+                                      VerticalAlignment="Center"/>
                         </Grid>
                     </Grid>
 
@@ -120,7 +125,12 @@
                                      Text="{Binding RatedContinuousTorqueEditor, Mode=TwoWay, UpdateSourceTrigger=LostFocus}"
                                      IsUndoEnabled="False"
                                      LostFocus="OnRatedContinuousTorqueLostFocus"/>
-                            <TextBlock Grid.Column="1" Text="{Binding CurrentMotor.Units.Torque}" Classes="PropertyValue" Margin="4,0,0,0"/>
+                            <ComboBox Grid.Column="1"
+                                      ItemsSource="{Binding AvailableTorqueUnits}"
+                                      SelectedItem="{Binding PreferredTorqueUnit, Mode=TwoWay}"
+                                      MinWidth="80"
+                                      Margin="4,0,0,0"
+                                      VerticalAlignment="Center"/>
                         </Grid>
                     </Grid>
 
@@ -137,7 +147,12 @@
                                      Text="{Binding PowerEditor, Mode=TwoWay, UpdateSourceTrigger=LostFocus}"
                                      IsUndoEnabled="False"
                                      LostFocus="OnPowerLostFocus"/>
-                            <TextBlock Grid.Column="1" Text="{Binding CurrentMotor.Units.Power}" Classes="PropertyValue" Margin="4,0,0,0"/>
+                            <ComboBox Grid.Column="1"
+                                      ItemsSource="{Binding AvailablePowerUnits}"
+                                      SelectedItem="{Binding PreferredPowerUnit, Mode=TwoWay}"
+                                      MinWidth="80"
+                                      Margin="4,0,0,0"
+                                      VerticalAlignment="Center"/>
                         </Grid>
                     </Grid>
 
