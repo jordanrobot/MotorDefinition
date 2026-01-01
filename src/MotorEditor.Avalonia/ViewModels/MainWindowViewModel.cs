@@ -1324,6 +1324,8 @@ public partial class MainWindowViewModel : ViewModelBase
 
     private void RefreshMotorEditorsFromCurrentMotor()
     {
+        Log.Information("[REFRESH] RefreshMotorEditorsFromCurrentMotor() called");
+        
         if (CurrentMotor is null)
         {
             MotorNameEditor = string.Empty;
@@ -1387,6 +1389,13 @@ public partial class MainWindowViewModel : ViewModelBase
         VoltageContinuousTorqueEditor = SelectedVoltage?.RatedContinuousTorque.ToString(System.Globalization.CultureInfo.InvariantCulture) ?? string.Empty;
         VoltageContinuousAmpsEditor = SelectedVoltage?.ContinuousAmperage.ToString(System.Globalization.CultureInfo.InvariantCulture) ?? string.Empty;
         VoltagePeakAmpsEditor = SelectedVoltage?.PeakAmperage.ToString(System.Globalization.CultureInfo.InvariantCulture) ?? string.Empty;
+        
+        Log.Information(
+            "[REFRESH] Editor values updated: RatedPeakTorque={PeakTorque} RatedContinuousTorque={ContTorque} MaxSpeed={MaxSpeed} Power={Power}",
+            RatedPeakTorqueEditor,
+            RatedContinuousTorqueEditor,
+            MaxSpeedEditor,
+            PowerEditor);
     }
 
     /// <summary>
@@ -2519,6 +2528,14 @@ public partial class MainWindowViewModel : ViewModelBase
             oldValue,
             newValue);
 
+        // Log motor values before conversion
+        Log.Information(
+            "[UNITS] Before conversion: RatedPeakTorque={PeakTorque} RatedContinuousTorque={ContTorque} MaxSpeed={MaxSpeed} Power={Power}",
+            CurrentMotor.RatedPeakTorque,
+            CurrentMotor.RatedContinuousTorque,
+            CurrentMotor.MaxSpeed,
+            CurrentMotor.Power);
+
         try
         {
             // Create old and new unit settings for conversion
@@ -2533,14 +2550,26 @@ public partial class MainWindowViewModel : ViewModelBase
             // Convert motor data with new units (hard conversion)
             _unitConversionService.ConvertMotorUnits(CurrentMotor, oldUnits, CurrentMotor.Units);
 
+            // Log motor values after conversion
+            Log.Information(
+                "[UNITS] After conversion: RatedPeakTorque={PeakTorque} RatedContinuousTorque={ContTorque} MaxSpeed={MaxSpeed} Power={Power}",
+                CurrentMotor.RatedPeakTorque,
+                CurrentMotor.RatedContinuousTorque,
+                CurrentMotor.MaxSpeed,
+                CurrentMotor.Power);
+
             // Refresh UI to show converted values
             RefreshMotorEditorsFromCurrentMotor();
-            ChartViewModel.RefreshChart();
+            
+            // Refresh chart if available
+            ChartViewModel?.RefreshChart();
 
             // Mark as dirty since data changed
             MarkDirty();
 
             StatusMessage = $"Converted {e.PropertyName} from {oldValue} to {newValue}";
+            
+            Log.Information("[UNITS] Conversion complete, UI refreshed");
         }
         catch (Exception ex)
         {
