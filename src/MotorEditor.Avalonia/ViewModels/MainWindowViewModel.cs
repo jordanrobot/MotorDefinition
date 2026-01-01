@@ -780,6 +780,13 @@ public partial class MainWindowViewModel : ViewModelBase
         _settingsStore = new PanelLayoutUserSettingsStore();
         UnsavedChangesPromptAsync = ShowUnsavedChangesPromptAsync;
         
+        // Initialize unit services
+        _unitPreferencesService = new UnitPreferencesService(_settingsStore);
+        _unitConversionService = new UnitConversionService(_settingsStore);
+        // Use Convert Stored Data mode (hard conversion) as per requirements
+        _unitConversionService.ConvertStoredData = true;
+        _unitConversionService.DisplayDecimalPlaces = _unitPreferencesService.GetDecimalPlaces();
+        
         // Initialize tabs (currently with single shared view models for backward compatibility)
         var initialTab = new DocumentTab
         {
@@ -808,6 +815,13 @@ public partial class MainWindowViewModel : ViewModelBase
         _motorConfigurationWorkflow = new MotorConfigurationWorkflow(_driveVoltageSeriesService);
         _settingsStore = new PanelLayoutUserSettingsStore();
         UnsavedChangesPromptAsync = ShowUnsavedChangesPromptAsync;
+        
+        // Initialize unit services
+        _unitPreferencesService = new UnitPreferencesService(_settingsStore);
+        _unitConversionService = new UnitConversionService(_settingsStore);
+        // Use Convert Stored Data mode (hard conversion) as per requirements
+        _unitConversionService.ConvertStoredData = true;
+        _unitConversionService.DisplayDecimalPlaces = _unitPreferencesService.GetDecimalPlaces();
         
         // Initialize tabs (currently with single shared view models for backward compatibility)
         var initialTab = new DocumentTab
