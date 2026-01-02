@@ -58,6 +58,22 @@ public partial class ChartViewModel : ViewModelBase
     [ObservableProperty]
     private string _powerUnit = "kW";
 
+    /// <summary>
+    /// Called when TorqueUnit changes to update the chart.
+    /// </summary>
+    partial void OnTorqueUnitChanged(string value)
+    {
+        if (_currentVoltage is not null)
+        {
+            UpdateAxes();
+            // Recalculate power curves since they depend on torque values
+            if (ShowPowerCurves)
+            {
+                UpdateChart();
+            }
+        }
+    }
+
     [ObservableProperty]
     private bool _showPowerCurves;
 
@@ -176,13 +192,18 @@ public partial class ChartViewModel : ViewModelBase
     }
 
     /// <summary>
-    /// Called when PowerUnit changes to update the chart axes.
+    /// Called when PowerUnit changes to update the chart axes and recalculate power curves.
     /// </summary>
     partial void OnPowerUnitChanged(string value)
     {
         if (_currentVoltage is not null)
         {
             UpdateAxes();
+            // Recalculate power curves with new unit
+            if (ShowPowerCurves)
+            {
+                UpdateChart();
+            }
         }
     }
 
@@ -537,25 +558,48 @@ public partial class ChartViewModel : ViewModelBase
     /// <summary>
     /// Calculates power from torque and RPM.
     /// </summary>
-    /// <param name="torque">Torque in Nm.</param>
+    /// <param name="torque">Torque in the current torque unit (TorqueUnit property).</param>
     /// <param name="rpm">Speed in RPM.</param>
-    /// <returns>Power in the current power unit (kW or HP).</returns>
+    /// <returns>Power in the current power unit (PowerUnit property).</returns>
     private double CalculatePower(double torque, double rpm)
     {
+        // Convert torque to Nm first if needed
+        double torqueNm = torque;
+        if (TorqueUnit == "lbf-in")
+        {
+            // 1 lbf-in = 0.112984829 Nm
+            torqueNm = torque * 0.112984829;
+        }
+        else if (TorqueUnit == "lbf-ft")
+        {
+            // 1 lbf-ft = 1.355817948 Nm
+            torqueNm = torque * 1.355817948;
+        }
+        else if (TorqueUnit == "oz-in")
+        {
+            // 1 oz-in = 0.00706155181 Nm
+            torqueNm = torque * 0.00706155181;
+        }
+        // else assume already in Nm
+
         // P = T × ω, where ω = RPM × 2π / 60
         // P (Watts) = Torque (Nm) × RPM × 2π / 60
-        var powerWatts = torque * rpm * Math.PI * 2.0 / 60.0;
+        var powerWatts = torqueNm * rpm * Math.PI * 2.0 / 60.0;
 
-        // Convert to kW or HP based on current unit
-        if (PowerUnit == "HP")
+        // Convert to kW or HP based on current power unit
+        if (PowerUnit == "hp")
         {
             // 1 HP = 745.7 W
             return powerWatts / 745.7;
         }
+        else if (PowerUnit == "kW")
+        {
+            return powerWatts / 1000.0;
+        }
         else
         {
-            // Default to kW
-            return powerWatts / 1000.0;
+            // Default to W
+            return powerWatts;
         }
     }
 

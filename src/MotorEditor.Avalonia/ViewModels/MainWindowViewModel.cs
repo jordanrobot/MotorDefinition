@@ -36,6 +36,18 @@ public partial class MainWindowViewModel : ViewModelBase
     private readonly IDriveVoltageSeriesService _driveVoltageSeriesService;
     private readonly IMotorConfigurationWorkflow _motorConfigurationWorkflow;
     private readonly IUserSettingsStore _settingsStore;
+    private readonly UnitConversionService _unitConversionService;
+    private readonly UnitPreferencesService _unitPreferencesService;
+
+    // Track previous units for conversion
+    private string? _previousTorqueUnit;
+    private string? _previousSpeedUnit;
+    private string? _previousPowerUnit;
+    private string? _previousWeightUnit;
+    private string? _previousInertiaUnit;
+    private string? _previousCurrentUnit;
+    private string? _previousResponseTimeUnit;
+    private string? _previousBacklashUnit;
 
     // Tab management
     private readonly ObservableCollection<DocumentTab> _tabs = new();
@@ -772,6 +784,13 @@ public partial class MainWindowViewModel : ViewModelBase
         _settingsStore = new PanelLayoutUserSettingsStore();
         UnsavedChangesPromptAsync = ShowUnsavedChangesPromptAsync;
         
+        // Initialize unit services
+        _unitPreferencesService = new UnitPreferencesService(_settingsStore);
+        _unitConversionService = new UnitConversionService(_settingsStore);
+        // Use Convert Stored Data mode (hard conversion) as per requirements
+        _unitConversionService.ConvertStoredData = true;
+        _unitConversionService.DisplayDecimalPlaces = _unitPreferencesService.GetDecimalPlaces();
+        
         // Initialize tabs (currently with single shared view models for backward compatibility)
         var initialTab = new DocumentTab
         {
@@ -800,6 +819,13 @@ public partial class MainWindowViewModel : ViewModelBase
         _motorConfigurationWorkflow = new MotorConfigurationWorkflow(_driveVoltageSeriesService);
         _settingsStore = new PanelLayoutUserSettingsStore();
         UnsavedChangesPromptAsync = ShowUnsavedChangesPromptAsync;
+        
+        // Initialize unit services
+        _unitPreferencesService = new UnitPreferencesService(_settingsStore);
+        _unitConversionService = new UnitConversionService(_settingsStore);
+        // Use Convert Stored Data mode (hard conversion) as per requirements
+        _unitConversionService.ConvertStoredData = true;
+        _unitConversionService.DisplayDecimalPlaces = _unitPreferencesService.GetDecimalPlaces();
         
         // Initialize tabs (currently with single shared view models for backward compatibility)
         var initialTab = new DocumentTab
@@ -840,6 +866,13 @@ public partial class MainWindowViewModel : ViewModelBase
         _motorConfigurationWorkflow = motorConfigurationWorkflow ?? throw new ArgumentNullException(nameof(motorConfigurationWorkflow));
         _settingsStore = settingsStore ?? new PanelLayoutUserSettingsStore();
         UnsavedChangesPromptAsync = unsavedChangesPromptAsync ?? ShowUnsavedChangesPromptAsync;
+
+        // Initialize unit services
+        _unitPreferencesService = new UnitPreferencesService(_settingsStore);
+        _unitConversionService = new UnitConversionService(_settingsStore);
+        // Use Convert Stored Data mode (hard conversion) as per requirements
+        _unitConversionService.ConvertStoredData = true;
+        _unitConversionService.DisplayDecimalPlaces = _unitPreferencesService.GetDecimalPlaces();
 
         // Initialize tabs (currently with single shared view models for backward compatibility)
         var editingCoordinator = new EditingCoordinator();
@@ -1309,6 +1342,8 @@ public partial class MainWindowViewModel : ViewModelBase
 
     private void RefreshMotorEditorsFromCurrentMotor()
     {
+        Log.Information("[REFRESH] RefreshMotorEditorsFromCurrentMotor() called");
+        
         if (CurrentMotor is null)
         {
             MotorNameEditor = string.Empty;
@@ -1372,6 +1407,13 @@ public partial class MainWindowViewModel : ViewModelBase
         VoltageContinuousTorqueEditor = SelectedVoltage?.RatedContinuousTorque.ToString(System.Globalization.CultureInfo.InvariantCulture) ?? string.Empty;
         VoltageContinuousAmpsEditor = SelectedVoltage?.ContinuousAmperage.ToString(System.Globalization.CultureInfo.InvariantCulture) ?? string.Empty;
         VoltagePeakAmpsEditor = SelectedVoltage?.PeakAmperage.ToString(System.Globalization.CultureInfo.InvariantCulture) ?? string.Empty;
+        
+        Log.Information(
+            "[REFRESH] Editor values updated: RatedPeakTorque={PeakTorque} RatedContinuousTorque={ContTorque} MaxSpeed={MaxSpeed} Power={Power}",
+            RatedPeakTorqueEditor,
+            RatedContinuousTorqueEditor,
+            MaxSpeedEditor,
+            PowerEditor);
     }
 
     /// <summary>
@@ -2273,6 +2315,28 @@ public partial class MainWindowViewModel : ViewModelBase
             value?.MotorName,
             value?.Drives?.Count ?? 0);
 
+        // Unsubscribe from previous motor's Units PropertyChanged
+        if (CurrentMotor != null && CurrentMotor.Units != null)
+        {
+            CurrentMotor.Units.PropertyChanged -= OnUnitsPropertyChanged;
+        }
+
+        // Subscribe to new motor's Units PropertyChanged
+        if (value != null && value.Units != null)
+        {
+            value.Units.PropertyChanged += OnUnitsPropertyChanged;
+            
+            // Initialize previous unit values for tracking
+            _previousTorqueUnit = value.Units.Torque;
+            _previousSpeedUnit = value.Units.Speed;
+            _previousPowerUnit = value.Units.Power;
+            _previousWeightUnit = value.Units.Weight;
+            _previousInertiaUnit = value.Units.Inertia;
+            _previousCurrentUnit = value.Units.Current;
+            _previousResponseTimeUnit = value.Units.ResponseTime;
+            _previousBacklashUnit = value.Units.Backlash;
+        }
+
         // Refresh the drives collection
         RefreshAvailableDrives();
 
@@ -2435,6 +2499,154 @@ public partial class MainWindowViewModel : ViewModelBase
     {
         MarkDirty();
         ChartViewModel.RefreshChart();
+    }
+
+    /// <summary>
+    /// Handles changes to unit settings and converts stored motor data.
+    /// </summary>
+    private void OnUnitsPropertyChanged(object? sender, System.ComponentModel.PropertyChangedEventArgs e)
+    {
+        if (CurrentMotor == null || CurrentMotor.Units == null)
+        {
+            return;
+        }
+
+        // Determine old and new units
+        string? oldValue = null;
+        string? newValue = null;
+
+        switch (e.PropertyName)
+        {
+            case nameof(UnitSettings.Torque):
+                oldValue = _previousTorqueUnit ?? "Nm";
+                newValue = CurrentMotor.Units.Torque;
+                _previousTorqueUnit = newValue;
+                break;
+            case nameof(UnitSettings.Speed):
+                oldValue = _previousSpeedUnit ?? "rpm";
+                newValue = CurrentMotor.Units.Speed;
+                _previousSpeedUnit = newValue;
+                break;
+            case nameof(UnitSettings.Power):
+                oldValue = _previousPowerUnit ?? "W";
+                newValue = CurrentMotor.Units.Power;
+                _previousPowerUnit = newValue;
+                break;
+            case nameof(UnitSettings.Weight):
+                oldValue = _previousWeightUnit ?? "kg";
+                newValue = CurrentMotor.Units.Weight;
+                _previousWeightUnit = newValue;
+                break;
+            case nameof(UnitSettings.Inertia):
+                oldValue = _previousInertiaUnit ?? "kg-m^2";
+                newValue = CurrentMotor.Units.Inertia;
+                _previousInertiaUnit = newValue;
+                break;
+            case nameof(UnitSettings.Current):
+                oldValue = _previousCurrentUnit ?? "A";
+                newValue = CurrentMotor.Units.Current;
+                _previousCurrentUnit = newValue;
+                break;
+            case nameof(UnitSettings.ResponseTime):
+                oldValue = _previousResponseTimeUnit ?? "ms";
+                newValue = CurrentMotor.Units.ResponseTime;
+                _previousResponseTimeUnit = newValue;
+                break;
+            case nameof(UnitSettings.Backlash):
+                oldValue = _previousBacklashUnit ?? "arcmin";
+                newValue = CurrentMotor.Units.Backlash;
+                _previousBacklashUnit = newValue;
+                break;
+        }
+
+        if (oldValue == null || newValue == null || oldValue == newValue)
+        {
+            return;
+        }
+
+        Log.Information(
+            "[UNITS] Unit changed: Property={Property} OldValue={Old} NewValue={New}",
+            e.PropertyName,
+            oldValue,
+            newValue);
+
+        // Log motor values before conversion
+        Log.Information(
+            "[UNITS] Before conversion: RatedPeakTorque={PeakTorque} RatedContinuousTorque={ContTorque} MaxSpeed={MaxSpeed} Power={Power}",
+            CurrentMotor.RatedPeakTorque,
+            CurrentMotor.RatedContinuousTorque,
+            CurrentMotor.MaxSpeed,
+            CurrentMotor.Power);
+
+        try
+        {
+            // Create old and new unit settings for conversion
+            var oldUnits = new UnitSettings
+            {
+                Torque = e.PropertyName == nameof(UnitSettings.Torque) ? oldValue : CurrentMotor.Units.Torque,
+                Speed = e.PropertyName == nameof(UnitSettings.Speed) ? oldValue : CurrentMotor.Units.Speed,
+                Power = e.PropertyName == nameof(UnitSettings.Power) ? oldValue : CurrentMotor.Units.Power,
+                Weight = e.PropertyName == nameof(UnitSettings.Weight) ? oldValue : CurrentMotor.Units.Weight,
+                Inertia = e.PropertyName == nameof(UnitSettings.Inertia) ? oldValue : CurrentMotor.Units.Inertia,
+                Current = e.PropertyName == nameof(UnitSettings.Current) ? oldValue : CurrentMotor.Units.Current,
+                ResponseTime = e.PropertyName == nameof(UnitSettings.ResponseTime) ? oldValue : CurrentMotor.Units.ResponseTime,
+                Backlash = e.PropertyName == nameof(UnitSettings.Backlash) ? oldValue : CurrentMotor.Units.Backlash
+            };
+
+            // Convert motor data with new units (hard conversion)
+            _unitConversionService.ConvertMotorUnits(CurrentMotor, oldUnits, CurrentMotor.Units);
+
+            // Log motor values after conversion
+            Log.Information(
+                "[UNITS] After conversion: RatedPeakTorque={PeakTorque} RatedContinuousTorque={ContTorque} MaxSpeed={MaxSpeed} Power={Power} BrakeAmperage={BrakeAmperage} BrakeBacklash={BrakeBacklash}",
+                CurrentMotor.RatedPeakTorque,
+                CurrentMotor.RatedContinuousTorque,
+                CurrentMotor.MaxSpeed,
+                CurrentMotor.Power,
+                CurrentMotor.BrakeAmperage,
+                CurrentMotor.BrakeBacklash);
+
+            // Refresh UI to show converted values
+            RefreshMotorEditorsFromCurrentMotor();
+            RefreshVoltageEditorsFromSelectedVoltage();
+            
+            // Log editor values after refresh to verify UI update
+            Log.Information(
+                "[REFRESH] After RefreshMotorEditors: BrakeAmperageEditor={BrakeAmpEditor} BrakeBacklashEditor={BrakeBackEditor} VoltageContinuousAmpsEditor={ContAmpsEditor} VoltagePeakAmpsEditor={PeakAmpsEditor}",
+                BrakeAmperageEditor,
+                BrakeBacklashEditor,
+                VoltageContinuousAmpsEditor,
+                VoltagePeakAmpsEditor);
+            
+            // Update chart unit labels when torque or power units change
+            if (ChartViewModel != null)
+            {
+                if (e.PropertyName == nameof(UnitSettings.Torque))
+                {
+                    ChartViewModel.TorqueUnit = CurrentMotor.Units.Torque;
+                }
+                if (e.PropertyName == nameof(UnitSettings.Power))
+                {
+                    ChartViewModel.PowerUnit = CurrentMotor.Units.Power;
+                }
+            }
+            
+            // Refresh chart and curve data table if available
+            ChartViewModel?.RefreshChart();
+            ActiveTab?.CurveDataTableViewModel?.RefreshData();
+
+            // Mark as dirty since data changed
+            MarkDirty();
+
+            StatusMessage = $"Converted {e.PropertyName} from {oldValue} to {newValue}";
+            
+            Log.Information("[UNITS] Conversion complete, UI refreshed");
+        }
+        catch (Exception ex)
+        {
+            Log.Error(ex, "[UNITS] Error converting units");
+            StatusMessage = $"Error converting units: {ex.Message}";
+        }
     }
 
     /// <summary>
