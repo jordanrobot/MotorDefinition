@@ -221,7 +221,7 @@ public class UnitService
 
             // Current units
             "A" => "A",
-            "mA" => "mA",
+            "mA" => "m*A",
 
             // Inertia units (moment of inertia)
             "kg-m^2" => "kg*m^2",
@@ -231,8 +231,8 @@ public class UnitService
             "Nm/A" => "N*m/A",
 
             // Backlash units
-            "arcmin" => "arcmin",
-            "arcsec" => "arcsec",
+            "arcmin" => "arcminute",
+            "arcsec" => "arcsecond",
 
             // Time units
             "ms" => "ms",
