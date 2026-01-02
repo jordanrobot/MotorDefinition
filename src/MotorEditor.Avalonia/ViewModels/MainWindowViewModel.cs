@@ -2618,6 +2618,19 @@ public partial class MainWindowViewModel : ViewModelBase
                 VoltageContinuousAmpsEditor,
                 VoltagePeakAmpsEditor);
             
+            // Update chart unit labels when torque or power units change
+            if (ChartViewModel != null)
+            {
+                if (e.PropertyName == nameof(UnitSettings.Torque))
+                {
+                    ChartViewModel.TorqueUnit = CurrentMotor.Units.Torque;
+                }
+                if (e.PropertyName == nameof(UnitSettings.Power))
+                {
+                    ChartViewModel.PowerUnit = CurrentMotor.Units.Power;
+                }
+            }
+            
             // Refresh chart and curve data table if available
             ChartViewModel?.RefreshChart();
             ActiveTab?.CurveDataTableViewModel?.RefreshData();
