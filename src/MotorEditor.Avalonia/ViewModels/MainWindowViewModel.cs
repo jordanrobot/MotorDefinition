@@ -2598,14 +2598,17 @@ public partial class MainWindowViewModel : ViewModelBase
 
             // Log motor values after conversion
             Log.Information(
-                "[UNITS] After conversion: RatedPeakTorque={PeakTorque} RatedContinuousTorque={ContTorque} MaxSpeed={MaxSpeed} Power={Power}",
+                "[UNITS] After conversion: RatedPeakTorque={PeakTorque} RatedContinuousTorque={ContTorque} MaxSpeed={MaxSpeed} Power={Power} BrakeAmperage={BrakeAmperage} BrakeBacklash={BrakeBacklash}",
                 CurrentMotor.RatedPeakTorque,
                 CurrentMotor.RatedContinuousTorque,
                 CurrentMotor.MaxSpeed,
-                CurrentMotor.Power);
+                CurrentMotor.Power,
+                CurrentMotor.BrakeAmperage,
+                CurrentMotor.BrakeBacklash);
 
             // Refresh UI to show converted values
             RefreshMotorEditorsFromCurrentMotor();
+            RefreshVoltageEditorsFromSelectedVoltage();
             
             // Refresh chart and curve data table if available
             ChartViewModel?.RefreshChart();
