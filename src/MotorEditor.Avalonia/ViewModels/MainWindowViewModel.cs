@@ -2610,6 +2610,14 @@ public partial class MainWindowViewModel : ViewModelBase
             RefreshMotorEditorsFromCurrentMotor();
             RefreshVoltageEditorsFromSelectedVoltage();
             
+            // Log editor values after refresh to verify UI update
+            Log.Information(
+                "[REFRESH] After RefreshMotorEditors: BrakeAmperageEditor={BrakeAmpEditor} BrakeBacklashEditor={BrakeBackEditor} VoltageContinuousAmpsEditor={ContAmpsEditor} VoltagePeakAmpsEditor={PeakAmpsEditor}",
+                BrakeAmperageEditor,
+                BrakeBacklashEditor,
+                VoltageContinuousAmpsEditor,
+                VoltagePeakAmpsEditor);
+            
             // Refresh chart and curve data table if available
             ChartViewModel?.RefreshChart();
             ActiveTab?.CurveDataTableViewModel?.RefreshData();
