@@ -92,6 +92,12 @@ public class UnitService
             return ConvertWithHorsepower(value, fromUnit, toUnit);
         }
 
+        // Handle current units manually as they're not supported by Tare
+        if (fromUnit == "A" || fromUnit == "mA" || toUnit == "A" || toUnit == "mA")
+        {
+            return ConvertWithCurrent(value, fromUnit, toUnit);
+        }
+
         var tareFromUnit = MapToTareUnit(fromUnit);
         var tareToUnit = MapToTareUnit(toUnit);
 
@@ -150,6 +156,51 @@ public class UnitService
         }
 
         throw new ArgumentException($"Invalid hp conversion: {fromUnit} to {toUnit}");
+    }
+
+    /// <summary>
+    /// Handles conversions involving electrical current units.
+    /// Tare library doesn't support electrical current units, so we handle them manually.
+    /// </summary>
+    private double ConvertWithCurrent(double value, string fromUnit, string toUnit)
+    {
+        const double AToMA = 1000.0; // 1 ampere (A) = 1000 milliamperes (mA)
+
+        // Convert from A to another unit
+        if (fromUnit == "A")
+        {
+            if (toUnit == "mA")
+            {
+                return value * AToMA;
+            }
+            else if (toUnit == "A")
+            {
+                return value;
+            }
+            else
+            {
+                throw new ArgumentException($"Cannot convert from A to {toUnit}", nameof(toUnit));
+            }
+        }
+
+        // Convert from mA to another unit
+        if (fromUnit == "mA")
+        {
+            if (toUnit == "A")
+            {
+                return value / AToMA;
+            }
+            else if (toUnit == "mA")
+            {
+                return value;
+            }
+            else
+            {
+                throw new ArgumentException($"Cannot convert from mA to {toUnit}", nameof(toUnit));
+            }
+        }
+
+        throw new ArgumentException($"Invalid current conversion: {fromUnit} to {toUnit}");
     }
 
     /// <summary>
@@ -219,17 +270,16 @@ public class UnitService
             "V" => "V",
             "kV" => "kV",
 
-            // Current units
-            "A" => "ampere",
-            "mA" => "m*ampere",
-
+            // Current units - not supported by Tare, handled manually in ConvertWithCurrent
+            // "A" and "mA" are handled manually in Convert() method
+            
             // Inertia units (moment of inertia)
             "kg-m^2" => "kg*m^2",
             "g-cm^2" => "g*cm^2",
 
-            // Torque constant units
-            "Nm/A" => "N*m/ampere",
-
+            // Torque constant units - not currently convertible due to current unit limitation
+            // "Nm/A" would need manual handling if conversions are needed
+            
             // Backlash units
             "arcmin" => "arcminute",
             "arcsec" => "arcsecond",

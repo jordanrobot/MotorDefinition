@@ -208,6 +208,33 @@ The converted value\.
 [System\.ArgumentException](https://learn.microsoft.com/en-us/dotnet/api/system.argumentexception 'System\.ArgumentException')  
 Thrown when unit conversion is not supported or units are incompatible\.
 
+<a name='JordanRobot.MotorDefinition.Services.UnitService.ConvertWithCurrent(double,string,string)'></a>
+
+## UnitService\.ConvertWithCurrent\(double, string, string\) Method
+
+Handles conversions involving electrical current units\.
+Tare library doesn't support electrical current units, so we handle them manually\.
+
+```csharp
+private double ConvertWithCurrent(double value, string fromUnit, string toUnit);
+```
+#### Parameters
+
+<a name='JordanRobot.MotorDefinition.Services.UnitService.ConvertWithCurrent(double,string,string).value'></a>
+
+`value` [System\.Double](https://learn.microsoft.com/en-us/dotnet/api/system.double 'System\.Double')
+
+<a name='JordanRobot.MotorDefinition.Services.UnitService.ConvertWithCurrent(double,string,string).fromUnit'></a>
+
+`fromUnit` [System\.String](https://learn.microsoft.com/en-us/dotnet/api/system.string 'System\.String')
+
+<a name='JordanRobot.MotorDefinition.Services.UnitService.ConvertWithCurrent(double,string,string).toUnit'></a>
+
+`toUnit` [System\.String](https://learn.microsoft.com/en-us/dotnet/api/system.string 'System\.String')
+
+#### Returns
+[System\.Double](https://learn.microsoft.com/en-us/dotnet/api/system.double 'System\.Double')
+
 <a name='JordanRobot.MotorDefinition.Services.UnitService.ConvertWithHorsepower(double,string,string)'></a>
 
 ## UnitService\.ConvertWithHorsepower\(double, string, string\) Method
