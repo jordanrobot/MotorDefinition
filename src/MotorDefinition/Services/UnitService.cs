@@ -220,15 +220,15 @@ public class UnitService
             "kV" => "kV",
 
             // Current units
-            "A" => "A",
-            "mA" => "m*A",
+            "A" => "ampere",
+            "mA" => "m*ampere",
 
             // Inertia units (moment of inertia)
             "kg-m^2" => "kg*m^2",
             "g-cm^2" => "g*cm^2",
 
             // Torque constant units
-            "Nm/A" => "N*m/A",
+            "Nm/A" => "N*m/ampere",
 
             // Backlash units
             "arcmin" => "arcminute",
