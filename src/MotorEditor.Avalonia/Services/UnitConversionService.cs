@@ -170,6 +170,7 @@ public class UnitConversionService
         {
             motor.RatedContinuousTorque = ConvertTorque(motor.RatedContinuousTorque, oldUnits.Torque, newUnits.Torque);
             motor.RatedPeakTorque = ConvertTorque(motor.RatedPeakTorque, oldUnits.Torque, newUnits.Torque);
+            motor.BrakeTorque = ConvertTorque(motor.BrakeTorque, oldUnits.Torque, newUnits.Torque);
         }
 
         if (oldUnits.Speed != newUnits.Speed)
@@ -186,6 +187,28 @@ public class UnitConversionService
         if (oldUnits.Weight != newUnits.Weight)
         {
             motor.Weight = ConvertMass(motor.Weight, oldUnits.Weight, newUnits.Weight);
+        }
+
+        if (oldUnits.Inertia != newUnits.Inertia)
+        {
+            motor.RotorInertia = _unitService.Convert(motor.RotorInertia, oldUnits.Inertia, newUnits.Inertia);
+        }
+
+        if (oldUnits.Current != newUnits.Current)
+        {
+            motor.BrakeAmperage = _unitService.Convert(motor.BrakeAmperage, oldUnits.Current, newUnits.Current);
+        }
+
+        if (oldUnits.ResponseTime != newUnits.ResponseTime)
+        {
+            motor.BrakeReleaseTime = _unitService.Convert(motor.BrakeReleaseTime, oldUnits.ResponseTime, newUnits.ResponseTime);
+            motor.BrakeEngageTimeDiode = _unitService.Convert(motor.BrakeEngageTimeDiode, oldUnits.ResponseTime, newUnits.ResponseTime);
+            motor.BrakeEngageTimeMov = _unitService.Convert(motor.BrakeEngageTimeMov, oldUnits.ResponseTime, newUnits.ResponseTime);
+        }
+
+        if (oldUnits.Backlash != newUnits.Backlash)
+        {
+            motor.BrakeBacklash = _unitService.Convert(motor.BrakeBacklash, oldUnits.Backlash, newUnits.Backlash);
         }
 
         // Convert drive/voltage level properties
@@ -208,6 +231,12 @@ public class UnitConversionService
                 if (oldUnits.Power != newUnits.Power)
                 {
                     voltage.Power = ConvertPower(voltage.Power, oldUnits.Power, newUnits.Power);
+                }
+
+                if (oldUnits.Current != newUnits.Current)
+                {
+                    voltage.ContinuousAmperage = _unitService.Convert(voltage.ContinuousAmperage, oldUnits.Current, newUnits.Current);
+                    voltage.PeakAmperage = _unitService.Convert(voltage.PeakAmperage, oldUnits.Current, newUnits.Current);
                 }
 
                 // Convert curve data points

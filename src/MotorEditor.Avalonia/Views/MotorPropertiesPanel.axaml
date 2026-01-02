@@ -159,13 +159,14 @@
                     </Grid>
 
                     <!-- Rotor Inertia -->
-                    <Grid Classes="PropertyRow" ColumnDefinitions="Auto,*">
+                    <Grid Classes="PropertyRow" ColumnDefinitions="Auto,*,Auto">
                         <TextBlock Grid.Column="0" Text="Rotor Inertia" Classes="PropertyLabel"/>
                         <TextBox Grid.Column="1"
                                  Classes="PropertyInput"
                                  Text="{Binding RotorInertiaEditor, Mode=TwoWay, UpdateSourceTrigger=LostFocus}"
                                  IsUndoEnabled="False"
                                  LostFocus="OnRotorInertiaLostFocus"/>
+                        <TextBlock Grid.Column="2" Text="{Binding CurrentMotor.Units.Inertia}" Classes="PropertyValue" Margin="4,0,0,0"/>
                     </Grid>
 
                     <!-- Feedback PPR -->
@@ -352,14 +353,6 @@
                             <ComboBox Grid.Column="1"
                                       ItemsSource="{Binding WeightUnits}"
                                       SelectedItem="{Binding CurrentMotor.Units.Weight}"
-                                      Classes="PropertyComboBox"/>
-                        </Grid>
-
-                        <Grid Classes="PropertyRow" ColumnDefinitions="Auto,*">
-                            <TextBlock Grid.Column="0" Text="Voltage" Classes="PropertyLabel"/>
-                            <ComboBox Grid.Column="1"
-                                      ItemsSource="{Binding VoltageUnits}"
-                                      SelectedItem="{Binding CurrentMotor.Units.Voltage}"
                                       Classes="PropertyComboBox"/>
                         </Grid>
 

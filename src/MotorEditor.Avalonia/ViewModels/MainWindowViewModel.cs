@@ -44,6 +44,10 @@ public partial class MainWindowViewModel : ViewModelBase
     private string? _previousSpeedUnit;
     private string? _previousPowerUnit;
     private string? _previousWeightUnit;
+    private string? _previousInertiaUnit;
+    private string? _previousCurrentUnit;
+    private string? _previousResponseTimeUnit;
+    private string? _previousBacklashUnit;
 
     // Tab management
     private readonly ObservableCollection<DocumentTab> _tabs = new();
@@ -2327,6 +2331,10 @@ public partial class MainWindowViewModel : ViewModelBase
             _previousSpeedUnit = value.Units.Speed;
             _previousPowerUnit = value.Units.Power;
             _previousWeightUnit = value.Units.Weight;
+            _previousInertiaUnit = value.Units.Inertia;
+            _previousCurrentUnit = value.Units.Current;
+            _previousResponseTimeUnit = value.Units.ResponseTime;
+            _previousBacklashUnit = value.Units.Backlash;
         }
 
         // Refresh the drives collection
@@ -2529,6 +2537,26 @@ public partial class MainWindowViewModel : ViewModelBase
                 newValue = CurrentMotor.Units.Weight;
                 _previousWeightUnit = newValue;
                 break;
+            case nameof(UnitSettings.Inertia):
+                oldValue = _previousInertiaUnit ?? "kg-m^2";
+                newValue = CurrentMotor.Units.Inertia;
+                _previousInertiaUnit = newValue;
+                break;
+            case nameof(UnitSettings.Current):
+                oldValue = _previousCurrentUnit ?? "A";
+                newValue = CurrentMotor.Units.Current;
+                _previousCurrentUnit = newValue;
+                break;
+            case nameof(UnitSettings.ResponseTime):
+                oldValue = _previousResponseTimeUnit ?? "ms";
+                newValue = CurrentMotor.Units.ResponseTime;
+                _previousResponseTimeUnit = newValue;
+                break;
+            case nameof(UnitSettings.Backlash):
+                oldValue = _previousBacklashUnit ?? "arcmin";
+                newValue = CurrentMotor.Units.Backlash;
+                _previousBacklashUnit = newValue;
+                break;
         }
 
         if (oldValue == null || newValue == null || oldValue == newValue)
@@ -2558,7 +2586,11 @@ public partial class MainWindowViewModel : ViewModelBase
                 Torque = e.PropertyName == nameof(UnitSettings.Torque) ? oldValue : CurrentMotor.Units.Torque,
                 Speed = e.PropertyName == nameof(UnitSettings.Speed) ? oldValue : CurrentMotor.Units.Speed,
                 Power = e.PropertyName == nameof(UnitSettings.Power) ? oldValue : CurrentMotor.Units.Power,
-                Weight = e.PropertyName == nameof(UnitSettings.Weight) ? oldValue : CurrentMotor.Units.Weight
+                Weight = e.PropertyName == nameof(UnitSettings.Weight) ? oldValue : CurrentMotor.Units.Weight,
+                Inertia = e.PropertyName == nameof(UnitSettings.Inertia) ? oldValue : CurrentMotor.Units.Inertia,
+                Current = e.PropertyName == nameof(UnitSettings.Current) ? oldValue : CurrentMotor.Units.Current,
+                ResponseTime = e.PropertyName == nameof(UnitSettings.ResponseTime) ? oldValue : CurrentMotor.Units.ResponseTime,
+                Backlash = e.PropertyName == nameof(UnitSettings.Backlash) ? oldValue : CurrentMotor.Units.Backlash
             };
 
             // Convert motor data with new units (hard conversion)
@@ -2575,8 +2607,9 @@ public partial class MainWindowViewModel : ViewModelBase
             // Refresh UI to show converted values
             RefreshMotorEditorsFromCurrentMotor();
             
-            // Refresh chart if available
+            // Refresh chart and curve data table if available
             ChartViewModel?.RefreshChart();
+            ActiveTab?.CurveDataTableViewModel?.RefreshData();
 
             // Mark as dirty since data changed
             MarkDirty();
