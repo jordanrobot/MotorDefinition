@@ -377,7 +377,6 @@ public static class PanelLayoutPersistence
             var normalized = values
                 .Where(v => !string.IsNullOrWhiteSpace(v))
                 .Distinct(StringComparer.Ordinal)
-                .OrderBy(v => v, StringComparer.Ordinal)
                 .ToArray();
 
             SaveString(settingsKey, JsonSerializer.Serialize(normalized));

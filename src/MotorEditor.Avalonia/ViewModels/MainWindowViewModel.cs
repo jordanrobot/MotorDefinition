@@ -1181,6 +1181,8 @@ public partial class MainWindowViewModel : ViewModelBase
 
     private void OnDirectoryBrowserPropertyChanged(object? sender, System.ComponentModel.PropertyChangedEventArgs e)
     {
+        Log.Debug("OnDirectoryBrowserPropertyChanged: PropertyName={PropertyName}", e.PropertyName);
+        
         if (e.PropertyName != nameof(DirectoryBrowserViewModel.RootDirectoryPath))
         {
             return;
@@ -1188,9 +1190,13 @@ public partial class MainWindowViewModel : ViewModelBase
 
         // Add the folder to recent folders when it's opened
         var rootPath = DirectoryBrowser.RootDirectoryPath;
+        Log.Debug("RootDirectoryPath changed to: {RootPath}", rootPath);
+        
         if (!string.IsNullOrWhiteSpace(rootPath))
         {
+            Log.Debug("Adding folder to recent folders: {RootPath}", rootPath);
             _recentFoldersService.AddRecentFolder(rootPath);
+            Log.Debug("Recent folders count: {Count}", _recentFoldersService.RecentFolders.Count);
         }
 
         if (string.IsNullOrWhiteSpace(CurrentFilePath))
@@ -2976,10 +2982,8 @@ public partial class MainWindowViewModel : ViewModelBase
             }
 
             // Set the folder in the directory browser
+            // Note: This will trigger OnDirectoryBrowserPropertyChanged which adds the folder to recent folders
             await DirectoryBrowser.SetRootDirectoryAsync(folderPath, CancellationToken.None).ConfigureAwait(true);
-            
-            // Add to recent folders (moves to top)
-            _recentFoldersService.AddRecentFolder(folderPath);
             
             StatusMessage = $"Opened folder: {Path.GetFileName(folderPath)}";
         }
