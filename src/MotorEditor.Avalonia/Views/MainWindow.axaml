@@ -132,6 +132,16 @@
                         </ControlTheme>
                     </MenuItem.ItemContainerTheme>
                 </MenuItem>
+                <MenuItem Header="Recent Fol_ders" ItemsSource="{Binding RecentFolders}">
+                    <MenuItem.ItemContainerTheme>
+                        <ControlTheme TargetType="MenuItem" BasedOn="{StaticResource {x:Type MenuItem}}">
+                            <Setter Property="Command" Value="{Binding $parent[Window].((vm:MainWindowViewModel)DataContext).OpenRecentFolderCommand}"/>
+                            <Setter Property="CommandParameter" Value="{Binding}"/>
+                            <Setter Property="Header" Value="{Binding Converter={StaticResource FilePathToNameConverter}}"/>
+                            <Setter Property="ToolTip.Tip" Value="{Binding}"/>
+                        </ControlTheme>
+                    </MenuItem.ItemContainerTheme>
+                </MenuItem>
                 <Separator/>
                 <MenuItem Header="_Save" Command="{Binding SaveCommand}" InputGesture="Ctrl+S"/>
                 <MenuItem Header="Save _As..." Command="{Binding SaveAsCommand}" InputGesture="Ctrl+Shift+S"/>
