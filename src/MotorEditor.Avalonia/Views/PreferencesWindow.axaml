@@ -1,0 +1,158 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:vm="using:CurveEditor.ViewModels"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        mc:Ignorable="d" d:DesignWidth="600" d:DesignHeight="500"
+        x:Class="CurveEditor.Views.PreferencesWindow"
+        x:DataType="vm:PreferencesViewModel"
+        Icon="avares://MotorEditor/images/icons/icon.ico"
+        Title="Preferences"
+        Width="600" Height="500"
+        MinWidth="500" MinHeight="400"
+        WindowStartupLocation="CenterOwner">
+
+    <Design.DataContext>
+        <vm:PreferencesViewModel/>
+    </Design.DataContext>
+
+    <Window.Styles>
+        <Style Selector="TextBlock.SectionHeader">
+            <Setter Property="FontWeight" Value="SemiBold"/>
+            <Setter Property="FontSize" Value="14"/>
+            <Setter Property="Margin" Value="0,12,0,8"/>
+        </Style>
+
+        <Style Selector="TextBlock.Label">
+            <Setter Property="VerticalAlignment" Value="Center"/>
+            <Setter Property="Margin" Value="0,0,12,0"/>
+            <Setter Property="MinWidth" Value="120"/>
+        </Style>
+
+        <Style Selector="Border.Section">
+            <Setter Property="BorderBrush" Value="{DynamicResource SystemControlBackgroundBaseLowBrush}"/>
+            <Setter Property="BorderThickness" Value="0,0,0,1"/>
+            <Setter Property="Padding" Value="0,8,0,16"/>
+            <Setter Property="Margin" Value="0,0,0,8"/>
+        </Style>
+    </Window.Styles>
+
+    <DockPanel Margin="16">
+        <!-- Bottom buttons -->
+        <StackPanel DockPanel.Dock="Bottom" 
+                    Orientation="Horizontal" 
+                    HorizontalAlignment="Right" 
+                    Spacing="8"
+                    Margin="0,16,0,0">
+            <Button Content="Save" 
+                    Command="{Binding SaveCommand}"
+                    Click="SaveButton_Click"
+                    MinWidth="80"
+                    Classes="accent"/>
+            <Button Content="Cancel" 
+                    Click="CancelButton_Click"
+                    MinWidth="80"/>
+        </StackPanel>
+
+        <!-- Content -->
+        <ScrollViewer>
+            <StackPanel Spacing="8">
+                <!-- Display Settings -->
+                <Border Classes="Section">
+                    <StackPanel>
+                        <TextBlock Classes="SectionHeader" Text="Display Settings"/>
+
+                        <!-- Decimal Precision -->
+                        <Grid ColumnDefinitions="Auto,*" Margin="0,4">
+                            <TextBlock Grid.Column="0" 
+                                       Classes="Label"
+                                       Text="Decimal Precision:"/>
+                            <NumericUpDown Grid.Column="1"
+                                           Value="{Binding DecimalPrecision}"
+                                           Minimum="0"
+                                           Maximum="10"
+                                           Increment="1"
+                                           FormatString="N0"
+                                           HorizontalAlignment="Left"
+                                           MinWidth="100"/>
+                        </Grid>
+
+                        <!-- Theme -->
+                        <Grid ColumnDefinitions="Auto,*" Margin="0,8,0,0">
+                            <TextBlock Grid.Column="0" 
+                                       Classes="Label"
+                                       Text="Theme:"/>
+                            <ComboBox Grid.Column="1"
+                                      SelectedItem="{Binding Theme}"
+                                      HorizontalAlignment="Left"
+                                      MinWidth="150">
+                                <ComboBoxItem Content="Light"/>
+                                <ComboBoxItem Content="Dark"/>
+                            </ComboBox>
+                        </Grid>
+                    </StackPanel>
+                </Border>
+
+                <!-- Curve Colors -->
+                <Border Classes="Section">
+                    <StackPanel>
+                        <TextBlock Classes="SectionHeader" Text="Curve Colors"/>
+                        <TextBlock Text="Customize the default colors used for torque curves"
+                                   TextWrapping="Wrap"
+                                   Foreground="{DynamicResource SystemControlForegroundBaseMediumBrush}"
+                                   FontSize="12"
+                                   Margin="0,0,0,8"/>
+
+                        <Grid ColumnDefinitions="*,Auto" RowDefinitions="Auto,*">
+                            <!-- Color list -->
+                            <ListBox Grid.Column="0" 
+                                     Grid.Row="0"
+                                     Grid.RowSpan="2"
+                                     ItemsSource="{Binding CurveColors}"
+                                     SelectedItem="{Binding SelectedCurveColor}"
+                                     Height="200"
+                                     Margin="0,0,8,0">
+                                <ListBox.ItemTemplate>
+                                    <DataTemplate>
+                                        <StackPanel Orientation="Horizontal" Spacing="8">
+                                            <Border Width="40" 
+                                                    Height="20" 
+                                                    Background="{Binding}"
+                                                    BorderBrush="Gray"
+                                                    BorderThickness="1"
+                                                    CornerRadius="2"/>
+                                            <TextBlock Text="{Binding}" 
+                                                       VerticalAlignment="Center"/>
+                                        </StackPanel>
+                                    </DataTemplate>
+                                </ListBox.ItemTemplate>
+                            </ListBox>
+
+                            <!-- Color picker and buttons -->
+                            <StackPanel Grid.Column="1" 
+                                        Grid.Row="0"
+                                        Spacing="8"
+                                        VerticalAlignment="Top">
+                                <ColorPicker x:Name="ColorPickerControl"
+                                             IsVisible="False"/>
+                                <Button Content="Add Color"
+                                        Command="{Binding AddCurveColorCommand}"
+                                        CommandParameter="#FF0000"
+                                        MinWidth="100"/>
+                                <Button Content="Remove"
+                                        Command="{Binding RemoveCurveColorCommand}"
+                                        MinWidth="100"/>
+                            </StackPanel>
+                        </Grid>
+
+                        <TextBlock Text="Note: Colors are displayed as hex codes (e.g., #FF0000 for red)"
+                                   TextWrapping="Wrap"
+                                   Foreground="{DynamicResource SystemControlForegroundBaseMediumBrush}"
+                                   FontSize="11"
+                                   Margin="0,8,0,0"/>
+                    </StackPanel>
+                </Border>
+            </StackPanel>
+        </ScrollViewer>
+    </DockPanel>
+</Window>

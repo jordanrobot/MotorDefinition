@@ -148,6 +148,8 @@
                           Command="{Binding RedoCommand}"
                           IsEnabled="{Binding CanRedo}"
                           InputGesture="Ctrl+Y"/>
+                <Separator/>
+                <MenuItem Header="_Preferences..." Command="{Binding ShowPreferencesCommand}"/>
             </MenuItem>
             <MenuItem Header="_View">
                 <MenuItem Header="Show _Directory Browser"
