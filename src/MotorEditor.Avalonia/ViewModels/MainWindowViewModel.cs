@@ -981,6 +981,14 @@ public partial class MainWindowViewModel : ViewModelBase
     }
 
     /// <summary>
+    /// Format a numeric value for display in editor fields using current precision settings.
+    /// </summary>
+    private string FormatForEditor(double value, bool excludeFromRounding = false)
+    {
+        return _numericFormattingService.FormatNumber(value, excludeFromRounding);
+    }
+
+    /// <summary>
     /// Creates a new document tab with initialized view models and wiring.
     /// </summary>
     private DocumentTab CreateNewTab()
@@ -1518,32 +1526,32 @@ public partial class MainWindowViewModel : ViewModelBase
         MotorNameEditor = CurrentMotor.MotorName ?? string.Empty;
         ManufacturerEditor = CurrentMotor.Manufacturer ?? string.Empty;
         PartNumberEditor = CurrentMotor.PartNumber ?? string.Empty;
-        MaxSpeedEditor = CurrentMotor.MaxSpeed.ToString(System.Globalization.CultureInfo.InvariantCulture);
-        RatedSpeedEditor = CurrentMotor.RatedSpeed.ToString(System.Globalization.CultureInfo.InvariantCulture);
-        RatedPeakTorqueEditor = CurrentMotor.RatedPeakTorque.ToString(System.Globalization.CultureInfo.InvariantCulture);
-        RatedContinuousTorqueEditor = CurrentMotor.RatedContinuousTorque.ToString(System.Globalization.CultureInfo.InvariantCulture);
-        PowerEditor = CurrentMotor.Power.ToString(System.Globalization.CultureInfo.InvariantCulture);
-        WeightEditor = CurrentMotor.Weight.ToString(System.Globalization.CultureInfo.InvariantCulture);
-        RotorInertiaEditor = CurrentMotor.RotorInertia.ToString(System.Globalization.CultureInfo.InvariantCulture);
+        MaxSpeedEditor = _numericFormattingService.FormatNumber(CurrentMotor.MaxSpeed);
+        RatedSpeedEditor = _numericFormattingService.FormatNumber(CurrentMotor.RatedSpeed);
+        RatedPeakTorqueEditor = _numericFormattingService.FormatNumber(CurrentMotor.RatedPeakTorque);
+        RatedContinuousTorqueEditor = _numericFormattingService.FormatNumber(CurrentMotor.RatedContinuousTorque);
+        PowerEditor = _numericFormattingService.FormatNumber(CurrentMotor.Power);
+        WeightEditor = _numericFormattingService.FormatNumber(CurrentMotor.Weight);
+        RotorInertiaEditor = _numericFormattingService.FormatNumber(CurrentMotor.RotorInertia, excludeFromRounding: true);
         FeedbackPprEditor = CurrentMotor.FeedbackPpr.ToString(System.Globalization.CultureInfo.InvariantCulture);
         HasBrakeEditor = CurrentMotor.HasBrake;
-        BrakeTorqueEditor = CurrentMotor.BrakeTorque.ToString(System.Globalization.CultureInfo.InvariantCulture);
-        BrakeAmperageEditor = CurrentMotor.BrakeAmperage.ToString(System.Globalization.CultureInfo.InvariantCulture);
-        BrakeVoltageEditor = CurrentMotor.BrakeVoltage.ToString(System.Globalization.CultureInfo.InvariantCulture);
-        BrakeReleaseTimeEditor = CurrentMotor.BrakeReleaseTime.ToString(System.Globalization.CultureInfo.InvariantCulture);
-        BrakeEngageTimeMovEditor = CurrentMotor.BrakeEngageTimeMov.ToString(System.Globalization.CultureInfo.InvariantCulture);
-        BrakeEngageTimeDiodeEditor = CurrentMotor.BrakeEngageTimeDiode.ToString(System.Globalization.CultureInfo.InvariantCulture);
-        BrakeBacklashEditor = CurrentMotor.BrakeBacklash.ToString(System.Globalization.CultureInfo.InvariantCulture);
+        BrakeTorqueEditor = _numericFormattingService.FormatNumber(CurrentMotor.BrakeTorque);
+        BrakeAmperageEditor = _numericFormattingService.FormatNumber(CurrentMotor.BrakeAmperage);
+        BrakeVoltageEditor = _numericFormattingService.FormatNumber(CurrentMotor.BrakeVoltage);
+        BrakeReleaseTimeEditor = _numericFormattingService.FormatNumber(CurrentMotor.BrakeReleaseTime);
+        BrakeEngageTimeMovEditor = _numericFormattingService.FormatNumber(CurrentMotor.BrakeEngageTimeMov);
+        BrakeEngageTimeDiodeEditor = _numericFormattingService.FormatNumber(CurrentMotor.BrakeEngageTimeDiode);
+        BrakeBacklashEditor = _numericFormattingService.FormatNumber(CurrentMotor.BrakeBacklash);
         DriveNameEditor = SelectedDrive?.Name ?? string.Empty;
         DrivePartNumberEditor = SelectedDrive?.PartNumber ?? string.Empty;
         DriveManufacturerEditor = SelectedDrive?.Manufacturer ?? string.Empty;
-        VoltageValueEditor = SelectedVoltage?.Value.ToString(System.Globalization.CultureInfo.InvariantCulture) ?? string.Empty;
-        VoltagePowerEditor = SelectedVoltage?.Power.ToString(System.Globalization.CultureInfo.InvariantCulture) ?? string.Empty;
-        VoltageMaxSpeedEditor = SelectedVoltage?.MaxSpeed.ToString(System.Globalization.CultureInfo.InvariantCulture) ?? string.Empty;
-        VoltagePeakTorqueEditor = SelectedVoltage?.RatedPeakTorque.ToString(System.Globalization.CultureInfo.InvariantCulture) ?? string.Empty;
-        VoltageContinuousTorqueEditor = SelectedVoltage?.RatedContinuousTorque.ToString(System.Globalization.CultureInfo.InvariantCulture) ?? string.Empty;
-        VoltageContinuousAmpsEditor = SelectedVoltage?.ContinuousAmperage.ToString(System.Globalization.CultureInfo.InvariantCulture) ?? string.Empty;
-        VoltagePeakAmpsEditor = SelectedVoltage?.PeakAmperage.ToString(System.Globalization.CultureInfo.InvariantCulture) ?? string.Empty;
+        VoltageValueEditor = SelectedVoltage is not null ? _numericFormattingService.FormatNumber(SelectedVoltage.Value) : string.Empty;
+        VoltagePowerEditor = SelectedVoltage is not null ? _numericFormattingService.FormatNumber(SelectedVoltage.Power) : string.Empty;
+        VoltageMaxSpeedEditor = SelectedVoltage is not null ? _numericFormattingService.FormatNumber(SelectedVoltage.MaxSpeed) : string.Empty;
+        VoltagePeakTorqueEditor = SelectedVoltage is not null ? _numericFormattingService.FormatNumber(SelectedVoltage.RatedPeakTorque) : string.Empty;
+        VoltageContinuousTorqueEditor = SelectedVoltage is not null ? _numericFormattingService.FormatNumber(SelectedVoltage.RatedContinuousTorque) : string.Empty;
+        VoltageContinuousAmpsEditor = SelectedVoltage is not null ? _numericFormattingService.FormatNumber(SelectedVoltage.ContinuousAmperage) : string.Empty;
+        VoltagePeakAmpsEditor = SelectedVoltage is not null ? _numericFormattingService.FormatNumber(SelectedVoltage.PeakAmperage) : string.Empty;
         
         Log.Information(
             "[REFRESH] Editor values updated: RatedPeakTorque={PeakTorque} RatedContinuousTorque={ContTorque} MaxSpeed={MaxSpeed} Power={Power}",
@@ -1886,7 +1894,7 @@ public partial class MainWindowViewModel : ViewModelBase
         var oldValue = SelectedVoltage.RatedPeakTorque;
         if (!TryParseDouble(VoltagePeakTorqueEditor, oldValue, out var newValue))
         {
-            VoltagePeakTorqueEditor = oldValue.ToString(System.Globalization.CultureInfo.InvariantCulture);
+            VoltagePeakTorqueEditor = FormatForEditor(oldValue);
             return;
         }
 
@@ -1898,7 +1906,7 @@ public partial class MainWindowViewModel : ViewModelBase
         Log.Debug("EditSelectedVoltagePeakTorque: old={Old}, new={New}", oldValue, newValue);
         var command = new EditVoltagePropertyCommand(SelectedVoltage, nameof(Voltage.RatedPeakTorque), oldValue, newValue);
         ActiveTab?.UndoStack.PushAndExecute(command);
-        VoltagePeakTorqueEditor = newValue.ToString(System.Globalization.CultureInfo.InvariantCulture);
+        VoltagePeakTorqueEditor = FormatForEditor(newValue);
         ChartViewModel.RefreshChart();
         CurveDataTableViewModel.RefreshData();
         IsDirty = true;
@@ -1970,7 +1978,7 @@ public partial class MainWindowViewModel : ViewModelBase
         var oldValue = SelectedVoltage.PeakAmperage;
         if (!TryParseDouble(VoltagePeakAmpsEditor, oldValue, out var newValue))
         {
-            VoltagePeakAmpsEditor = oldValue.ToString(System.Globalization.CultureInfo.InvariantCulture);
+            VoltagePeakAmpsEditor = FormatForEditor(oldValue);
             return;
         }
 
@@ -1982,7 +1990,7 @@ public partial class MainWindowViewModel : ViewModelBase
         Log.Debug("EditSelectedVoltagePeakAmps: old={Old}, new={New}", oldValue, newValue);
         var command = new EditVoltagePropertyCommand(SelectedVoltage, nameof(Voltage.PeakAmperage), oldValue, newValue);
         ActiveTab?.UndoStack.PushAndExecute(command);
-        VoltagePeakAmpsEditor = newValue.ToString(System.Globalization.CultureInfo.InvariantCulture);
+        VoltagePeakAmpsEditor = FormatForEditor(newValue);
         ChartViewModel.RefreshChart();
         CurveDataTableViewModel.RefreshData();
         IsDirty = true;
@@ -1998,7 +2006,7 @@ public partial class MainWindowViewModel : ViewModelBase
         var oldValue = CurrentMotor.RatedSpeed;
         if (!TryParseDouble(RatedSpeedEditor, oldValue, out var newValue))
         {
-            RatedSpeedEditor = oldValue.ToString(System.Globalization.CultureInfo.InvariantCulture);
+            RatedSpeedEditor = FormatForEditor(oldValue);
             return;
         }
 
@@ -2009,7 +2017,7 @@ public partial class MainWindowViewModel : ViewModelBase
 
         var command = new EditMotorPropertyCommand(CurrentMotor, nameof(ServoMotor.RatedSpeed), oldValue, newValue);
         ActiveTab?.UndoStack.PushAndExecute(command);
-        RatedSpeedEditor = newValue.ToString(System.Globalization.CultureInfo.InvariantCulture);
+        RatedSpeedEditor = FormatForEditor(newValue);
         ChartViewModel.MotorRatedSpeed = newValue;
         IsDirty = true;
     }
@@ -2049,7 +2057,7 @@ public partial class MainWindowViewModel : ViewModelBase
         var oldValue = CurrentMotor.RatedContinuousTorque;
         if (!TryParseDouble(RatedContinuousTorqueEditor, oldValue, out var newValue))
         {
-            RatedContinuousTorqueEditor = oldValue.ToString(System.Globalization.CultureInfo.InvariantCulture);
+            RatedContinuousTorqueEditor = FormatForEditor(oldValue);
             return;
         }
 
@@ -2060,7 +2068,7 @@ public partial class MainWindowViewModel : ViewModelBase
 
         var command = new EditMotorPropertyCommand(CurrentMotor, nameof(ServoMotor.RatedContinuousTorque), oldValue, newValue);
         ActiveTab?.UndoStack.PushAndExecute(command);
-        RatedContinuousTorqueEditor = newValue.ToString(System.Globalization.CultureInfo.InvariantCulture);
+        RatedContinuousTorqueEditor = FormatForEditor(newValue);
         IsDirty = true;
     }
 
@@ -2222,7 +2230,7 @@ public partial class MainWindowViewModel : ViewModelBase
         var oldValue = CurrentMotor.BrakeAmperage;
         if (!TryParseDouble(BrakeAmperageEditor, oldValue, out var newValue))
         {
-            BrakeAmperageEditor = oldValue.ToString(System.Globalization.CultureInfo.InvariantCulture);
+            BrakeAmperageEditor = FormatForEditor(oldValue);
             return;
         }
 
@@ -2233,7 +2241,7 @@ public partial class MainWindowViewModel : ViewModelBase
 
         var command = new EditMotorPropertyCommand(CurrentMotor, nameof(ServoMotor.BrakeAmperage), oldValue, newValue);
         ActiveTab?.UndoStack.PushAndExecute(command);
-        BrakeAmperageEditor = newValue.ToString(System.Globalization.CultureInfo.InvariantCulture);
+        BrakeAmperageEditor = FormatForEditor(newValue);
         IsDirty = true;
     }
 
@@ -2272,7 +2280,7 @@ public partial class MainWindowViewModel : ViewModelBase
         var oldValue = CurrentMotor.BrakeReleaseTime;
         if (!TryParseDouble(BrakeReleaseTimeEditor, oldValue, out var newValue))
         {
-            BrakeReleaseTimeEditor = oldValue.ToString(System.Globalization.CultureInfo.InvariantCulture);
+            BrakeReleaseTimeEditor = FormatForEditor(oldValue);
             return;
         }
 
@@ -2283,7 +2291,7 @@ public partial class MainWindowViewModel : ViewModelBase
 
         var command = new EditMotorPropertyCommand(CurrentMotor, nameof(ServoMotor.BrakeReleaseTime), oldValue, newValue);
         ActiveTab?.UndoStack.PushAndExecute(command);
-        BrakeReleaseTimeEditor = newValue.ToString(System.Globalization.CultureInfo.InvariantCulture);
+        BrakeReleaseTimeEditor = FormatForEditor(newValue);
         IsDirty = true;
     }
 
@@ -2416,10 +2424,10 @@ public partial class MainWindowViewModel : ViewModelBase
             VoltageValueEditor = voltage.Value.ToString(System.Globalization.CultureInfo.InvariantCulture);
             VoltagePowerEditor = voltage.Power.ToString(System.Globalization.CultureInfo.InvariantCulture);
             VoltageMaxSpeedEditor = voltage.MaxSpeed.ToString(System.Globalization.CultureInfo.InvariantCulture);
-            VoltagePeakTorqueEditor = voltage.RatedPeakTorque.ToString(System.Globalization.CultureInfo.InvariantCulture);
+            VoltagePeakTorqueEditor = FormatForEditor(voltage.RatedPeakTorque);
             VoltageContinuousTorqueEditor = voltage.RatedContinuousTorque.ToString(System.Globalization.CultureInfo.InvariantCulture);
             VoltageContinuousAmpsEditor = voltage.ContinuousAmperage.ToString(System.Globalization.CultureInfo.InvariantCulture);
-            VoltagePeakAmpsEditor = voltage.PeakAmperage.ToString(System.Globalization.CultureInfo.InvariantCulture);
+            VoltagePeakAmpsEditor = FormatForEditor(voltage.PeakAmperage);
             Log.Information($"[REFRESH] Set voltage editors - Value: {VoltageValueEditor}, Power: {VoltagePowerEditor}");
         }
         else
@@ -2525,18 +2533,18 @@ public partial class MainWindowViewModel : ViewModelBase
         else
         {
             MaxSpeedEditor = value.MaxSpeed.ToString(System.Globalization.CultureInfo.InvariantCulture);
-            RatedSpeedEditor = value.RatedSpeed.ToString(System.Globalization.CultureInfo.InvariantCulture);
+            RatedSpeedEditor = FormatForEditor(value.RatedSpeed);
             RatedPeakTorqueEditor = value.RatedPeakTorque.ToString(System.Globalization.CultureInfo.InvariantCulture);
-            RatedContinuousTorqueEditor = value.RatedContinuousTorque.ToString(System.Globalization.CultureInfo.InvariantCulture);
+            RatedContinuousTorqueEditor = FormatForEditor(value.RatedContinuousTorque);
             PowerEditor = value.Power.ToString(System.Globalization.CultureInfo.InvariantCulture);
             WeightEditor = value.Weight.ToString(System.Globalization.CultureInfo.InvariantCulture);
             RotorInertiaEditor = value.RotorInertia.ToString(System.Globalization.CultureInfo.InvariantCulture);
             FeedbackPprEditor = value.FeedbackPpr.ToString(System.Globalization.CultureInfo.InvariantCulture);
             HasBrakeEditor = value.HasBrake;
             BrakeTorqueEditor = value.BrakeTorque.ToString(System.Globalization.CultureInfo.InvariantCulture);
-            BrakeAmperageEditor = value.BrakeAmperage.ToString(System.Globalization.CultureInfo.InvariantCulture);
+            BrakeAmperageEditor = FormatForEditor(value.BrakeAmperage);
             BrakeVoltageEditor = value.BrakeVoltage.ToString(System.Globalization.CultureInfo.InvariantCulture);
-            BrakeReleaseTimeEditor = value.BrakeReleaseTime.ToString(System.Globalization.CultureInfo.InvariantCulture);
+            BrakeReleaseTimeEditor = FormatForEditor(value.BrakeReleaseTime);
             BrakeEngageTimeMovEditor = value.BrakeEngageTimeMov.ToString(System.Globalization.CultureInfo.InvariantCulture);
             BrakeEngageTimeDiodeEditor = value.BrakeEngageTimeDiode.ToString(System.Globalization.CultureInfo.InvariantCulture);
             BrakeBacklashEditor = value.BrakeBacklash.ToString(System.Globalization.CultureInfo.InvariantCulture);
@@ -2544,12 +2552,12 @@ public partial class MainWindowViewModel : ViewModelBase
             DrivePartNumberEditor = SelectedDrive?.PartNumber ?? string.Empty;
             DriveManufacturerEditor = SelectedDrive?.Manufacturer ?? string.Empty;
             VoltageValueEditor = SelectedVoltage?.Value.ToString(System.Globalization.CultureInfo.InvariantCulture) ?? string.Empty;
-            VoltagePowerEditor = SelectedVoltage?.Power.ToString(System.Globalization.CultureInfo.InvariantCulture) ?? string.Empty;
-            VoltageMaxSpeedEditor = SelectedVoltage?.MaxSpeed.ToString(System.Globalization.CultureInfo.InvariantCulture) ?? string.Empty;
-            VoltagePeakTorqueEditor = SelectedVoltage?.RatedPeakTorque.ToString(System.Globalization.CultureInfo.InvariantCulture) ?? string.Empty;
-            VoltageContinuousTorqueEditor = SelectedVoltage?.RatedContinuousTorque.ToString(System.Globalization.CultureInfo.InvariantCulture) ?? string.Empty;
-            VoltageContinuousAmpsEditor = SelectedVoltage?.ContinuousAmperage.ToString(System.Globalization.CultureInfo.InvariantCulture) ?? string.Empty;
-            VoltagePeakAmpsEditor = SelectedVoltage?.PeakAmperage.ToString(System.Globalization.CultureInfo.InvariantCulture) ?? string.Empty;
+            VoltagePowerEditor = SelectedVoltage is not null ? FormatForEditor(SelectedVoltage.Power) : string.Empty;
+            VoltageMaxSpeedEditor = SelectedVoltage is not null ? FormatForEditor(SelectedVoltage.MaxSpeed) : string.Empty;
+            VoltagePeakTorqueEditor = SelectedVoltage is not null ? FormatForEditor(SelectedVoltage.RatedPeakTorque) : string.Empty;
+            VoltageContinuousTorqueEditor = SelectedVoltage is not null ? FormatForEditor(SelectedVoltage.RatedContinuousTorque) : string.Empty;
+            VoltageContinuousAmpsEditor = SelectedVoltage is not null ? FormatForEditor(SelectedVoltage.ContinuousAmperage) : string.Empty;
+            VoltagePeakAmpsEditor = SelectedVoltage is not null ? FormatForEditor(SelectedVoltage.PeakAmperage) : string.Empty;
         }
 
         // Populate ValidationErrors/ValidationErrorsList immediately when switching or loading motors.
@@ -2618,12 +2626,12 @@ public partial class MainWindowViewModel : ViewModelBase
         CurveDataTableViewModel.CurrentVoltage = value;
 
         VoltageValueEditor = value?.Value.ToString(System.Globalization.CultureInfo.InvariantCulture) ?? string.Empty;
-        VoltagePowerEditor = value?.Power.ToString(System.Globalization.CultureInfo.InvariantCulture) ?? string.Empty;
-        VoltageMaxSpeedEditor = value?.MaxSpeed.ToString(System.Globalization.CultureInfo.InvariantCulture) ?? string.Empty;
-        VoltagePeakTorqueEditor = value?.RatedPeakTorque.ToString(System.Globalization.CultureInfo.InvariantCulture) ?? string.Empty;
-        VoltageContinuousTorqueEditor = value?.RatedContinuousTorque.ToString(System.Globalization.CultureInfo.InvariantCulture) ?? string.Empty;
-        VoltageContinuousAmpsEditor = value?.ContinuousAmperage.ToString(System.Globalization.CultureInfo.InvariantCulture) ?? string.Empty;
-        VoltagePeakAmpsEditor = value?.PeakAmperage.ToString(System.Globalization.CultureInfo.InvariantCulture) ?? string.Empty;
+        VoltagePowerEditor = value is not null ? FormatForEditor(value.Power) : string.Empty;
+        VoltageMaxSpeedEditor = value is not null ? FormatForEditor(value.MaxSpeed) : string.Empty;
+        VoltagePeakTorqueEditor = value is not null ? FormatForEditor(value.RatedPeakTorque) : string.Empty;
+        VoltageContinuousTorqueEditor = value is not null ? FormatForEditor(value.RatedContinuousTorque) : string.Empty;
+        VoltageContinuousAmpsEditor = value is not null ? FormatForEditor(value.ContinuousAmperage) : string.Empty;
+        VoltagePeakAmpsEditor = value is not null ? FormatForEditor(value.PeakAmperage) : string.Empty;
         Log.Information("[SELECTION] OnSelectedVoltageChanged() - END");
     }
 
