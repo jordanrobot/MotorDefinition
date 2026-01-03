@@ -20,6 +20,7 @@ public partial class DirectoryBrowserPanel : UserControl
         {
             tree.AddHandler(PointerPressedEvent, OnExplorerTreePointerPressed, RoutingStrategies.Tunnel);
             tree.AddHandler(PointerWheelChangedEvent, OnExplorerTreePointerWheelChanged, RoutingStrategies.Tunnel);
+            tree.AddHandler(ContextRequestedEvent, OnExplorerTreeContextRequested, RoutingStrategies.Tunnel);
         }
     }
 
@@ -65,6 +66,52 @@ public partial class DirectoryBrowserPanel : UserControl
         else if (e.Delta.Y < 0)
         {
             viewModel.DecreaseFontSizeCommand.Execute(null);
+            e.Handled = true;
+        }
+    }
+
+    private void OnExplorerTreeContextRequested(object? sender, ContextRequestedEventArgs e)
+    {
+        if (DataContext is not DirectoryBrowserViewModel viewModel)
+        {
+            return;
+        }
+
+        var treeViewItem = (e.Source as Visual)?.GetVisualAncestors().OfType<TreeViewItem>().FirstOrDefault();
+        if (treeViewItem?.DataContext is not ExplorerNodeViewModel node)
+        {
+            return;
+        }
+
+        // Don't show context menu for placeholders or root
+        if (node.IsPlaceholder || node.IsRoot)
+        {
+            return;
+        }
+
+        // Select the node that was right-clicked
+        viewModel.SelectedNode = node;
+
+        var contextMenu = new ContextMenu();
+        var commands = node.IsDirectory ? viewModel.DirectoryContextCommands : viewModel.FileContextCommands;
+
+        foreach (var command in commands)
+        {
+            if (command.CanExecute(node.FullPath, node.IsDirectory))
+            {
+                var menuItem = new MenuItem
+                {
+                    Header = command.DisplayName,
+                    Command = viewModel.ExecuteContextCommandCommand,
+                    CommandParameter = command
+                };
+                contextMenu.Items.Add(menuItem);
+            }
+        }
+
+        if (contextMenu.Items.Count > 0)
+        {
+            contextMenu.Open(treeViewItem);
             e.Handled = true;
         }
     }
