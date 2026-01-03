@@ -807,6 +807,9 @@ public partial class MainWindowViewModel : ViewModelBase
         WireEditingCoordinator();
         WireUndoInfrastructure();
         WireDirectoryBrowserIntegration();
+
+        // Load saved power curves preference
+        chartViewModel.ShowPowerCurves = _settingsStore.LoadBool("ShowPowerCurves", false);
     }
 
     public MainWindowViewModel(IFileService fileService, ICurveGeneratorService curveGeneratorService)
@@ -844,6 +847,9 @@ public partial class MainWindowViewModel : ViewModelBase
         WireEditingCoordinator();
         WireUndoInfrastructure();
         WireDirectoryBrowserIntegration();
+
+        // Load saved power curves preference
+        chartViewModel.ShowPowerCurves = _settingsStore.LoadBool("ShowPowerCurves", false);
     }
 
     /// <summary>
@@ -928,6 +934,9 @@ public partial class MainWindowViewModel : ViewModelBase
         tab.CurveDataTableViewModel.EditingCoordinator = tab.EditingCoordinator;
         tab.ChartViewModel.UndoStack = tab.UndoStack;
         tab.CurveDataTableViewModel.UndoStack = tab.UndoStack;
+
+        // Load saved power curves preference
+        tab.ChartViewModel.ShowPowerCurves = _settingsStore.LoadBool("ShowPowerCurves", false);
 
         tab.ChartViewModel.DataChanged += (s, e) => tab.MarkDirty();
         tab.CurveDataTableViewModel.DataChanged += (s, e) =>
