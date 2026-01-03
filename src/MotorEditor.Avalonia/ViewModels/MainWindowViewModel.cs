@@ -40,6 +40,7 @@ public partial class MainWindowViewModel : ViewModelBase
     private readonly UnitConversionService _unitConversionService;
     private readonly UnitPreferencesService _unitPreferencesService;
     private readonly IRecentFilesService _recentFilesService;
+    private readonly IRecentFoldersService _recentFoldersService;
     private readonly IUserPreferencesService _userPreferencesService;
 
     // Track previous units for conversion
@@ -350,6 +351,11 @@ public partial class MainWindowViewModel : ViewModelBase
     /// Gets the observable list of recent file paths, ordered from most recent to oldest.
     /// </summary>
     public ReadOnlyObservableCollection<string> RecentFiles => _recentFilesService.RecentFiles;
+
+    /// <summary>
+    /// Gets the observable list of recent folder paths, ordered from most recent to oldest.
+    /// </summary>
+    public ReadOnlyObservableCollection<string> RecentFolders => _recentFoldersService.RecentFolders;
 
     /// <summary>
     /// Current file path (delegates to active tab).
@@ -804,6 +810,7 @@ public partial class MainWindowViewModel : ViewModelBase
         _motorConfigurationWorkflow = new MotorConfigurationWorkflow(_driveVoltageSeriesService);
         _settingsStore = new PanelLayoutUserSettingsStore();
         _recentFilesService = new RecentFilesService(_settingsStore);
+        _recentFoldersService = new RecentFoldersService(_settingsStore);
         _userPreferencesService = new UserPreferencesService();
         UnsavedChangesPromptAsync = ShowUnsavedChangesPromptAsync;
         
@@ -846,6 +853,7 @@ public partial class MainWindowViewModel : ViewModelBase
         _motorConfigurationWorkflow = new MotorConfigurationWorkflow(_driveVoltageSeriesService);
         _settingsStore = new PanelLayoutUserSettingsStore();
         _recentFilesService = new RecentFilesService(_settingsStore);
+        _recentFoldersService = new RecentFoldersService(_settingsStore);
         _userPreferencesService = new UserPreferencesService();
         UnsavedChangesPromptAsync = ShowUnsavedChangesPromptAsync;
         
@@ -899,6 +907,7 @@ public partial class MainWindowViewModel : ViewModelBase
         _motorConfigurationWorkflow = motorConfigurationWorkflow ?? throw new ArgumentNullException(nameof(motorConfigurationWorkflow));
         _settingsStore = settingsStore ?? new PanelLayoutUserSettingsStore();
         _recentFilesService = new RecentFilesService(_settingsStore);
+        _recentFoldersService = new RecentFoldersService(_settingsStore);
         _userPreferencesService = new UserPreferencesService();
         UnsavedChangesPromptAsync = unsavedChangesPromptAsync ?? ShowUnsavedChangesPromptAsync;
 
@@ -1175,6 +1184,13 @@ public partial class MainWindowViewModel : ViewModelBase
         if (e.PropertyName != nameof(DirectoryBrowserViewModel.RootDirectoryPath))
         {
             return;
+        }
+
+        // Add the folder to recent folders when it's opened
+        var rootPath = DirectoryBrowser.RootDirectoryPath;
+        if (!string.IsNullOrWhiteSpace(rootPath))
+        {
+            _recentFoldersService.AddRecentFolder(rootPath);
         }
 
         if (string.IsNullOrWhiteSpace(CurrentFilePath))
@@ -2934,6 +2950,43 @@ public partial class MainWindowViewModel : ViewModelBase
         {
             Log.Error(ex, "Failed to open recent file: {FilePath}", filePath);
             StatusMessage = $"Error opening file: {ex.Message}";
+        }
+    }
+
+    [RelayCommand]
+    private async Task OpenRecentFolderAsync(string folderPath)
+    {
+        ArgumentNullException.ThrowIfNull(folderPath);
+
+        try
+        {
+            // Check if folder exists
+            if (!Directory.Exists(folderPath))
+            {
+                StatusMessage = $"Folder not found: {Path.GetFileName(folderPath)}";
+                // Remove from recent folders list
+                _recentFoldersService.RemoveRecentFolder(folderPath);
+                return;
+            }
+
+            // Show the directory browser panel if not already visible
+            if (ActiveLeftPanelId != PanelRegistry.PanelIds.DirectoryBrowser)
+            {
+                ActiveLeftPanelId = PanelRegistry.PanelIds.DirectoryBrowser;
+            }
+
+            // Set the folder in the directory browser
+            await DirectoryBrowser.SetRootDirectoryAsync(folderPath, CancellationToken.None).ConfigureAwait(true);
+            
+            // Add to recent folders (moves to top)
+            _recentFoldersService.AddRecentFolder(folderPath);
+            
+            StatusMessage = $"Opened folder: {Path.GetFileName(folderPath)}";
+        }
+        catch (Exception ex)
+        {
+            Log.Error(ex, "Failed to open recent folder: {FolderPath}", folderPath);
+            StatusMessage = $"Error opening folder: {ex.Message}";
         }
     }
 
