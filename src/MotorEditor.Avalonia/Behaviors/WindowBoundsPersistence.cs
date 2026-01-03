@@ -11,7 +11,7 @@ namespace CurveEditor.Behaviors;
 /// </summary>
 public static class WindowBoundsPersistence
 {
-    private const string AppFolderName = "CurveEditor";
+    private const string AppFolderName = "MotorEditor";
 
     private sealed class WindowSettings
     {

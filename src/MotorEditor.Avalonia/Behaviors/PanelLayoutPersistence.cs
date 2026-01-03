@@ -16,7 +16,7 @@ namespace CurveEditor.Behaviors;
 /// </summary>
 public static class PanelLayoutPersistence
 {
-    private const string AppFolderName = "CurveEditor";
+    private const string AppFolderName = "MotorEditor";
 
     private static readonly HashSet<string> LoggedLoadFailures = new(StringComparer.Ordinal);
     private static readonly object LoggedLoadFailuresGate = new();
