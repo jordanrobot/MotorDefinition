@@ -95,9 +95,21 @@ public partial class DirectoryBrowserViewModel : ObservableObject
 
         var persistedFontSize = _settings.LoadDouble(FontSizeKey, DefaultFontSize);
         FontSize = Math.Clamp(persistedFontSize, MinFontSize, MaxFontSize);
+
+        InitializeContextMenuCommands();
     }
 
     public ObservableCollection<ExplorerNodeViewModel> RootItems { get; } = [];
+
+    public ObservableCollection<IDirectoryBrowserCommand> FileContextCommands { get; } = [];
+    public ObservableCollection<IDirectoryBrowserCommand> DirectoryContextCommands { get; } = [];
+
+    private void InitializeContextMenuCommands()
+    {
+        var revealCommand = new RevealInFileExplorerCommand();
+        FileContextCommands.Add(revealCommand);
+        DirectoryContextCommands.Add(revealCommand);
+    }
 
     public void UpdateOpenFileStates(string? activeFilePath, IEnumerable<string?> dirtyFilePaths)
     {
@@ -1006,6 +1018,25 @@ public partial class DirectoryBrowserViewModel : ObservableObject
         }
 
         return current;
+    }
+
+    [RelayCommand]
+    private async Task ExecuteContextCommandAsync(IDirectoryBrowserCommand? command)
+    {
+        if (command is null || SelectedNode is null)
+        {
+            return;
+        }
+
+        var path = SelectedNode.FullPath;
+        var isDirectory = SelectedNode.IsDirectory;
+
+        if (!command.CanExecute(path, isDirectory))
+        {
+            return;
+        }
+
+        await command.ExecuteAsync(path, isDirectory).ConfigureAwait(false);
     }
 
     protected virtual async Task InvokeOnUiAsync(Action action)
