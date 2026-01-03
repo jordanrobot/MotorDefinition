@@ -1373,6 +1373,9 @@ public partial class MainWindowViewModel : ViewModelBase
             OnPropertyChanged(nameof(WindowTitle));
 
             _settingsStore.SaveString(DirectoryBrowserViewModel.LastOpenedMotorFileKey, filePath);
+            
+            // Add to recent files
+            _recentFilesService.AddRecentFile(filePath);
 
             if (updateExplorerSelection)
             {
@@ -3002,6 +3005,13 @@ public partial class MainWindowViewModel : ViewModelBase
             MarkCleanCheckpoint();
             StatusMessage = "File saved successfully";
             CurrentFilePath = _fileService.CurrentFilePath;
+            
+            // Add to recent files to update position
+            if (!string.IsNullOrWhiteSpace(CurrentFilePath))
+            {
+                _recentFilesService.AddRecentFile(CurrentFilePath);
+            }
+            
             OnPropertyChanged(nameof(WindowTitle));
         }
         catch (Exception ex)
@@ -3062,6 +3072,10 @@ public partial class MainWindowViewModel : ViewModelBase
 
             _settingsStore.SaveString(DirectoryBrowserViewModel.LastOpenedMotorFileKey, filePath);
             CurrentFilePath = _fileService.CurrentFilePath;
+            
+            // Add to recent files
+            _recentFilesService.AddRecentFile(filePath);
+            
             await DirectoryBrowser.SyncSelectionToFilePathAsync(filePath).ConfigureAwait(true);
         }
         catch (Exception ex)
