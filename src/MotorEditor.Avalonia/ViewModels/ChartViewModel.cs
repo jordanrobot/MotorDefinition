@@ -865,7 +865,7 @@ public partial class ChartViewModel : ViewModelBase
                 );
             }
 
-            maxPower = RoundToNiceValue(maxPower.Value * 1.1, true); // Add 10% margin
+            maxPower = RoundToNiceValue(maxPower.Value * 1.1, true, isPowerValue: true); // Add 10% margin
         }
 
         XAxes = CreateXAxes(maxRpm);
@@ -913,6 +913,11 @@ public partial class ChartViewModel : ViewModelBase
         // Add secondary Y-axis for power if power curves are shown
         if (ShowPowerCurves && powerMaxValue.HasValue)
         {
+            // Use whole numbers for W (large values), decimals for kW/HP (small values)
+            var labeler = PowerUnit == "W" 
+                ? (Func<double, string>)(value => value.ToString("N0"))
+                : (value => value.ToString("N1"));
+            
             axes.Add(new Axis
             {
                 Name = $"Power ({PowerUnit})",
@@ -923,7 +928,7 @@ public partial class ChartViewModel : ViewModelBase
                 MaxLimit = powerMaxValue.Value,
                 MinStep = CalculatePowerStep(powerMaxValue.Value),
                 ForceStepToMin = true,
-                Labeler = value => value.ToString("N1"),
+                Labeler = labeler,
                 Position = LiveChartsCore.Measure.AxisPosition.End,
                 ShowSeparatorLines = false
             });
@@ -932,19 +937,38 @@ public partial class ChartViewModel : ViewModelBase
         return [.. axes];
     }
 
-    private static double CalculatePowerStep(double maxValue)
+    private double CalculatePowerStep(double maxValue)
     {
-        // Calculate a nice step value based on max power
+        // Calculate a nice step value based on max power and current unit
+        // For W (larger values), we need larger steps to avoid crowding
+        if (PowerUnit == "W")
+        {
+            if (maxValue <= 10) return 1;
+            if (maxValue <= 20) return 2;
+            if (maxValue <= 50) return 5;
+            if (maxValue <= 100) return 10;
+            if (maxValue <= 200) return 20;
+            if (maxValue <= 500) return 50;
+            if (maxValue <= 1000) return 100;
+            if (maxValue <= 1500) return 150;
+            if (maxValue <= 2000) return 200;
+            if (maxValue <= 5000) return 500;
+            if (maxValue <= 10000) return 1000;
+            return 2000;
+        }
+        
+        // For kW and HP (smaller values), use finer increments
         if (maxValue <= 1) return 0.1;
         if (maxValue <= 2.5) return 0.25;
         if (maxValue <= 5) return 0.5;
         if (maxValue <= 10) return 1;
-        if (maxValue <= 25) return 2.5;
+        if (maxValue <= 20) return 2;
         if (maxValue <= 50) return 5;
         if (maxValue <= 100) return 10;
-        if (maxValue <= 250) return 25;
+        if (maxValue <= 200) return 20;
         if (maxValue <= 500) return 50;
-        return 100;
+        if (maxValue <= 1000) return 100;
+        return 200;
     }
 
     private static double CalculateTorqueStep(double maxValue)
@@ -959,10 +983,46 @@ public partial class ChartViewModel : ViewModelBase
         return 100;
     }
 
-    private static double RoundToNiceValue(double value, bool roundUp)
+    /// <summary>
+    /// Rounds a value to a nice increment for axis display.
+    /// Uses unit-specific rounding for power values to match standardized increments.
+    /// </summary>
+    /// <param name="value">The value to round.</param>
+    /// <param name="roundUp">If true, rounds up to next nice value; otherwise rounds down.</param>
+    /// <param name="isPowerValue">If true, applies power-specific rounding based on PowerUnit.</param>
+    /// <returns>The rounded value.</returns>
+    private double RoundToNiceValue(double value, bool roundUp, bool isPowerValue = false)
     {
         if (value <= 0) return 0;
 
+        // For power values, use unit-specific standardized increments
+        if (isPowerValue)
+        {
+            if (PowerUnit == "W")
+            {
+                // W: 10, 20, 50, 100, 250, 500, 1000, 1500, 2000, 5000, etc.
+                double[] wIncrements = [10, 20, 50, 100, 250, 500, 1000, 1500, 2000, 5000, 10000, 20000];
+                foreach (var increment in wIncrements)
+                {
+                    if (roundUp && value <= increment) return increment;
+                    if (!roundUp && value < increment) return wIncrements[Array.IndexOf(wIncrements, increment) - 1];
+                }
+                return roundUp ? 20000 : 10000;
+            }
+            else if (PowerUnit == "kW" || PowerUnit == "hp")
+            {
+                // kW and HP: 1, 5, 10, 20, 50, 100, 200, 500, etc.
+                double[] powerIncrements = [1, 5, 10, 20, 50, 100, 200, 500, 1000];
+                foreach (var increment in powerIncrements)
+                {
+                    if (roundUp && value <= increment) return increment;
+                    if (!roundUp && value < increment) return powerIncrements[Array.IndexOf(powerIncrements, increment) - 1];
+                }
+                return roundUp ? 1000 : 500;
+            }
+        }
+
+        // Default rounding for non-power values (torque, etc.)
         // Find the order of magnitude
         var magnitude = Math.Pow(10, Math.Floor(Math.Log10(value)));
         var normalized = value / magnitude;

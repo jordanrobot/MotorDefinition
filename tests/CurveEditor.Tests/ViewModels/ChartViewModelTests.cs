@@ -508,4 +508,131 @@ public class ChartViewModelTests
         Assert.Single(viewModel.YAxes);
         Assert.Contains("Torque", viewModel.YAxes[0].Name);
     }
+
+    [Theory]
+    [InlineData("W")]
+    [InlineData("kW")]
+    [InlineData("hp")]
+    public void PowerAxisMaxValue_RoundsToStandardizedIncrements(string powerUnit)
+    {
+        // Arrange
+        var viewModel = new ChartViewModel
+        {
+            PowerUnit = powerUnit,
+            ShowPowerCurves = true
+        };
+        
+        // Create a voltage with specific power values
+        var voltage = new Voltage(220)
+        {
+            MaxSpeed = 5000,
+            RatedPeakTorque = 10,
+            RatedContinuousTorque = 8
+        };
+        
+        var peakSeries = new Curve("Peak");
+        peakSeries.Data.Add(new DataPoint { Rpm = 3000, Torque = 10 });
+        voltage.Curves.Add(peakSeries);
+        
+        viewModel.CurrentVoltage = voltage;
+
+        // Act - Get the power Y-axis
+        var powerAxis = viewModel.YAxes[1]; // Second axis is power
+
+        // Assert - The max limit should be a standardized round number
+        var maxLimit = powerAxis.MaxLimit ?? 0;
+        
+        if (powerUnit == "W")
+        {
+            // For W, max should be one of: 10, 20, 50, 100, 250, 500, 1000, 1500, 2000, etc.
+            var wIncrements = new[] { 10.0, 20, 50, 100, 250, 500, 1000, 1500, 2000, 5000, 10000 };
+            Assert.Contains(maxLimit, wIncrements);
+        }
+        else
+        {
+            // For kW/HP, max should be one of: 1, 5, 10, 20, 50, 100, 200, etc.
+            var powerIncrements = new[] { 1.0, 5, 10, 20, 50, 100, 200, 500 };
+            Assert.Contains(maxLimit, powerIncrements);
+        }
+    }
+
+    [Theory]
+    [InlineData("W", 100)]
+    [InlineData("W", 500)]
+    [InlineData("W", 1000)]
+    [InlineData("W", 2000)]
+    [InlineData("kW", 10)]
+    [InlineData("kW", 50)]
+    [InlineData("kW", 100)]
+    [InlineData("hp", 10)]
+    [InlineData("hp", 50)]
+    [InlineData("hp", 100)]
+    public void PowerAxisStep_UsesAppropriateIncrementsForUnit(string powerUnit, double approximateMaxPower)
+    {
+        // Arrange
+        var viewModel = new ChartViewModel
+        {
+            PowerUnit = powerUnit,
+            ShowPowerCurves = true
+        };
+        
+        var voltage = new Voltage(220)
+        {
+            MaxSpeed = 5000,
+            RatedPeakTorque = 20,
+            RatedContinuousTorque = 15
+        };
+        
+        var peakSeries = new Curve("Peak");
+        peakSeries.Data.Add(new DataPoint { Rpm = 3000, Torque = 20 });
+        voltage.Curves.Add(peakSeries);
+        
+        viewModel.CurrentVoltage = voltage;
+
+        // Act
+        var powerAxis = viewModel.YAxes[1];
+
+        // Assert - Check that the step is appropriate
+        // The step should result in readable number of labels (typically 4-12 labels)
+        var numberOfLabels = (powerAxis.MaxLimit ?? 0) / powerAxis.MinStep;
+        Assert.InRange(numberOfLabels, 4, 12); // Should have 4-12 labels for readability
+        
+        // Verify step is reasonable for the unit
+        if (powerUnit == "W")
+        {
+            // For W, steps should be larger (10, 20, 50, 100, etc.)
+            Assert.True(powerAxis.MinStep >= 10, $"W step should be >= 10, was {powerAxis.MinStep}");
+        }
+        else
+        {
+            // For kW/HP, steps can be smaller (0.1, 0.5, 1, 2, etc.)
+            Assert.True(powerAxis.MinStep >= 0.1, $"{powerUnit} step should be >= 0.1, was {powerAxis.MinStep}");
+        }
+    }
+
+    [Fact]
+    public void PowerAxisLabels_UseWholeNumbers()
+    {
+        // Arrange
+        var viewModel = new ChartViewModel
+        {
+            PowerUnit = "W",
+            ShowPowerCurves = true
+        };
+        
+        var voltage = CreateTestVoltage();
+        viewModel.CurrentVoltage = voltage;
+
+        // Act
+        var powerAxis = viewModel.YAxes[1];
+        
+        // Assert - The labeler should format values appropriately
+        // Test a few values to ensure they're whole numbers for W
+        var label1000 = powerAxis.Labeler(1000);
+        var label500 = powerAxis.Labeler(500);
+        
+        // For W unit with large values, should not show decimals
+        Assert.DoesNotContain(".", label1000);
+        Assert.DoesNotContain(".", label500);
+    }
 }
