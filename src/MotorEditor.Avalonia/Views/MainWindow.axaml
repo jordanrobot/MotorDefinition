@@ -123,14 +123,14 @@
                 <MenuItem Header="Close _Folder" Command="{Binding DirectoryBrowser.CloseFolderCommand}"/>
                 <Separator/>
                 <MenuItem Header="Recent _Files" ItemsSource="{Binding RecentFiles}">
-                    <MenuItem.Styles>
-                        <Style Selector="MenuItem">
+                    <MenuItem.ItemContainerTheme>
+                        <ControlTheme TargetType="MenuItem" BasedOn="{StaticResource {x:Type MenuItem}}">
                             <Setter Property="Command" Value="{Binding $parent[Window].((vm:MainWindowViewModel)DataContext).OpenRecentFileCommand}"/>
                             <Setter Property="CommandParameter" Value="{Binding}"/>
                             <Setter Property="Header" Value="{Binding Converter={StaticResource FilePathToNameConverter}}"/>
                             <Setter Property="ToolTip.Tip" Value="{Binding}"/>
-                        </Style>
-                    </MenuItem.Styles>
+                        </ControlTheme>
+                    </MenuItem.ItemContainerTheme>
                 </MenuItem>
                 <Separator/>
                 <MenuItem Header="_Save" Command="{Binding SaveCommand}" InputGesture="Ctrl+S"/>
