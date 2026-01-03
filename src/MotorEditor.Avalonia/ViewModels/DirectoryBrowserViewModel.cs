@@ -46,7 +46,7 @@ public partial class DirectoryBrowserViewModel : ObservableObject
     private double _fontSize = DefaultFontSize;
 
     private string? _activeFileRelativePath;
-    private bool _isActiveFileDirty;
+    private HashSet<string> _dirtyFileRelativePaths = new(StringComparer.OrdinalIgnoreCase);
 
     private readonly IDirectoryBrowserService _directoryBrowserService;
     private readonly IFolderPicker _folderPicker;
@@ -99,11 +99,25 @@ public partial class DirectoryBrowserViewModel : ObservableObject
 
     public ObservableCollection<ExplorerNodeViewModel> RootItems { get; } = [];
 
-    public void UpdateActiveFileState(string? activeFilePath, bool isDirty)
+    public void UpdateOpenFileStates(string? activeFilePath, IEnumerable<string?> dirtyFilePaths)
     {
-        _isActiveFileDirty = isDirty;
         _activeFileRelativePath = TryGetRelativePathUnderRoot(activeFilePath);
+        _dirtyFileRelativePaths = new HashSet<string>(
+            GetRelativePathsUnderRoot(dirtyFilePaths),
+            StringComparer.OrdinalIgnoreCase);
         ApplyActiveFileStateToLoadedNodes();
+    }
+
+    private IEnumerable<string> GetRelativePathsUnderRoot(IEnumerable<string?> dirtyFilePaths)
+    {
+        foreach (var filePath in dirtyFilePaths)
+        {
+            var relative = TryGetRelativePathUnderRoot(filePath);
+            if (!string.IsNullOrWhiteSpace(relative))
+            {
+                yield return relative;
+            }
+        }
     }
 
     private string? TryGetRelativePathUnderRoot(string? activeFilePath)
@@ -156,7 +170,7 @@ public partial class DirectoryBrowserViewModel : ObservableObject
         if (node.IsDirectory || node.IsPlaceholder)
         {
             node.IsActiveFile = false;
-            node.IsActiveFileDirty = false;
+            node.IsDirty = false;
             return;
         }
 
@@ -165,7 +179,7 @@ public partial class DirectoryBrowserViewModel : ObservableObject
             && string.Equals(node.RelativePath, activeRel, StringComparison.OrdinalIgnoreCase);
 
         node.IsActiveFile = isActive;
-        node.IsActiveFileDirty = isActive && _isActiveFileDirty;
+        node.IsDirty = _dirtyFileRelativePaths.Contains(node.RelativePath);
     }
 
     partial void OnRootDirectoryPathChanged(string? value)

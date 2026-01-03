@@ -109,7 +109,7 @@ public sealed class DirectoryBrowserDirtyIndicatorTests
     }
 
     [Fact]
-    public async Task UpdateActiveFileState_WhenActiveFileIsDirty_AppendsStarToThatFileOnly()
+    public async Task UpdateOpenFileStates_WhenAnyFileIsDirty_AppendsStarRegardlessOfActiveFile()
     {
         var store = new InMemorySettingsStore();
         var root = Directory.CreateDirectory(Path.Combine(Path.GetTempPath(), "curve-test-" + Guid.NewGuid().ToString("N")));
@@ -123,7 +123,7 @@ public sealed class DirectoryBrowserDirtyIndicatorTests
             var vm = new TestDirectoryBrowserViewModel(new DirectoryBrowserService(), new StubFolderPicker(), store);
             await vm.SetRootDirectoryAsync(root.FullName);
 
-            vm.UpdateActiveFileState(fileA, isDirty: true);
+            vm.UpdateOpenFileStates(activeFilePath: fileA, dirtyFilePaths: new[] { fileA });
 
             var rootNode = Assert.Single(vm.RootItems);
             var fileNodeA = Assert.Single(rootNode.Children, n => !n.IsDirectory && n.DisplayName == "a.json");
@@ -132,12 +132,20 @@ public sealed class DirectoryBrowserDirtyIndicatorTests
             Assert.Equal("a.json*", fileNodeA.DisplayNameWithDirtyIndicator);
             Assert.Equal("b.json", fileNodeB.DisplayNameWithDirtyIndicator);
 
-            vm.UpdateActiveFileState(fileA, isDirty: false);
-            Assert.Equal("a.json", fileNodeA.DisplayNameWithDirtyIndicator);
+            // Dirty marker should persist even if a different file is active.
+            vm.UpdateOpenFileStates(activeFilePath: fileB, dirtyFilePaths: new[] { fileA });
+            Assert.Equal("a.json*", fileNodeA.DisplayNameWithDirtyIndicator);
+            Assert.Equal("b.json", fileNodeB.DisplayNameWithDirtyIndicator);
 
-            vm.UpdateActiveFileState(fileB, isDirty: true);
-            Assert.Equal("a.json", fileNodeA.DisplayNameWithDirtyIndicator);
+            // Multiple dirty files should each show a star.
+            vm.UpdateOpenFileStates(activeFilePath: fileB, dirtyFilePaths: new[] { fileA, fileB });
+            Assert.Equal("a.json*", fileNodeA.DisplayNameWithDirtyIndicator);
             Assert.Equal("b.json*", fileNodeB.DisplayNameWithDirtyIndicator);
+
+            // Clearing dirty state should remove the star.
+            vm.UpdateOpenFileStates(activeFilePath: fileB, dirtyFilePaths: Array.Empty<string>());
+            Assert.Equal("a.json", fileNodeA.DisplayNameWithDirtyIndicator);
+            Assert.Equal("b.json", fileNodeB.DisplayNameWithDirtyIndicator);
         }
         finally
         {
