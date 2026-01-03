@@ -471,7 +471,8 @@ public partial class MainWindowViewModel : ViewModelBase
     }
 
     /// <summary>
-    /// Toggles the power curves overlay on/off.
+    /// Toggles the power curves overlay on/off application-wide.
+    /// This affects all open tabs and newly opened files.
     /// </summary>
     [RelayCommand]
     private void ToggleShowPowerCurves()
@@ -482,8 +483,20 @@ public partial class MainWindowViewModel : ViewModelBase
             return;
         }
 
-        chartViewModel.ShowPowerCurves = !chartViewModel.ShowPowerCurves;
-        _settingsStore.SaveBool("ShowPowerCurves", chartViewModel.ShowPowerCurves);
+        // Toggle the state
+        var newState = !chartViewModel.ShowPowerCurves;
+        
+        // Apply to all open tabs
+        foreach (var tab in Tabs)
+        {
+            if (tab.ChartViewModel != null)
+            {
+                tab.ChartViewModel.ShowPowerCurves = newState;
+            }
+        }
+        
+        // Save preference for future tabs
+        _settingsStore.SaveBool("ShowPowerCurves", newState);
     }
 
     /// <summary>
