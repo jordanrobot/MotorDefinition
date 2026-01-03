@@ -314,7 +314,9 @@ public partial class CurveDataPanel : UserControl
                     {
                         VerticalAlignment = Avalonia.Layout.VerticalAlignment.Center,
                         Margin = new Thickness(2),
-                        Text = row.GetTorque(seriesName).ToString("N2")
+                        Text = (DataContext is MainWindowViewModel vm) 
+                            ? vm.NumericFormatter.FormatNumberWithSeparators(row.GetTorque(seriesName))
+                            : row.GetTorque(seriesName).ToString("N2")
                     };
 
                     border.Child = textBlock;
@@ -343,7 +345,9 @@ public partial class CurveDataPanel : UserControl
                         {
                             VerticalAlignment = Avalonia.Layout.VerticalAlignment.Center,
                             Margin = new Thickness(2),
-                            Text = row?.GetTorque(seriesName).ToString("N2") ?? "0.00",
+                            Text = (DataContext is MainWindowViewModel vm && row is not null)
+                                ? vm.NumericFormatter.FormatNumberWithSeparators(row.GetTorque(seriesName))
+                                : (row?.GetTorque(seriesName).ToString("N2") ?? "0.00"),
                             BorderThickness = new Thickness(2),
                             BorderBrush = Brushes.White,
                             // Disable Avalonia's per-TextBox undo stack so that
@@ -836,7 +840,7 @@ public partial class CurveDataPanel : UserControl
                         {
                             if (_cellBorders.TryGetValue(editCell, out var border) && border.Child is TextBlock textBlock)
                             {
-                                textBlock.Text = originalValue.ToString("N2");
+                                textBlock.Text = vmEsc.NumericFormatter.FormatNumberWithSeparators(originalValue);
                             }
 
                             vmEsc.ChartViewModel.RefreshChart();
@@ -1345,7 +1349,7 @@ public partial class CurveDataPanel : UserControl
                     var seriesName = vm.CurveDataTableViewModel.GetSeriesNameForColumn(colIndex);
                     if (seriesName is not null)
                     {
-                        values.Add(row.GetTorque(seriesName).ToString("F2"));
+                        values.Add(vm.NumericFormatter.FormatFixedPoint(row.GetTorque(seriesName)));
                     }
                     else
                     {
@@ -1418,7 +1422,7 @@ public partial class CurveDataPanel : UserControl
 
             if (_cellBorders.TryGetValue(cellPos, out var border) && border.Child is TextBlock textBlock)
             {
-                textBlock.Text = value.ToString("N2");
+                textBlock.Text = vm.NumericFormatter.FormatNumberWithSeparators(value);
             }
         }
 
@@ -1642,7 +1646,7 @@ public partial class CurveDataPanel : UserControl
 
                 if (_cellBorders.TryGetValue(cellPos, out var border) && border.Child is TextBlock textBlock)
                 {
-                    textBlock.Text = torque.ToString("N2");
+                    textBlock.Text = vm.NumericFormatter.FormatNumberWithSeparators(torque);
                 }
             }
 
@@ -1684,9 +1688,9 @@ public partial class CurveDataPanel : UserControl
             }
 
             // Directly update the TextBlock in the cell for immediate visual feedback
-            if (_cellBorders.TryGetValue(cellPos, out var border) && border.Child is TextBlock textBlock)
+            if (_cellBorders.TryGetValue(cellPos, out var border) && border.Child is TextBlock textBlock && DataContext is MainWindowViewModel vmReset)
             {
-                textBlock.Text = originalValue.ToString("N2");
+                textBlock.Text = vmReset.NumericFormatter.FormatNumberWithSeparators(originalValue);
             }
         }
 
