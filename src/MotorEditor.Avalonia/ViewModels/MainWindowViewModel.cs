@@ -41,6 +41,7 @@ public partial class MainWindowViewModel : ViewModelBase
     private readonly UnitPreferencesService _unitPreferencesService;
     private readonly IRecentFilesService _recentFilesService;
     private readonly IUserPreferencesService _userPreferencesService;
+    private readonly NumericFormattingService _numericFormattingService;
 
     // Track previous units for conversion
     private string? _previousTorqueUnit;
@@ -345,6 +346,11 @@ public partial class MainWindowViewModel : ViewModelBase
     /// </summary>
     [ObservableProperty]
     private DirectoryBrowserViewModel _directoryBrowser = new();
+
+    /// <summary>
+    /// Service for formatting numeric values according to user preferences.
+    /// </summary>
+    public NumericFormattingService NumericFormatter => _numericFormattingService;
 
     /// <summary>
     /// Gets the observable list of recent file paths, ordered from most recent to oldest.
@@ -805,6 +811,7 @@ public partial class MainWindowViewModel : ViewModelBase
         _settingsStore = new PanelLayoutUserSettingsStore();
         _recentFilesService = new RecentFilesService(_settingsStore);
         _userPreferencesService = new UserPreferencesService();
+        _numericFormattingService = new NumericFormattingService(_userPreferencesService);
         UnsavedChangesPromptAsync = ShowUnsavedChangesPromptAsync;
         
         // Initialize unit services
@@ -829,6 +836,7 @@ public partial class MainWindowViewModel : ViewModelBase
         WireEditingCoordinator();
         WireUndoInfrastructure();
         WireDirectoryBrowserIntegration();
+        WirePreferencesHandling();
 
         // Load saved power curves preference
         chartViewModel.ShowPowerCurves = _settingsStore.LoadBool("ShowPowerCurves", false);
@@ -847,6 +855,7 @@ public partial class MainWindowViewModel : ViewModelBase
         _settingsStore = new PanelLayoutUserSettingsStore();
         _recentFilesService = new RecentFilesService(_settingsStore);
         _userPreferencesService = new UserPreferencesService();
+        _numericFormattingService = new NumericFormattingService(_userPreferencesService);
         UnsavedChangesPromptAsync = ShowUnsavedChangesPromptAsync;
         
         // Initialize unit services
@@ -871,6 +880,7 @@ public partial class MainWindowViewModel : ViewModelBase
         WireEditingCoordinator();
         WireUndoInfrastructure();
         WireDirectoryBrowserIntegration();
+        WirePreferencesHandling();
 
         // Load saved power curves preference
         chartViewModel.ShowPowerCurves = _settingsStore.LoadBool("ShowPowerCurves", false);
@@ -900,6 +910,7 @@ public partial class MainWindowViewModel : ViewModelBase
         _settingsStore = settingsStore ?? new PanelLayoutUserSettingsStore();
         _recentFilesService = new RecentFilesService(_settingsStore);
         _userPreferencesService = new UserPreferencesService();
+        _numericFormattingService = new NumericFormattingService(_userPreferencesService);
         UnsavedChangesPromptAsync = unsavedChangesPromptAsync ?? ShowUnsavedChangesPromptAsync;
 
         // Initialize unit services
@@ -925,6 +936,7 @@ public partial class MainWindowViewModel : ViewModelBase
         WireEditingCoordinator();
         WireUndoInfrastructure();
         WireDirectoryBrowserIntegration();
+        WirePreferencesHandling();
 
         // Load saved power curves preference
         ChartViewModel!.ShowPowerCurves = _settingsStore.LoadBool("ShowPowerCurves", false);
@@ -940,6 +952,32 @@ public partial class MainWindowViewModel : ViewModelBase
 
         CurrentFilePath = _fileService.CurrentFilePath;
         DirectoryBrowser.UpdateOpenFileStates(CurrentFilePath, GetDirtyFilePaths());
+    }
+
+    /// <summary>
+    /// Wire up preferences change handling to refresh displays when precision changes.
+    /// </summary>
+    private void WirePreferencesHandling()
+    {
+        // Unsubscribe first to prevent duplicate event handlers if this is called multiple times
+        _userPreferencesService.PreferencesChanged -= OnPreferencesChanged;
+        _userPreferencesService.PreferencesChanged += OnPreferencesChanged;
+    }
+
+    /// <summary>
+    /// Handle preferences changes by triggering view refresh.
+    /// </summary>
+    private void OnPreferencesChanged(object? sender, EventArgs e)
+    {
+        // Notify all properties that depend on formatting to refresh
+        // This will cause CurveDataPanel to rebuild its columns with new formatting
+        OnPropertyChanged(nameof(NumericFormatter));
+        
+        // Trigger a full UI refresh by notifying that the motor changed
+        if (CurrentMotor is not null)
+        {
+            OnPropertyChanged(nameof(CurrentMotor));
+        }
     }
 
     /// <summary>
