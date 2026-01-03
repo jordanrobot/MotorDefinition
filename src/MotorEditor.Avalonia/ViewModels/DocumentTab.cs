@@ -72,7 +72,7 @@ public partial class DocumentTab : ObservableObject
             var name = FilePath != null
                 ? Path.GetFileName(FilePath)
                 : Motor?.MotorName ?? "Untitled";
-            var dirtyMark = IsDirty ? " >" : string.Empty;
+            var dirtyMark = IsDirty ? " *" : string.Empty;
             return $"{{ }} {name}{dirtyMark}";
         }
     }
