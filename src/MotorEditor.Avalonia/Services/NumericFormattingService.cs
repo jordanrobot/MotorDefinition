@@ -46,10 +46,11 @@ public class NumericFormattingService
         // Format with the precision, then remove trailing zeros and decimal point if not needed
         var formatted = rounded.ToString($"F{DecimalPrecision}", CultureInfo.CurrentCulture);
         
-        // Remove trailing zeros after decimal point
-        if (formatted.Contains('.') || formatted.Contains(','))
+        // Remove trailing zeros after decimal point (culture-aware)
+        var decimalSeparator = CultureInfo.CurrentCulture.NumberFormat.NumberDecimalSeparator;
+        if (formatted.Contains(decimalSeparator))
         {
-            formatted = formatted.TrimEnd('0').TrimEnd('.', ',');
+            formatted = formatted.TrimEnd('0').TrimEnd(decimalSeparator[0]);
         }
         
         return formatted;
