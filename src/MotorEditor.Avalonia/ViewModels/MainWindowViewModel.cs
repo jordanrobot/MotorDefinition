@@ -471,7 +471,8 @@ public partial class MainWindowViewModel : ViewModelBase
     }
 
     /// <summary>
-    /// Toggles the power curves overlay on/off.
+    /// Toggles the power curves overlay on/off application-wide.
+    /// This affects all open tabs and newly opened files.
     /// </summary>
     [RelayCommand]
     private void ToggleShowPowerCurves()
@@ -482,8 +483,20 @@ public partial class MainWindowViewModel : ViewModelBase
             return;
         }
 
-        chartViewModel.ShowPowerCurves = !chartViewModel.ShowPowerCurves;
-        _settingsStore.SaveBool("ShowPowerCurves", chartViewModel.ShowPowerCurves);
+        // Toggle the state
+        var newState = !chartViewModel.ShowPowerCurves;
+        
+        // Apply to all open tabs
+        foreach (var tab in Tabs)
+        {
+            if (tab.ChartViewModel != null)
+            {
+                tab.ChartViewModel.ShowPowerCurves = newState;
+            }
+        }
+        
+        // Save preference for future tabs
+        _settingsStore.SaveBool("ShowPowerCurves", newState);
     }
 
     /// <summary>
@@ -807,6 +820,9 @@ public partial class MainWindowViewModel : ViewModelBase
         WireEditingCoordinator();
         WireUndoInfrastructure();
         WireDirectoryBrowserIntegration();
+
+        // Load saved power curves preference
+        chartViewModel.ShowPowerCurves = _settingsStore.LoadBool("ShowPowerCurves", false);
     }
 
     public MainWindowViewModel(IFileService fileService, ICurveGeneratorService curveGeneratorService)
@@ -844,6 +860,9 @@ public partial class MainWindowViewModel : ViewModelBase
         WireEditingCoordinator();
         WireUndoInfrastructure();
         WireDirectoryBrowserIntegration();
+
+        // Load saved power curves preference
+        chartViewModel.ShowPowerCurves = _settingsStore.LoadBool("ShowPowerCurves", false);
     }
 
     /// <summary>
@@ -928,6 +947,9 @@ public partial class MainWindowViewModel : ViewModelBase
         tab.CurveDataTableViewModel.EditingCoordinator = tab.EditingCoordinator;
         tab.ChartViewModel.UndoStack = tab.UndoStack;
         tab.CurveDataTableViewModel.UndoStack = tab.UndoStack;
+
+        // Load saved power curves preference
+        tab.ChartViewModel.ShowPowerCurves = _settingsStore.LoadBool("ShowPowerCurves", false);
 
         tab.ChartViewModel.DataChanged += (s, e) => tab.MarkDirty();
         tab.CurveDataTableViewModel.DataChanged += (s, e) =>
