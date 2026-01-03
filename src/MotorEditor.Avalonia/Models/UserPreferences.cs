@@ -34,6 +34,16 @@ public sealed class UserPreferences
     };
 
     /// <summary>
+    /// Whether to show the Motor Rated Speed reference line on the chart.
+    /// </summary>
+    public bool ShowMotorRatedSpeedLine { get; set; } = true;
+
+    /// <summary>
+    /// Whether to show the Voltage Max Speed reference line on the chart.
+    /// </summary>
+    public bool ShowVoltageMaxSpeedLine { get; set; } = true;
+
+    /// <summary>
     /// Creates a copy of the current preferences.
     /// </summary>
     public UserPreferences Clone()
@@ -42,7 +52,9 @@ public sealed class UserPreferences
         {
             DecimalPrecision = DecimalPrecision,
             Theme = Theme,
-            CurveColors = new List<string>(CurveColors)
+            CurveColors = new List<string>(CurveColors),
+            ShowMotorRatedSpeedLine = ShowMotorRatedSpeedLine,
+            ShowVoltageMaxSpeedLine = ShowVoltageMaxSpeedLine
         };
     }
 }

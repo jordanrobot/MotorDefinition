@@ -635,4 +635,189 @@ public class ChartViewModelTests
         Assert.DoesNotContain(".", label1000);
         Assert.DoesNotContain(".", label500);
     }
+
+    [Fact]
+    public void ShowMotorRatedSpeedLine_DefaultsToTrue()
+    {
+        // Arrange & Act
+        var viewModel = new ChartViewModel();
+
+        // Assert
+        Assert.True(viewModel.ShowMotorRatedSpeedLine);
+    }
+
+    [Fact]
+    public void ShowVoltageMaxSpeedLine_DefaultsToTrue()
+    {
+        // Arrange & Act
+        var viewModel = new ChartViewModel();
+
+        // Assert
+        Assert.True(viewModel.ShowVoltageMaxSpeedLine);
+    }
+
+    [Fact]
+    public void UpdateChart_HidesMotorRatedSpeedLine_WhenShowMotorRatedSpeedLineIsFalse()
+    {
+        // Arrange
+        var viewModel = new ChartViewModel
+        {
+            MotorMaxSpeed = 6000,
+            MotorRatedSpeed = 3000,
+            ShowMotorRatedSpeedLine = false
+        };
+        var voltage = CreateTestVoltage();
+
+        // Act
+        viewModel.CurrentVoltage = voltage;
+
+        // Assert
+        Assert.DoesNotContain(viewModel.Series, s => s.Name == "Motor Rated Speed");
+    }
+
+    [Fact]
+    public void UpdateChart_HidesVoltageMaxSpeedLine_WhenShowVoltageMaxSpeedLineIsFalse()
+    {
+        // Arrange
+        var viewModel = new ChartViewModel
+        {
+            MotorMaxSpeed = 6000,
+            ShowVoltageMaxSpeedLine = false
+        };
+        var voltage = CreateTestVoltage();
+        voltage.MaxSpeed = 5000;
+
+        // Act
+        viewModel.CurrentVoltage = voltage;
+
+        // Assert
+        Assert.DoesNotContain(viewModel.Series, s => s.Name == "Voltage Max Speed");
+    }
+
+    [Fact]
+    public void LegendItems_ContainsTorqueCurveSeries()
+    {
+        // Arrange
+        var viewModel = new ChartViewModel();
+        var voltage = CreateTestVoltage();
+
+        // Act
+        viewModel.CurrentVoltage = voltage;
+
+        // Assert
+        Assert.Contains(viewModel.LegendItems, item => item.Name == "Peak");
+        Assert.Contains(viewModel.LegendItems, item => item.Name == "Continuous");
+    }
+
+    [Fact]
+    public void LegendItems_ContainsBrakeTorque_WhenBrakeIsPresent()
+    {
+        // Arrange
+        var viewModel = new ChartViewModel
+        {
+            HasBrake = true,
+            BrakeTorque = 30
+        };
+        var voltage = CreateTestVoltage();
+
+        // Act
+        viewModel.CurrentVoltage = voltage;
+
+        // Assert
+        Assert.Contains(viewModel.LegendItems, item => item.Name == "Brake Torque");
+    }
+
+    [Fact]
+    public void LegendItems_ContainsMotorRatedSpeed_WhenVisible()
+    {
+        // Arrange
+        var viewModel = new ChartViewModel
+        {
+            MotorMaxSpeed = 6000,
+            MotorRatedSpeed = 3000,
+            ShowMotorRatedSpeedLine = true
+        };
+        var voltage = CreateTestVoltage();
+
+        // Act
+        viewModel.CurrentVoltage = voltage;
+
+        // Assert
+        Assert.Contains(viewModel.LegendItems, item => item.Name == "Motor Rated Speed");
+    }
+
+    [Fact]
+    public void LegendItems_DoesNotContainMotorRatedSpeed_WhenHidden()
+    {
+        // Arrange
+        var viewModel = new ChartViewModel
+        {
+            MotorMaxSpeed = 6000,
+            MotorRatedSpeed = 3000,
+            ShowMotorRatedSpeedLine = false
+        };
+        var voltage = CreateTestVoltage();
+
+        // Act
+        viewModel.CurrentVoltage = voltage;
+
+        // Assert
+        Assert.DoesNotContain(viewModel.LegendItems, item => item.Name == "Motor Rated Speed");
+    }
+
+    [Fact]
+    public void LegendItems_ContainsVoltageMaxSpeed_WhenVisible()
+    {
+        // Arrange
+        var viewModel = new ChartViewModel
+        {
+            MotorMaxSpeed = 6000,
+            ShowVoltageMaxSpeedLine = true
+        };
+        var voltage = CreateTestVoltage();
+        voltage.MaxSpeed = 5000;
+
+        // Act
+        viewModel.CurrentVoltage = voltage;
+
+        // Assert
+        Assert.Contains(viewModel.LegendItems, item => item.Name == "Voltage Max Speed");
+    }
+
+    [Fact]
+    public void LegendItems_DoesNotContainVoltageMaxSpeed_WhenHidden()
+    {
+        // Arrange
+        var viewModel = new ChartViewModel
+        {
+            MotorMaxSpeed = 6000,
+            ShowVoltageMaxSpeedLine = false
+        };
+        var voltage = CreateTestVoltage();
+        voltage.MaxSpeed = 5000;
+
+        // Act
+        viewModel.CurrentVoltage = voltage;
+
+        // Assert
+        Assert.DoesNotContain(viewModel.LegendItems, item => item.Name == "Voltage Max Speed");
+    }
+
+    [Fact]
+    public void LegendItems_ContainsPowerCurves_WhenPowerCurvesShown()
+    {
+        // Arrange
+        var viewModel = new ChartViewModel
+        {
+            ShowPowerCurves = true
+        };
+        var voltage = CreateTestVoltage();
+
+        // Act
+        viewModel.CurrentVoltage = voltage;
+
+        // Assert
+        Assert.Contains(viewModel.LegendItems, item => item.Name == "Peak (Power)");
+        Assert.Contains(viewModel.LegendItems, item => item.Name == "Continuous (Power)");
+    }
 }

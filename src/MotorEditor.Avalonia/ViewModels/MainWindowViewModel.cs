@@ -506,6 +506,56 @@ public partial class MainWindowViewModel : ViewModelBase
         _settingsStore.SaveBool("ShowPowerCurves", newState);
     }
 
+    [RelayCommand]
+    private void ToggleShowMotorRatedSpeedLine()
+    {
+        var chartViewModel = ChartViewModel;
+        if (chartViewModel == null)
+        {
+            return;
+        }
+
+        // Toggle the state
+        var newState = !chartViewModel.ShowMotorRatedSpeedLine;
+        
+        // Apply to all open tabs
+        foreach (var tab in Tabs)
+        {
+            if (tab.ChartViewModel != null)
+            {
+                tab.ChartViewModel.ShowMotorRatedSpeedLine = newState;
+            }
+        }
+        
+        // Save preference for future tabs
+        _settingsStore.SaveBool("ShowMotorRatedSpeedLine", newState);
+    }
+
+    [RelayCommand]
+    private void ToggleShowVoltageMaxSpeedLine()
+    {
+        var chartViewModel = ChartViewModel;
+        if (chartViewModel == null)
+        {
+            return;
+        }
+
+        // Toggle the state
+        var newState = !chartViewModel.ShowVoltageMaxSpeedLine;
+        
+        // Apply to all open tabs
+        foreach (var tab in Tabs)
+        {
+            if (tab.ChartViewModel != null)
+            {
+                tab.ChartViewModel.ShowVoltageMaxSpeedLine = newState;
+            }
+        }
+        
+        // Save preference for future tabs
+        _settingsStore.SaveBool("ShowVoltageMaxSpeedLine", newState);
+    }
+
     /// <summary>
     /// Toggles a panel by its ID, implementing zone-based exclusivity.
     /// Panels only collapse others in the same zone.
@@ -926,8 +976,10 @@ public partial class MainWindowViewModel : ViewModelBase
         WireUndoInfrastructure();
         WireDirectoryBrowserIntegration();
 
-        // Load saved power curves preference
+        // Load saved preferences
         ChartViewModel!.ShowPowerCurves = _settingsStore.LoadBool("ShowPowerCurves", false);
+        ChartViewModel!.ShowMotorRatedSpeedLine = _settingsStore.LoadBool("ShowMotorRatedSpeedLine", true);
+        ChartViewModel!.ShowVoltageMaxSpeedLine = _settingsStore.LoadBool("ShowVoltageMaxSpeedLine", true);
     }
 
     private void WireDirectoryBrowserIntegration()
@@ -961,8 +1013,10 @@ public partial class MainWindowViewModel : ViewModelBase
         tab.ChartViewModel.UndoStack = tab.UndoStack;
         tab.CurveDataTableViewModel.UndoStack = tab.UndoStack;
 
-        // Load saved power curves preference
+        // Load saved preferences
         tab.ChartViewModel.ShowPowerCurves = _settingsStore.LoadBool("ShowPowerCurves", false);
+        tab.ChartViewModel.ShowMotorRatedSpeedLine = _settingsStore.LoadBool("ShowMotorRatedSpeedLine", true);
+        tab.ChartViewModel.ShowVoltageMaxSpeedLine = _settingsStore.LoadBool("ShowVoltageMaxSpeedLine", true);
 
         tab.ChartViewModel.DataChanged += (s, e) => tab.MarkDirty();
         tab.CurveDataTableViewModel.DataChanged += (s, e) =>

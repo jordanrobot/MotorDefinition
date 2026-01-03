@@ -15,6 +15,32 @@ using System.Linq;
 namespace CurveEditor.ViewModels;
 
 /// <summary>
+/// Represents a legend item for the chart.
+/// </summary>
+public class LegendItem
+{
+    /// <summary>
+    /// Display name of the legend item.
+    /// </summary>
+    public required string Name { get; init; }
+
+    /// <summary>
+    /// Color of the line/series.
+    /// </summary>
+    public required SKColor Color { get; init; }
+
+    /// <summary>
+    /// Whether the line is dashed.
+    /// </summary>
+    public bool IsDashed { get; init; }
+
+    /// <summary>
+    /// Whether the line is dotted.
+    /// </summary>
+    public bool IsDotted { get; init; }
+}
+
+/// <summary>
 /// ViewModel for the torque curve chart visualization.
 /// Manages series data, axes configuration, and chart styling.
 /// </summary>
@@ -57,6 +83,15 @@ public partial class ChartViewModel : ViewModelBase
 
     [ObservableProperty]
     private string _powerUnit = "kW";
+
+    [ObservableProperty]
+    private ObservableCollection<LegendItem> _legendItems = [];
+
+    [ObservableProperty]
+    private bool _showMotorRatedSpeedLine = true;
+
+    [ObservableProperty]
+    private bool _showVoltageMaxSpeedLine = true;
 
     /// <summary>
     /// Called when TorqueUnit changes to update the chart.
@@ -205,6 +240,22 @@ public partial class ChartViewModel : ViewModelBase
                 UpdateChart();
             }
         }
+    }
+
+    /// <summary>
+    /// Called when ShowMotorRatedSpeedLine changes to update the chart.
+    /// </summary>
+    partial void OnShowMotorRatedSpeedLineChanged(bool value)
+    {
+        UpdateChart();
+    }
+
+    /// <summary>
+    /// Called when ShowVoltageMaxSpeedLine changes to update the chart.
+    /// </summary>
+    partial void OnShowVoltageMaxSpeedLineChanged(bool value)
+    {
+        UpdateChart();
     }
 
     /// <summary>
@@ -508,6 +559,9 @@ public partial class ChartViewModel : ViewModelBase
 
         // Update axes based on data
         UpdateAxes();
+
+        // Generate legend items
+        UpdateLegend();
     }
 
     /// <summary>
@@ -745,8 +799,8 @@ public partial class ChartViewModel : ViewModelBase
 
         var lineTorqueHeight = maxTorque * 1.1; // Extend slightly above max torque
 
-        // Add Motor Rated Speed line
-        if (MotorRatedSpeed > 0)
+        // Add Motor Rated Speed line if enabled
+        if (ShowMotorRatedSpeedLine && MotorRatedSpeed > 0)
         {
             var motorRatedSpeedPoints = new ObservableCollection<ObservablePoint>
             {
@@ -773,8 +827,8 @@ public partial class ChartViewModel : ViewModelBase
             Series.Add(motorRatedSpeedLine);
         }
 
-        // Add Voltage Max Speed line
-        if (_currentVoltage.MaxSpeed > 0)
+        // Add Voltage Max Speed line if enabled
+        if (ShowVoltageMaxSpeedLine && _currentVoltage.MaxSpeed > 0)
         {
             var voltageMaxSpeedPoints = new ObservableCollection<ObservablePoint>
             {
@@ -799,6 +853,96 @@ public partial class ChartViewModel : ViewModelBase
             };
 
             Series.Add(voltageMaxSpeedLine);
+        }
+    }
+
+    /// <summary>
+    /// Updates the legend items based on the currently visible series.
+    /// </summary>
+    private void UpdateLegend()
+    {
+        LegendItems.Clear();
+
+        if (_currentVoltage is null)
+        {
+            return;
+        }
+
+        // Add legend items for torque curve series
+        for (var i = 0; i < _currentVoltage.Curves.Count; i++)
+        {
+            var curve = _currentVoltage.Curves[i];
+            if (!IsSeriesVisible(curve.Name))
+            {
+                continue;
+            }
+
+            var color = SeriesColors[i % SeriesColors.Length];
+            LegendItems.Add(new LegendItem
+            {
+                Name = curve.Name,
+                Color = color,
+                IsDashed = false,
+                IsDotted = false
+            });
+        }
+
+        // Add legend item for power curves if shown
+        if (ShowPowerCurves)
+        {
+            for (var i = 0; i < _currentVoltage.Curves.Count; i++)
+            {
+                var curve = _currentVoltage.Curves[i];
+                if (!IsSeriesVisible(curve.Name))
+                {
+                    continue;
+                }
+
+                var color = SeriesColors[i % SeriesColors.Length];
+                LegendItems.Add(new LegendItem
+                {
+                    Name = $"{curve.Name} (Power)",
+                    Color = color,
+                    IsDashed = false,
+                    IsDotted = true
+                });
+            }
+        }
+
+        // Add legend item for brake torque line if visible
+        if (HasBrake && BrakeTorque > 0)
+        {
+            LegendItems.Add(new LegendItem
+            {
+                Name = "Brake Torque",
+                Color = new SKColor(255, 165, 0), // Orange
+                IsDashed = true,
+                IsDotted = false
+            });
+        }
+
+        // Add legend item for Motor Rated Speed if visible
+        if (ShowMotorRatedSpeedLine && MotorRatedSpeed > 0)
+        {
+            LegendItems.Add(new LegendItem
+            {
+                Name = "Motor Rated Speed",
+                Color = new SKColor(100, 100, 255), // Blue
+                IsDashed = true,
+                IsDotted = false
+            });
+        }
+
+        // Add legend item for Voltage Max Speed if visible
+        if (ShowVoltageMaxSpeedLine && _currentVoltage.MaxSpeed > 0)
+        {
+            LegendItems.Add(new LegendItem
+            {
+                Name = "Voltage Max Speed",
+                Color = new SKColor(255, 100, 100), // Red
+                IsDashed = true,
+                IsDotted = false
+            });
         }
     }
 

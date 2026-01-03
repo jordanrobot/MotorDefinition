@@ -4,18 +4,30 @@
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:vm="using:CurveEditor.ViewModels"
              xmlns:lvc="using:LiveChartsCore.SkiaSharpView.Avalonia"
+             xmlns:converters="using:CurveEditor.Converters"
              mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="500"
              x:Class="CurveEditor.Views.ChartView"
              x:DataType="vm:ChartViewModel">
+    
+    <UserControl.Resources>
+        <converters:SKColorToAvaloniaBrushConverter x:Key="ColorConverter"/>
+        <converters:BooleanToDashArrayConverter x:Key="DashArrayConverter"/>
+    </UserControl.Resources>
     
     <Design.DataContext>
         <vm:ChartViewModel/>
     </Design.DataContext>
     
     <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+        
         <!-- Chart -->
         <lvc:CartesianChart
             x:Name="TorqueChart"
+            Grid.Row="0"
             Series="{Binding Series}"
             XAxes="{Binding XAxes}"
             YAxes="{Binding YAxes}"
@@ -44,12 +56,50 @@
         
         <!-- Title Overlay -->
         <TextBlock Text="{Binding Title}"
+                   Grid.Row="0"
                    FontSize="16"
                    FontWeight="SemiBold"
                    Foreground="Gray"
                    HorizontalAlignment="Center"
                    VerticalAlignment="Top"
-                   Margin="0,10,0,0"
+                   Margin="0,20,0,0"
                    IsHitTestVisible="False"/>
+        
+        <!-- Legend -->
+        <ItemsControl ItemsSource="{Binding LegendItems}"
+                      Grid.Row="1"
+                      Margin="10,5,10,10">
+            <ItemsControl.ItemsPanel>
+                <ItemsPanelTemplate>
+                    <WrapPanel HorizontalAlignment="Center" Orientation="Horizontal"/>
+                </ItemsPanelTemplate>
+            </ItemsControl.ItemsPanel>
+            <ItemsControl.ItemTemplate>
+                <DataTemplate x:DataType="vm:LegendItem">
+                    <StackPanel Orientation="Horizontal" Margin="10,2">
+                        <!-- Legend line indicator -->
+                        <Border Width="30" Height="16" VerticalAlignment="Center">
+                            <Panel>
+                                <!-- Solid or dashed line -->
+                                <Rectangle Width="30" Height="2"
+                                          VerticalAlignment="Center"
+                                          Fill="{Binding Color, Converter={StaticResource ColorConverter}}"/>
+                                <!-- Visual dash effect for dashed lines -->
+                                <Rectangle Width="30" Height="2"
+                                          VerticalAlignment="Center"
+                                          Fill="{Binding Color, Converter={StaticResource ColorConverter}}"
+                                          Opacity="0.3"
+                                          IsVisible="{Binding IsDashed}"/>
+                            </Panel>
+                        </Border>
+                        <!-- Legend text -->
+                        <TextBlock Text="{Binding Name}"
+                                   FontSize="12"
+                                   VerticalAlignment="Center"
+                                   Margin="5,0,0,0"/>
+                    </StackPanel>
+                </DataTemplate>
+            </ItemsControl.ItemTemplate>
+        </ItemsControl>
     </Grid>
 </UserControl>

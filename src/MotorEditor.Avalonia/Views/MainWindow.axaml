@@ -172,6 +172,12 @@
                 <MenuItem Header="Show _Power Curves"
                           IsChecked="{Binding ChartViewModel.ShowPowerCurves}"
                           Command="{Binding ToggleShowPowerCurvesCommand}"/>
+                <MenuItem Header="Show Motor _Rated Speed Line"
+                          IsChecked="{Binding ChartViewModel.ShowMotorRatedSpeedLine}"
+                          Command="{Binding ToggleShowMotorRatedSpeedLineCommand}"/>
+                <MenuItem Header="Show _Voltage Max Speed Line"
+                          IsChecked="{Binding ChartViewModel.ShowVoltageMaxSpeedLine}"
+                          Command="{Binding ToggleShowVoltageMaxSpeedLineCommand}"/>
             </MenuItem>
             <MenuItem Header="_Help">
                 <MenuItem Header="Open _Logs Folder" Command="{Binding OpenLogsFolderCommand}"/>
