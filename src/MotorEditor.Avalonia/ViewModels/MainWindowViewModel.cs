@@ -836,6 +836,7 @@ public partial class MainWindowViewModel : ViewModelBase
         WireEditingCoordinator();
         WireUndoInfrastructure();
         WireDirectoryBrowserIntegration();
+        WirePreferencesHandling();
 
         // Load saved power curves preference
         chartViewModel.ShowPowerCurves = _settingsStore.LoadBool("ShowPowerCurves", false);
@@ -879,6 +880,7 @@ public partial class MainWindowViewModel : ViewModelBase
         WireEditingCoordinator();
         WireUndoInfrastructure();
         WireDirectoryBrowserIntegration();
+        WirePreferencesHandling();
 
         // Load saved power curves preference
         chartViewModel.ShowPowerCurves = _settingsStore.LoadBool("ShowPowerCurves", false);
@@ -934,6 +936,7 @@ public partial class MainWindowViewModel : ViewModelBase
         WireEditingCoordinator();
         WireUndoInfrastructure();
         WireDirectoryBrowserIntegration();
+        WirePreferencesHandling();
 
         // Load saved power curves preference
         ChartViewModel!.ShowPowerCurves = _settingsStore.LoadBool("ShowPowerCurves", false);
@@ -949,6 +952,31 @@ public partial class MainWindowViewModel : ViewModelBase
 
         CurrentFilePath = _fileService.CurrentFilePath;
         DirectoryBrowser.UpdateOpenFileStates(CurrentFilePath, GetDirtyFilePaths());
+    }
+
+    /// <summary>
+    /// Wire up preferences change handling to refresh displays when precision changes.
+    /// </summary>
+    private void WirePreferencesHandling()
+    {
+        _userPreferencesService.PreferencesChanged -= OnPreferencesChanged;
+        _userPreferencesService.PreferencesChanged += OnPreferencesChanged;
+    }
+
+    /// <summary>
+    /// Handle preferences changes by triggering view refresh.
+    /// </summary>
+    private void OnPreferencesChanged(object? sender, EventArgs e)
+    {
+        // Notify all properties that depend on formatting to refresh
+        // This will cause CurveDataPanel to rebuild its columns with new formatting
+        OnPropertyChanged(nameof(NumericFormatter));
+        
+        // Trigger a full UI refresh by notifying that the motor changed
+        if (CurrentMotor is not null)
+        {
+            OnPropertyChanged(nameof(CurrentMotor));
+        }
     }
 
     /// <summary>
