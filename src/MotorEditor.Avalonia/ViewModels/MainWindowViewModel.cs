@@ -346,9 +346,9 @@ public partial class MainWindowViewModel : ViewModelBase
     private DirectoryBrowserViewModel _directoryBrowser = new();
 
     /// <summary>
-    /// Gets the list of recent file paths, ordered from most recent to oldest.
+    /// Gets the observable list of recent file paths, ordered from most recent to oldest.
     /// </summary>
-    public IReadOnlyList<string> RecentFiles => _recentFilesService.RecentFiles;
+    public ReadOnlyObservableCollection<string> RecentFiles => _recentFilesService.RecentFiles;
 
     /// <summary>
     /// Current file path (delegates to active tab).
@@ -1288,6 +1288,9 @@ public partial class MainWindowViewModel : ViewModelBase
             // This ensures all property setters and handlers are triggered correctly
             ActiveTab = newTab;
             InitializeActiveTabWithMotor();
+            
+            // Add to recent files
+            _recentFilesService.AddRecentFile(filePath);
             
             StatusMessage = $"Opened: {Path.GetFileName(filePath)}";
         }
@@ -2834,7 +2837,6 @@ public partial class MainWindowViewModel : ViewModelBase
                 StatusMessage = $"Switched to already open file: {Path.GetFileName(filePath)}";
                 // Still add to recent files even if already open
                 _recentFilesService.AddRecentFile(filePath);
-                OnPropertyChanged(nameof(RecentFiles));
                 return;
             }
             
@@ -2861,7 +2863,6 @@ public partial class MainWindowViewModel : ViewModelBase
             
             // Add to recent files
             _recentFilesService.AddRecentFile(filePath);
-            OnPropertyChanged(nameof(RecentFiles));
             
             StatusMessage = $"Opened: {Path.GetFileName(filePath)}";
             Log.Information("[FILE_OP] OpenFileAsync() - END");
@@ -2887,7 +2888,6 @@ public partial class MainWindowViewModel : ViewModelBase
                 StatusMessage = $"File not found: {Path.GetFileName(filePath)}";
                 // Remove from recent files list
                 _recentFilesService.RemoveRecentFile(filePath);
-                OnPropertyChanged(nameof(RecentFiles));
                 return;
             }
 
@@ -2902,7 +2902,6 @@ public partial class MainWindowViewModel : ViewModelBase
                 StatusMessage = $"Switched to already open file: {Path.GetFileName(filePath)}";
                 // Move to top of recent files
                 _recentFilesService.AddRecentFile(filePath);
-                OnPropertyChanged(nameof(RecentFiles));
                 return;
             }
             
@@ -2921,7 +2920,6 @@ public partial class MainWindowViewModel : ViewModelBase
             
             // Add to recent files (moves to top)
             _recentFilesService.AddRecentFile(filePath);
-            OnPropertyChanged(nameof(RecentFiles));
             
             StatusMessage = $"Opened: {Path.GetFileName(filePath)}";
         }

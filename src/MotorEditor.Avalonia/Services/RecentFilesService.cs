@@ -18,6 +18,7 @@ public class RecentFilesService : IRecentFilesService
 
     private readonly IUserSettingsStore _settingsStore;
     private readonly ObservableCollection<string> _recentFiles;
+    private readonly ReadOnlyObservableCollection<string> _recentFilesReadOnly;
 
     /// <summary>
     /// Creates a new RecentFilesService instance.
@@ -27,11 +28,12 @@ public class RecentFilesService : IRecentFilesService
     {
         _settingsStore = settingsStore ?? throw new ArgumentNullException(nameof(settingsStore));
         _recentFiles = new ObservableCollection<string>();
+        _recentFilesReadOnly = new ReadOnlyObservableCollection<string>(_recentFiles);
         LoadRecentFiles();
     }
 
     /// <inheritdoc />
-    public IReadOnlyList<string> RecentFiles => _recentFiles;
+    public ReadOnlyObservableCollection<string> RecentFiles => _recentFilesReadOnly;
 
     /// <inheritdoc />
     public void AddRecentFile(string filePath)

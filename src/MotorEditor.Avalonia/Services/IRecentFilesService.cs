@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 
 namespace CurveEditor.Services;
 
@@ -8,9 +9,9 @@ namespace CurveEditor.Services;
 public interface IRecentFilesService
 {
     /// <summary>
-    /// Gets the list of recent file paths, ordered from most recent to oldest.
+    /// Gets the observable list of recent file paths, ordered from most recent to oldest.
     /// </summary>
-    IReadOnlyList<string> RecentFiles { get; }
+    ReadOnlyObservableCollection<string> RecentFiles { get; }
 
     /// <summary>
     /// Adds a file to the recent files list.
