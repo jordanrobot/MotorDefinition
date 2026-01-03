@@ -50,7 +50,7 @@ public class NumericFormattingService
         var decimalSeparator = CultureInfo.CurrentCulture.NumberFormat.NumberDecimalSeparator;
         if (formatted.Contains(decimalSeparator))
         {
-            formatted = formatted.TrimEnd('0').TrimEnd(decimalSeparator[0]);
+            formatted = formatted.TrimEnd('0').TrimEnd(decimalSeparator.ToCharArray());
         }
         
         return formatted;

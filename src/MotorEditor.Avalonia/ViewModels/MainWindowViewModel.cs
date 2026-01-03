@@ -959,6 +959,7 @@ public partial class MainWindowViewModel : ViewModelBase
     /// </summary>
     private void WirePreferencesHandling()
     {
+        // Unsubscribe first to prevent duplicate event handlers if this is called multiple times
         _userPreferencesService.PreferencesChanged -= OnPreferencesChanged;
         _userPreferencesService.PreferencesChanged += OnPreferencesChanged;
     }
