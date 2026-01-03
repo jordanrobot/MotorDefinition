@@ -240,15 +240,10 @@ See ADR-0008 (`../../docs/adr/adr-0008-selection-and-editing-coordination.md`) f
 - [X] Refactor existing JSON serialization/deserialization to match new schema
 
 See ADR-0006 (`../../docs/adr/adr-0006-motor-file-schema-and-versioning.md`) for the motor file schema and versioning strategy.
-- [ ] present options for consolidating series data within drive&voltage sections. This is to group series torque values together so that veiwing and editing raw json files is much easier. 
-- [ ] If the user chooses to adjust series data format within the json schema, implement this change.
-
-**Deliverable:** Application with working multi-series chart, series visibility toggles, and editable data grid.
 
 ---
 
 ## Phase 3: File Management
-
 
 ### 3.0 Generic Panel Expand/Collapse
 - [X] Implement generic expand/collapse mechanism for existing panels. Use relevant ADRs as reference, but do not be constrained by these ADRs as this functionality is not yet implemented. If we need to adjust ADRs to better fit the implementation, we can do so, please just let me know.
@@ -309,11 +304,7 @@ See ADR-0006 (`../../docs/adr/adr-0006-motor-file-schema-and-versioning.md`) for
 - [X] Save Copy As: save copy to new file, original stays active
 - [X] All saves overwrite (no append mode)
 
-**Deliverable:** Full file management with directory browser and save prompts.
-
----
-
-## Phase 3.7: Rename objects for clarity
+### Phase 3.7: Rename objects for clarity
 - [X] Rename domain root type to `ServoMotor` throughout codebase
 - [X] Rename curve type to `Curve` throughout codebase
 - [X] Rename drive type to `Drive` throughout codebase
@@ -336,11 +327,6 @@ See ADR-0006 (`../../docs/adr/adr-0006-motor-file-schema-and-versioning.md`) for
 - [X] Update adrs (docs/adr/) not listed here that reference these old names
 
 ## Phase 4: Advanced Editing
-
-### 4.0 Series Data Adjustment
-- [ ] Transpose the series data so that each series is represented as a row instead of a column
-- [ ] Ensure all related UI components and data bindings are updated accordingly
-- [ ] Ensure header labels and checkboxes (lock, visibility) are placed at the left-hand of each series row.
 
 ### 4.1 EQ-Style Curve Editing
 - [ ] Enable point selection on chart (single-click on point)
@@ -415,7 +401,7 @@ See ADR-0005 (`../../docs/adr/adr-0005-keyboard-shortcuts-and-input-routing.md`)
 See ADR-0007 (`../../docs/adr/adr-0007-status-bar-and-validation-feedback.md`) for the status bar, validation, and user feedback conventions.
 
 ### 5.3 Unsaved Changes Handling
-- [ ] Prompt to save on close
+- [X] Prompt to save on close
 - [ ] Prompt to save on open new file
 - [X] Show asterisk (*) in title for unsaved changes
 
@@ -426,24 +412,20 @@ See ADR-0007 (`../../docs/adr/adr-0007-status-bar-and-validation-feedback.md`) f
 ## Phase 6: Units System (Future)
 
 ### 6.1 Tare Integration
-- [ ] Add Tare NuGet package
-- [ ] Create UnitService using Tare
-- [ ] Define supported units (Nm, lbf-in)
+- [X] Add Tare NuGet package
+- [X] Create UnitService using Tare
+- [X] Define supported units (Nm, lbf-in)
 
 ### 6.2 Unit Toggle UI
-- [ ] Add unit selector in UI
-- [ ] Store current unit preference
-- [ ] Convert displayed values on toggle
+- [X] Add unit selector in UI
+- [X] Store current unit preference
+- [X] Convert displayed values on toggle
 
 ### 6.3 Conversion Logic
 - [ ] Convert on display (not stored data)
-- [ ] Or: Convert stored data (with user confirmation)
+- [X] Or: Convert stored data (with user confirmation)
 - [ ] Handle precision/rounding
-
-### 6.4 Persistence
-- [ ] Save unit preference
-- [ ] Remember last used unit
-- [ ] Store unit in JSON file (optional)
+- [ ] Store unit in JSON file
 
 **Deliverable:** Full unit system support.
 
@@ -452,19 +434,19 @@ See ADR-0007 (`../../docs/adr/adr-0007-status-bar-and-validation-feedback.md`) f
 ## Phase 7: Tabbed Interface (Future)
 
 ### 7.1 Tab Management
-- [ ] Tab bar for multiple open files
-- [ ] Each file in its own tab
-- [ ] Click tab to switch between files
-- [ ] Close button on each tab
+- [X] Tab bar for multiple open files
+- [X] Each file in its own tab
+- [X] Click tab to switch between files
+- [X] Close button on each tab
 
 ### 7.2 Independent State
-- [ ] Each tab has independent dirty state
-- [ ] Each tab has independent undo/redo history
+- [X] Each tab has independent dirty state
+- [X] Each tab has independent undo/redo history
 - [ ] Prompt to save when closing dirty tab
 
 ### 7.3 Tab Behavior
-- [ ] New file opens in new tab
-- [ ] Double-click file in directory browser opens new tab
+- [X] New file opens in new tab
+- [X] Single-click file in directory browser opens new tab
 - [ ] Option to open in current tab vs new tab
 - [ ] Drag tabs to reorder
 
@@ -475,18 +457,18 @@ See ADR-0007 (`../../docs/adr/adr-0007-status-bar-and-validation-feedback.md`) f
 ## Phase 8: Power Curve Overlay (Future)
 
 ### 8.1 Power Calculation
-- [ ] Calculate power from torque and speed: P = T × ω
-- [ ] Generate power curve from each torque curve
-- [ ] Support kW and HP display units
+- [X] Calculate power from torque and speed: P = T × ω
+- [X] Generate power curve from each torque curve
+- [X] Support kW and HP display units
 
 ### 8.2 Dual Y-Axis Chart
-- [ ] Add secondary Y-axis for power (right side)
-- [ ] Primary Y-axis: Torque (left side)
-- [ ] Label axes appropriately
-- [ ] Power curves distinguished by color
+- [X] Add secondary Y-axis for power (right side)
+- [X] Primary Y-axis: Torque (left side)
+- [X] Label axes appropriately
+- [X] Power curves distinguished by color & dashed lines
 
 ### 8.3 Power Overlay Toggle
-- [ ] Menu option to show/hide power curves
+- [X] Menu option to show/hide power curves
 - [ ] Toggle per-series power visibility
 - [ ] User preference to remember setting
 
@@ -606,45 +588,45 @@ The sample above shows 10% increments for brevity.
 ## Success Metrics
 
 ### MVP Complete When:
-- [ ] Can create new motor definition file with wizard
-- [ ] New curve generation from max speed, torque, power parameters
-- [ ] Can open existing JSON files with multiple series
-- [ ] All motor properties editable (name, manufacturer, specs, etc.)
-- [ ] Directory browser side pane (VS Code-style)
-- [ ] Click file in directory list to load
-- [ ] Dirty state tracked for unsaved changes
-- [ ] Prompt to save on close if dirty
-- [ ] Prompt to save when opening new file if dirty
-- [ ] Save command overwrites file
-- [ ] Save As creates new file (becomes active)
-- [ ] Save Copy As creates copy (original stays active)
-- [ ] Displays torque curve as line graph with multiple series
-- [ ] Default series: "Peak" and "Continuous"
-- [ ] Can add/rename/delete curve series
-- [ ] Series visibility toggleable via checkboxes
-- [ ] Series distinguished by unique colors
+- [X] Can create new motor definition file with wizard
+- [X] New curve generation from max speed, torque, power parameters
+- [X] Can open existing JSON files with multiple series
+- [X] All motor properties editable (name, manufacturer, specs, etc.)
+- [X] Directory browser side pane (VS Code-style)
+- [X] Click file in directory list to load
+- [X] Dirty state tracked for unsaved changes
+- [X] Prompt to save on close if dirty
+- [X] Prompt to save when opening new file if dirty
+- [X] Save command overwrites file
+- [X] Save As creates new file (becomes active)
+- [X] Save Copy As creates copy (original stays active)
+- [X] Displays torque curve as line graph with multiple series
+- [X] Default series: "Peak" and "Continuous"
+- [X] Can add/rename/delete curve series
+- [X] Series visibility toggleable via checkboxes
+- [X] Series distinguished by unique colors
 - [ ] User can edit series colors (persisted per series name)
-- [ ] Standard curves saved at 1% increments (0-100%); file format supports 0–101 points per series
-- [ ] RPM displayed rounded to nearest whole number
-- [ ] RPM on X axis, Torque on Y axis (default)
-- [ ] Grid lines at rounded value increments
-- [ ] Hover tooltip shows RPM/torque values
-- [ ] Can edit values in data grid
-- [ ] Chart updates in real-time
+- [X] Standard curves saved at 1% increments (0-100%); file format supports 0–101 points per series, but can do more (overspeed) or less.
+- [X] RPM displayed rounded to nearest whole number
+- [X] RPM on X axis, Torque on Y axis (default)
+- [X] Grid lines at rounded value increments
+- [X] Hover tooltip shows RPM/torque values
+- [X] Can edit values in data grid
+- [X] Chart updates in real-time
 - [ ] EQ-style point dragging works
 - [ ] Q slider affects curve sharpness
 - [ ] Can load background image
 - [ ] Background image scales independently (X/Y)
 - [ ] Axis scaling via sliders (smooth, no jitter)
-- [ ] Can save to JSON file with all motor properties
-- [ ] Runs as portable executable
-- [ ] Works on Windows 11
+- [X] Can save to JSON file with all motor properties
+- [X] Runs as portable executable
+- [X] Works on Windows 11
  - [x] Undo/redo support (Ctrl+Z / Ctrl+Y)
 - [ ] Structured logging with Serilog
 - [ ] Global exception handling with user-friendly error dialogs
 
 ### Nice to Have for MVP:
-- [ ] Keyboard shortcuts
+- [X] Keyboard shortcuts
 - [ ] Recent files list
 - [ ] Axis swap toggle (RPM ↔ Torque)
 

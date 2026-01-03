@@ -12,6 +12,7 @@ using Serilog;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.ComponentModel;
 using System.IO;
 using System.Linq;
 using System.Threading;
@@ -148,7 +149,7 @@ public partial class MainWindowViewModel : ViewModelBase
 
     private void OnIsDirtyChanged(bool value)
     {
-        DirectoryBrowser.UpdateActiveFileState(CurrentFilePath, value);
+        DirectoryBrowser.UpdateOpenFileStates(CurrentFilePath, GetDirtyFilePaths());
     }
 
     [ObservableProperty]
@@ -364,7 +365,7 @@ public partial class MainWindowViewModel : ViewModelBase
     private void OnCurrentFilePathChanged(string? value)
     {
         _ = DirectoryBrowser.SyncSelectionToFilePathAsync(value);
-        DirectoryBrowser.UpdateActiveFileState(value, IsDirty);
+        DirectoryBrowser.UpdateOpenFileStates(value, GetDirtyFilePaths());
     }
 
     /// <summary>
@@ -798,6 +799,7 @@ public partial class MainWindowViewModel : ViewModelBase
             CurveDataTableViewModel = curveDataTableViewModel,
             EditingCoordinator = editingCoordinator
         };
+        WireTabIntegration(initialTab);
         _tabs.Add(initialTab);
         ActiveTab = initialTab;
         Tabs = _tabs;
@@ -834,6 +836,7 @@ public partial class MainWindowViewModel : ViewModelBase
             CurveDataTableViewModel = curveDataTableViewModel,
             EditingCoordinator = editingCoordinator
         };
+        WireTabIntegration(initialTab);
         _tabs.Add(initialTab);
         ActiveTab = initialTab;
         Tabs = _tabs;
@@ -882,6 +885,7 @@ public partial class MainWindowViewModel : ViewModelBase
             CurveDataTableViewModel = curveDataTableViewModel,
             EditingCoordinator = editingCoordinator
         };
+        WireTabIntegration(initialTab);
         _tabs.Add(initialTab);
         ActiveTab = initialTab;
         Tabs = _tabs;
@@ -903,7 +907,7 @@ public partial class MainWindowViewModel : ViewModelBase
         DirectoryBrowser.PropertyChanged += OnDirectoryBrowserPropertyChanged;
 
         CurrentFilePath = _fileService.CurrentFilePath;
-        DirectoryBrowser.UpdateActiveFileState(CurrentFilePath, IsDirty);
+        DirectoryBrowser.UpdateOpenFileStates(CurrentFilePath, GetDirtyFilePaths());
     }
 
     /// <summary>
@@ -942,8 +946,46 @@ public partial class MainWindowViewModel : ViewModelBase
             }
         };
 
+        WireTabIntegration(tab);
+
         Log.Information("[TAB] CreateNewTab() - Tab created");
         return tab;
+    }
+
+    private void WireTabIntegration(DocumentTab tab)
+    {
+        ArgumentNullException.ThrowIfNull(tab);
+
+        tab.PropertyChanged -= OnTabPropertyChanged;
+        tab.PropertyChanged += OnTabPropertyChanged;
+    }
+
+    private void UnwireTabIntegration(DocumentTab tab)
+    {
+        ArgumentNullException.ThrowIfNull(tab);
+        tab.PropertyChanged -= OnTabPropertyChanged;
+    }
+
+    private void OnTabPropertyChanged(object? sender, PropertyChangedEventArgs e)
+    {
+        if (sender is not DocumentTab tab)
+        {
+            return;
+        }
+
+        // Edits typically mark the DocumentTab dirty directly (tab.MarkDirty()), bypassing the
+        // MainWindowViewModel.IsDirty setter. Keep Directory Browser dirty indicators in sync.
+        if (e.PropertyName is nameof(DocumentTab.IsDirty) or nameof(DocumentTab.FilePath))
+        {
+            if (tab == ActiveTab)
+            {
+                OnPropertyChanged(nameof(IsDirty));
+                OnPropertyChanged(nameof(CurrentFilePath));
+                OnPropertyChanged(nameof(WindowTitle));
+            }
+
+            DirectoryBrowser.UpdateOpenFileStates(CurrentFilePath, GetDirtyFilePaths());
+        }
     }
 
     /// <summary>
@@ -1023,7 +1065,7 @@ public partial class MainWindowViewModel : ViewModelBase
             OnPropertyChanged(nameof(WindowTitle));
 
             // Update directory browser
-            DirectoryBrowser.UpdateActiveFileState(CurrentFilePath, IsDirty);
+            DirectoryBrowser.UpdateOpenFileStates(CurrentFilePath, GetDirtyFilePaths());
 
             Log.Information("[TAB_CHANGE] Calling RefreshMotorEditorsFromCurrentMotor()");
             // Refresh property editors to display current tab's drive/voltage/series values
@@ -1077,6 +1119,22 @@ public partial class MainWindowViewModel : ViewModelBase
         }
     }
 
+    private IEnumerable<string?> GetDirtyFilePaths()
+    {
+        if (Tabs is null)
+        {
+            yield break;
+        }
+
+        foreach (var tab in Tabs)
+        {
+            if (tab.IsDirty)
+            {
+                yield return tab.FilePath;
+            }
+        }
+    }
+
     private void OnDirectoryBrowserPropertyChanged(object? sender, System.ComponentModel.PropertyChangedEventArgs e)
     {
         if (e.PropertyName != nameof(DirectoryBrowserViewModel.RootDirectoryPath))
@@ -1125,7 +1183,7 @@ public partial class MainWindowViewModel : ViewModelBase
             }
 
             await DirectoryBrowser.SyncSelectionToFilePathAsync(filePath).ConfigureAwait(true);
-            DirectoryBrowser.UpdateActiveFileState(filePath, IsDirty);
+            DirectoryBrowser.UpdateOpenFileStates(filePath, GetDirtyFilePaths());
         }
         catch
         {
@@ -3412,6 +3470,7 @@ public partial class MainWindowViewModel : ViewModelBase
         }
 
         // Remove the tab
+        UnwireTabIntegration(tab);
         _tabs.Remove(tab);
 
         // If we closed the active tab, activate another
@@ -3419,6 +3478,9 @@ public partial class MainWindowViewModel : ViewModelBase
         {
             ActiveTab = _tabs.LastOrDefault();
         }
+
+        // If we closed a dirty background tab, ensure the Directory Browser drops its marker.
+        DirectoryBrowser.UpdateOpenFileStates(CurrentFilePath, GetDirtyFilePaths());
 
         StatusMessage = $"Closed tab: {tab.DisplayName}";
     }

@@ -52,7 +52,7 @@ public partial class ExplorerNodeViewModel : ObservableObject
 
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(DisplayNameWithDirtyIndicator))]
-    private bool _isActiveFileDirty;
+    private bool _isDirty;
 
     [ObservableProperty]
     private MotorFileValidationState _validationState = MotorFileValidationState.Unknown;
@@ -70,7 +70,7 @@ public partial class ExplorerNodeViewModel : ObservableObject
                 return DisplayName;
             }
 
-            return IsActiveFile && IsActiveFileDirty
+            return IsDirty
                 ? DisplayName + "*"
                 : DisplayName;
         }
