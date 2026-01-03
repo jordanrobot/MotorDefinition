@@ -117,6 +117,22 @@
                 <MenuItem Header="Open _Folder..." Command="{Binding OpenFolderCommand}"/>
                 <MenuItem Header="Close _Folder" Command="{Binding DirectoryBrowser.CloseFolderCommand}"/>
                 <Separator/>
+                <MenuItem Header="Recent _Files" ItemsSource="{Binding RecentFiles}">
+                    <MenuItem.Styles>
+                        <Style Selector="MenuItem">
+                            <Setter Property="Command" Value="{Binding $parent[Window].((vm:MainWindowViewModel)DataContext).OpenRecentFileCommand}"/>
+                            <Setter Property="CommandParameter" Value="{Binding}"/>
+                            <Setter Property="Header" Value="{Binding}"/>
+                            <Setter Property="ToolTip.Tip" Value="{Binding}"/>
+                        </Style>
+                    </MenuItem.Styles>
+                    <MenuItem.DataTemplates>
+                        <DataTemplate DataType="x:String">
+                            <TextBlock Text="{Binding}" MaxWidth="400" TextTrimming="CharacterEllipsis"/>
+                        </DataTemplate>
+                    </MenuItem.DataTemplates>
+                </MenuItem>
+                <Separator/>
                 <MenuItem Header="_Save" Command="{Binding SaveCommand}" InputGesture="Ctrl+S"/>
                 <MenuItem Header="Save _As..." Command="{Binding SaveAsCommand}" InputGesture="Ctrl+Shift+S"/>
                 <MenuItem Header="Save Copy As..." Command="{Binding SaveCopyAsCommand}"/>

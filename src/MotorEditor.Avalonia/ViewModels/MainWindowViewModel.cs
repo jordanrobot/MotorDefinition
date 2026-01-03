@@ -39,6 +39,7 @@ public partial class MainWindowViewModel : ViewModelBase
     private readonly IUserSettingsStore _settingsStore;
     private readonly UnitConversionService _unitConversionService;
     private readonly UnitPreferencesService _unitPreferencesService;
+    private readonly IRecentFilesService _recentFilesService;
 
     // Track previous units for conversion
     private string? _previousTorqueUnit;
@@ -343,6 +344,11 @@ public partial class MainWindowViewModel : ViewModelBase
     /// </summary>
     [ObservableProperty]
     private DirectoryBrowserViewModel _directoryBrowser = new();
+
+    /// <summary>
+    /// Gets the list of recent file paths, ordered from most recent to oldest.
+    /// </summary>
+    public IReadOnlyList<string> RecentFiles => _recentFilesService.RecentFiles;
 
     /// <summary>
     /// Current file path (delegates to active tab).
@@ -796,6 +802,7 @@ public partial class MainWindowViewModel : ViewModelBase
         var editingCoordinator = new EditingCoordinator();
         _motorConfigurationWorkflow = new MotorConfigurationWorkflow(_driveVoltageSeriesService);
         _settingsStore = new PanelLayoutUserSettingsStore();
+        _recentFilesService = new RecentFilesService(_settingsStore);
         UnsavedChangesPromptAsync = ShowUnsavedChangesPromptAsync;
         
         // Initialize unit services
@@ -836,6 +843,7 @@ public partial class MainWindowViewModel : ViewModelBase
         var editingCoordinator = new EditingCoordinator();
         _motorConfigurationWorkflow = new MotorConfigurationWorkflow(_driveVoltageSeriesService);
         _settingsStore = new PanelLayoutUserSettingsStore();
+        _recentFilesService = new RecentFilesService(_settingsStore);
         UnsavedChangesPromptAsync = ShowUnsavedChangesPromptAsync;
         
         // Initialize unit services
@@ -887,6 +895,7 @@ public partial class MainWindowViewModel : ViewModelBase
         _driveVoltageSeriesService = driveVoltageSeriesService ?? throw new ArgumentNullException(nameof(driveVoltageSeriesService));
         _motorConfigurationWorkflow = motorConfigurationWorkflow ?? throw new ArgumentNullException(nameof(motorConfigurationWorkflow));
         _settingsStore = settingsStore ?? new PanelLayoutUserSettingsStore();
+        _recentFilesService = new RecentFilesService(_settingsStore);
         UnsavedChangesPromptAsync = unsavedChangesPromptAsync ?? ShowUnsavedChangesPromptAsync;
 
         // Initialize unit services
@@ -2823,6 +2832,9 @@ public partial class MainWindowViewModel : ViewModelBase
                 // Switch to existing tab
                 ActiveTab = existingTab;
                 StatusMessage = $"Switched to already open file: {Path.GetFileName(filePath)}";
+                // Still add to recent files even if already open
+                _recentFilesService.AddRecentFile(filePath);
+                OnPropertyChanged(nameof(RecentFiles));
                 return;
             }
             
@@ -2846,6 +2858,11 @@ public partial class MainWindowViewModel : ViewModelBase
             InitializeActiveTabWithMotor();
             
             await DirectoryBrowser.SyncSelectionToFilePathAsync(filePath).ConfigureAwait(true);
+            
+            // Add to recent files
+            _recentFilesService.AddRecentFile(filePath);
+            OnPropertyChanged(nameof(RecentFiles));
+            
             StatusMessage = $"Opened: {Path.GetFileName(filePath)}";
             Log.Information("[FILE_OP] OpenFileAsync() - END");
         }
@@ -2854,6 +2871,64 @@ public partial class MainWindowViewModel : ViewModelBase
             Log.Error(ex, "Failed to open file");
             StatusMessage = $"Error: {ex.Message}";
             Log.Information($"[FILE_OP] ERROR: {ex.Message}");
+        }
+    }
+
+    [RelayCommand]
+    private async Task OpenRecentFileAsync(string filePath)
+    {
+        ArgumentNullException.ThrowIfNull(filePath);
+
+        try
+        {
+            // Check if file exists
+            if (!File.Exists(filePath))
+            {
+                StatusMessage = $"File not found: {Path.GetFileName(filePath)}";
+                // Remove from recent files list
+                _recentFilesService.RemoveRecentFile(filePath);
+                OnPropertyChanged(nameof(RecentFiles));
+                return;
+            }
+
+            // Check if file is already open in a tab
+            var existingTab = _tabs.FirstOrDefault(t => 
+                string.Equals(t.FilePath, filePath, StringComparison.OrdinalIgnoreCase));
+            
+            if (existingTab != null)
+            {
+                // Switch to existing tab
+                ActiveTab = existingTab;
+                StatusMessage = $"Switched to already open file: {Path.GetFileName(filePath)}";
+                // Move to top of recent files
+                _recentFilesService.AddRecentFile(filePath);
+                OnPropertyChanged(nameof(RecentFiles));
+                return;
+            }
+            
+            // Create new tab for the file
+            var newTab = CreateNewTab();
+            newTab.Motor = await _fileService.LoadAsync(filePath);
+            newTab.FilePath = filePath;
+            newTab.UndoStack.Clear();
+            newTab.MarkClean();
+            
+            _tabs.Add(newTab);
+            ActiveTab = newTab;
+            InitializeActiveTabWithMotor();
+            
+            await DirectoryBrowser.SyncSelectionToFilePathAsync(filePath).ConfigureAwait(true);
+            
+            // Add to recent files (moves to top)
+            _recentFilesService.AddRecentFile(filePath);
+            OnPropertyChanged(nameof(RecentFiles));
+            
+            StatusMessage = $"Opened: {Path.GetFileName(filePath)}";
+        }
+        catch (Exception ex)
+        {
+            Log.Error(ex, "Failed to open recent file: {FilePath}", filePath);
+            StatusMessage = $"Error opening file: {ex.Message}";
         }
     }
 
