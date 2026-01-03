@@ -2,6 +2,7 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:vm="using:CurveEditor.ViewModels"
         xmlns:views="using:CurveEditor.Views"
+        xmlns:converters="using:CurveEditor.Converters"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         mc:Ignorable="d" d:DesignWidth="1200" d:DesignHeight="800"
@@ -11,6 +12,10 @@
         Title="{Binding WindowTitle}"
         Width="1200" Height="800"
         MinWidth="800" MinHeight="600">
+
+    <Window.Resources>
+        <converters:FilePathToNameConverter x:Key="FilePathToNameConverter"/>
+    </Window.Resources>
 
     <Design.DataContext>
         <vm:MainWindowViewModel/>
@@ -116,6 +121,17 @@
                 <MenuItem Header="_Close" Command="{Binding CloseFileCommand}" InputGesture="Ctrl+W"/>
                 <MenuItem Header="Open _Folder..." Command="{Binding OpenFolderCommand}"/>
                 <MenuItem Header="Close _Folder" Command="{Binding DirectoryBrowser.CloseFolderCommand}"/>
+                <Separator/>
+                <MenuItem Header="Recent _Files" ItemsSource="{Binding RecentFiles}">
+                    <MenuItem.ItemContainerTheme>
+                        <ControlTheme TargetType="MenuItem" BasedOn="{StaticResource {x:Type MenuItem}}">
+                            <Setter Property="Command" Value="{Binding $parent[Window].((vm:MainWindowViewModel)DataContext).OpenRecentFileCommand}"/>
+                            <Setter Property="CommandParameter" Value="{Binding}"/>
+                            <Setter Property="Header" Value="{Binding Converter={StaticResource FilePathToNameConverter}}"/>
+                            <Setter Property="ToolTip.Tip" Value="{Binding}"/>
+                        </ControlTheme>
+                    </MenuItem.ItemContainerTheme>
+                </MenuItem>
                 <Separator/>
                 <MenuItem Header="_Save" Command="{Binding SaveCommand}" InputGesture="Ctrl+S"/>
                 <MenuItem Header="Save _As..." Command="{Binding SaveAsCommand}" InputGesture="Ctrl+Shift+S"/>
