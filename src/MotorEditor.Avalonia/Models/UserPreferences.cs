@@ -34,6 +34,17 @@ public sealed class UserPreferences
     };
 
     /// <summary>
+    /// Threshold for detecting and correcting floating-point precision errors in unit conversions.
+    /// Values with fractional parts smaller than this threshold near round numbers will be rounded.
+    /// Default is 1e-10 (0.0000000001).
+    /// </summary>
+    /// <remarks>
+    /// This helps fix conversion rounding errors like 50.1300000000034 -> 50.13.
+    /// Set to 0 to disable precision error correction.
+    /// </remarks>
+    public double PrecisionErrorThreshold { get; set; } = 1e-10;
+
+    /// <summary>
     /// Creates a copy of the current preferences.
     /// </summary>
     public UserPreferences Clone()
@@ -42,7 +53,8 @@ public sealed class UserPreferences
         {
             DecimalPrecision = DecimalPrecision,
             Theme = Theme,
-            CurveColors = new List<string>(CurveColors)
+            CurveColors = new List<string>(CurveColors),
+            PrecisionErrorThreshold = PrecisionErrorThreshold
         };
     }
 }

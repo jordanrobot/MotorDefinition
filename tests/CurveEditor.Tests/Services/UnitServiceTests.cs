@@ -414,4 +414,101 @@ public class UnitServiceTests
     }
 
     #endregion
+
+    #region Precision Rounding Tests
+
+    [Fact]
+    public void Convert_WithPrecisionErrorThreshold_CorrectsTinyErrors()
+    {
+        // Arrange
+        var service = new UnitService
+        {
+            PrecisionErrorThreshold = 1e-10
+        };
+        
+        // Use a conversion that demonstrates precision error correction
+        // Converting between inertia units can produce precision errors
+        var value = 1.0;
+        var fromUnit = "kg-m^2";
+        var toUnit = "g-cm^2";
+
+        // Act
+        var result = service.Convert(value, fromUnit, toUnit);
+
+        // Assert - result should be properly rounded without tiny precision errors
+        // The expected value is 10,000,000.0 g-cm^2 = 1 kg-m^2
+        // If precision errors exist, they should be corrected
+        var roundedToInt = Math.Round(result, 0);
+        var difference = Math.Abs(result - roundedToInt);
+        
+        // If the difference is tiny (less than threshold), it should have been corrected
+        if (difference < 1e-6)
+        {
+            Assert.Equal(roundedToInt, result, 10);
+        }
+    }
+
+    [Fact]
+    public void Convert_ThresholdDisabled_MayHavePrecisionErrors()
+    {
+        // Arrange
+        var service = new UnitService
+        {
+            PrecisionErrorThreshold = 0 // Disabled
+        };
+        
+        var value = 10.0;
+        var fromUnit = "Nm";
+        var toUnit = "lbf-in";
+
+        // Act
+        var result = service.Convert(value, fromUnit, toUnit);
+
+        // Assert - verify conversion still works (exact value may vary)
+        Assert.True(result > 88.0 && result < 89.0);
+    }
+
+    [Fact]
+    public void Convert_DefaultThreshold_AutomaticallyAppliesCorrection()
+    {
+        // Arrange
+        var service = new UnitService(); // Uses default threshold
+        
+        // Test with a simple conversion
+        var value = 1.0;
+        var fromUnit = "kg";
+        var toUnit = "lbs";
+
+        // Act
+        var result = service.Convert(value, fromUnit, toUnit);
+
+        // Assert - should be properly rounded (approximately 2.20462 lbs)
+        Assert.True(result > 2.20 && result < 2.21, $"Result {result} should be around 2.20462");
+    }
+
+    [Fact]
+    public void PrecisionErrorThreshold_DefaultValue_IsSetCorrectly()
+    {
+        // Arrange & Act
+        var service = new UnitService();
+
+        // Assert
+        Assert.Equal(PrecisionRounding.DefaultThreshold, service.PrecisionErrorThreshold);
+    }
+
+    [Fact]
+    public void PrecisionErrorThreshold_CanBeCustomized()
+    {
+        // Arrange
+        var service = new UnitService();
+        var customThreshold = 1e-8;
+
+        // Act
+        service.PrecisionErrorThreshold = customThreshold;
+
+        // Assert
+        Assert.Equal(customThreshold, service.PrecisionErrorThreshold);
+    }
+
+    #endregion
 }

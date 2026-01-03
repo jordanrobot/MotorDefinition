@@ -9,6 +9,12 @@ namespace JordanRobot.MotorDefinition.Services;
 public class UnitService
 {
     /// <summary>
+    /// Gets or sets the threshold for correcting floating-point precision errors in conversions.
+    /// Default is 1e-10. Set to 0 or negative to disable precision error correction.
+    /// </summary>
+    public double PrecisionErrorThreshold { get; set; } = PrecisionRounding.DefaultThreshold;
+
+    /// <summary>
     /// Gets the supported torque units.
     /// </summary>
     public static string[] SupportedTorqueUnits => ["Nm", "lbf-ft", "lbf-in", "oz-in"];
@@ -74,7 +80,7 @@ public class UnitService
     /// <param name="value">The value to convert.</param>
     /// <param name="fromUnit">The source unit string (e.g., "Nm", "lbf-in").</param>
     /// <param name="toUnit">The target unit string (e.g., "Nm", "lbf-in").</param>
-    /// <returns>The converted value.</returns>
+    /// <returns>The converted value with precision errors corrected.</returns>
     /// <exception cref="ArgumentException">Thrown when unit conversion is not supported or units are incompatible.</exception>
     public double Convert(double value, string fromUnit, string toUnit)
     {
@@ -86,25 +92,31 @@ public class UnitService
             return value;
         }
 
+        double result;
+
         // Handle hp specially as it's not natively supported by Tare
         if (fromUnit == "hp" || toUnit == "hp")
         {
-            return ConvertWithHorsepower(value, fromUnit, toUnit);
+            result = ConvertWithHorsepower(value, fromUnit, toUnit);
         }
-
         // Handle current units manually as they're not supported by Tare
-        if (fromUnit == "A" || fromUnit == "mA" || toUnit == "A" || toUnit == "mA")
+        else if (fromUnit == "A" || fromUnit == "mA" || toUnit == "A" || toUnit == "mA")
         {
-            return ConvertWithCurrent(value, fromUnit, toUnit);
+            result = ConvertWithCurrent(value, fromUnit, toUnit);
+        }
+        else
+        {
+            var tareFromUnit = MapToTareUnit(fromUnit);
+            var tareToUnit = MapToTareUnit(toUnit);
+
+            var quantity = Quantity.Parse($"{value} {tareFromUnit}");
+            var converted = quantity.As(tareToUnit);
+
+            result = (double)converted.Value;
         }
 
-        var tareFromUnit = MapToTareUnit(fromUnit);
-        var tareToUnit = MapToTareUnit(toUnit);
-
-        var quantity = Quantity.Parse($"{value} {tareFromUnit}");
-        var converted = quantity.As(tareToUnit);
-
-        return (double)converted.Value;
+        // Apply precision error correction
+        return PrecisionRounding.CorrectPrecisionError(result, PrecisionErrorThreshold);
     }
 
     /// <summary>

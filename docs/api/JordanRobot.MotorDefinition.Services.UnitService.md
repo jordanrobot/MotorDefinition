@@ -13,6 +13,20 @@ public class UnitService
 Inheritance [System\.Object](https://learn.microsoft.com/en-us/dotnet/api/system.object 'System\.Object') &#129106; UnitService
 ### Properties
 
+<a name='JordanRobot.MotorDefinition.Services.UnitService.PrecisionErrorThreshold'></a>
+
+## UnitService\.PrecisionErrorThreshold Property
+
+Gets or sets the threshold for correcting floating\-point precision errors in conversions\.
+Default is 1e\-10\. Set to 0 or negative to disable precision error correction\.
+
+```csharp
+public double PrecisionErrorThreshold { get; set; }
+```
+
+#### Property Value
+[System\.Double](https://learn.microsoft.com/en-us/dotnet/api/system.double 'System\.Double')
+
 <a name='JordanRobot.MotorDefinition.Services.UnitService.SupportedBacklashUnits'></a>
 
 ## UnitService\.SupportedBacklashUnits Property
@@ -201,7 +215,7 @@ The target unit string \(e\.g\., "Nm", "lbf\-in"\)\.
 
 #### Returns
 [System\.Double](https://learn.microsoft.com/en-us/dotnet/api/system.double 'System\.Double')  
-The converted value\.
+The converted value with precision errors corrected\.
 
 #### Exceptions
 

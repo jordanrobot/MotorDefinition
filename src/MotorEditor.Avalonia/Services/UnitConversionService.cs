@@ -12,6 +12,7 @@ public class UnitConversionService
 {
     private readonly UnitService _unitService;
     private readonly IUserSettingsStore? _settingsStore;
+    private readonly IUserPreferencesService? _userPreferencesService;
 
     /// <summary>
     /// Gets or sets whether to convert stored data or only display values.
@@ -31,10 +32,20 @@ public class UnitConversionService
     /// Initializes a new instance of the UnitConversionService class.
     /// </summary>
     /// <param name="settingsStore">Optional user settings store for persisting preferences.</param>
-    public UnitConversionService(IUserSettingsStore? settingsStore = null)
+    /// <param name="userPreferencesService">Optional user preferences service for accessing precision settings.</param>
+    public UnitConversionService(
+        IUserSettingsStore? settingsStore = null,
+        IUserPreferencesService? userPreferencesService = null)
     {
         _unitService = new UnitService();
         _settingsStore = settingsStore;
+        _userPreferencesService = userPreferencesService;
+
+        // Apply user preference for precision threshold if available
+        if (_userPreferencesService?.Preferences != null)
+        {
+            _unitService.PrecisionErrorThreshold = _userPreferencesService.Preferences.PrecisionErrorThreshold;
+        }
     }
 
     /// <summary>

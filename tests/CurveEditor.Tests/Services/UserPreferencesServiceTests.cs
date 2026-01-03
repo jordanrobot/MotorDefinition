@@ -153,7 +153,8 @@ public class UserPreferencesServiceTests : IDisposable
         {
             DecimalPrecision = 3,
             Theme = "Dark",
-            CurveColors = new List<string> { "#FF0000", "#00FF00" }
+            CurveColors = new List<string> { "#FF0000", "#00FF00" },
+            PrecisionErrorThreshold = 1e-8
         };
 
         var clone = original.Clone();
@@ -162,11 +163,40 @@ public class UserPreferencesServiceTests : IDisposable
         clone.DecimalPrecision = 5;
         clone.Theme = "Light";
         clone.CurveColors.Add("#0000FF");
+        clone.PrecisionErrorThreshold = 1e-12;
 
         // Original should remain unchanged
         Assert.Equal(3, original.DecimalPrecision);
         Assert.Equal("Dark", original.Theme);
         Assert.Equal(2, original.CurveColors.Count);
+        Assert.Equal(1e-8, original.PrecisionErrorThreshold);
+    }
+
+    [Fact]
+    public void PrecisionErrorThreshold_DefaultValue_IsCorrect()
+    {
+        // Arrange & Act
+        var preferences = new UserPreferences();
+
+        // Assert
+        Assert.Equal(1e-10, preferences.PrecisionErrorThreshold);
+    }
+
+    [Fact]
+    public void PrecisionErrorThreshold_CanBeCustomized()
+    {
+        // Arrange
+        var service = new UserPreferencesService(_tempDir);
+        service.Preferences.PrecisionErrorThreshold = 1e-8;
+
+        // Act
+        service.SavePreferences();
+
+        // Load in new service to verify persistence
+        var newService = new UserPreferencesService(_tempDir);
+
+        // Assert
+        Assert.Equal(1e-8, newService.Preferences.PrecisionErrorThreshold);
     }
 
     [Fact]
