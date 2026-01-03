@@ -40,6 +40,7 @@ public partial class MainWindowViewModel : ViewModelBase
     private readonly UnitConversionService _unitConversionService;
     private readonly UnitPreferencesService _unitPreferencesService;
     private readonly IRecentFilesService _recentFilesService;
+    private readonly IUserPreferencesService _userPreferencesService;
 
     // Track previous units for conversion
     private string? _previousTorqueUnit;
@@ -803,6 +804,7 @@ public partial class MainWindowViewModel : ViewModelBase
         _motorConfigurationWorkflow = new MotorConfigurationWorkflow(_driveVoltageSeriesService);
         _settingsStore = new PanelLayoutUserSettingsStore();
         _recentFilesService = new RecentFilesService(_settingsStore);
+        _userPreferencesService = new UserPreferencesService();
         UnsavedChangesPromptAsync = ShowUnsavedChangesPromptAsync;
         
         // Initialize unit services
@@ -844,6 +846,7 @@ public partial class MainWindowViewModel : ViewModelBase
         _motorConfigurationWorkflow = new MotorConfigurationWorkflow(_driveVoltageSeriesService);
         _settingsStore = new PanelLayoutUserSettingsStore();
         _recentFilesService = new RecentFilesService(_settingsStore);
+        _userPreferencesService = new UserPreferencesService();
         UnsavedChangesPromptAsync = ShowUnsavedChangesPromptAsync;
         
         // Initialize unit services
@@ -896,6 +899,7 @@ public partial class MainWindowViewModel : ViewModelBase
         _motorConfigurationWorkflow = motorConfigurationWorkflow ?? throw new ArgumentNullException(nameof(motorConfigurationWorkflow));
         _settingsStore = settingsStore ?? new PanelLayoutUserSettingsStore();
         _recentFilesService = new RecentFilesService(_settingsStore);
+        _userPreferencesService = new UserPreferencesService();
         UnsavedChangesPromptAsync = unsavedChangesPromptAsync ?? ShowUnsavedChangesPromptAsync;
 
         // Initialize unit services
@@ -3603,6 +3607,35 @@ public partial class MainWindowViewModel : ViewModelBase
         if (Application.Current?.ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop)
         {
             desktop.Shutdown();
+        }
+    }
+
+    [RelayCommand]
+    private async Task ShowPreferencesAsync()
+    {
+        Log.Information("Opening preferences window");
+
+        try
+        {
+            if (Application.Current?.ApplicationLifetime is not IClassicDesktopStyleApplicationLifetime desktop ||
+                desktop.MainWindow is null)
+            {
+                Log.Warning("Cannot show preferences: main window not found");
+                return;
+            }
+
+            var preferencesViewModel = new PreferencesViewModel(_userPreferencesService);
+            var preferencesWindow = new Views.PreferencesWindow
+            {
+                DataContext = preferencesViewModel
+            };
+
+            await preferencesWindow.ShowDialog(desktop.MainWindow);
+        }
+        catch (Exception ex)
+        {
+            Log.Error(ex, "Failed to show preferences window");
+            StatusMessage = "Failed to open preferences";
         }
     }
 
