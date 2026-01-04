@@ -110,7 +110,8 @@
                                  IsVisible="{Binding IsRenaming}"
                                  BorderThickness="1"
                                  Padding="2"
-                                 VerticalAlignment="Center"/>
+                                 VerticalAlignment="Center"
+                                 AttachedToVisualTree="OnRenameTextBoxAttached"/>
                     </Grid>
                 </TreeDataTemplate>
             </TreeView.DataTemplates>
