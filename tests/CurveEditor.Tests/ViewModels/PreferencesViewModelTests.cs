@@ -123,4 +123,42 @@ public class PreferencesViewModelTests : IDisposable
         Assert.Contains("#111111", newService.Preferences.CurveColors);
         Assert.Contains("#222222", newService.Preferences.CurveColors);
     }
+
+    [Fact]
+    public void SaveCommand_ChangingTheme_UpdatesServiceAndPersists()
+    {
+        var viewModel = new PreferencesViewModel(_preferencesService);
+        
+        // Change from default Light to Dark
+        viewModel.Theme = "Dark";
+        viewModel.SaveCommand.Execute(null);
+
+        // Verify it was saved to the service
+        Assert.Equal("Dark", _preferencesService.Preferences.Theme);
+
+        // Create new service instance to verify persistence
+        var newService = new UserPreferencesService(_tempDir);
+        Assert.Equal("Dark", newService.Preferences.Theme);
+    }
+
+    [Fact]
+    public void SaveCommand_ChangingThemeToLight_UpdatesServiceAndPersists()
+    {
+        // Set initial state to Dark
+        _preferencesService.Preferences.Theme = "Dark";
+        _preferencesService.SavePreferences();
+
+        var viewModel = new PreferencesViewModel(_preferencesService);
+        
+        // Change from Dark to Light
+        viewModel.Theme = "Light";
+        viewModel.SaveCommand.Execute(null);
+
+        // Verify it was saved to the service
+        Assert.Equal("Light", _preferencesService.Preferences.Theme);
+
+        // Create new service instance to verify persistence
+        var newService = new UserPreferencesService(_tempDir);
+        Assert.Equal("Light", newService.Preferences.Theme);
+    }
 }

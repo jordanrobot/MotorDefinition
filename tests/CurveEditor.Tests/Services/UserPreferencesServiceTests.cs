@@ -191,4 +191,41 @@ public class UserPreferencesServiceTests : IDisposable
         Assert.False(original.ShowPowerCurves);
         Assert.Single(original.OpenTabs);
     }
+
+    [Fact]
+    public void SavePreferences_WithDarkTheme_PersistsCorrectly()
+    {
+        var service = new UserPreferencesService(_tempDir);
+        service.Preferences.Theme = "Dark";
+
+        service.SavePreferences();
+
+        var newService = new UserPreferencesService(_tempDir);
+        Assert.Equal("Dark", newService.Preferences.Theme);
+    }
+
+    [Fact]
+    public void SavePreferences_WithLightTheme_PersistsCorrectly()
+    {
+        var service = new UserPreferencesService(_tempDir);
+        service.Preferences.Theme = "Light";
+
+        service.SavePreferences();
+
+        var newService = new UserPreferencesService(_tempDir);
+        Assert.Equal("Light", newService.Preferences.Theme);
+    }
+
+    [Fact]
+    public void PreferencesChanged_RaisedWhenThemeChanges()
+    {
+        var service = new UserPreferencesService(_tempDir);
+        var eventRaised = false;
+        service.PreferencesChanged += (_, _) => eventRaised = true;
+
+        service.Preferences.Theme = "Dark";
+        service.SavePreferences();
+
+        Assert.True(eventRaised);
+    }
 }
