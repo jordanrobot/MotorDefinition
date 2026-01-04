@@ -1,6 +1,14 @@
-[Quick Start](docs/QuickStart.md) | [User Guide](docs/UserGuide.md) | [API documentation](docs/api/index.md)
+[Quick Start](docs/QuickStart.md) | [User Guide](docs/UserGuide.md) | [API documentation](docs/api/index.md) | [Data Integrity Validation](docs/DataIntegrityValidation.md)
 
 # JordanRobot.MotorDefinition Library
+
+## Features
+
+- **Motor Definition Management**: Load, save, and manipulate motor torque curve data
+- **Data Integrity Validation**: SHA-256 checksums to verify data hasn't been tampered with ⭐ NEW
+- **Hierarchical Structure**: Motor → Drive(s) → Voltage(s) → Curve(s)
+- **JSON Persistence**: Human-readable file format with compact array storage
+- **Engineering Units**: Support for different unit systems (Nm, lbf-in, etc.)
 
 ## Getting Started
 
@@ -8,6 +16,7 @@ Use these pages to learn the `JordanRobot.MotorDefinition` library:
 
 - [Quick Start](docs/QuickStart.md)
 - [User Guide](docs/UserGuide.md)
+- [Data Integrity Validation](docs/DataIntegrityValidation.md) ⭐ NEW
 - [API documentation](docs/api/index.md "MotorDefinition API")
 Related resources:
 
@@ -40,7 +49,8 @@ A desktop application for creating and editing motor torque curves stored in JSO
 - ✅ Curve data panel with editable DataGrid
 - ✅ Two-way binding between chart and data grid
 - ✅ Data validation with error indicators
-- ✅ Comprehensive unit tests (172 tests)
+- ✅ Data integrity validation with SHA-256 checksums ⭐ NEW
+- ✅ Comprehensive unit tests (518 tests)
 
 ### Future Phases
 - Phase 3: Directory browser and save prompts
@@ -49,6 +59,7 @@ A desktop application for creating and editing motor torque curves stored in JSO
 - Phase 6: Units system (Nm ↔ lbf-in)
 - Phase 7: Tabbed interface for multiple files
 - Phase 8: Power curve overlay
+- Phase 9: Data integrity UI integration (sign/verify in MotorEditor)
 
 ## Getting Started
 
