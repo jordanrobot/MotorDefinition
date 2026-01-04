@@ -41,7 +41,7 @@ public class PreferencesViewModelTests : IDisposable
         var viewModel = new PreferencesViewModel(_preferencesService);
 
         Assert.Equal(2, viewModel.DecimalPrecision);
-        Assert.Equal("Light", viewModel.Theme);
+        Assert.Equal("Dark", viewModel.Theme);
         Assert.NotEmpty(viewModel.CurveColors);
     }
 
@@ -122,5 +122,43 @@ public class PreferencesViewModelTests : IDisposable
         Assert.Equal(2, newService.Preferences.CurveColors.Count);
         Assert.Contains("#111111", newService.Preferences.CurveColors);
         Assert.Contains("#222222", newService.Preferences.CurveColors);
+    }
+
+    [Fact]
+    public void SaveCommand_ChangingTheme_UpdatesServiceAndPersists()
+    {
+        var viewModel = new PreferencesViewModel(_preferencesService);
+        
+        // Change from default Dark to Light
+        viewModel.Theme = "Light";
+        viewModel.SaveCommand.Execute(null);
+
+        // Verify it was saved to the service
+        Assert.Equal("Light", _preferencesService.Preferences.Theme);
+
+        // Create new service instance to verify persistence
+        var newService = new UserPreferencesService(_tempDir);
+        Assert.Equal("Light", newService.Preferences.Theme);
+    }
+
+    [Fact]
+    public void SaveCommand_ChangingThemeToLight_UpdatesServiceAndPersists()
+    {
+        // Set initial state to Dark
+        _preferencesService.Preferences.Theme = "Dark";
+        _preferencesService.SavePreferences();
+
+        var viewModel = new PreferencesViewModel(_preferencesService);
+        
+        // Change from Dark to Light
+        viewModel.Theme = "Light";
+        viewModel.SaveCommand.Execute(null);
+
+        // Verify it was saved to the service
+        Assert.Equal("Light", _preferencesService.Preferences.Theme);
+
+        // Create new service instance to verify persistence
+        var newService = new UserPreferencesService(_tempDir);
+        Assert.Equal("Light", newService.Preferences.Theme);
     }
 }

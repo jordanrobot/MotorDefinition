@@ -844,6 +844,9 @@ public partial class MainWindowViewModel : ViewModelBase
         }
     }
 
+    /// <summary>
+    /// Default constructor for production use.
+    /// </summary>
     public MainWindowViewModel()
     {
         _curveGeneratorService = new CurveGeneratorService();
@@ -857,6 +860,58 @@ public partial class MainWindowViewModel : ViewModelBase
         _settingsStore = new PanelLayoutUserSettingsStore();
         _recentFilesService = new RecentFilesService(_settingsStore);
         _userPreferencesService = new UserPreferencesService();
+        UnsavedChangesPromptAsync = ShowUnsavedChangesPromptAsync;
+        
+        // Initialize unit services
+        _unitPreferencesService = new UnitPreferencesService(_settingsStore);
+        _unitConversionService = new UnitConversionService(_settingsStore);
+        // Use Convert Stored Data mode (hard conversion) as per requirements
+        _unitConversionService.ConvertStoredData = true;
+        _unitConversionService.DisplayDecimalPlaces = _unitPreferencesService.GetDecimalPlaces();
+        
+        // Initialize tabs (currently with single shared view models for backward compatibility)
+        var initialTab = new DocumentTab
+        {
+            ChartViewModel = chartViewModel,
+            CurveDataTableViewModel = curveDataTableViewModel,
+            EditingCoordinator = editingCoordinator
+        };
+        WireTabIntegration(initialTab);
+        _tabs.Add(initialTab);
+        ActiveTab = initialTab;
+        Tabs = _tabs;
+        
+        WireEditingCoordinator();
+        WireUndoInfrastructure();
+        WireDirectoryBrowserIntegration();
+
+        // Load saved power curves preference
+        chartViewModel.ShowPowerCurves = _settingsStore.LoadBool("ShowPowerCurves", false);
+    }
+
+    /// <summary>
+    /// Constructor that accepts a user preferences service for theme management.
+    /// </summary>
+    /// <param name="userPreferencesService">The shared user preferences service instance.</param>
+    /// <remarks>
+    /// Note: Initialization code is duplicated from the parameterless constructor.
+    /// Extraction to a helper method is not possible because many fields are readonly
+    /// and can only be assigned in constructors. This pattern is consistent with other
+    /// constructor overloads in this class.
+    /// </remarks>
+    public MainWindowViewModel(IUserPreferencesService userPreferencesService)
+    {
+        _userPreferencesService = userPreferencesService ?? throw new ArgumentNullException(nameof(userPreferencesService));
+        _curveGeneratorService = new CurveGeneratorService();
+        _fileService = new FileService(_curveGeneratorService);
+        _validationService = new ValidationService();
+        _driveVoltageSeriesService = new DriveVoltageSeriesService();
+        var chartViewModel = new ChartViewModel();
+        var curveDataTableViewModel = new CurveDataTableViewModel();
+        var editingCoordinator = new EditingCoordinator();
+        _motorConfigurationWorkflow = new MotorConfigurationWorkflow(_driveVoltageSeriesService);
+        _settingsStore = new PanelLayoutUserSettingsStore();
+        _recentFilesService = new RecentFilesService(_settingsStore);
         UnsavedChangesPromptAsync = ShowUnsavedChangesPromptAsync;
         
         // Initialize unit services

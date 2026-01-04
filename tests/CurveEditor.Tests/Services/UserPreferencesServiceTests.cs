@@ -43,7 +43,7 @@ public class UserPreferencesServiceTests : IDisposable
 
         Assert.NotNull(service.Preferences);
         Assert.Equal(2, service.Preferences.DecimalPrecision);
-        Assert.Equal("Light", service.Preferences.Theme);
+        Assert.Equal("Dark", service.Preferences.Theme);
         Assert.NotEmpty(service.Preferences.CurveColors);
     }
 
@@ -190,5 +190,42 @@ public class UserPreferencesServiceTests : IDisposable
         Assert.Equal("/test.motor", original.CurrentFilePath);
         Assert.False(original.ShowPowerCurves);
         Assert.Single(original.OpenTabs);
+    }
+
+    [Fact]
+    public void SavePreferences_WithDarkTheme_PersistsCorrectly()
+    {
+        var service = new UserPreferencesService(_tempDir);
+        service.Preferences.Theme = "Dark";
+
+        service.SavePreferences();
+
+        var newService = new UserPreferencesService(_tempDir);
+        Assert.Equal("Dark", newService.Preferences.Theme);
+    }
+
+    [Fact]
+    public void SavePreferences_WithLightTheme_PersistsCorrectly()
+    {
+        var service = new UserPreferencesService(_tempDir);
+        service.Preferences.Theme = "Light";
+
+        service.SavePreferences();
+
+        var newService = new UserPreferencesService(_tempDir);
+        Assert.Equal("Light", newService.Preferences.Theme);
+    }
+
+    [Fact]
+    public void PreferencesChanged_RaisedWhenThemeChanges()
+    {
+        var service = new UserPreferencesService(_tempDir);
+        var eventRaised = false;
+        service.PreferencesChanged += (_, _) => eventRaised = true;
+
+        service.Preferences.Theme = "Dark";
+        service.SavePreferences();
+
+        Assert.True(eventRaised);
     }
 }

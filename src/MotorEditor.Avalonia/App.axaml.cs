@@ -4,6 +4,8 @@ using Avalonia.Threading;
 using Avalonia.Data.Core;
 using Avalonia.Data.Core.Plugins;
 using Avalonia.Markup.Xaml;
+using Avalonia.Styling;
+using CurveEditor.Services;
 using CurveEditor.ViewModels;
 using CurveEditor.Views;
 using Serilog;
@@ -14,6 +16,8 @@ namespace CurveEditor;
 
 public partial class App : Application
 {
+    private IUserPreferencesService? _userPreferencesService;
+
     public override void Initialize()
     {
         AvaloniaXamlLoader.Load(this);
@@ -26,13 +30,58 @@ public partial class App : Application
             // Avoid duplicate validations from both Avalonia and the CommunityToolkit. 
             // More info: https://docs.avaloniaui.net/docs/guides/development-guides/data-validation#manage-validationplugins
             DisableAvaloniaDataAnnotationValidation();
+
+            // Create shared preferences service
+            _userPreferencesService = new UserPreferencesService();
+
+            // Apply saved theme on startup
+            ApplyTheme(_userPreferencesService.Preferences.Theme);
+
+            // Subscribe to preferences changes
+            _userPreferencesService.PreferencesChanged += OnPreferencesChanged;
+
             desktop.MainWindow = new MainWindow
             {
-                DataContext = new MainWindowViewModel(),
+                DataContext = new MainWindowViewModel(_userPreferencesService),
             };
         }
 
         base.OnFrameworkInitializationCompleted();
+    }
+
+    /// <summary>
+    /// Applies the specified theme to the application.
+    /// </summary>
+    /// <param name="themeName">The name of the theme: "Light" or "Dark".</param>
+    private void ApplyTheme(string themeName)
+    {
+        try
+        {
+            var themeVariant = themeName switch
+            {
+                "Dark" => ThemeVariant.Dark,
+                "Light" => ThemeVariant.Light,
+                _ => ThemeVariant.Light
+            };
+
+            RequestedThemeVariant = themeVariant;
+            Log.Information("Applied theme: {ThemeName}", themeName);
+        }
+        catch (Exception ex)
+        {
+            Log.Warning(ex, "Failed to apply theme: {ThemeName}", themeName);
+        }
+    }
+
+    /// <summary>
+    /// Handles preferences changes and applies the new theme.
+    /// </summary>
+    private void OnPreferencesChanged(object? sender, EventArgs e)
+    {
+        if (_userPreferencesService is not null)
+        {
+            ApplyTheme(_userPreferencesService.Preferences.Theme);
+        }
     }
 
     private static async void OnUnhandledDesktopException(object? sender, DispatcherUnhandledExceptionEventArgs e)
