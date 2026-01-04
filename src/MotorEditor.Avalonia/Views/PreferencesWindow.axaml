@@ -86,8 +86,10 @@
                                       SelectedItem="{Binding Theme}"
                                       HorizontalAlignment="Left"
                                       MinWidth="150">
-                                <ComboBoxItem Content="Light"/>
-                                <ComboBoxItem Content="Dark"/>
+                                <ComboBox.Items>
+                                    <x:String>Light</x:String>
+                                    <x:String>Dark</x:String>
+                                </ComboBox.Items>
                             </ComboBox>
                         </Grid>
                     </StackPanel>

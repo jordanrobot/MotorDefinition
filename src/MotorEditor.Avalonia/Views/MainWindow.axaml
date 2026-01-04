@@ -291,19 +291,19 @@
                     <!-- Custom TabItem Style -->
                     <TabControl.Styles>
                         <Style Selector="TabItem">
-                            <Setter Property="Background" Value="#1E1E1E"/>
-                            <Setter Property="Foreground" Value="#D4D4AA"/>
-                            <Setter Property="BorderBrush" Value="#3C3C3C"/>
+                            <Setter Property="Background" Value="{DynamicResource CurveEditor.TabItem.BackgroundBrush}"/>
+                            <Setter Property="Foreground" Value="{DynamicResource CurveEditor.TabItem.ForegroundBrush}"/>
+                            <Setter Property="BorderBrush" Value="{DynamicResource CurveEditor.TabItem.BorderBrush}"/>
                             <Setter Property="BorderThickness" Value="0,0,1,0"/>
                             <Setter Property="Padding" Value="12,6"/>
                             <Setter Property="FontSize" Value="12"/>
                         </Style>
                         <Style Selector="TabItem:selected">
-                            <Setter Property="Background" Value="#252526"/>
-                            <Setter Property="Foreground" Value="#D7BA7D"/>
+                            <Setter Property="Background" Value="{DynamicResource CurveEditor.TabItem.SelectedBackgroundBrush}"/>
+                            <Setter Property="Foreground" Value="{DynamicResource CurveEditor.TabItem.SelectedForegroundBrush}"/>
                         </Style>
                         <Style Selector="TabItem:pointerover">
-                            <Setter Property="Background" Value="#2A2D2E"/>
+                            <Setter Property="Background" Value="{DynamicResource CurveEditor.TabItem.HoverBackgroundBrush}"/>
                         </Style>
                     </TabControl.Styles>
                     

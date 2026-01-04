@@ -43,7 +43,7 @@ public class UserPreferencesServiceTests : IDisposable
 
         Assert.NotNull(service.Preferences);
         Assert.Equal(2, service.Preferences.DecimalPrecision);
-        Assert.Equal("Light", service.Preferences.Theme);
+        Assert.Equal("Dark", service.Preferences.Theme);
         Assert.NotEmpty(service.Preferences.CurveColors);
     }
 

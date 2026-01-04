@@ -41,7 +41,7 @@ public class PreferencesViewModelTests : IDisposable
         var viewModel = new PreferencesViewModel(_preferencesService);
 
         Assert.Equal(2, viewModel.DecimalPrecision);
-        Assert.Equal("Light", viewModel.Theme);
+        Assert.Equal("Dark", viewModel.Theme);
         Assert.NotEmpty(viewModel.CurveColors);
     }
 
@@ -129,16 +129,16 @@ public class PreferencesViewModelTests : IDisposable
     {
         var viewModel = new PreferencesViewModel(_preferencesService);
         
-        // Change from default Light to Dark
-        viewModel.Theme = "Dark";
+        // Change from default Dark to Light
+        viewModel.Theme = "Light";
         viewModel.SaveCommand.Execute(null);
 
         // Verify it was saved to the service
-        Assert.Equal("Dark", _preferencesService.Preferences.Theme);
+        Assert.Equal("Light", _preferencesService.Preferences.Theme);
 
         // Create new service instance to verify persistence
         var newService = new UserPreferencesService(_tempDir);
-        Assert.Equal("Dark", newService.Preferences.Theme);
+        Assert.Equal("Light", newService.Preferences.Theme);
     }
 
     [Fact]

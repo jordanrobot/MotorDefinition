@@ -27,6 +27,14 @@
 
           <!-- Splitters / separators -->
           <SolidColorBrush x:Key="CurveEditor.Splitter.Brush" Color="#2A2A2A"/>
+
+          <!-- Tab Items -->
+          <SolidColorBrush x:Key="CurveEditor.TabItem.BackgroundBrush" Color="#1E1E1E"/>
+          <SolidColorBrush x:Key="CurveEditor.TabItem.ForegroundBrush" Color="#D4D4AA"/>
+          <SolidColorBrush x:Key="CurveEditor.TabItem.BorderBrush" Color="#3C3C3C"/>
+          <SolidColorBrush x:Key="CurveEditor.TabItem.SelectedBackgroundBrush" Color="#252526"/>
+          <SolidColorBrush x:Key="CurveEditor.TabItem.SelectedForegroundBrush" Color="#D7BA7D"/>
+          <SolidColorBrush x:Key="CurveEditor.TabItem.HoverBackgroundBrush" Color="#2A2D2E"/>
         </ResourceDictionary>
 
         <ResourceDictionary x:Key="Light">
@@ -53,6 +61,14 @@
 
           <!-- Splitters / separators -->
           <SolidColorBrush x:Key="CurveEditor.Splitter.Brush" Color="#E5E5E5"/>
+
+          <!-- Tab Items -->
+          <SolidColorBrush x:Key="CurveEditor.TabItem.BackgroundBrush" Color="#FFFFFF"/>
+          <SolidColorBrush x:Key="CurveEditor.TabItem.ForegroundBrush" Color="#333333"/>
+          <SolidColorBrush x:Key="CurveEditor.TabItem.BorderBrush" Color="#CCCCCC"/>
+          <SolidColorBrush x:Key="CurveEditor.TabItem.SelectedBackgroundBrush" Color="#F3F3F3"/>
+          <SolidColorBrush x:Key="CurveEditor.TabItem.SelectedForegroundBrush" Color="#0066CC"/>
+          <SolidColorBrush x:Key="CurveEditor.TabItem.HoverBackgroundBrush" Color="#E8E8E8"/>
         </ResourceDictionary>
       </ResourceDictionary.ThemeDictionaries>
     </ResourceDictionary>

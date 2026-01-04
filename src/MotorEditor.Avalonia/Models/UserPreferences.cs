@@ -16,7 +16,7 @@ public sealed class UserPreferences
     /// <summary>
     /// Theme preference: "Light" or "Dark".
     /// </summary>
-    public string Theme { get; set; } = "Light";
+    public string Theme { get; set; } = "Dark";
 
     /// <summary>
     /// List of color hex codes for curve colors.
