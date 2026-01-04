@@ -52,6 +52,8 @@ public partial class MainWindowViewModel : ViewModelBase
     private string? _previousResponseTimeUnit;
     private string? _previousBacklashUnit;
 
+    private UnitSettings? _subscribedUnitSettings;
+
     // Tab management
     private readonly ObservableCollection<DocumentTab> _tabs = new();
     private DocumentTab? _activeTab;
@@ -1062,6 +1064,15 @@ public partial class MainWindowViewModel : ViewModelBase
             return;
         }
 
+        if (e.PropertyName == nameof(DocumentTab.Motor) && tab == ActiveTab)
+        {
+            // Document tabs can update their motor directly (e.g., during file loads).
+            // CurrentMotor is a delegating property, so ensure we keep unit-change subscriptions
+            // in sync with the active tab's motor.
+            OnPropertyChanged(nameof(CurrentMotor));
+            SyncUnitSubscriptionsForMotor(tab.Motor);
+        }
+
         // Edits typically mark the DocumentTab dirty directly (tab.MarkDirty()), bypassing the
         // MainWindowViewModel.IsDirty setter. Keep Directory Browser dirty indicators in sync.
         if (e.PropertyName is nameof(DocumentTab.IsDirty) or nameof(DocumentTab.FilePath))
@@ -1144,6 +1155,7 @@ public partial class MainWindowViewModel : ViewModelBase
         {
             // Notify all properties that depend on active tab
             OnPropertyChanged(nameof(CurrentMotor));
+            SyncUnitSubscriptionsForMotor(CurrentMotor);
             OnPropertyChanged(nameof(IsDirty));
             OnPropertyChanged(nameof(CurrentFilePath));
             OnPropertyChanged(nameof(ChartViewModel));
@@ -2468,27 +2480,7 @@ public partial class MainWindowViewModel : ViewModelBase
             value?.MotorName,
             value?.Drives?.Count ?? 0);
 
-        // Unsubscribe from previous motor's Units PropertyChanged
-        if (CurrentMotor != null && CurrentMotor.Units != null)
-        {
-            CurrentMotor.Units.PropertyChanged -= OnUnitsPropertyChanged;
-        }
-
-        // Subscribe to new motor's Units PropertyChanged
-        if (value != null && value.Units != null)
-        {
-            value.Units.PropertyChanged += OnUnitsPropertyChanged;
-            
-            // Initialize previous unit values for tracking
-            _previousTorqueUnit = value.Units.Torque;
-            _previousSpeedUnit = value.Units.Speed;
-            _previousPowerUnit = value.Units.Power;
-            _previousWeightUnit = value.Units.Weight;
-            _previousInertiaUnit = value.Units.Inertia;
-            _previousCurrentUnit = value.Units.Current;
-            _previousResponseTimeUnit = value.Units.ResponseTime;
-            _previousBacklashUnit = value.Units.Backlash;
-        }
+        SyncUnitSubscriptionsForMotor(value);
 
         // Refresh the drives collection
         RefreshAvailableDrives();
@@ -2571,6 +2563,37 @@ public partial class MainWindowViewModel : ViewModelBase
         // Populate ValidationErrors/ValidationErrorsList immediately when switching or loading motors.
         // Without this, errors only show up after an edit (MarkDirty) or manual refresh.
         ValidateMotor();
+    }
+
+    private void SyncUnitSubscriptionsForMotor(ServoMotor? motor)
+    {
+        if (_subscribedUnitSettings is not null)
+        {
+            _subscribedUnitSettings.PropertyChanged -= OnUnitsPropertyChanged;
+        }
+
+        _subscribedUnitSettings = motor?.Units;
+
+        if (_subscribedUnitSettings is null)
+        {
+            return;
+        }
+
+        _subscribedUnitSettings.PropertyChanged += OnUnitsPropertyChanged;
+
+        // Initialize previous unit values for tracking
+        _previousTorqueUnit = _subscribedUnitSettings.Torque;
+        _previousSpeedUnit = _subscribedUnitSettings.Speed;
+        _previousPowerUnit = _subscribedUnitSettings.Power;
+        _previousWeightUnit = _subscribedUnitSettings.Weight;
+        _previousInertiaUnit = _subscribedUnitSettings.Inertia;
+        _previousCurrentUnit = _subscribedUnitSettings.Current;
+        _previousResponseTimeUnit = _subscribedUnitSettings.ResponseTime;
+        _previousBacklashUnit = _subscribedUnitSettings.Backlash;
+
+        Log.Information(
+            "[UNITS] Subscribed to UnitSettings changes: MotorName={MotorName}",
+            motor?.MotorName);
     }
 
     private void OnSelectedDriveChanged(Drive? value)

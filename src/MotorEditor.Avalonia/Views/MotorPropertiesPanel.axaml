@@ -328,7 +328,7 @@
                             <TextBlock Grid.Column="0" Text="Torque" Classes="PropertyLabel"/>
                             <ComboBox Grid.Column="1"
                                       ItemsSource="{Binding TorqueUnits}"
-                                      SelectedItem="{Binding CurrentMotor.Units.Torque}"
+                                      SelectedItem="{Binding CurrentMotor.Units.Torque, Mode=TwoWay}"
                                       Classes="PropertyComboBox"/>
                         </Grid>
 
@@ -336,7 +336,7 @@
                             <TextBlock Grid.Column="0" Text="Speed" Classes="PropertyLabel"/>
                             <ComboBox Grid.Column="1"
                                       ItemsSource="{Binding SpeedUnits}"
-                                      SelectedItem="{Binding CurrentMotor.Units.Speed}"
+                                      SelectedItem="{Binding CurrentMotor.Units.Speed, Mode=TwoWay}"
                                       Classes="PropertyComboBox"/>
                         </Grid>
 
@@ -344,7 +344,7 @@
                             <TextBlock Grid.Column="0" Text="Power" Classes="PropertyLabel"/>
                             <ComboBox Grid.Column="1"
                                       ItemsSource="{Binding PowerUnits}"
-                                      SelectedItem="{Binding CurrentMotor.Units.Power}"
+                                      SelectedItem="{Binding CurrentMotor.Units.Power, Mode=TwoWay}"
                                       Classes="PropertyComboBox"/>
                         </Grid>
 
@@ -352,7 +352,7 @@
                             <TextBlock Grid.Column="0" Text="Weight" Classes="PropertyLabel"/>
                             <ComboBox Grid.Column="1"
                                       ItemsSource="{Binding WeightUnits}"
-                                      SelectedItem="{Binding CurrentMotor.Units.Weight}"
+                                      SelectedItem="{Binding CurrentMotor.Units.Weight, Mode=TwoWay}"
                                       Classes="PropertyComboBox"/>
                         </Grid>
 
@@ -360,7 +360,7 @@
                             <TextBlock Grid.Column="0" Text="Current" Classes="PropertyLabel"/>
                             <ComboBox Grid.Column="1"
                                       ItemsSource="{Binding CurrentUnits}"
-                                      SelectedItem="{Binding CurrentMotor.Units.Current}"
+                                      SelectedItem="{Binding CurrentMotor.Units.Current, Mode=TwoWay}"
                                       Classes="PropertyComboBox"/>
                         </Grid>
 
@@ -368,7 +368,7 @@
                             <TextBlock Grid.Column="0" Text="Inertia" Classes="PropertyLabel"/>
                             <ComboBox Grid.Column="1"
                                       ItemsSource="{Binding InertiaUnits}"
-                                      SelectedItem="{Binding CurrentMotor.Units.Inertia}"
+                                      SelectedItem="{Binding CurrentMotor.Units.Inertia, Mode=TwoWay}"
                                       Classes="PropertyComboBox"/>
                         </Grid>
 
@@ -376,7 +376,7 @@
                             <TextBlock Grid.Column="0" Text="Torque Const." Classes="PropertyLabel"/>
                             <ComboBox Grid.Column="1"
                                       ItemsSource="{Binding TorqueConstantUnits}"
-                                      SelectedItem="{Binding CurrentMotor.Units.TorqueConstant}"
+                                      SelectedItem="{Binding CurrentMotor.Units.TorqueConstant, Mode=TwoWay}"
                                       Classes="PropertyComboBox"/>
                         </Grid>
 
@@ -384,7 +384,7 @@
                             <TextBlock Grid.Column="0" Text="Backlash" Classes="PropertyLabel"/>
                             <ComboBox Grid.Column="1"
                                       ItemsSource="{Binding BacklashUnits}"
-                                      SelectedItem="{Binding CurrentMotor.Units.Backlash}"
+                                      SelectedItem="{Binding CurrentMotor.Units.Backlash, Mode=TwoWay}"
                                       Classes="PropertyComboBox"/>
                         </Grid>
 
@@ -392,7 +392,7 @@
                             <TextBlock Grid.Column="0" Text="Time" Classes="PropertyLabel"/>
                             <ComboBox Grid.Column="1"
                                       ItemsSource="{Binding TimeUnits}"
-                                      SelectedItem="{Binding CurrentMotor.Units.ResponseTime}"
+                                      SelectedItem="{Binding CurrentMotor.Units.ResponseTime, Mode=TwoWay}"
                                       Classes="PropertyComboBox"/>
                         </Grid>
                     </StackPanel>
