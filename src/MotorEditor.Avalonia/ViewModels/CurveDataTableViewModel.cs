@@ -304,6 +304,102 @@ public partial class CurveDataTableViewModel : ViewModelBase
     }
 
     /// <summary>
+    /// Updates a percent value in the data table for all series.
+    /// Percent is shared across all series in a voltage configuration.
+    /// </summary>
+    public void UpdatePercent(int rowIndex, int value)
+    {
+        if (rowIndex < 0 || rowIndex >= Rows.Count)
+        {
+            return;
+        }
+
+        if (_currentVoltage is null || _currentVoltage.Curves.Count == 0)
+        {
+            return;
+        }
+
+        // Update percent for all series at this row index
+        foreach (var series in _currentVoltage.Curves)
+        {
+            if (series.LockedPercent)
+            {
+                continue;
+            }
+
+            if (rowIndex >= series.Data.Count)
+            {
+                continue;
+            }
+
+            if (_undoStack is null)
+            {
+                series.Data[rowIndex].Percent = value;
+            }
+            else
+            {
+                var command = new EditPointCommand(
+                    series,
+                    rowIndex,
+                    newPercent: value,
+                    newRpm: null,
+                    newTorque: null);
+                _undoStack.PushAndExecute(command);
+            }
+        }
+
+        DataChanged?.Invoke(this, EventArgs.Empty);
+    }
+
+    /// <summary>
+    /// Updates an RPM value in the data table for all series.
+    /// RPM is shared across all series in a voltage configuration.
+    /// </summary>
+    public void UpdateRpm(int rowIndex, double value)
+    {
+        if (rowIndex < 0 || rowIndex >= Rows.Count)
+        {
+            return;
+        }
+
+        if (_currentVoltage is null || _currentVoltage.Curves.Count == 0)
+        {
+            return;
+        }
+
+        // Update RPM for all series at this row index
+        foreach (var series in _currentVoltage.Curves)
+        {
+            if (series.LockedRpm)
+            {
+                continue;
+            }
+
+            if (rowIndex >= series.Data.Count)
+            {
+                continue;
+            }
+
+            if (_undoStack is null)
+            {
+                series.Data[rowIndex].Rpm = value;
+            }
+            else
+            {
+                var command = new EditPointCommand(
+                    series,
+                    rowIndex,
+                    newPercent: null,
+                    newRpm: value,
+                    newTorque: null);
+                _undoStack.PushAndExecute(command);
+            }
+        }
+
+        DataChanged?.Invoke(this, EventArgs.Empty);
+    }
+
+    /// <summary>
     /// Gets the torque value for a specific row and series.
     /// </summary>
     public double GetTorque(int rowIndex, string seriesName)
@@ -322,6 +418,36 @@ public partial class CurveDataTableViewModel : ViewModelBase
     {
         var series = _currentVoltage?.Curves.FirstOrDefault(s => s.Name == seriesName);
         return series?.Locked ?? false;
+    }
+
+    /// <summary>
+    /// Checks if percent column is locked for any series in the current voltage.
+    /// Returns true if all series have percent locked.
+    /// </summary>
+    public bool IsPercentLocked()
+    {
+        if (_currentVoltage is null || _currentVoltage.Curves.Count == 0)
+        {
+            return true;
+        }
+
+        // If any series allows percent editing, return false
+        return _currentVoltage.Curves.All(s => s.LockedPercent);
+    }
+
+    /// <summary>
+    /// Checks if RPM column is locked for any series in the current voltage.
+    /// Returns true if all series have RPM locked.
+    /// </summary>
+    public bool IsRpmLocked()
+    {
+        if (_currentVoltage is null || _currentVoltage.Curves.Count == 0)
+        {
+            return true;
+        }
+
+        // If any series allows RPM editing, return false
+        return _currentVoltage.Curves.All(s => s.LockedRpm);
     }
 
     /// <summary>

@@ -19,6 +19,8 @@ public class Curve : INotifyPropertyChanged
     private const int MaxSupportedPointCount = 101;
     private string _name = string.Empty;
     private bool _locked;
+    private bool _lockedPercent;
+    private bool _lockedRpm;
     private bool _isVisible = true;
 
     /// <summary>
@@ -68,6 +70,48 @@ public class Curve : INotifyPropertyChanged
             if (_locked != value)
             {
                 _locked = value;
+                OnPropertyChanged();
+            }
+        }
+    }
+
+    /// <summary>
+    /// Gets or sets whether the speed percentage column is locked for editing.
+    /// </summary>
+    /// <remarks>
+    /// When <see langword="true"/>, the percent values in the curve data should not be modified.
+    /// This allows locking percent editing independently of torque or RPM editing.
+    /// </remarks>
+    [JsonPropertyName("lockedPercent")]
+    public bool LockedPercent
+    {
+        get => _lockedPercent;
+        set
+        {
+            if (_lockedPercent != value)
+            {
+                _lockedPercent = value;
+                OnPropertyChanged();
+            }
+        }
+    }
+
+    /// <summary>
+    /// Gets or sets whether the speed RPM column is locked for editing.
+    /// </summary>
+    /// <remarks>
+    /// When <see langword="true"/>, the RPM values in the curve data should not be modified.
+    /// This allows locking RPM editing independently of torque or percent editing.
+    /// </remarks>
+    [JsonPropertyName("lockedRpm")]
+    public bool LockedRpm
+    {
+        get => _lockedRpm;
+        set
+        {
+            if (_lockedRpm != value)
+            {
+                _lockedRpm = value;
                 OnPropertyChanged();
             }
         }
