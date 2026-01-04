@@ -42,10 +42,6 @@ public partial class MainWindowViewModel : ViewModelBase
     private readonly IRecentFilesService _recentFilesService;
     private readonly IRecentFoldersService _recentFoldersService;
     private readonly IUserPreferencesService _userPreferencesService;
-    
-    // Observable properties for menu bindings
-    private ReadOnlyObservableCollection<string>? _recentFilesForBinding;
-    private ReadOnlyObservableCollection<string>? _recentFoldersForBinding;
 
     // Track previous units for conversion
     private string? _previousTorqueUnit;
@@ -354,30 +350,22 @@ public partial class MainWindowViewModel : ViewModelBase
     /// <summary>
     /// Gets the observable list of recent file paths, ordered from most recent to oldest.
     /// </summary>
-    public ReadOnlyObservableCollection<string> RecentFiles
-    {
-        get
-        {
-            if (_recentFilesForBinding == null && _recentFilesService != null)
-            {
-                _recentFilesForBinding = _recentFilesService.RecentFiles;
-            }
-            return _recentFilesForBinding!;
-        }
-    }
+    public ReadOnlyObservableCollection<string> RecentFiles => _recentFilesService.RecentFiles;
 
     /// <summary>
     /// Gets the observable list of recent folder paths, ordered from most recent to oldest.
     /// </summary>
-    public ReadOnlyObservableCollection<string> RecentFolders
+    public ReadOnlyObservableCollection<string> RecentFolders => _recentFoldersService.RecentFolders;
+    
+    /// <summary>
+    /// Test property for debugging - returns a hard-coded collection
+    /// </summary>
+    public ReadOnlyObservableCollection<string> TestFolders
     {
         get
         {
-            if (_recentFoldersForBinding == null && _recentFoldersService != null)
-            {
-                _recentFoldersForBinding = _recentFoldersService.RecentFolders;
-            }
-            return _recentFoldersForBinding!;
+            var test = new ObservableCollection<string> { "C:\\Test1", "C:\\Test2", "C:\\Test3" };
+            return new ReadOnlyObservableCollection<string>(test);
         }
     }
 
@@ -838,10 +826,6 @@ public partial class MainWindowViewModel : ViewModelBase
         _userPreferencesService = new UserPreferencesService();
         UnsavedChangesPromptAsync = ShowUnsavedChangesPromptAsync;
         
-        // Notify that Recent* properties are available for binding
-        OnPropertyChanged(nameof(RecentFiles));
-        OnPropertyChanged(nameof(RecentFolders));
-        
         // Initialize unit services
         _unitPreferencesService = new UnitPreferencesService(_settingsStore);
         _unitConversionService = new UnitConversionService(_settingsStore);
@@ -884,10 +868,6 @@ public partial class MainWindowViewModel : ViewModelBase
         _recentFoldersService = new RecentFoldersService(_settingsStore);
         _userPreferencesService = new UserPreferencesService();
         UnsavedChangesPromptAsync = ShowUnsavedChangesPromptAsync;
-        
-        // Notify that Recent* properties are available for binding
-        OnPropertyChanged(nameof(RecentFiles));
-        OnPropertyChanged(nameof(RecentFolders));
         
         // Initialize unit services
         _unitPreferencesService = new UnitPreferencesService(_settingsStore);
@@ -942,10 +922,6 @@ public partial class MainWindowViewModel : ViewModelBase
         _recentFoldersService = new RecentFoldersService(_settingsStore);
         _userPreferencesService = new UserPreferencesService();
         UnsavedChangesPromptAsync = unsavedChangesPromptAsync ?? ShowUnsavedChangesPromptAsync;
-
-        // Notify that Recent* properties are available for binding
-        OnPropertyChanged(nameof(RecentFiles));
-        OnPropertyChanged(nameof(RecentFolders));
 
         // Initialize unit services
         _unitPreferencesService = new UnitPreferencesService(_settingsStore);

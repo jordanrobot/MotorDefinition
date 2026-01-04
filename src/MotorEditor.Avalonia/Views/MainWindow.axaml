@@ -132,7 +132,7 @@
                         </ControlTheme>
                     </MenuItem.ItemContainerTheme>
                 </MenuItem>
-                <MenuItem Header="Recent Fol_ders" ItemsSource="{Binding RecentFolders}">
+                <MenuItem Header="Recent Fol_ders" ItemsSource="{Binding TestFolders}">
                     <MenuItem.ItemContainerTheme>
                         <ControlTheme TargetType="MenuItem" BasedOn="{StaticResource {x:Type MenuItem}}">
                             <Setter Property="Command" Value="{Binding $parent[Window].((vm:MainWindowViewModel)DataContext).OpenRecentFolderCommand}"/>
