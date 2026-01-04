@@ -10,18 +10,34 @@ public sealed class EditPointCommand : IUndoableCommand
 {
     private readonly Curve _series;
     private readonly int _index;
-    private readonly double _newRpm;
-    private readonly double _newTorque;
+    private readonly int? _newPercent;
+    private readonly double? _newRpm;
+    private readonly double? _newTorque;
+    private int _oldPercent;
     private double _oldRpm;
     private double _oldTorque;
 
     /// <summary>
-    /// Creates a new <see cref="EditPointCommand"/>.
+    /// Creates a new <see cref="EditPointCommand"/> for editing RPM and Torque.
     /// </summary>
     public EditPointCommand(Curve series, int index, double newRpm, double newTorque)
+        : this(series, index, null, newRpm, newTorque)
+    {
+    }
+
+    /// <summary>
+    /// Creates a new <see cref="EditPointCommand"/> for editing Percent, RPM, and/or Torque.
+    /// </summary>
+    /// <param name="series">The curve series containing the point.</param>
+    /// <param name="index">The index of the point to edit.</param>
+    /// <param name="newPercent">The new percent value, or null to leave unchanged.</param>
+    /// <param name="newRpm">The new RPM value, or null to leave unchanged.</param>
+    /// <param name="newTorque">The new torque value, or null to leave unchanged.</param>
+    public EditPointCommand(Curve series, int index, int? newPercent, double? newRpm, double? newTorque)
     {
         _series = series ?? throw new ArgumentNullException(nameof(series));
         _index = index;
+        _newPercent = newPercent;
         _newRpm = newRpm;
         _newTorque = newTorque;
     }
@@ -38,10 +54,22 @@ public sealed class EditPointCommand : IUndoableCommand
         }
 
         var point = _series.Data[_index];
+        _oldPercent = point.Percent;
         _oldRpm = point.Rpm;
         _oldTorque = point.Torque;
-        point.Rpm = _newRpm;
-        point.Torque = _newTorque;
+
+        if (_newPercent.HasValue)
+        {
+            point.Percent = _newPercent.Value;
+        }
+        if (_newRpm.HasValue)
+        {
+            point.Rpm = _newRpm.Value;
+        }
+        if (_newTorque.HasValue)
+        {
+            point.Torque = _newTorque.Value;
+        }
     }
 
     /// <inheritdoc />
@@ -53,6 +81,7 @@ public sealed class EditPointCommand : IUndoableCommand
         }
 
         var point = _series.Data[_index];
+        point.Percent = _oldPercent;
         point.Rpm = _oldRpm;
         point.Torque = _oldTorque;
     }

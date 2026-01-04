@@ -95,6 +95,40 @@ public bool Locked { get; set; }
 ### Remarks
 When [true](https://docs.microsoft.com/en-us/dotnet/csharp/language-reference/builtin-types/bool 'https://docs\.microsoft\.com/en\-us/dotnet/csharp/language\-reference/builtin\-types/bool'), the curve data should not be modified\.
 
+<a name='JordanRobot.MotorDefinition.Model.Curve.LockedPercent'></a>
+
+## Curve\.LockedPercent Property
+
+Gets or sets whether the speed percentage column is locked for editing\.
+
+```csharp
+public bool LockedPercent { get; set; }
+```
+
+#### Property Value
+[System\.Boolean](https://learn.microsoft.com/en-us/dotnet/api/system.boolean 'System\.Boolean')
+
+### Remarks
+When [true](https://docs.microsoft.com/en-us/dotnet/csharp/language-reference/builtin-types/bool 'https://docs\.microsoft\.com/en\-us/dotnet/csharp/language\-reference/builtin\-types/bool'), the percent values in the curve data should not be modified\.
+This allows locking percent editing independently of torque or RPM editing\.
+
+<a name='JordanRobot.MotorDefinition.Model.Curve.LockedRpm'></a>
+
+## Curve\.LockedRpm Property
+
+Gets or sets whether the speed RPM column is locked for editing\.
+
+```csharp
+public bool LockedRpm { get; set; }
+```
+
+#### Property Value
+[System\.Boolean](https://learn.microsoft.com/en-us/dotnet/api/system.boolean 'System\.Boolean')
+
+### Remarks
+When [true](https://docs.microsoft.com/en-us/dotnet/csharp/language-reference/builtin-types/bool 'https://docs\.microsoft\.com/en\-us/dotnet/csharp/language\-reference/builtin\-types/bool'), the RPM values in the curve data should not be modified\.
+This allows locking RPM editing independently of torque or percent editing\.
+
 <a name='JordanRobot.MotorDefinition.Model.Curve.Name'></a>
 
 ## Curve\.Name Property

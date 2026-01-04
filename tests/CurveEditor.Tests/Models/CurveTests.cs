@@ -62,6 +62,95 @@ public class CurveTests
         Assert.True(series.Locked);
     }
 
+    [Fact]
+    public void LockedPercent_DefaultsToFalse()
+    {
+        var series = new Curve();
+
+        Assert.False(series.LockedPercent);
+    }
+
+    [Fact]
+    public void LockedPercent_CanBeSetToTrue()
+    {
+        var series = new Curve("Peak")
+        {
+            LockedPercent = true
+        };
+
+        Assert.True(series.LockedPercent);
+    }
+
+    [Fact]
+    public void LockedRpm_DefaultsToFalse()
+    {
+        var series = new Curve();
+
+        Assert.False(series.LockedRpm);
+    }
+
+    [Fact]
+    public void LockedRpm_CanBeSetToTrue()
+    {
+        var series = new Curve("Peak")
+        {
+            LockedRpm = true
+        };
+
+        Assert.True(series.LockedRpm);
+    }
+
+    [Fact]
+    public void LockedPercent_Independent_FromLockedRpm()
+    {
+        var series = new Curve("Peak")
+        {
+            LockedPercent = true,
+            LockedRpm = false
+        };
+
+        Assert.True(series.LockedPercent);
+        Assert.False(series.LockedRpm);
+    }
+
+    [Fact]
+    public void PropertyChanged_RaisedWhen_LockedPercentChanges()
+    {
+        var series = new Curve("Peak");
+        var propertyChangedRaised = false;
+        string? changedPropertyName = null;
+
+        series.PropertyChanged += (sender, e) =>
+        {
+            propertyChangedRaised = true;
+            changedPropertyName = e.PropertyName;
+        };
+
+        series.LockedPercent = true;
+
+        Assert.True(propertyChangedRaised);
+        Assert.Equal(nameof(Curve.LockedPercent), changedPropertyName);
+    }
+
+    [Fact]
+    public void PropertyChanged_RaisedWhen_LockedRpmChanges()
+    {
+        var series = new Curve("Peak");
+        var propertyChangedRaised = false;
+        string? changedPropertyName = null;
+
+        series.PropertyChanged += (sender, e) =>
+        {
+            propertyChangedRaised = true;
+            changedPropertyName = e.PropertyName;
+        };
+
+        series.LockedRpm = true;
+
+        Assert.True(propertyChangedRaised);
+        Assert.Equal(nameof(Curve.LockedRpm), changedPropertyName);
+    }
+
     [Theory]
     [InlineData(null)]
     [InlineData("")]

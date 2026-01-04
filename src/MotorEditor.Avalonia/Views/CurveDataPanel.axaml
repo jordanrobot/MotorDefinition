@@ -69,11 +69,39 @@
                     <!-- Fixed columns: % and RPM -->
                     <Border Width="50" BorderThickness="0,0,1,0" 
                             BorderBrush="{DynamicResource SystemControlBackgroundBaseMediumBrush}">
-                        <TextBlock Text="%" Classes="Header" HorizontalAlignment="Center"/>
+                        <StackPanel Margin="2,2">
+                            <TextBlock Text="%" Classes="Header" HorizontalAlignment="Center"/>
+                            <!-- Lock button for Percent column -->
+                            <ToggleButton x:Name="PercentLockToggle"
+                                          Width="20" Height="20"
+                                          Padding="0"
+                                          HorizontalAlignment="Center"
+                                          ToolTip.Tip="Toggle Lock for % Column"
+                                          Click="OnPercentLockToggleClick">
+                                <Panel>
+                                    <TextBlock x:Name="PercentLockIcon" Text="🔒" FontSize="10"/>
+                                    <TextBlock x:Name="PercentUnlockIcon" Text="🔓" FontSize="10"/>
+                                </Panel>
+                            </ToggleButton>
+                        </StackPanel>
                     </Border>
                     <Border Width="70" BorderThickness="0,0,1,0" 
                             BorderBrush="{DynamicResource SystemControlBackgroundBaseMediumBrush}">
-                        <TextBlock Text="RPM" Classes="Header" HorizontalAlignment="Center"/>
+                        <StackPanel Margin="2,2">
+                            <TextBlock Text="RPM" Classes="Header" HorizontalAlignment="Center"/>
+                            <!-- Lock button for RPM column -->
+                            <ToggleButton x:Name="RpmLockToggle"
+                                          Width="20" Height="20"
+                                          Padding="0"
+                                          HorizontalAlignment="Center"
+                                          ToolTip.Tip="Toggle Lock for RPM Column"
+                                          Click="OnRpmLockToggleClick">
+                                <Panel>
+                                    <TextBlock x:Name="RpmLockIcon" Text="🔒" FontSize="10"/>
+                                    <TextBlock x:Name="RpmUnlockIcon" Text="🔓" FontSize="10"/>
+                                </Panel>
+                            </ToggleButton>
+                        </StackPanel>
                     </Border>
                     
                     <!-- Dynamic series columns -->
@@ -160,16 +188,7 @@
                   HorizontalScrollBarVisibility="Disabled"
                   IsVisible="{Binding SelectedVoltage, Converter={x:Static ObjectConverters.IsNotNull}}"
                   CellEditEnded="DataGrid_CellEditEnded">
-            <DataGrid.Columns>
-                <DataGridTextColumn Header="%" 
-                                    Binding="{Binding Percent}" 
-                                    Width="50"
-                                    IsReadOnly="True"/>
-                <DataGridTextColumn Header="RPM" 
-                                    Binding="{Binding DisplayRpm}" 
-                                    Width="70"
-                                    IsReadOnly="True"/>
-            </DataGrid.Columns>
+            <!-- Columns are dynamically created in code-behind -->
         </DataGrid>
         
         <!-- Empty state -->

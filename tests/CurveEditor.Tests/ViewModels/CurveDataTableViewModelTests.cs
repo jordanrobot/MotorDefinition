@@ -814,6 +814,166 @@ public class CurveDataTableViewModelTests
         Assert.Equal(0, CellPosition.Compare(a, a)); // equal
     }
 
+    [Fact]
+    public void UpdatePercent_UpdatesPercentForAllSeries()
+    {
+        // Arrange
+        var viewModel = CreateViewModelWithData();
+        var rowIndex = 50; // Middle row
+        var newPercent = 75;
+
+        // Act
+        viewModel.UpdatePercent(rowIndex, newPercent);
+
+        // Assert - both series should have the updated percent value
+        var voltage = viewModel.CurrentVoltage;
+        Assert.NotNull(voltage);
+        foreach (var series in voltage.Curves)
+        {
+            Assert.Equal(newPercent, series.Data[rowIndex].Percent);
+        }
+    }
+
+    [Fact]
+    public void UpdatePercent_DoesNotUpdateLockedSeries()
+    {
+        // Arrange
+        var viewModel = CreateViewModelWithData();
+        var rowIndex = 50;
+        var newPercent = 75;
+        
+        // Lock the percent for the Peak series
+        var peakSeries = viewModel.SeriesColumns.First(s => s.Name == "Peak");
+        peakSeries.LockedPercent = true;
+        var originalPercent = peakSeries.Data[rowIndex].Percent;
+
+        // Act
+        viewModel.UpdatePercent(rowIndex, newPercent);
+
+        // Assert - Peak should remain unchanged, Continuous should be updated
+        Assert.Equal(originalPercent, peakSeries.Data[rowIndex].Percent);
+        
+        var continuousSeries = viewModel.SeriesColumns.First(s => s.Name == "Continuous");
+        Assert.Equal(newPercent, continuousSeries.Data[rowIndex].Percent);
+    }
+
+    [Fact]
+    public void UpdateRpm_UpdatesRpmForAllSeries()
+    {
+        // Arrange
+        var viewModel = CreateViewModelWithData();
+        var rowIndex = 50; // Middle row
+        var newRpm = 3000.5;
+
+        // Act
+        viewModel.UpdateRpm(rowIndex, newRpm);
+
+        // Assert - both series should have the updated RPM value
+        var voltage = viewModel.CurrentVoltage;
+        Assert.NotNull(voltage);
+        foreach (var series in voltage.Curves)
+        {
+            Assert.Equal(newRpm, series.Data[rowIndex].Rpm);
+        }
+    }
+
+    [Fact]
+    public void UpdateRpm_DoesNotUpdateLockedSeries()
+    {
+        // Arrange
+        var viewModel = CreateViewModelWithData();
+        var rowIndex = 50;
+        var newRpm = 3000.5;
+        
+        // Lock the RPM for the Continuous series
+        var continuousSeries = viewModel.SeriesColumns.First(s => s.Name == "Continuous");
+        continuousSeries.LockedRpm = true;
+        var originalRpm = continuousSeries.Data[rowIndex].Rpm;
+
+        // Act
+        viewModel.UpdateRpm(rowIndex, newRpm);
+
+        // Assert - Continuous should remain unchanged, Peak should be updated
+        Assert.Equal(originalRpm, continuousSeries.Data[rowIndex].Rpm);
+        
+        var peakSeries = viewModel.SeriesColumns.First(s => s.Name == "Peak");
+        Assert.Equal(newRpm, peakSeries.Data[rowIndex].Rpm);
+    }
+
+    [Fact]
+    public void IsPercentLocked_ReturnsFalse_WhenAnySeriesAllowsPercentEditing()
+    {
+        // Arrange
+        var viewModel = CreateViewModelWithData();
+        var peakSeries = viewModel.SeriesColumns.First(s => s.Name == "Peak");
+        peakSeries.LockedPercent = false;
+        
+        var continuousSeries = viewModel.SeriesColumns.First(s => s.Name == "Continuous");
+        continuousSeries.LockedPercent = true;
+
+        // Act
+        var isLocked = viewModel.IsPercentLocked();
+
+        // Assert - should return false because Peak allows editing
+        Assert.False(isLocked);
+    }
+
+    [Fact]
+    public void IsPercentLocked_ReturnsTrue_WhenAllSeriesHavePercentLocked()
+    {
+        // Arrange
+        var viewModel = CreateViewModelWithData();
+        
+        // Lock percent for all series
+        foreach (var series in viewModel.SeriesColumns)
+        {
+            series.LockedPercent = true;
+        }
+
+        // Act
+        var isLocked = viewModel.IsPercentLocked();
+
+        // Assert
+        Assert.True(isLocked);
+    }
+
+    [Fact]
+    public void IsRpmLocked_ReturnsFalse_WhenAnySeriesAllowsRpmEditing()
+    {
+        // Arrange
+        var viewModel = CreateViewModelWithData();
+        var peakSeries = viewModel.SeriesColumns.First(s => s.Name == "Peak");
+        peakSeries.LockedRpm = true;
+        
+        var continuousSeries = viewModel.SeriesColumns.First(s => s.Name == "Continuous");
+        continuousSeries.LockedRpm = false;
+
+        // Act
+        var isLocked = viewModel.IsRpmLocked();
+
+        // Assert - should return false because Continuous allows editing
+        Assert.False(isLocked);
+    }
+
+    [Fact]
+    public void IsRpmLocked_ReturnsTrue_WhenAllSeriesHaveRpmLocked()
+    {
+        // Arrange
+        var viewModel = CreateViewModelWithData();
+        
+        // Lock RPM for all series
+        foreach (var series in viewModel.SeriesColumns)
+        {
+            series.LockedRpm = true;
+        }
+
+        // Act
+        var isLocked = viewModel.IsRpmLocked();
+
+        // Assert
+        Assert.True(isLocked);
+    }
+
     private static CurveDataTableViewModel CreateViewModelWithData()
     {
         var viewModel = new CurveDataTableViewModel();
