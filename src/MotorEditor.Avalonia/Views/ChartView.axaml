@@ -79,10 +79,16 @@
                     <StackPanel Orientation="Horizontal" Margin="10,2">
                         <!-- Legend line indicator -->
                         <Canvas Width="30" Height="16" VerticalAlignment="Center">
-                            <!-- Solid line (for non-dashed, non-dotted) -->
+                            <!-- Solid line (for non-dashed, non-dotted torque curves) -->
                             <Rectangle Canvas.Left="0" Canvas.Top="7" Width="30" Height="2"
-                                      Fill="{Binding Color, Converter={StaticResource ColorConverter}}"
-                                      IsVisible="{Binding !IsDashed}"/>
+                                      Fill="{Binding Color, Converter={StaticResource ColorConverter}}">
+                                <Rectangle.IsVisible>
+                                    <MultiBinding Converter="{x:Static BoolConverters.And}">
+                                        <Binding Path="!IsDashed"/>
+                                        <Binding Path="!IsDotted"/>
+                                    </MultiBinding>
+                                </Rectangle.IsVisible>
+                            </Rectangle>
                             <!-- Dashed line (for reference lines like Motor Rated Speed, Voltage Max Speed, Brake Torque) -->
                             <Rectangle Canvas.Left="0" Canvas.Top="7" Width="8" Height="2"
                                       Fill="{Binding Color, Converter={StaticResource ColorConverter}}"
@@ -93,7 +99,7 @@
                             <Rectangle Canvas.Left="24" Canvas.Top="7" Width="6" Height="2"
                                       Fill="{Binding Color, Converter={StaticResource ColorConverter}}"
                                       IsVisible="{Binding IsDashed}"/>
-                            <!-- Dotted line overlay (for power curves) -->
+                            <!-- Dotted line (for power curves) -->
                             <Rectangle Canvas.Left="0" Canvas.Top="7" Width="3" Height="2"
                                       Fill="{Binding Color, Converter={StaticResource ColorConverter}}"
                                       IsVisible="{Binding IsDotted}"/>
