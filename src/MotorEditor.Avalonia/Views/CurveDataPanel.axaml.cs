@@ -282,28 +282,206 @@ public partial class CurveDataPanel : UserControl
             var isPercentLocked = vm.CurveDataTableViewModel.IsPercentLocked();
             var isRpmLocked = vm.CurveDataTableViewModel.IsRpmLocked();
 
-            // Add % column
-            var percentColumn = new DataGridTextColumn
+            // Update lock toggle button visual states
+            UpdateLockToggleStates(isPercentLocked, isRpmLocked);
+
+            // Add % column with template (like torque columns for selection support)
+            var percentColumn = new DataGridTemplateColumn
             {
                 Header = "%",
-                Binding = new Avalonia.Data.Binding("Percent"),
                 Width = new DataGridLength(50),
                 IsReadOnly = isPercentLocked
             };
+
+            // Create cell template for % column with selection border
+            var percentCellTemplate = new FuncDataTemplate<CurveDataRow>((row, _) =>
+            {
+                if (row is null) return new TextBlock { Text = "0" };
+
+                var border = new Border
+                {
+                    BorderThickness = new Thickness(1),
+                    BorderBrush = Brushes.Transparent,
+                    Background = Brushes.Transparent,
+                    Padding = new Thickness(2)
+                };
+
+                var textBlock = new TextBlock
+                {
+                    VerticalAlignment = Avalonia.Layout.VerticalAlignment.Center,
+                    Margin = new Thickness(2),
+                    Text = row.Percent.ToString()
+                };
+
+                border.Child = textBlock;
+
+                // Register the border for selection updates (column index 0)
+                var cellPos = new CellPosition(row.RowIndex, 0);
+                _cellBorders[cellPos] = border;
+
+                // Update visual based on current selection state
+                if (DataContext is MainWindowViewModel viewModel)
+                {
+                    var isSelected = viewModel.CurveDataTableViewModel.IsCellSelected(row.RowIndex, 0);
+                    UpdateCellBorderVisual(border, isSelected);
+                }
+
+                return border;
+            });
+            percentColumn.CellTemplate = percentCellTemplate;
+
+            // Create editing template for % column
+            if (!isPercentLocked)
+            {
+                var percentEditingTemplate = new FuncDataTemplate<CurveDataRow>((row, _) =>
+                {
+                    var textBox = new TextBox
+                    {
+                        VerticalAlignment = Avalonia.Layout.VerticalAlignment.Center,
+                        Margin = new Thickness(2),
+                        Text = row?.Percent.ToString() ?? "0",
+                        BorderThickness = new Thickness(2),
+                        BorderBrush = Brushes.White,
+                        IsUndoEnabled = false
+                    };
+
+                    textBox.AttachedToVisualTree += (sender, e) =>
+                    {
+                        if (sender is TextBox tb)
+                        {
+                            tb.SelectAll();
+                            tb.Focus();
+                        }
+                    };
+
+                    textBox.LostFocus += (sender, e) =>
+                    {
+                        if (sender is not TextBox tb || row is null)
+                        {
+                            return;
+                        }
+
+                        if (!int.TryParse(tb.Text, out var newValue) || newValue < 0)
+                        {
+                            return;
+                        }
+
+                        if (DataContext is not MainWindowViewModel viewModel)
+                        {
+                            return;
+                        }
+
+                        var rowIndex = row.RowIndex;
+                        viewModel.CurveDataTableViewModel.UpdatePercent(rowIndex, newValue);
+                        viewModel.MarkDirty();
+                        viewModel.ChartViewModel.RefreshChart();
+                    };
+
+                    return textBox;
+                });
+                percentColumn.CellEditingTemplate = percentEditingTemplate;
+            }
+
             DataTable.Columns.Add(percentColumn);
 
-            // Add RPM column
-            var rpmColumn = new DataGridTextColumn
+            // Add RPM column with template (like torque columns for selection support)
+            var rpmColumn = new DataGridTemplateColumn
             {
                 Header = "RPM",
-                Binding = new Avalonia.Data.Binding("DisplayRpm"),
                 Width = new DataGridLength(70),
                 IsReadOnly = isRpmLocked
             };
-            DataTable.Columns.Add(rpmColumn);
 
-            // Update lock toggle button visual states
-            UpdateLockToggleStates(isPercentLocked, isRpmLocked);
+            // Create cell template for RPM column with selection border
+            var rpmCellTemplate = new FuncDataTemplate<CurveDataRow>((row, _) =>
+            {
+                if (row is null) return new TextBlock { Text = "0" };
+
+                var border = new Border
+                {
+                    BorderThickness = new Thickness(1),
+                    BorderBrush = Brushes.Transparent,
+                    Background = Brushes.Transparent,
+                    Padding = new Thickness(2)
+                };
+
+                var textBlock = new TextBlock
+                {
+                    VerticalAlignment = Avalonia.Layout.VerticalAlignment.Center,
+                    Margin = new Thickness(2),
+                    Text = row.DisplayRpm.ToString()
+                };
+
+                border.Child = textBlock;
+
+                // Register the border for selection updates (column index 1)
+                var cellPos = new CellPosition(row.RowIndex, 1);
+                _cellBorders[cellPos] = border;
+
+                // Update visual based on current selection state
+                if (DataContext is MainWindowViewModel viewModel)
+                {
+                    var isSelected = viewModel.CurveDataTableViewModel.IsCellSelected(row.RowIndex, 1);
+                    UpdateCellBorderVisual(border, isSelected);
+                }
+
+                return border;
+            });
+            rpmColumn.CellTemplate = rpmCellTemplate;
+
+            // Create editing template for RPM column
+            if (!isRpmLocked)
+            {
+                var rpmEditingTemplate = new FuncDataTemplate<CurveDataRow>((row, _) =>
+                {
+                    var textBox = new TextBox
+                    {
+                        VerticalAlignment = Avalonia.Layout.VerticalAlignment.Center,
+                        Margin = new Thickness(2),
+                        Text = row?.DisplayRpm.ToString() ?? "0",
+                        BorderThickness = new Thickness(2),
+                        BorderBrush = Brushes.White,
+                        IsUndoEnabled = false
+                    };
+
+                    textBox.AttachedToVisualTree += (sender, e) =>
+                    {
+                        if (sender is TextBox tb)
+                        {
+                            tb.SelectAll();
+                            tb.Focus();
+                        }
+                    };
+
+                    textBox.LostFocus += (sender, e) =>
+                    {
+                        if (sender is not TextBox tb || row is null)
+                        {
+                            return;
+                        }
+
+                        if (!double.TryParse(tb.Text, out var newValue) || newValue < 0)
+                        {
+                            return;
+                        }
+
+                        if (DataContext is not MainWindowViewModel viewModel)
+                        {
+                            return;
+                        }
+
+                        var rowIndex = row.RowIndex;
+                        viewModel.CurveDataTableViewModel.UpdateRpm(rowIndex, newValue);
+                        viewModel.MarkDirty();
+                        viewModel.ChartViewModel.RefreshChart();
+                    };
+
+                    return textBox;
+                });
+                rpmColumn.CellEditingTemplate = rpmEditingTemplate;
+            }
+
+            DataTable.Columns.Add(rpmColumn);
 
             // Add a column for each series
             var columnIndex = 2; // Start after % and RPM columns
@@ -662,41 +840,11 @@ public partial class CurveDataPanel : UserControl
     {
         if (DataContext is not MainWindowViewModel viewModel) return;
 
-        // Handle editing of % and RPM columns
-        // Note: We can't access the edited value directly from the event args in Avalonia,
-        // so we rely on the binding having already updated the row's Percent property
-        // The UpdatePercent and UpdateRpm methods will handle propagating to all series
-        if (e.Row.DataContext is CurveDataRow dataRow)
-        {
-            var columnIndex = e.Column.DisplayIndex;
-            var rowIndex = dataRow.RowIndex;
-
-            // Column 0 is %, column 1 is RPM
-            // The values have already been updated via binding, so we just need to
-            // propagate them to all series through the view model
-            if (columnIndex == 0)
-            {
-                // The Percent property getter reads from the first series, so we get
-                // the newly edited value and apply it to all series
-                var newPercent = dataRow.Percent;
-                viewModel.CurveDataTableViewModel.UpdatePercent(rowIndex, newPercent);
-            }
-            else if (columnIndex == 1)
-            {
-                // Similarly for RPM - get the edited value and propagate
-                // Note: DisplayRpm is rounded, so we should get the actual Rpm value
-                if (viewModel.SelectedVoltage?.Curves.FirstOrDefault() is Curve firstSeries 
-                    && rowIndex < firstSeries.Data.Count)
-                {
-                    var newRpm = firstSeries.Data[rowIndex].Rpm;
-                    viewModel.CurveDataTableViewModel.UpdateRpm(rowIndex, newRpm);
-                }
-            }
-        }
+        // Note: % and RPM editing is now handled in the LostFocus event of their TextBox templates
+        // This method just handles cleanup and ensuring the UI is in sync
 
         // Mark data as dirty when edited
         viewModel.MarkDirty();
-        viewModel.ChartViewModel.RefreshChart();
 
         // Update cell selection visuals after edit ends
         // This ensures the white border is properly cleared/updated

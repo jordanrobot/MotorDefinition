@@ -45,6 +45,8 @@ public class DataPointTests
     [InlineData(100)]
     [InlineData(101)]
     [InlineData(200)]
+    [InlineData(150)] // Overspeed value
+    [InlineData(250)] // Overspeed value
     public void Percent_ValidValues_SetsPercent(int validPercent)
     {
         var point = new DataPoint { Percent = validPercent };
