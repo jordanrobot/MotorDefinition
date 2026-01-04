@@ -7,7 +7,6 @@ using Avalonia.VisualTree;
 using Avalonia.LogicalTree;
 using CurveEditor.ViewModels;
 using System.Linq;
-using System;
 
 namespace CurveEditor.Views;
 
@@ -30,28 +29,6 @@ public partial class DirectoryBrowserPanel : UserControl
 
         // Handle global key events for rename text box
         this.AddHandler(KeyDownEvent, OnPanelKeyDown, RoutingStrategies.Bubble);
-        
-        // Handle clicks outside rename TextBox to complete rename
-        this.AddHandler(PointerPressedEvent, OnPanelPointerPressed, RoutingStrategies.Tunnel);
-    }
-
-    private void OnPanelPointerPressed(object? sender, PointerPressedEventArgs e)
-    {
-        // If we have an active rename TextBox and the click is outside of it, complete the rename
-        if (_activeRenameTextBox is not null)
-        {
-            var clickedElement = e.Source as Visual;
-            
-            // Check if the click was inside the TextBox or any of its children
-            var isInsideTextBox = clickedElement == _activeRenameTextBox || 
-                                  (clickedElement?.GetVisualAncestors().Contains(_activeRenameTextBox) ?? false);
-            
-            if (!isInsideTextBox)
-            {
-                CompleteRename(_activeRenameTextBox);
-                e.Handled = true;
-            }
-        }
     }
 
     private void OnPanelKeyDown(object? sender, KeyEventArgs e)
@@ -69,21 +46,14 @@ public partial class DirectoryBrowserPanel : UserControl
                 CancelRename(textBox);
                 e.Handled = true;
             }
-            // Prevent arrow keys from navigating the tree when in rename mode
-            else if (e.Key == Key.Left || e.Key == Key.Right || 
-                     e.Key == Key.Up || e.Key == Key.Down)
-            {
-                // Let the TextBox handle arrow keys for cursor movement
-                // Mark as handled so tree navigation doesn't occur
-                e.Handled = false; // Let TextBox process it
-                return;
-            }
+            // Don't handle arrow keys - let TextBox process them for cursor movement
+            // This prevents tree navigation during rename
         }
     }
 
     private void OnExplorerTreeKeyDown(object? sender, KeyEventArgs e)
     {
-        // If we're currently renaming, don't allow tree navigation keys
+        // Block tree navigation shortcuts when rename is active
         if (_activeRenameTextBox is not null)
         {
             return;
@@ -188,6 +158,25 @@ public partial class DirectoryBrowserPanel : UserControl
 
     private void OnExplorerTreePointerPressed(object? sender, PointerPressedEventArgs e)
     {
+        // If we're renaming and the click is outside the TextBox, complete the rename first
+        if (_activeRenameTextBox is not null)
+        {
+            var clickedElement = e.Source as Visual;
+            var isInsideTextBox = clickedElement == _activeRenameTextBox || 
+                                  (clickedElement?.GetVisualAncestors().Contains(_activeRenameTextBox) ?? false);
+            
+            if (!isInsideTextBox)
+            {
+                CompleteRename(_activeRenameTextBox);
+                // Don't mark as handled - let the click propagate for normal tree interaction
+            }
+            else
+            {
+                // Click is inside the TextBox, don't process tree click
+                return;
+            }
+        }
+
         // Let the built-in expander caret handle its own clicks.
         if (IsWithinExpander(e.Source as Visual))
         {
