@@ -52,14 +52,25 @@ public partial class DirectoryBrowserPanel : UserControl
 
     private void OnExplorerTreeKeyDown(object? sender, KeyEventArgs e)
     {
-        // Block tree navigation shortcuts during rename to prevent conflicts
-        if (_activeRenameTextBox is not null)
+        if (DataContext is not DirectoryBrowserViewModel viewModel)
         {
             return;
         }
 
-        if (DataContext is not DirectoryBrowserViewModel viewModel)
+        // During rename, block tree navigation shortcuts but allow TextBox to handle its own keys
+        if (_activeRenameTextBox is not null)
         {
+            // Only block keys that would navigate the tree or perform actions
+            // F2, Ctrl+C, Delete, Ctrl+D should be blocked during rename
+            if (e.Key == Key.F2 ||
+                (e.Key == Key.C && e.KeyModifiers.HasFlag(KeyModifiers.Control)) ||
+                e.Key == Key.Delete ||
+                (e.Key == Key.D && e.KeyModifiers.HasFlag(KeyModifiers.Control)))
+            {
+                e.Handled = true;
+                return;
+            }
+            // Let all other keys (arrow keys, typing, etc.) pass through to TextBox
             return;
         }
 
@@ -156,9 +167,13 @@ public partial class DirectoryBrowserPanel : UserControl
         // Subscribe to DetachedFromVisualTree to clean up
         textBox.DetachedFromVisualTree += OnRenameTextBoxDetached;
 
-        // Focus the TextBox and select all text
-        textBox.Focus();
-        textBox.SelectAll();
+        // Use Dispatcher to ensure TextBox is fully laid out before focusing
+        Avalonia.Threading.Dispatcher.UIThread.Post(() =>
+        {
+            // Focus the TextBox and select all text
+            textBox.Focus();
+            textBox.SelectAll();
+        }, Avalonia.Threading.DispatcherPriority.Loaded);
     }
 
     /// <summary>
