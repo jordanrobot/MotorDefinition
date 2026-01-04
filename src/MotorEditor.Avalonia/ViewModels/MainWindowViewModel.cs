@@ -814,6 +814,12 @@ public partial class MainWindowViewModel : ViewModelBase
         _userPreferencesService = new UserPreferencesService();
         UnsavedChangesPromptAsync = ShowUnsavedChangesPromptAsync;
         
+        // Notify UI that RecentFolders property is available (workaround for Avalonia binding timing issue)
+        if (_recentFoldersService.RecentFolders.Count > 0)
+        {
+            OnPropertyChanged(nameof(RecentFolders));
+        }
+        
         // Initialize unit services
         _unitPreferencesService = new UnitPreferencesService(_settingsStore);
         _unitConversionService = new UnitConversionService(_settingsStore);
@@ -856,6 +862,12 @@ public partial class MainWindowViewModel : ViewModelBase
         _recentFoldersService = new RecentFoldersService(_settingsStore);
         _userPreferencesService = new UserPreferencesService();
         UnsavedChangesPromptAsync = ShowUnsavedChangesPromptAsync;
+        
+        // Notify UI that RecentFolders property is available (workaround for Avalonia binding timing issue)
+        if (_recentFoldersService.RecentFolders.Count > 0)
+        {
+            OnPropertyChanged(nameof(RecentFolders));
+        }
         
         // Initialize unit services
         _unitPreferencesService = new UnitPreferencesService(_settingsStore);
@@ -910,6 +922,12 @@ public partial class MainWindowViewModel : ViewModelBase
         _recentFoldersService = new RecentFoldersService(_settingsStore);
         _userPreferencesService = new UserPreferencesService();
         UnsavedChangesPromptAsync = unsavedChangesPromptAsync ?? ShowUnsavedChangesPromptAsync;
+
+        // Notify UI that RecentFolders property is available (workaround for Avalonia binding timing issue)
+        if (_recentFoldersService.RecentFolders.Count > 0)
+        {
+            OnPropertyChanged(nameof(RecentFolders));
+        }
 
         // Initialize unit services
         _unitPreferencesService = new UnitPreferencesService(_settingsStore);
