@@ -1081,17 +1081,25 @@ public partial class ChartViewModel : ViewModelBase
         return [.. axes];
     }
 
-    private double CalculatePowerStep(double maxValue)
+    /// <summary>
+    /// Calculates an appropriate step value for an axis based on its maximum value.
+    /// Uses standardized increments to ensure readable labels that don't crowd the axis.
+    /// </summary>
+    /// <param name="maxValue">The maximum value on the axis.</param>
+    /// <param name="isLargeUnit">True for units with large numeric values (W, oz-in), false for smaller units (kW, HP, Nm).</param>
+    /// <returns>The step value to use for axis labels.</returns>
+    private static double CalculateAxisStep(double maxValue, bool isLargeUnit)
     {
-        // Calculate a nice step value based on max power and current unit
-        // For W (larger values), we need larger steps to avoid crowding
-        if (PowerUnit == "W")
+        if (isLargeUnit)
         {
+            // For large units (W, oz-in, lbf-in), use larger steps to avoid crowding
+            if (maxValue <= 5) return 0.5;
             if (maxValue <= 10) return 1;
             if (maxValue <= 20) return 2;
             if (maxValue <= 50) return 5;
             if (maxValue <= 100) return 10;
             if (maxValue <= 200) return 20;
+            if (maxValue <= 250) return 25;
             if (maxValue <= 500) return 50;
             if (maxValue <= 1000) return 100;
             if (maxValue <= 1500) return 150;
@@ -1101,30 +1109,36 @@ public partial class ChartViewModel : ViewModelBase
             return 2000;
         }
         
-        // For kW and HP (smaller values), use finer increments
+        // For smaller units (kW, HP, Nm, lbf-ft), use finer increments
         if (maxValue <= 1) return 0.1;
         if (maxValue <= 2.5) return 0.25;
         if (maxValue <= 5) return 0.5;
         if (maxValue <= 10) return 1;
         if (maxValue <= 20) return 2;
+        if (maxValue <= 25) return 2.5;
         if (maxValue <= 50) return 5;
         if (maxValue <= 100) return 10;
         if (maxValue <= 200) return 20;
+        if (maxValue <= 250) return 25;
         if (maxValue <= 500) return 50;
         if (maxValue <= 1000) return 100;
         return 200;
     }
 
-    private static double CalculateTorqueStep(double maxValue)
+    private double CalculatePowerStep(double maxValue)
     {
-        // Calculate a nice step value based on max torque
-        if (maxValue <= 10) return 1;
-        if (maxValue <= 25) return 2.5;
-        if (maxValue <= 50) return 5;
-        if (maxValue <= 100) return 10;
-        if (maxValue <= 250) return 25;
-        if (maxValue <= 500) return 50;
-        return 100;
+        // Calculate a nice step value based on max power and current unit
+        // For W (larger values), we need larger steps to avoid crowding
+        bool isLargeUnit = PowerUnit == "W";
+        return CalculateAxisStep(maxValue, isLargeUnit);
+    }
+
+    private double CalculateTorqueStep(double maxValue)
+    {
+        // Calculate a nice step value based on max torque and current unit
+        // For oz-in and lbf-in (larger numeric values), we need larger steps to avoid crowding
+        bool isLargeUnit = TorqueUnit is "oz-in" or "lbf-in";
+        return CalculateAxisStep(maxValue, isLargeUnit);
     }
 
     /// <summary>
