@@ -5,6 +5,7 @@ using Avalonia.Interactivity;
 using Avalonia.Input;
 using Avalonia.VisualTree;
 using Avalonia.LogicalTree;
+using Avalonia.Threading;
 using CurveEditor.ViewModels;
 using System.Linq;
 
@@ -29,6 +30,21 @@ public partial class DirectoryBrowserPanel : UserControl
         this.AddHandler(KeyDownEvent, OnPanelKeyDown, RoutingStrategies.Bubble);
     }
 
+    private void RenameTextBox_AttachedToVisualTree(object? sender, VisualTreeAttachmentEventArgs e)
+    {
+        if (sender is not TextBox textBox)
+        {
+            return;
+        }
+
+        Dispatcher.UIThread.Post(() =>
+        {
+            textBox.Focus();
+            textBox.SelectionStart = 0;
+            textBox.SelectionEnd = textBox.Text?.Length ?? 0;
+        }, DispatcherPriority.Input);
+    }
+
     private void OnPanelKeyDown(object? sender, KeyEventArgs e)
     {
         // Check if we're in a rename text box
@@ -44,6 +60,34 @@ public partial class DirectoryBrowserPanel : UserControl
                 CancelRename(textBox);
                 e.Handled = true;
             }
+        }
+    }
+
+    private void RenameTextBox_LostFocus(object? sender, RoutedEventArgs e)
+    {
+        if (DataContext is not DirectoryBrowserViewModel viewModel)
+        {
+            return;
+        }
+
+        if (sender is not TextBox textBox || textBox.DataContext is not ExplorerNodeViewModel node)
+        {
+            return;
+        }
+
+        if (!node.IsRenaming)
+        {
+            return;
+        }
+
+        var newName = textBox.Text?.Trim();
+        if (string.IsNullOrWhiteSpace(newName))
+        {
+            _ = viewModel.CancelRenameAsync(node);
+        }
+        else
+        {
+            _ = viewModel.CompleteRenameAsync(node, newName);
         }
     }
 
@@ -99,6 +143,11 @@ public partial class DirectoryBrowserPanel : UserControl
             return;
         }
 
+        if (!node.IsRenaming)
+        {
+            return;
+        }
+
         var newName = textBox.Text?.Trim();
         if (!string.IsNullOrWhiteSpace(newName))
         {
@@ -133,8 +182,18 @@ public partial class DirectoryBrowserPanel : UserControl
             return;
         }
 
+        if (DataContext is DirectoryBrowserViewModel viewModel && viewModel.SelectedNode?.IsRenaming == true)
+        {
+            return;
+        }
+
         var treeViewItem = (e.Source as Visual)?.GetVisualAncestors().OfType<TreeViewItem>().FirstOrDefault();
         if (treeViewItem?.DataContext is not ExplorerNodeViewModel node)
+        {
+            return;
+        }
+
+        if (node.IsRenaming)
         {
             return;
         }

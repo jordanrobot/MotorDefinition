@@ -110,7 +110,9 @@
                                  IsVisible="{Binding IsRenaming}"
                                  BorderThickness="1"
                                  Padding="2"
-                                 VerticalAlignment="Center"/>
+                                 VerticalAlignment="Center"
+                                 AttachedToVisualTree="RenameTextBox_AttachedToVisualTree"
+                                 LostFocus="RenameTextBox_LostFocus"/>
                     </Grid>
                 </TreeDataTemplate>
             </TreeView.DataTemplates>
