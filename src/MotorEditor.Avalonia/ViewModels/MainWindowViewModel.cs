@@ -844,6 +844,9 @@ public partial class MainWindowViewModel : ViewModelBase
         }
     }
 
+    /// <summary>
+    /// Default constructor for production use.
+    /// </summary>
     public MainWindowViewModel()
     {
         _curveGeneratorService = new CurveGeneratorService();
@@ -889,6 +892,13 @@ public partial class MainWindowViewModel : ViewModelBase
     /// <summary>
     /// Constructor that accepts a user preferences service for theme management.
     /// </summary>
+    /// <param name="userPreferencesService">The shared user preferences service instance.</param>
+    /// <remarks>
+    /// Note: Initialization code is duplicated from the parameterless constructor.
+    /// Extraction to a helper method is not possible because many fields are readonly
+    /// and can only be assigned in constructors. This pattern is consistent with other
+    /// constructor overloads in this class.
+    /// </remarks>
     public MainWindowViewModel(IUserPreferencesService userPreferencesService)
     {
         _userPreferencesService = userPreferencesService ?? throw new ArgumentNullException(nameof(userPreferencesService));
