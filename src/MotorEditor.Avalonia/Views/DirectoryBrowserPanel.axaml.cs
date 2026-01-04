@@ -52,10 +52,19 @@ public partial class DirectoryBrowserPanel : UserControl
 
     private void OnExplorerTreeKeyDown(object? sender, KeyEventArgs e)
     {
-        // If event came from rename TextBox, don't process as tree event
+        // If event came from rename TextBox
         if (e.Source is TextBox textBox && textBox.Name == "RenameTextBox")
         {
-            // TextBox already processed this, don't let tree handle it
+            // For Enter, Tab, and Escape - don't mark as handled
+            // Let them bubble to OnPanelKeyDown which will complete/cancel rename
+            if (e.Key == Key.Enter || e.Key == Key.Tab || e.Key == Key.Escape)
+            {
+                // Don't handle these - let OnPanelKeyDown process them
+                return;
+            }
+            
+            // For all other keys (arrow keys, typing, etc.), mark as handled
+            // to prevent tree navigation
             e.Handled = true;
             return;
         }
