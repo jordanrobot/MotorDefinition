@@ -46,6 +46,23 @@ public Curve(string name);
 The name of the curve\.
 ### Properties
 
+<a name='JordanRobot.MotorDefinition.Model.Curve.CurveSignature'></a>
+
+## Curve\.CurveSignature Property
+
+Gets or sets the validation signature for this curve's data\.
+
+```csharp
+public JordanRobot.MotorDefinition.Model.ValidationSignature? CurveSignature { get; set; }
+```
+
+#### Property Value
+[ValidationSignature](JordanRobot.MotorDefinition.Model.ValidationSignature.md 'JordanRobot\.MotorDefinition\.Model\.ValidationSignature')
+
+### Remarks
+This signature covers the curve data points only\.
+Null indicates the curve has not been signed\.
+
 <a name='JordanRobot.MotorDefinition.Model.Curve.Data'></a>
 
 ## Curve\.Data Property

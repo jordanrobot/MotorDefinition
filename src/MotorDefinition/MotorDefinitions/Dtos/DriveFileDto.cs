@@ -23,4 +23,8 @@ internal sealed class DriveFileDto
     [JsonPropertyOrder(4)]
     [JsonPropertyName("voltages")]
     public List<VoltageFileDto> Voltages { get; set; } = [];
+
+    [JsonPropertyOrder(5)]
+    [JsonPropertyName("driveSignature")]
+    public ValidationSignatureDto? DriveSignature { get; set; }
 }

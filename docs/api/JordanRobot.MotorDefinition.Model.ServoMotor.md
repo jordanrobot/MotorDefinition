@@ -268,6 +268,23 @@ public string MotorName { get; set; }
 #### Property Value
 [System\.String](https://learn.microsoft.com/en-us/dotnet/api/system.string 'System\.String')
 
+<a name='JordanRobot.MotorDefinition.Model.ServoMotor.MotorSignature'></a>
+
+## ServoMotor\.MotorSignature Property
+
+Gets or sets the validation signature for motor properties\.
+
+```csharp
+public JordanRobot.MotorDefinition.Model.ValidationSignature? MotorSignature { get; set; }
+```
+
+#### Property Value
+[ValidationSignature](JordanRobot.MotorDefinition.Model.ValidationSignature.md 'JordanRobot\.MotorDefinition\.Model\.ValidationSignature')
+
+### Remarks
+This signature covers motor\-level properties only \(excludes drives and metadata\)\.
+Null indicates the motor properties have not been signed\.
+
 <a name='JordanRobot.MotorDefinition.Model.ServoMotor.PartNumber'></a>
 
 ## ServoMotor\.PartNumber Property

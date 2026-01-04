@@ -10,4 +10,5 @@
 | [MotorMetadata](JordanRobot.MotorDefinition.Model.MotorMetadata.md 'JordanRobot\.MotorDefinition\.Model\.MotorMetadata') | Contains metadata about the motor definition file\. |
 | [ServoMotor](JordanRobot.MotorDefinition.Model.ServoMotor.md 'JordanRobot\.MotorDefinition\.Model\.ServoMotor') | Represents a complete motor definition including properties, drive configurations, and metadata\. |
 | [UnitSettings](JordanRobot.MotorDefinition.Model.UnitSettings.md 'JordanRobot\.MotorDefinition\.Model\.UnitSettings') | Specifies the units used for various motor properties\. |
+| [ValidationSignature](JordanRobot.MotorDefinition.Model.ValidationSignature.md 'JordanRobot\.MotorDefinition\.Model\.ValidationSignature') | Represents a validation signature for data integrity verification\. |
 | [Voltage](JordanRobot.MotorDefinition.Model.Voltage.md 'JordanRobot\.MotorDefinition\.Model\.Voltage') | Represents voltage\-specific configuration and performance data for a motor/drive combination\. |

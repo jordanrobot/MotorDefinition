@@ -77,4 +77,7 @@ internal sealed class MotorDefinitionFileDto
 
     [JsonPropertyName("metadata")]
     public MotorMetadataDto Metadata { get; set; } = new();
+
+    [JsonPropertyName("motorSignature")]
+    public ValidationSignatureDto? MotorSignature { get; set; }
 }

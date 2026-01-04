@@ -122,6 +122,16 @@ public class Curve : INotifyPropertyChanged
     public IEnumerable<double> Torques => Data.Select(p => p.Torque);
 
     /// <summary>
+    /// Gets or sets the validation signature for this curve's data.
+    /// </summary>
+    /// <remarks>
+    /// This signature covers the curve data points only.
+    /// Null indicates the curve has not been signed.
+    /// </remarks>
+    [JsonPropertyName("curveSignature")]
+    public ValidationSignature? CurveSignature { get; set; }
+
+    /// <summary>
     /// Creates a new Curve with default values.
     /// </summary>
     public Curve()
