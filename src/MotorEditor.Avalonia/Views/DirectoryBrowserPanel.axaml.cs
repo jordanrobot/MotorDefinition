@@ -158,15 +158,25 @@ public partial class DirectoryBrowserPanel : UserControl
         // Subscribe to DetachedFromVisualTree to clean up
         textBox.DetachedFromVisualTree += OnRenameTextBoxDetached;
 
-        // Use Dispatcher to ensure TextBox is fully laid out before focusing
+        // Use multiple dispatcher calls to ensure focus is set after layout completes
+        // First post with Loaded priority to wait for layout
         Avalonia.Threading.Dispatcher.UIThread.Post(() =>
         {
-            if (textBox.IsVisible && textBox.IsAttachedToVisualTree())
+            // Then post again with Background priority for extra time
+            Avalonia.Threading.Dispatcher.UIThread.Post(() =>
             {
-                // Focus the TextBox and select all text
-                textBox.Focus();
-                textBox.SelectAll();
-            }
+                if (textBox.IsVisible && textBox.IsAttachedToVisualTree())
+                {
+                    // Focus the TextBox - this makes it the active input element
+                    textBox.Focus();
+                    
+                    // Select all text so typing replaces it
+                    textBox.SelectAll();
+                    
+                    // Set caret to end as fallback if SelectAll doesn't work
+                    textBox.CaretIndex = textBox.Text?.Length ?? 0;
+                }
+            }, Avalonia.Threading.DispatcherPriority.Background);
         }, Avalonia.Threading.DispatcherPriority.Loaded);
     }
 
