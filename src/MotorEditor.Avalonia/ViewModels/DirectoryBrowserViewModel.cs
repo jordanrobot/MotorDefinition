@@ -113,21 +113,27 @@ public partial class DirectoryBrowserViewModel : ObservableObject
     {
         var revealCommand = new RevealInFileExplorerCommand();
         var openInEditorCommand = new OpenInTextEditorCommand();
+        var renameCommand = new RenameCommand();
         var duplicateCommand = new DuplicateCommand();
         var deleteCommand = new DeleteCommand();
+        var pasteCommand = new PasteCommand();
 
         // File context menu commands
         FileContextCommands.Add(revealCommand);
         FileContextCommands.Add(openInEditorCommand);
         FileContextCommands.Add(new CopyFileCommand());
+        FileContextCommands.Add(renameCommand);
         FileContextCommands.Add(duplicateCommand);
+        FileContextCommands.Add(pasteCommand);
         FileContextCommands.Add(deleteCommand);
 
         // Directory context menu commands
         DirectoryContextCommands.Add(revealCommand);
         DirectoryContextCommands.Add(openInEditorCommand);
         DirectoryContextCommands.Add(new NewDirectoryCommand());
+        DirectoryContextCommands.Add(renameCommand);
         DirectoryContextCommands.Add(duplicateCommand);
+        DirectoryContextCommands.Add(pasteCommand);
         DirectoryContextCommands.Add(deleteCommand);
     }
 
@@ -1056,6 +1062,13 @@ public partial class DirectoryBrowserViewModel : ObservableObject
             return;
         }
 
+        // Handle rename command specially - just enter rename mode
+        if (command is RenameCommand)
+        {
+            await InvokeOnUiAsync(() => SelectedNode.IsRenaming = true).ConfigureAwait(false);
+            return;
+        }
+
         // Request confirmation if required
         if (command.RequiresConfirmation)
         {
@@ -1076,6 +1089,108 @@ public partial class DirectoryBrowserViewModel : ObservableObject
         if (command.RequiresRefresh)
         {
             await RefreshInternalAsync().ConfigureAwait(false);
+        }
+    }
+
+    /// <summary>
+    /// Completes a rename operation on the selected node.
+    /// </summary>
+    public async Task<bool> CompleteRenameAsync(ExplorerNodeViewModel node, string newName)
+    {
+        if (node is null || string.IsNullOrWhiteSpace(newName))
+        {
+            return false;
+        }
+
+        var success = await RenameCommand.PerformRenameAsync(node.FullPath, newName, node.IsDirectory).ConfigureAwait(false);
+        
+        if (success)
+        {
+            await RefreshInternalAsync().ConfigureAwait(false);
+        }
+
+        await InvokeOnUiAsync(() => node.IsRenaming = false).ConfigureAwait(false);
+        return success;
+    }
+
+    /// <summary>
+    /// Cancels a rename operation on the selected node.
+    /// </summary>
+    public async Task CancelRenameAsync(ExplorerNodeViewModel node)
+    {
+        if (node is null)
+        {
+            return;
+        }
+
+        await InvokeOnUiAsync(() => node.IsRenaming = false).ConfigureAwait(false);
+    }
+
+    /// <summary>
+    /// Starts rename mode on the currently selected node (keyboard shortcut handler).
+    /// </summary>
+    [RelayCommand]
+    public async Task StartRenameAsync()
+    {
+        if (SelectedNode is null || SelectedNode.IsRoot || SelectedNode.IsPlaceholder)
+        {
+            return;
+        }
+
+        await InvokeOnUiAsync(() => SelectedNode.IsRenaming = true).ConfigureAwait(false);
+    }
+
+    /// <summary>
+    /// Copies the selected node (keyboard shortcut handler).
+    /// </summary>
+    [RelayCommand]
+    public async Task CopySelectedAsync()
+    {
+        if (SelectedNode is null || SelectedNode.IsPlaceholder)
+        {
+            return;
+        }
+
+        var copyCommand = new CopyFileCommand();
+        if (copyCommand.CanExecute(SelectedNode.FullPath, SelectedNode.IsDirectory))
+        {
+            await copyCommand.ExecuteAsync(SelectedNode.FullPath, SelectedNode.IsDirectory).ConfigureAwait(false);
+        }
+    }
+
+    /// <summary>
+    /// Deletes the selected node (keyboard shortcut handler).
+    /// </summary>
+    [RelayCommand]
+    public async Task DeleteSelectedAsync()
+    {
+        if (SelectedNode is null || SelectedNode.IsRoot || SelectedNode.IsPlaceholder)
+        {
+            return;
+        }
+
+        var deleteCommand = new DeleteCommand();
+        await ExecuteContextCommandAsync(deleteCommand).ConfigureAwait(false);
+    }
+
+    /// <summary>
+    /// Duplicates the selected node (keyboard shortcut handler).
+    /// </summary>
+    [RelayCommand]
+    public async Task DuplicateSelectedAsync()
+    {
+        if (SelectedNode is null || SelectedNode.IsRoot || SelectedNode.IsPlaceholder)
+        {
+            return;
+        }
+
+        var duplicateCommand = new DuplicateCommand();
+        if (duplicateCommand.CanExecute(SelectedNode.FullPath, SelectedNode.IsDirectory))
+        {
+            await duplicateCommand.ExecuteAsync(SelectedNode.FullPath, SelectedNode.IsDirectory).ConfigureAwait(false);
+            await RefreshInternalAsync().ConfigureAwait(false);
+            
+            // TODO: Find the newly created item and start rename mode
         }
     }
 

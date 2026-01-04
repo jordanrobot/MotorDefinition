@@ -102,12 +102,14 @@ public sealed class DirectoryBrowserContextMenuTests
             new InMemorySettingsStore());
 
         Assert.NotEmpty(vm.FileContextCommands);
-        Assert.Equal(5, vm.FileContextCommands.Count);
+        Assert.Equal(7, vm.FileContextCommands.Count);
         Assert.IsType<RevealInFileExplorerCommand>(vm.FileContextCommands[0]);
         Assert.IsType<OpenInTextEditorCommand>(vm.FileContextCommands[1]);
         Assert.IsType<CopyFileCommand>(vm.FileContextCommands[2]);
-        Assert.IsType<DuplicateCommand>(vm.FileContextCommands[3]);
-        Assert.IsType<DeleteCommand>(vm.FileContextCommands[4]);
+        Assert.IsType<RenameCommand>(vm.FileContextCommands[3]);
+        Assert.IsType<DuplicateCommand>(vm.FileContextCommands[4]);
+        Assert.IsType<PasteCommand>(vm.FileContextCommands[5]);
+        Assert.IsType<DeleteCommand>(vm.FileContextCommands[6]);
     }
 
     [Fact]
@@ -119,12 +121,14 @@ public sealed class DirectoryBrowserContextMenuTests
             new InMemorySettingsStore());
 
         Assert.NotEmpty(vm.DirectoryContextCommands);
-        Assert.Equal(5, vm.DirectoryContextCommands.Count);
+        Assert.Equal(7, vm.DirectoryContextCommands.Count);
         Assert.IsType<RevealInFileExplorerCommand>(vm.DirectoryContextCommands[0]);
         Assert.IsType<OpenInTextEditorCommand>(vm.DirectoryContextCommands[1]);
         Assert.IsType<NewDirectoryCommand>(vm.DirectoryContextCommands[2]);
-        Assert.IsType<DuplicateCommand>(vm.DirectoryContextCommands[3]);
-        Assert.IsType<DeleteCommand>(vm.DirectoryContextCommands[4]);
+        Assert.IsType<RenameCommand>(vm.DirectoryContextCommands[3]);
+        Assert.IsType<DuplicateCommand>(vm.DirectoryContextCommands[4]);
+        Assert.IsType<PasteCommand>(vm.DirectoryContextCommands[5]);
+        Assert.IsType<DeleteCommand>(vm.DirectoryContextCommands[6]);
     }
 
     [Fact]

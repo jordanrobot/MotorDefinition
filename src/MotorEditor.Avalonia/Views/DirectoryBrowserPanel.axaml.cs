@@ -4,6 +4,7 @@ using Avalonia.Controls.Primitives;
 using Avalonia.Interactivity;
 using Avalonia.Input;
 using Avalonia.VisualTree;
+using Avalonia.LogicalTree;
 using CurveEditor.ViewModels;
 using System.Linq;
 
@@ -21,7 +22,107 @@ public partial class DirectoryBrowserPanel : UserControl
             tree.AddHandler(PointerPressedEvent, OnExplorerTreePointerPressed, RoutingStrategies.Tunnel);
             tree.AddHandler(PointerWheelChangedEvent, OnExplorerTreePointerWheelChanged, RoutingStrategies.Tunnel);
             tree.AddHandler(ContextRequestedEvent, OnExplorerTreeContextRequested, RoutingStrategies.Tunnel);
+            tree.AddHandler(KeyDownEvent, OnExplorerTreeKeyDown, RoutingStrategies.Tunnel);
         }
+
+        // Handle global key events for rename text box
+        this.AddHandler(KeyDownEvent, OnPanelKeyDown, RoutingStrategies.Bubble);
+    }
+
+    private void OnPanelKeyDown(object? sender, KeyEventArgs e)
+    {
+        // Check if we're in a rename text box
+        if (e.Source is TextBox textBox && textBox.Name == "RenameTextBox")
+        {
+            if (e.Key == Key.Enter || e.Key == Key.Tab)
+            {
+                CompleteRename(textBox);
+                e.Handled = true;
+            }
+            else if (e.Key == Key.Escape)
+            {
+                CancelRename(textBox);
+                e.Handled = true;
+            }
+        }
+    }
+
+    private void OnExplorerTreeKeyDown(object? sender, KeyEventArgs e)
+    {
+        if (DataContext is not DirectoryBrowserViewModel viewModel)
+        {
+            return;
+        }
+
+        // F2 - Rename
+        if (e.Key == Key.F2)
+        {
+            _ = viewModel.StartRenameCommand.ExecuteAsync(null);
+            e.Handled = true;
+            return;
+        }
+
+        // Ctrl+C - Copy
+        if (e.Key == Key.C && e.KeyModifiers.HasFlag(KeyModifiers.Control))
+        {
+            _ = viewModel.CopySelectedCommand.ExecuteAsync(null);
+            e.Handled = true;
+            return;
+        }
+
+        // Delete - Delete
+        if (e.Key == Key.Delete)
+        {
+            _ = viewModel.DeleteSelectedCommand.ExecuteAsync(null);
+            e.Handled = true;
+            return;
+        }
+
+        // Ctrl+D - Duplicate
+        if (e.Key == Key.D && e.KeyModifiers.HasFlag(KeyModifiers.Control))
+        {
+            _ = viewModel.DuplicateSelectedCommand.ExecuteAsync(null);
+            e.Handled = true;
+            return;
+        }
+    }
+
+    private void CompleteRename(TextBox textBox)
+    {
+        if (DataContext is not DirectoryBrowserViewModel viewModel)
+        {
+            return;
+        }
+
+        if (textBox.DataContext is not ExplorerNodeViewModel node)
+        {
+            return;
+        }
+
+        var newName = textBox.Text?.Trim();
+        if (!string.IsNullOrWhiteSpace(newName))
+        {
+            _ = viewModel.CompleteRenameAsync(node, newName);
+        }
+        else
+        {
+            _ = viewModel.CancelRenameAsync(node);
+        }
+    }
+
+    private void CancelRename(TextBox textBox)
+    {
+        if (DataContext is not DirectoryBrowserViewModel viewModel)
+        {
+            return;
+        }
+
+        if (textBox.DataContext is not ExplorerNodeViewModel node)
+        {
+            return;
+        }
+
+        _ = viewModel.CancelRenameAsync(node);
     }
 
     private void OnExplorerTreePointerPressed(object? sender, PointerPressedEventArgs e)

@@ -478,5 +478,158 @@ public sealed class DirectoryBrowserCommandTests
         var command = new NewDirectoryCommand();
         Assert.True(command.RequiresRefresh);
     }
+
+    // RenameCommand Tests
+
+    [Fact]
+    public void RenameCommand_HasCorrectDisplayName()
+    {
+        var command = new RenameCommand();
+        Assert.Equal("Rename", command.DisplayName);
+    }
+
+    [Fact]
+    public void RenameCommand_RequiresRefresh()
+    {
+        var command = new RenameCommand();
+        Assert.True(command.RequiresRefresh);
+    }
+
+    [Fact]
+    public void RenameCommand_CanExecute_ReturnsFalseForNullPath()
+    {
+        var command = new RenameCommand();
+        Assert.False(command.CanExecute(null!, isDirectory: false));
+        Assert.False(command.CanExecute(string.Empty, isDirectory: false));
+        Assert.False(command.CanExecute("   ", isDirectory: false));
+    }
+
+    [Fact]
+    public void RenameCommand_CanExecute_ReturnsTrueForExistingFile()
+    {
+        var command = new RenameCommand();
+        var tempFile = Path.GetTempFileName();
+        try
+        {
+            Assert.True(command.CanExecute(tempFile, isDirectory: false));
+        }
+        finally
+        {
+            try { File.Delete(tempFile); } catch { }
+        }
+    }
+
+    [Fact]
+    public void RenameCommand_CanExecute_ReturnsTrueForExistingDirectory()
+    {
+        var command = new RenameCommand();
+        var tempDir = Directory.CreateTempSubdirectory("rename-test-");
+        try
+        {
+            Assert.True(command.CanExecute(tempDir.FullName, isDirectory: true));
+        }
+        finally
+        {
+            try { tempDir.Delete(recursive: true); } catch { }
+        }
+    }
+
+    [Fact]
+    public async Task RenameCommand_PerformRenameAsync_RenamesFile()
+    {
+        var tempDir = Directory.CreateTempSubdirectory("rename-file-test-");
+        try
+        {
+            var oldPath = Path.Combine(tempDir.FullName, "oldname.txt");
+            await File.WriteAllTextAsync(oldPath, "content");
+
+            var success = await RenameCommand.PerformRenameAsync(oldPath, "newname.txt", isDirectory: false);
+
+            Assert.True(success);
+            Assert.False(File.Exists(oldPath));
+            Assert.True(File.Exists(Path.Combine(tempDir.FullName, "newname.txt")));
+        }
+        finally
+        {
+            try { tempDir.Delete(recursive: true); } catch { }
+        }
+    }
+
+    [Fact]
+    public async Task RenameCommand_PerformRenameAsync_RenamesDirectory()
+    {
+        var tempDir = Directory.CreateTempSubdirectory("rename-dir-test-");
+        try
+        {
+            var oldPath = Path.Combine(tempDir.FullName, "oldname");
+            Directory.CreateDirectory(oldPath);
+
+            var success = await RenameCommand.PerformRenameAsync(oldPath, "newname", isDirectory: true);
+
+            Assert.True(success);
+            Assert.False(Directory.Exists(oldPath));
+            Assert.True(Directory.Exists(Path.Combine(tempDir.FullName, "newname")));
+        }
+        finally
+        {
+            try { tempDir.Delete(recursive: true); } catch { }
+        }
+    }
+
+    // PasteCommand Tests
+
+    [Fact]
+    public void PasteCommand_HasCorrectDisplayName()
+    {
+        var command = new PasteCommand();
+        Assert.Equal("Paste", command.DisplayName);
+    }
+
+    [Fact]
+    public void PasteCommand_RequiresRefresh()
+    {
+        var command = new PasteCommand();
+        Assert.True(command.RequiresRefresh);
+    }
+
+    [Fact]
+    public void PasteCommand_CanExecute_ReturnsFalseForNullPath()
+    {
+        var command = new PasteCommand();
+        Assert.False(command.CanExecute(null!, isDirectory: true));
+        Assert.False(command.CanExecute(string.Empty, isDirectory: true));
+        Assert.False(command.CanExecute("   ", isDirectory: true));
+    }
+
+    [Fact]
+    public void PasteCommand_CanExecute_ReturnsFalseForFiles()
+    {
+        var command = new PasteCommand();
+        var tempFile = Path.GetTempFileName();
+        try
+        {
+            Assert.False(command.CanExecute(tempFile, isDirectory: false));
+        }
+        finally
+        {
+            try { File.Delete(tempFile); } catch { }
+        }
+    }
+
+    [Fact]
+    public void PasteCommand_CanExecute_ReturnsTrueForExistingDirectory()
+    {
+        var command = new PasteCommand();
+        var tempDir = Directory.CreateTempSubdirectory("paste-test-");
+        try
+        {
+            Assert.True(command.CanExecute(tempDir.FullName, isDirectory: true));
+        }
+        finally
+        {
+            try { tempDir.Delete(recursive: true); } catch { }
+        }
+    }
 }
+
 
