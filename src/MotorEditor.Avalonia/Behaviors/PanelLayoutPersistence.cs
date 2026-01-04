@@ -374,12 +374,25 @@ public static class PanelLayoutPersistence
     {
         try
         {
-            var normalized = values
+            var inputList = values.ToList();
+            Log.Debug("[SaveStringArrayAsJson] Called with key={SettingsKey}, input count={Count}", settingsKey, inputList.Count);
+            
+            var normalized = inputList
                 .Where(v => !string.IsNullOrWhiteSpace(v))
                 .Distinct(StringComparer.Ordinal)
                 .ToArray();
 
-            SaveString(settingsKey, JsonSerializer.Serialize(normalized));
+            Log.Debug("[SaveStringArrayAsJson] After normalization: {Count} items", normalized.Length);
+            for (int i = 0; i < normalized.Length; i++)
+            {
+                Log.Debug("[SaveStringArrayAsJson]   [{Index}]: {Value}", i, normalized[i]);
+            }
+
+            var json = JsonSerializer.Serialize(normalized);
+            Log.Debug("[SaveStringArrayAsJson] Serialized JSON length: {Length}", json.Length);
+            
+            SaveString(settingsKey, json);
+            Log.Debug("[SaveStringArrayAsJson] Saved to settings store");
         }
         catch (Exception ex)
         {

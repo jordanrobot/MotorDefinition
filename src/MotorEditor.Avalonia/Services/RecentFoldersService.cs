@@ -42,27 +42,41 @@ public class RecentFoldersService : IRecentFoldersService
 
         try
         {
+            Log.Debug("[RecentFolders] AddRecentFolder called with: {FolderPath}", folderPath);
+            
             // Normalize the path to avoid duplicates with different casing or separators
             var normalizedPath = Path.GetFullPath(folderPath);
+            Log.Debug("[RecentFolders] Normalized path: {NormalizedPath}", normalizedPath);
+            Log.Debug("[RecentFolders] Current collection count before add: {Count}", _recentFolders.Count);
 
             // Remove if already exists (to move it to top)
             var existingIndex = _recentFolders.IndexOf(normalizedPath);
+            Log.Debug("[RecentFolders] Existing index: {Index}", existingIndex);
             if (existingIndex >= 0)
             {
                 _recentFolders.RemoveAt(existingIndex);
+                Log.Debug("[RecentFolders] Removed existing entry at index {Index}", existingIndex);
             }
 
             // Add to the top of the list
             _recentFolders.Insert(0, normalizedPath);
+            Log.Debug("[RecentFolders] Inserted at index 0, new count: {Count}", _recentFolders.Count);
 
             // Trim to max size
             while (_recentFolders.Count > MaxRecentFolders)
             {
                 _recentFolders.RemoveAt(_recentFolders.Count - 1);
             }
+            Log.Debug("[RecentFolders] After trimming, count: {Count}", _recentFolders.Count);
 
             SaveRecentFolders();
-            Log.Debug("Added folder to recent folders: {FolderPath}", normalizedPath);
+            Log.Debug("[RecentFolders] Saved to settings. Final count: {Count}", _recentFolders.Count);
+            
+            // Log all items
+            for (int i = 0; i < _recentFolders.Count; i++)
+            {
+                Log.Debug("[RecentFolders]   [{Index}]: {Path}", i, _recentFolders[i]);
+            }
         }
         catch (Exception ex)
         {
@@ -134,7 +148,9 @@ public class RecentFoldersService : IRecentFoldersService
     {
         try
         {
+            Log.Debug("[RecentFolders] SaveRecentFolders called with {Count} items", _recentFolders.Count);
             _settingsStore.SaveStringArrayAsJson(SettingsKey, _recentFolders);
+            Log.Debug("[RecentFolders] Successfully saved to settings store");
         }
         catch (Exception ex)
         {
