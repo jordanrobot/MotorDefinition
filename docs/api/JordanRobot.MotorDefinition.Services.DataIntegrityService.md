@@ -12,6 +12,23 @@ public class DataIntegrityService : JordanRobot.MotorDefinition.Services.IDataIn
 Inheritance [System\.Object](https://learn.microsoft.com/en-us/dotnet/api/system.object 'System\.Object') &#129106; DataIntegrityService
 
 Implements [IDataIntegrityService](JordanRobot.MotorDefinition.Services.IDataIntegrityService.md 'JordanRobot\.MotorDefinition\.Services\.IDataIntegrityService')
+
+### Remarks
+
+This service uses a normalized JSON representation with specific serialization options
+to compute checksums. The serialization format is fixed to ensure checksum stability:
+- Compact JSON (no indentation)
+- camelCase property names
+- SHA-256 hash algorithm
+- Lowercase hexadecimal output
+
+IMPORTANT: Changes to the serialization format will invalidate all existing signatures.
+The format is considered stable and should not be changed without a major version bump.
+
+Checksum Coverage:
+- Motor checksum: Motor-level properties only (excludes drives and metadata)
+- Drive checksum: Drive properties and all voltages (excludes curve data)
+- Curve checksum: Curve name, locked flag, notes, and all data points
 ### Methods
 
 <a name='JordanRobot.MotorDefinition.Services.DataIntegrityService.ComputeCurveChecksum(JordanRobot.MotorDefinition.Model.Curve)'></a>

@@ -9,8 +9,30 @@ namespace JordanRobot.MotorDefinition.Services;
 /// <summary>
 /// Provides data integrity verification using SHA-256 cryptographic checksums.
 /// </summary>
+/// <remarks>
+/// <para>
+/// This service uses a normalized JSON representation with specific serialization options
+/// to compute checksums. The serialization format is fixed to ensure checksum stability:
+/// - Compact JSON (no indentation)
+/// - camelCase property names
+/// - SHA-256 hash algorithm
+/// - Lowercase hexadecimal output
+/// </para>
+/// <para>
+/// IMPORTANT: Changes to the serialization format will invalidate all existing signatures.
+/// The format is considered stable and should not be changed without a major version bump.
+/// </para>
+/// <para>
+/// Checksum Coverage:
+/// - Motor checksum: Motor-level properties only (excludes drives and metadata)
+/// - Drive checksum: Drive properties and all voltages (excludes curve data)
+/// - Curve checksum: Curve name, locked flag, notes, and all data points
+/// </para>
+/// </remarks>
 public class DataIntegrityService : IDataIntegrityService
 {
+    // IMPORTANT: These options must remain stable to preserve checksum compatibility
+    // Changes here will invalidate all existing signatures
     private static readonly JsonSerializerOptions JsonOptions = new()
     {
         WriteIndented = false, // Compact for consistent hashing
@@ -129,6 +151,9 @@ public class DataIntegrityService : IDataIntegrityService
         ArgumentNullException.ThrowIfNull(drive);
 
         // Create a normalized representation of drive properties (including voltages)
+        // NOTE: Drive signature covers drive metadata and voltage configurations,
+        // but NOT the curve data. Curves must be signed independently to allow
+        // for drive configuration changes without invalidating curve signatures.
         var driveData = new
         {
             drive.Name,
@@ -177,6 +202,8 @@ public class DataIntegrityService : IDataIntegrityService
         var json = JsonSerializer.Serialize(data, JsonOptions);
         var bytes = Encoding.UTF8.GetBytes(json);
         var hash = SHA256.HashData(bytes);
+        // Lowercase hex format for consistency and easier comparison
+        // This format is part of the stable API and should not be changed
         return Convert.ToHexString(hash).ToLowerInvariant();
     }
 }
