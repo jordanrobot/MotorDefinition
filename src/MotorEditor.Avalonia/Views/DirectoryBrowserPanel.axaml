@@ -106,7 +106,7 @@
                         <!-- Rename TextBox (shown when renaming) -->
                         <TextBox Grid.Column="2"
                                  x:Name="RenameTextBox"
-                                 Text="{Binding DisplayName}"
+                                 Text="{Binding DisplayName, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
                                  IsVisible="{Binding IsRenaming}"
                                  BorderThickness="1"
                                  Padding="2"

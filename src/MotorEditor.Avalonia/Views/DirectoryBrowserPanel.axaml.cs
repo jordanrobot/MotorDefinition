@@ -63,9 +63,16 @@ public partial class DirectoryBrowserPanel : UserControl
                 return;
             }
             
-            // For all other keys (arrow keys, typing, etc.), mark as handled
-            // to prevent tree navigation
-            e.Handled = true;
+            // For navigation keys, mark as handled to prevent tree navigation
+            // But DON'T mark typing keys as handled - let them work normally in TextBox
+            if (e.Key == Key.Left || e.Key == Key.Right || e.Key == Key.Up || e.Key == Key.Down ||
+                e.Key == Key.Home || e.Key == Key.End || e.Key == Key.PageUp || e.Key == Key.PageDown)
+            {
+                e.Handled = true;
+            }
+            
+            // For all other keys (typing), don't mark as handled
+            // The TextBox has already processed them, just return to skip tree processing
             return;
         }
 
