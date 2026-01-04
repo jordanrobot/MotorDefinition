@@ -8,6 +8,7 @@ using Avalonia.Media;
 using Avalonia.VisualTree;
 using CurveEditor.ViewModels;
 using JordanRobot.MotorDefinition.Model;
+using Serilog;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -200,6 +201,10 @@ public partial class CurveDataPanel : UserControl
     {
         if (DataContext is not MainWindowViewModel vm) return;
 
+        var selectedCells = vm.CurveDataTableViewModel.SelectedCells;
+        Log.Debug("[BORDER] UpdateCellSelectionVisuals: {Count} cells selected, {BorderCount} borders tracked", 
+            selectedCells.Count, _cellBorders.Count);
+
         var bordersToRemove = new List<CellPosition>();
 
         // First pass: Reset ALL borders to unselected state and clean up stale entries
@@ -226,11 +231,17 @@ public partial class CurveDataPanel : UserControl
         }
 
         // Second pass: Apply selected state only to currently selected cells
-        foreach (var cellPos in vm.CurveDataTableViewModel.SelectedCells)
+        foreach (var cellPos in selectedCells)
         {
             if (_cellBorders.TryGetValue(cellPos, out var border))
             {
+                Log.Debug("[BORDER] Highlighting cell at Row={Row}, Col={Col}", cellPos.RowIndex, cellPos.ColumnIndex);
                 UpdateCellBorderVisual(border, true);
+            }
+            else
+            {
+                Log.Debug("[BORDER] WARNING: No border found for selected cell at Row={Row}, Col={Col}", 
+                    cellPos.RowIndex, cellPos.ColumnIndex);
             }
         }
     }
@@ -1365,24 +1376,28 @@ public partial class CurveDataPanel : UserControl
             switch (e.Key)
             {
                 case Key.Up:
+                    Log.Debug("[NAV] Arrow Up pressed");
                     vm.CurveDataTableViewModel.MoveSelection(-1, 0);
                     ScrollToSelection(dataGrid);
                     UpdateCellSelectionVisuals();
                     e.Handled = true;
                     break;
                 case Key.Down:
+                    Log.Debug("[NAV] Arrow Down pressed");
                     vm.CurveDataTableViewModel.MoveSelection(1, 0);
                     ScrollToSelection(dataGrid);
                     UpdateCellSelectionVisuals();
                     e.Handled = true;
                     break;
                 case Key.Left:
+                    Log.Debug("[NAV] Arrow Left pressed");
                     vm.CurveDataTableViewModel.MoveSelection(0, -1);
                     ScrollToSelection(dataGrid);
                     UpdateCellSelectionVisuals();
                     e.Handled = true;
                     break;
                 case Key.Right:
+                    Log.Debug("[NAV] Arrow Right pressed");
                     vm.CurveDataTableViewModel.MoveSelection(0, 1);
                     ScrollToSelection(dataGrid);
                     UpdateCellSelectionVisuals();
@@ -1476,6 +1491,8 @@ public partial class CurveDataPanel : UserControl
         if (selectedCells.Count == 0) return;
 
         var firstSelected = selectedCells.First();
+        Log.Debug("[NAV] ScrollToSelection: Row={Row}, Col={Col}", firstSelected.RowIndex, firstSelected.ColumnIndex);
+        
         if (firstSelected.RowIndex >= 0 && firstSelected.RowIndex < vm.CurveDataTableViewModel.Rows.Count)
         {
             var row = vm.CurveDataTableViewModel.Rows[firstSelected.RowIndex];
@@ -1484,7 +1501,9 @@ public partial class CurveDataPanel : UserControl
             // but don't pass it to ScrollIntoView to avoid DataGrid's native selection
             if (firstSelected.ColumnIndex >= 0 && firstSelected.ColumnIndex < dataGrid.Columns.Count)
             {
+                var oldColumn = dataGrid.CurrentColumn?.DisplayIndex ?? -1;
                 dataGrid.CurrentColumn = dataGrid.Columns[firstSelected.ColumnIndex];
+                Log.Debug("[NAV] Updated CurrentColumn from {OldCol} to {NewCol}", oldColumn, firstSelected.ColumnIndex);
             }
             
             // Pass null for column to avoid DataGrid showing its own selection border

@@ -1,6 +1,7 @@
 using CommunityToolkit.Mvvm.ComponentModel;
 using CurveEditor.Services;
 using JordanRobot.MotorDefinition.Model;
+using Serilog;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
@@ -639,6 +640,7 @@ public partial class CurveDataTableViewModel : ViewModelBase
             // If no selection, select the first cell
             if (Rows.Count > 0 && ColumnCount > 0)
             {
+                Log.Debug("[VM-NAV] No selection, selecting first cell (0,0)");
                 SelectCell(0, 0);
             }
             return;
@@ -646,8 +648,13 @@ public partial class CurveDataTableViewModel : ViewModelBase
 
         // Use the anchor cell or the first selected cell
         var referenceCell = _anchorCell ?? SelectedCells.First();
+        var oldRow = referenceCell.RowIndex;
+        var oldCol = referenceCell.ColumnIndex;
         var newRow = Math.Clamp(referenceCell.RowIndex + rowDelta, 0, Math.Max(0, Rows.Count - 1));
         var newCol = Math.Clamp(referenceCell.ColumnIndex + columnDelta, 0, Math.Max(0, ColumnCount - 1));
+
+        Log.Debug("[VM-NAV] MoveSelection: From ({OldRow},{OldCol}) by delta ({RowDelta},{ColDelta}) to ({NewRow},{NewCol})", 
+            oldRow, oldCol, rowDelta, columnDelta, newRow, newCol);
 
         SelectCell(newRow, newCol);
     }
