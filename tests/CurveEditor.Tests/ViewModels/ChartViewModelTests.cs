@@ -820,4 +820,180 @@ public class ChartViewModelTests
         Assert.Contains(viewModel.LegendItems, item => item.Name == "Peak (Power)");
         Assert.Contains(viewModel.LegendItems, item => item.Name == "Continuous (Power)");
     }
+
+    [Theory]
+    [InlineData("Nm", 10, false)]
+    [InlineData("Nm", 50, false)]
+    [InlineData("Nm", 100, false)]
+    [InlineData("Nm", 250, false)]
+    [InlineData("lbf-ft", 50, false)]
+    [InlineData("lbf-ft", 100, false)]
+    [InlineData("oz-in", 100, true)]
+    [InlineData("oz-in", 500, true)]
+    [InlineData("oz-in", 1000, true)]
+    [InlineData("lbf-in", 100, true)]
+    [InlineData("lbf-in", 500, true)]
+    public void TorqueAxisStep_UsesAppropriateIncrementsForUnit(string torqueUnit, double approximateMaxTorque, bool isLargeUnit)
+    {
+        // Arrange
+        var viewModel = new ChartViewModel
+        {
+            TorqueUnit = torqueUnit
+        };
+        
+        var voltage = new Voltage(220)
+        {
+            MaxSpeed = 5000,
+            RatedPeakTorque = approximateMaxTorque * 0.8,
+            RatedContinuousTorque = approximateMaxTorque * 0.6
+        };
+        
+        var peakSeries = new Curve("Peak");
+        peakSeries.Data.Add(new DataPoint { Rpm = 3000, Torque = approximateMaxTorque * 0.8 });
+        voltage.Curves.Add(peakSeries);
+        
+        viewModel.CurrentVoltage = voltage;
+
+        // Act
+        var torqueAxis = viewModel.YAxes[0];
+
+        // Assert - Check that the step is appropriate for readability
+        // The step should result in readable number of labels (typically 4-12 labels)
+        var numberOfLabels = (torqueAxis.MaxLimit ?? 0) / torqueAxis.MinStep;
+        Assert.InRange(numberOfLabels, 4, 12); // Should have 4-12 labels for readability
+        
+        // Verify step is reasonable for the unit type
+        if (isLargeUnit)
+        {
+            // For large units (oz-in, lbf-in), steps should be larger (10, 20, 50, 100, etc.)
+            Assert.True(torqueAxis.MinStep >= 5, $"{torqueUnit} step should be >= 5, was {torqueAxis.MinStep}");
+        }
+        else
+        {
+            // For smaller units (Nm, lbf-ft), steps can be smaller (1, 2, 5, 10, etc.)
+            Assert.True(torqueAxis.MinStep >= 0.5, $"{torqueUnit} step should be >= 0.5, was {torqueAxis.MinStep}");
+        }
+    }
+
+    [Theory]
+    [InlineData("oz-in", 100)]
+    [InlineData("oz-in", 500)]
+    [InlineData("oz-in", 1000)]
+    [InlineData("oz-in", 2000)]
+    [InlineData("lbf-in", 50)]
+    [InlineData("lbf-in", 100)]
+    [InlineData("lbf-in", 500)]
+    [InlineData("Nm", 10)]
+    [InlineData("Nm", 50)]
+    [InlineData("Nm", 100)]
+    [InlineData("lbf-ft", 10)]
+    [InlineData("lbf-ft", 50)]
+    [InlineData("lbf-ft", 100)]
+    public void TorqueAxisMaxValue_RoundsToStandardizedIncrements(string torqueUnit, double maxTorque)
+    {
+        // Arrange
+        var viewModel = new ChartViewModel
+        {
+            TorqueUnit = torqueUnit
+        };
+        
+        // Create a voltage with specific torque values
+        var voltage = new Voltage(220)
+        {
+            MaxSpeed = 5000,
+            RatedPeakTorque = maxTorque * 0.85,
+            RatedContinuousTorque = maxTorque * 0.7
+        };
+        
+        var peakSeries = new Curve("Peak");
+        peakSeries.Data.Add(new DataPoint { Rpm = 3000, Torque = maxTorque * 0.85 });
+        voltage.Curves.Add(peakSeries);
+        
+        viewModel.CurrentVoltage = voltage;
+
+        // Act - Get the torque Y-axis
+        var torqueAxis = viewModel.YAxes[0]; // First axis is torque
+
+        // Assert - The max limit should be a standardized round number
+        var maxLimit = torqueAxis.MaxLimit ?? 0;
+        
+        // Max should be rounded up from the data max (maxTorque * 0.85 * 1.1)
+        // and should be a "nice" number
+        Assert.True(maxLimit > 0, "Max limit should be positive");
+        Assert.True(maxLimit >= maxTorque * 0.85, "Max limit should be at least the max data value");
+        
+        // The max limit should be one of the standard increments based on its magnitude
+        // Standard increments: 1, 2, 2.5, 5, 10, 20, 25, 50, 100, 200, 250, 500, 1000, etc.
+        var magnitude = Math.Pow(10, Math.Floor(Math.Log10(maxLimit)));
+        var normalized = maxLimit / magnitude;
+        var standardValues = new[] { 1.0, 2.0, 2.5, 5.0, 10.0 };
+        
+        Assert.Contains(normalized, standardValues);
+    }
+
+    [Theory]
+    [InlineData("oz-in", 500, 50)]  // For 500 oz-in max, expect step of 50
+    [InlineData("oz-in", 1000, 100)] // For 1000 oz-in max, expect step of 100
+    [InlineData("lbf-in", 100, 10)]  // For 100 lbf-in max, expect step of 10
+    [InlineData("lbf-in", 500, 50)]  // For 500 lbf-in max, expect step of 50
+    [InlineData("Nm", 10, 1)]        // For 10 Nm max, expect step of 1
+    [InlineData("Nm", 50, 5)]        // For 50 Nm max, expect step of 5
+    [InlineData("Nm", 100, 10)]      // For 100 Nm max, expect step of 10
+    [InlineData("lbf-ft", 50, 5)]    // For 50 lbf-ft max, expect step of 5
+    public void TorqueAxisStep_HasExpectedStepForMaxValue(string torqueUnit, double maxValue, double expectedStep)
+    {
+        // Arrange
+        var viewModel = new ChartViewModel
+        {
+            TorqueUnit = torqueUnit
+        };
+        
+        var voltage = new Voltage(220)
+        {
+            MaxSpeed = 5000,
+            RatedPeakTorque = maxValue * 0.85,
+            RatedContinuousTorque = maxValue * 0.7
+        };
+        
+        var peakSeries = new Curve("Peak");
+        peakSeries.Data.Add(new DataPoint { Rpm = 3000, Torque = maxValue * 0.85 });
+        voltage.Curves.Add(peakSeries);
+        
+        viewModel.CurrentVoltage = voltage;
+
+        // Act
+        var torqueAxis = viewModel.YAxes[0];
+
+        // Assert - The step should match the expected value
+        Assert.Equal(expectedStep, torqueAxis.MinStep);
+    }
+
+    [Theory]
+    [InlineData("oz-in")]
+    [InlineData("lbf-in")]
+    [InlineData("Nm")]
+    [InlineData("lbf-ft")]
+    public void TorqueAxisLabels_UseWholeNumbersForLargeValues(string torqueUnit)
+    {
+        // Arrange
+        var viewModel = new ChartViewModel
+        {
+            TorqueUnit = torqueUnit
+        };
+        
+        var voltage = CreateTestVoltage();
+        voltage.RatedPeakTorque = 100;
+        viewModel.CurrentVoltage = voltage;
+
+        // Act
+        var torqueAxis = viewModel.YAxes[0];
+        
+        // Assert - The labeler should format values appropriately
+        var label100 = torqueAxis.Labeler(100);
+        var label50 = torqueAxis.Labeler(50);
+        
+        // For whole number values, should not show decimals
+        Assert.DoesNotContain(".", label100);
+        Assert.DoesNotContain(".", label50);
+    }
 }
