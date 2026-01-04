@@ -24,7 +24,7 @@ public partial class DirectoryBrowserPanel : UserControl
             tree.AddHandler(PointerPressedEvent, OnExplorerTreePointerPressed, RoutingStrategies.Tunnel);
             tree.AddHandler(PointerWheelChangedEvent, OnExplorerTreePointerWheelChanged, RoutingStrategies.Tunnel);
             tree.AddHandler(ContextRequestedEvent, OnExplorerTreeContextRequested, RoutingStrategies.Tunnel);
-            tree.AddHandler(KeyDownEvent, OnExplorerTreeKeyDown, RoutingStrategies.Tunnel);
+            tree.AddHandler(KeyDownEvent, OnExplorerTreeKeyDown, RoutingStrategies.Bubble);  // Changed to Bubble
         }
 
         // Handle global key events for rename text box
@@ -46,31 +46,22 @@ public partial class DirectoryBrowserPanel : UserControl
                 CancelRename(textBox);
                 e.Handled = true;
             }
-            // Arrow keys are not handled - TextBox will process them for cursor movement
+            // Arrow keys and typing are not handled here - TextBox already processed them
         }
     }
 
     private void OnExplorerTreeKeyDown(object? sender, KeyEventArgs e)
     {
-        if (DataContext is not DirectoryBrowserViewModel viewModel)
+        // If event came from rename TextBox, don't process as tree event
+        if (e.Source is TextBox textBox && textBox.Name == "RenameTextBox")
         {
+            // TextBox already processed this, don't let tree handle it
+            e.Handled = true;
             return;
         }
 
-        // During rename, block tree navigation shortcuts but allow TextBox to handle its own keys
-        if (_activeRenameTextBox is not null)
+        if (DataContext is not DirectoryBrowserViewModel viewModel)
         {
-            // Only block keys that would navigate the tree or perform actions
-            // F2, Ctrl+C, Delete, Ctrl+D should be blocked during rename
-            if (e.Key == Key.F2 ||
-                (e.Key == Key.C && e.KeyModifiers.HasFlag(KeyModifiers.Control)) ||
-                e.Key == Key.Delete ||
-                (e.Key == Key.D && e.KeyModifiers.HasFlag(KeyModifiers.Control)))
-            {
-                e.Handled = true;
-                return;
-            }
-            // Let all other keys (arrow keys, typing, etc.) pass through to TextBox
             return;
         }
 
@@ -170,9 +161,12 @@ public partial class DirectoryBrowserPanel : UserControl
         // Use Dispatcher to ensure TextBox is fully laid out before focusing
         Avalonia.Threading.Dispatcher.UIThread.Post(() =>
         {
-            // Focus the TextBox and select all text
-            textBox.Focus();
-            textBox.SelectAll();
+            if (textBox.IsVisible && textBox.IsAttachedToVisualTree())
+            {
+                // Focus the TextBox and select all text
+                textBox.Focus();
+                textBox.SelectAll();
+            }
         }, Avalonia.Threading.DispatcherPriority.Loaded);
     }
 

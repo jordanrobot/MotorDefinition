@@ -111,6 +111,8 @@
                                  BorderThickness="1"
                                  Padding="2"
                                  VerticalAlignment="Center"
+                                 Focusable="True"
+                                 IsTabStop="True"
                                  AttachedToVisualTree="OnRenameTextBoxAttached"/>
                     </Grid>
                 </TreeDataTemplate>
