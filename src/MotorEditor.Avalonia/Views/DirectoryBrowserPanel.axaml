@@ -96,10 +96,21 @@
                                    Margin="0,0,6,0"
                                    Width="16"/>
 
+                        <!-- Display name (shown when not renaming) -->
                         <TextBlock Grid.Column="2"
                                    Text="{Binding DisplayNameWithDirtyIndicator}"
                                    TextWrapping="NoWrap"
-                                   TextTrimming="CharacterEllipsis"/>
+                                   TextTrimming="CharacterEllipsis"
+                                   IsVisible="{Binding IsRenaming, Converter={StaticResource InverseBooleanConverter}}"/>
+
+                        <!-- Rename TextBox (shown when renaming) -->
+                        <TextBox Grid.Column="2"
+                                 x:Name="RenameTextBox"
+                                 Text="{Binding DisplayName}"
+                                 IsVisible="{Binding IsRenaming}"
+                                 BorderThickness="1"
+                                 Padding="2"
+                                 VerticalAlignment="Center"/>
                     </Grid>
                 </TreeDataTemplate>
             </TreeView.DataTemplates>

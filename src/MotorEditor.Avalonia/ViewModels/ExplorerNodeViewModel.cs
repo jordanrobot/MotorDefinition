@@ -57,6 +57,9 @@ public partial class ExplorerNodeViewModel : ObservableObject
     [ObservableProperty]
     private MotorFileValidationState _validationState = MotorFileValidationState.Unknown;
 
+    [ObservableProperty]
+    private bool _isRenaming;
+
     public bool ShowChevron => IsDirectory && !IsRoot;
 
     public bool ShowValidationMarker => !IsDirectory && !IsPlaceholder;

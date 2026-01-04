@@ -13,6 +13,24 @@ public interface IDirectoryBrowserCommand
     string DisplayName { get; }
 
     /// <summary>
+    /// Gets whether this command requires user confirmation before executing.
+    /// </summary>
+    bool RequiresConfirmation => false;
+
+    /// <summary>
+    /// Gets the confirmation message to show the user before executing.
+    /// </summary>
+    /// <param name="path">The full path to the file or directory.</param>
+    /// <param name="isDirectory">True if the path is a directory, false if it's a file.</param>
+    /// <returns>The confirmation message.</returns>
+    string GetConfirmationMessage(string path, bool isDirectory) => string.Empty;
+
+    /// <summary>
+    /// Gets whether this command modifies the file system and requires a refresh after execution.
+    /// </summary>
+    bool RequiresRefresh => false;
+
+    /// <summary>
     /// Determines if this command can execute on the specified path.
     /// </summary>
     /// <param name="path">The full path to the file or directory.</param>
