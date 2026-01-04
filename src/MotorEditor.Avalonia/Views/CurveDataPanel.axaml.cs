@@ -275,11 +275,35 @@ public partial class CurveDataPanel : UserControl
             var savedItemsSource = DataTable.ItemsSource;
             DataTable.ItemsSource = null;
 
-            // Remove all columns except the first two (% and RPM)
-            while (DataTable.Columns.Count > 2)
+            // Clear all columns including % and RPM
+            DataTable.Columns.Clear();
+
+            // Determine if % and RPM columns are locked
+            var isPercentLocked = vm.CurveDataTableViewModel.IsPercentLocked();
+            var isRpmLocked = vm.CurveDataTableViewModel.IsRpmLocked();
+
+            // Add % column
+            var percentColumn = new DataGridTextColumn
             {
-                DataTable.Columns.RemoveAt(DataTable.Columns.Count - 1);
-            }
+                Header = "%",
+                Binding = new Avalonia.Data.Binding("Percent"),
+                Width = new DataGridLength(50),
+                IsReadOnly = isPercentLocked
+            };
+            DataTable.Columns.Add(percentColumn);
+
+            // Add RPM column
+            var rpmColumn = new DataGridTextColumn
+            {
+                Header = "RPM",
+                Binding = new Avalonia.Data.Binding("DisplayRpm"),
+                Width = new DataGridLength(70),
+                IsReadOnly = isRpmLocked
+            };
+            DataTable.Columns.Add(rpmColumn);
+
+            // Update lock toggle button visual states
+            UpdateLockToggleStates(isPercentLocked, isRpmLocked);
 
             // Add a column for each series
             var columnIndex = 2; // Start after % and RPM columns
@@ -636,12 +660,43 @@ public partial class CurveDataPanel : UserControl
     /// </summary>
     private void DataGrid_CellEditEnded(object? sender, DataGridCellEditEndedEventArgs e)
     {
-        // Mark data as dirty when edited
-        if (DataContext is MainWindowViewModel viewModel)
+        if (DataContext is not MainWindowViewModel viewModel) return;
+
+        // Handle editing of % and RPM columns
+        // Note: We can't access the edited value directly from the event args in Avalonia,
+        // so we rely on the binding having already updated the row's Percent property
+        // The UpdatePercent and UpdateRpm methods will handle propagating to all series
+        if (e.Row.DataContext is CurveDataRow dataRow)
         {
-            viewModel.MarkDirty();
-            viewModel.ChartViewModel.RefreshChart();
+            var columnIndex = e.Column.DisplayIndex;
+            var rowIndex = dataRow.RowIndex;
+
+            // Column 0 is %, column 1 is RPM
+            // The values have already been updated via binding, so we just need to
+            // propagate them to all series through the view model
+            if (columnIndex == 0)
+            {
+                // The Percent property getter reads from the first series, so we get
+                // the newly edited value and apply it to all series
+                var newPercent = dataRow.Percent;
+                viewModel.CurveDataTableViewModel.UpdatePercent(rowIndex, newPercent);
+            }
+            else if (columnIndex == 1)
+            {
+                // Similarly for RPM - get the edited value and propagate
+                // Note: DisplayRpm is rounded, so we should get the actual Rpm value
+                if (viewModel.SelectedVoltage?.Curves.FirstOrDefault() is Curve firstSeries 
+                    && rowIndex < firstSeries.Data.Count)
+                {
+                    var newRpm = firstSeries.Data[rowIndex].Rpm;
+                    viewModel.CurveDataTableViewModel.UpdateRpm(rowIndex, newRpm);
+                }
+            }
         }
+
+        // Mark data as dirty when edited
+        viewModel.MarkDirty();
+        viewModel.ChartViewModel.RefreshChart();
 
         // Update cell selection visuals after edit ends
         // This ensures the white border is properly cleared/updated
@@ -1728,5 +1783,97 @@ public partial class CurveDataPanel : UserControl
 
         // Update layout immediately
         dataGrid.UpdateLayout();
+    }
+
+    /// <summary>
+    /// Updates the visual state of the lock toggle buttons for % and RPM columns.
+    /// </summary>
+    private void UpdateLockToggleStates(bool isPercentLocked, bool isRpmLocked)
+    {
+        if (PercentLockToggle is not null)
+        {
+            PercentLockToggle.IsChecked = isPercentLocked;
+            if (PercentLockIcon is not null)
+            {
+                PercentLockIcon.IsVisible = isPercentLocked;
+            }
+            if (PercentUnlockIcon is not null)
+            {
+                PercentUnlockIcon.IsVisible = !isPercentLocked;
+            }
+        }
+
+        if (RpmLockToggle is not null)
+        {
+            RpmLockToggle.IsChecked = isRpmLocked;
+            if (RpmLockIcon is not null)
+            {
+                RpmLockIcon.IsVisible = isRpmLocked;
+            }
+            if (RpmUnlockIcon is not null)
+            {
+                RpmUnlockIcon.IsVisible = !isRpmLocked;
+            }
+        }
+    }
+
+    /// <summary>
+    /// Handles percent lock toggle button click for all series.
+    /// Toggles the LockedPercent property for all curves in the current voltage.
+    /// </summary>
+    private void OnPercentLockToggleClick(object? sender, RoutedEventArgs e)
+    {
+        if (DataContext is not MainWindowViewModel viewModel || viewModel.SelectedVoltage is null)
+        {
+            return;
+        }
+
+        // Determine current lock state (if any series allows percent editing, we consider it unlocked)
+        var isCurrentlyLocked = viewModel.SelectedVoltage.Curves.All(s => s.LockedPercent);
+        var newLockedState = !isCurrentlyLocked;
+
+        // Apply to all curves in the voltage
+        foreach (var curve in viewModel.SelectedVoltage.Curves)
+        {
+            curve.LockedPercent = newLockedState;
+        }
+
+        // Update the DataGrid columns to reflect the new lock state
+        RebuildDataGridColumns();
+        
+        viewModel.MarkDirty();
+        viewModel.StatusMessage = newLockedState 
+            ? "Locked % column for all series" 
+            : "Unlocked % column for all series";
+    }
+
+    /// <summary>
+    /// Handles RPM lock toggle button click for all series.
+    /// Toggles the LockedRpm property for all curves in the current voltage.
+    /// </summary>
+    private void OnRpmLockToggleClick(object? sender, RoutedEventArgs e)
+    {
+        if (DataContext is not MainWindowViewModel viewModel || viewModel.SelectedVoltage is null)
+        {
+            return;
+        }
+
+        // Determine current lock state (if any series allows RPM editing, we consider it unlocked)
+        var isCurrentlyLocked = viewModel.SelectedVoltage.Curves.All(s => s.LockedRpm);
+        var newLockedState = !isCurrentlyLocked;
+
+        // Apply to all curves in the voltage
+        foreach (var curve in viewModel.SelectedVoltage.Curves)
+        {
+            curve.LockedRpm = newLockedState;
+        }
+
+        // Update the DataGrid columns to reflect the new lock state
+        RebuildDataGridColumns();
+        
+        viewModel.MarkDirty();
+        viewModel.StatusMessage = newLockedState 
+            ? "Locked RPM column for all series" 
+            : "Unlocked RPM column for all series";
     }
 }
