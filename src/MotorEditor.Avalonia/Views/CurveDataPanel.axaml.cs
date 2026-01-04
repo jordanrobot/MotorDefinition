@@ -37,6 +37,7 @@ public partial class CurveDataPanel : UserControl
     /// <summary>
     /// Captures the original torque values for the provided cells so they can be restored later.
     /// Used by both Override Mode and edit-mode Esc behavior.
+    /// Now also supports % and RPM columns.
     /// </summary>
     private void SnapshotOriginalValues(IEnumerable<CellPosition> cells)
     {
@@ -46,8 +47,29 @@ public partial class CurveDataPanel : UserControl
 
         foreach (var cellPos in cells)
         {
-            if (cellPos.ColumnIndex < 2) continue;
+            // Handle % column (column 0)
+            if (cellPos.ColumnIndex == 0)
+            {
+                if (cellPos.RowIndex >= 0 && cellPos.RowIndex < vm.CurveDataTableViewModel.Rows.Count)
+                {
+                    var originalValue = (double)vm.CurveDataTableViewModel.Rows[cellPos.RowIndex].Percent;
+                    _originalValues[cellPos] = originalValue;
+                }
+                continue;
+            }
 
+            // Handle RPM column (column 1)
+            if (cellPos.ColumnIndex == 1)
+            {
+                if (cellPos.RowIndex >= 0 && cellPos.RowIndex < vm.CurveDataTableViewModel.Rows.Count)
+                {
+                    var originalValue = (double)vm.CurveDataTableViewModel.Rows[cellPos.RowIndex].DisplayRpm;
+                    _originalValues[cellPos] = originalValue;
+                }
+                continue;
+            }
+
+            // Handle torque columns (column 2+)
             var seriesName = vm.CurveDataTableViewModel.GetSeriesNameForColumn(cellPos.ColumnIndex);
             if (seriesName is null) continue;
             if (vm.CurveDataTableViewModel.IsSeriesLocked(seriesName)) continue;
@@ -1599,17 +1621,6 @@ public partial class CurveDataPanel : UserControl
         // see pasted values without needing to scroll.
         foreach (var cellPos in vm.CurveDataTableViewModel.SelectedCells)
         {
-            if (cellPos.ColumnIndex < 2)
-            {
-                continue;
-            }
-
-            var seriesName = vm.CurveDataTableViewModel.GetSeriesNameForColumn(cellPos.ColumnIndex);
-            if (seriesName is null)
-            {
-                continue;
-            }
-
             var rowIndex = cellPos.RowIndex;
             if (rowIndex < 0 || rowIndex >= vm.CurveDataTableViewModel.Rows.Count)
             {
@@ -1617,11 +1628,38 @@ public partial class CurveDataPanel : UserControl
             }
 
             var row = vm.CurveDataTableViewModel.Rows[rowIndex];
-            var value = row.GetTorque(seriesName);
 
-            if (_cellBorders.TryGetValue(cellPos, out var border) && border.Child is TextBlock textBlock)
+            // Handle % column (column 0)
+            if (cellPos.ColumnIndex == 0)
             {
-                textBlock.Text = value.ToString("N2");
+                if (_cellBorders.TryGetValue(cellPos, out var border) && border.Child is TextBlock textBlock)
+                {
+                    textBlock.Text = row.Percent.ToString();
+                }
+                continue;
+            }
+
+            // Handle RPM column (column 1)
+            if (cellPos.ColumnIndex == 1)
+            {
+                if (_cellBorders.TryGetValue(cellPos, out var border) && border.Child is TextBlock textBlock)
+                {
+                    textBlock.Text = row.DisplayRpm.ToString();
+                }
+                continue;
+            }
+
+            // Handle torque columns (column 2+)
+            var seriesName = vm.CurveDataTableViewModel.GetSeriesNameForColumn(cellPos.ColumnIndex);
+            if (seriesName is null)
+            {
+                continue;
+            }
+
+            var value = row.GetTorque(seriesName);
+            if (_cellBorders.TryGetValue(cellPos, out var torqueBorder) && torqueBorder.Child is TextBlock torqueTextBlock)
+            {
+                torqueTextBlock.Text = value.ToString("N2");
             }
         }
 
@@ -1746,6 +1784,7 @@ public partial class CurveDataPanel : UserControl
     /// <summary>
     /// Commits the Override Mode text to all selected cells and exits Override Mode.
     /// If the text cannot be parsed as a number, the original values are restored.
+    /// Now supports %, RPM, and torque columns with undo/redo.
     /// </summary>
     private void CommitOverrideMode()
     {
@@ -1755,20 +1794,75 @@ public partial class CurveDataPanel : UserControl
         // Try to parse the accumulated text as a number
         if (double.TryParse(_overrideText, out var value))
         {
-            var committedViaUndo = false;
+            // Separate % and RPM cells from torque cells
+            var percentCells = new List<CellPosition>();
+            var rpmCells = new List<CellPosition>();
+            var torqueCells = new Dictionary<CellPosition, double>();
 
-            if (_originalValues.Count > 0)
+            foreach (var kvp in _originalValues)
             {
-                committedViaUndo = vm.CurveDataTableViewModel.TryCommitOverrideWithUndo(_originalValues, value);
+                var cell = kvp.Key;
+                
+                if (cell.ColumnIndex == 0)
+                {
+                    percentCells.Add(cell);
+                }
+                else if (cell.ColumnIndex == 1)
+                {
+                    rpmCells.Add(cell);
+                }
+                else
+                {
+                    torqueCells[cell] = kvp.Value;
+                }
             }
 
-            // If the view-model did not route through the undo stack (for
-            // example, in environments without an UndoStack), fall back to
-            // simply marking the document dirty so validation and UI state
-            // stay consistent with prior behavior.
-            if (!committedViaUndo)
+            // Commit % cells with undo support
+            if (percentCells.Count > 0 && value >= 0 && value == Math.Floor(value))
             {
+                var intValue = (int)value;
+                foreach (var cell in percentCells)
+                {
+                    if (cell.RowIndex >= 0 && cell.RowIndex < vm.CurveDataTableViewModel.Rows.Count)
+                    {
+                        vm.CurveDataTableViewModel.UpdatePercent(cell.RowIndex, intValue);
+                    }
+                }
                 vm.MarkDirty();
+            }
+
+            // Commit RPM cells with undo support
+            if (rpmCells.Count > 0 && value >= 0)
+            {
+                foreach (var cell in rpmCells)
+                {
+                    if (cell.RowIndex >= 0 && cell.RowIndex < vm.CurveDataTableViewModel.Rows.Count)
+                    {
+                        vm.CurveDataTableViewModel.UpdateRpm(cell.RowIndex, value);
+                    }
+                }
+                vm.MarkDirty();
+            }
+
+            // Commit torque cells with undo support
+            if (torqueCells.Count > 0)
+            {
+                var committedViaUndo = vm.CurveDataTableViewModel.TryCommitOverrideWithUndo(torqueCells, value);
+
+                // If the view-model did not route through the undo stack (for
+                // example, in environments without an UndoStack), fall back to
+                // simply marking the document dirty so validation and UI state
+                // stay consistent with prior behavior.
+                if (!committedViaUndo)
+                {
+                    vm.MarkDirty();
+                }
+            }
+
+            // Update chart after all edits
+            if (_originalValues.Count > 0)
+            {
+                vm.ChartViewModel.RefreshChart();
             }
         }
         else
@@ -1797,6 +1891,7 @@ public partial class CurveDataPanel : UserControl
     /// <summary>
     /// Updates the display of all selected cells to show the current override text.
     /// This provides real-time visual feedback as the user types.
+    /// Now supports %, RPM, and torque columns.
     /// </summary>
     private void UpdateOverrideModeDisplay()
     {
@@ -1811,29 +1906,14 @@ public partial class CurveDataPanel : UserControl
             SnapshotOriginalValues(selectedCells);
         }
 
-        // If the text parses, update the underlying torque values and show
+        // If the text parses, update the underlying values and show
         // the formatted numeric value. Otherwise, leave the model unchanged
         // but show the raw typed text so the user sees exactly what they
         // entered; validation and revert happen when Override Mode exits.
         if (double.TryParse(_overrideText, out var value))
         {
-            // Delegate mutation rules to the view model helper, then update
-            // visible cells for immediate feedback.
-            vm.CurveDataTableViewModel.ApplyOverrideValue(value);
-
             foreach (var cellPos in selectedCells)
             {
-                if (cellPos.ColumnIndex < 2)
-                {
-                    continue;
-                }
-
-                var seriesName = vm.CurveDataTableViewModel.GetSeriesNameForColumn(cellPos.ColumnIndex);
-                if (seriesName is null)
-                {
-                    continue;
-                }
-
                 var rowIndex = cellPos.RowIndex;
                 if (rowIndex < 0 || rowIndex >= vm.CurveDataTableViewModel.Rows.Count)
                 {
@@ -1841,11 +1921,51 @@ public partial class CurveDataPanel : UserControl
                 }
 
                 var row = vm.CurveDataTableViewModel.Rows[rowIndex];
-                var torque = row.GetTorque(seriesName);
 
-                if (_cellBorders.TryGetValue(cellPos, out var border) && border.Child is TextBlock textBlock)
+                // Handle % column (column 0)
+                if (cellPos.ColumnIndex == 0)
                 {
-                    textBlock.Text = torque.ToString("N2");
+                    if (!vm.CurveDataTableViewModel.IsPercentLocked() && value >= 0 && value == Math.Floor(value))
+                    {
+                        var intValue = (int)value;
+                        // Update the value directly (will be committed to undo stack later)
+                        if (_cellBorders.TryGetValue(cellPos, out var border) && border.Child is TextBlock textBlock)
+                        {
+                            textBlock.Text = intValue.ToString();
+                        }
+                    }
+                    continue;
+                }
+
+                // Handle RPM column (column 1)
+                if (cellPos.ColumnIndex == 1)
+                {
+                    if (!vm.CurveDataTableViewModel.IsRpmLocked() && value >= 0)
+                    {
+                        // Update the value directly (will be committed to undo stack later)
+                        if (_cellBorders.TryGetValue(cellPos, out var border) && border.Child is TextBlock textBlock)
+                        {
+                            textBlock.Text = Math.Round(value).ToString();
+                        }
+                    }
+                    continue;
+                }
+
+                // Handle torque columns (column 2+)
+                var seriesName = vm.CurveDataTableViewModel.GetSeriesNameForColumn(cellPos.ColumnIndex);
+                if (seriesName is null)
+                {
+                    continue;
+                }
+
+                // Delegate mutation rules to the view model helper, then update
+                // visible cells for immediate feedback.
+                vm.CurveDataTableViewModel.ApplyOverrideValue(value);
+
+                var torque = row.GetTorque(seriesName);
+                if (_cellBorders.TryGetValue(cellPos, out var torqueBorder) && torqueBorder.Child is TextBlock torqueTextBlock)
+                {
+                    torqueTextBlock.Text = torque.ToString("N2");
                 }
             }
 
@@ -1854,13 +1974,9 @@ public partial class CurveDataPanel : UserControl
         }
         else
         {
+            // Show raw text for all selected cells when not a valid number
             foreach (var cellPos in selectedCells)
             {
-                if (cellPos.ColumnIndex < 2)
-                {
-                    continue;
-                }
-
                 if (_cellBorders.TryGetValue(cellPos, out var border) && border.Child is TextBlock textBlock)
                 {
                     textBlock.Text = _overrideText;
@@ -1881,15 +1997,47 @@ public partial class CurveDataPanel : UserControl
             var cellPos = kvp.Key;
             var originalValue = kvp.Value;
 
+            // Handle % column (column 0)
+            if (cellPos.ColumnIndex == 0)
+            {
+                var intValue = (int)originalValue;
+                if (cellPos.RowIndex >= 0 && cellPos.RowIndex < vm.CurveDataTableViewModel.Rows.Count)
+                {
+                    vm.CurveDataTableViewModel.UpdatePercent(cellPos.RowIndex, intValue);
+                }
+
+                if (_cellBorders.TryGetValue(cellPos, out var border) && border.Child is TextBlock textBlock)
+                {
+                    textBlock.Text = intValue.ToString();
+                }
+                continue;
+            }
+
+            // Handle RPM column (column 1)
+            if (cellPos.ColumnIndex == 1)
+            {
+                if (cellPos.RowIndex >= 0 && cellPos.RowIndex < vm.CurveDataTableViewModel.Rows.Count)
+                {
+                    vm.CurveDataTableViewModel.UpdateRpm(cellPos.RowIndex, originalValue);
+                }
+
+                if (_cellBorders.TryGetValue(cellPos, out var border) && border.Child is TextBlock textBlock)
+                {
+                    textBlock.Text = Math.Round(originalValue).ToString();
+                }
+                continue;
+            }
+
+            // Handle torque columns (column 2+)
             if (!vm.CurveDataTableViewModel.TrySetTorqueAtCell(cellPos, originalValue))
             {
                 continue;
             }
 
             // Directly update the TextBlock in the cell for immediate visual feedback
-            if (_cellBorders.TryGetValue(cellPos, out var border) && border.Child is TextBlock textBlock)
+            if (_cellBorders.TryGetValue(cellPos, out var torqueBorder) && torqueBorder.Child is TextBlock torqueTextBlock)
             {
-                textBlock.Text = originalValue.ToString("N2");
+                torqueTextBlock.Text = originalValue.ToString("N2");
             }
         }
 
