@@ -107,8 +107,23 @@ public partial class DirectoryBrowserViewModel : ObservableObject
     private void InitializeContextMenuCommands()
     {
         var revealCommand = new RevealInFileExplorerCommand();
+        var openInEditorCommand = new OpenInTextEditorCommand();
+        var duplicateCommand = new DuplicateCommand();
+        var deleteCommand = new DeleteCommand();
+
+        // File context menu commands
         FileContextCommands.Add(revealCommand);
+        FileContextCommands.Add(openInEditorCommand);
+        FileContextCommands.Add(new CopyFileCommand());
+        FileContextCommands.Add(duplicateCommand);
+        FileContextCommands.Add(deleteCommand);
+
+        // Directory context menu commands
         DirectoryContextCommands.Add(revealCommand);
+        DirectoryContextCommands.Add(openInEditorCommand);
+        DirectoryContextCommands.Add(new NewDirectoryCommand());
+        DirectoryContextCommands.Add(duplicateCommand);
+        DirectoryContextCommands.Add(deleteCommand);
     }
 
     public void UpdateOpenFileStates(string? activeFilePath, IEnumerable<string?> dirtyFilePaths)

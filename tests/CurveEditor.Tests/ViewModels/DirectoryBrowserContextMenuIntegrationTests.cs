@@ -138,13 +138,17 @@ public sealed class DirectoryBrowserContextMenuIntegrationTests
             new StubFolderPicker(),
             new InMemorySettingsStore());
 
-        // Both collections should contain the same RevealInFileExplorerCommand instance
-        Assert.Single(vm.FileContextCommands);
-        Assert.Single(vm.DirectoryContextCommands);
+        // File commands: RevealInFileExplorer, OpenInTextEditor, CopyFile, Duplicate, Delete
+        Assert.Equal(5, vm.FileContextCommands.Count);
         
-        // Verify they're both RevealInFileExplorerCommand
-        Assert.IsType<RevealInFileExplorerCommand>(vm.FileContextCommands[0]);
-        Assert.IsType<RevealInFileExplorerCommand>(vm.DirectoryContextCommands[0]);
+        // Directory commands: RevealInFileExplorer, OpenInTextEditor, NewDirectory, Duplicate, Delete
+        Assert.Equal(5, vm.DirectoryContextCommands.Count);
+        
+        // Verify the shared commands are the same instances
+        Assert.Same(vm.FileContextCommands[0], vm.DirectoryContextCommands[0]); // RevealInFileExplorer
+        Assert.Same(vm.FileContextCommands[1], vm.DirectoryContextCommands[1]); // OpenInTextEditor
+        Assert.Same(vm.FileContextCommands[3], vm.DirectoryContextCommands[3]); // Duplicate
+        Assert.Same(vm.FileContextCommands[4], vm.DirectoryContextCommands[4]); // Delete
     }
 
     [Fact]
