@@ -1479,7 +1479,14 @@ public partial class CurveDataPanel : UserControl
         if (firstSelected.RowIndex >= 0 && firstSelected.RowIndex < vm.CurveDataTableViewModel.Rows.Count)
         {
             var row = vm.CurveDataTableViewModel.Rows[firstSelected.RowIndex];
-            dataGrid.ScrollIntoView(row, null);
+            
+            // Also update DataGrid's CurrentColumn to keep navigation in sync
+            if (firstSelected.ColumnIndex >= 0 && firstSelected.ColumnIndex < dataGrid.Columns.Count)
+            {
+                dataGrid.CurrentColumn = dataGrid.Columns[firstSelected.ColumnIndex];
+            }
+            
+            dataGrid.ScrollIntoView(row, dataGrid.CurrentColumn);
         }
     }
 
