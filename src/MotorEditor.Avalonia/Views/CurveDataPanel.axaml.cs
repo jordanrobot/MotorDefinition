@@ -1480,13 +1480,15 @@ public partial class CurveDataPanel : UserControl
         {
             var row = vm.CurveDataTableViewModel.Rows[firstSelected.RowIndex];
             
-            // Also update DataGrid's CurrentColumn to keep navigation in sync
+            // Update DataGrid's CurrentColumn to keep navigation in sync
+            // but don't pass it to ScrollIntoView to avoid DataGrid's native selection
             if (firstSelected.ColumnIndex >= 0 && firstSelected.ColumnIndex < dataGrid.Columns.Count)
             {
                 dataGrid.CurrentColumn = dataGrid.Columns[firstSelected.ColumnIndex];
             }
             
-            dataGrid.ScrollIntoView(row, dataGrid.CurrentColumn);
+            // Pass null for column to avoid DataGrid showing its own selection border
+            dataGrid.ScrollIntoView(row, null);
         }
     }
 
