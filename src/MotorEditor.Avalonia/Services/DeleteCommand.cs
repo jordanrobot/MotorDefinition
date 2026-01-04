@@ -12,6 +12,20 @@ public class DeleteCommand : IDirectoryBrowserCommand
 {
     public string DisplayName => "Delete";
 
+    public bool RequiresConfirmation => true;
+
+    public bool RequiresRefresh => true;
+
+    public string GetConfirmationMessage(string path, bool isDirectory)
+    {
+        var itemType = isDirectory ? "directory" : "file";
+        var itemName = isDirectory 
+            ? Path.GetFileName(path.TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar))
+            : Path.GetFileName(path);
+        
+        return $"Are you sure you want to delete the {itemType} '{itemName}'?{(isDirectory ? " All contents will be deleted." : "")}";
+    }
+
     public bool CanExecute(string path, bool isDirectory)
     {
         if (string.IsNullOrWhiteSpace(path))

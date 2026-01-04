@@ -992,8 +992,30 @@ public partial class MainWindowViewModel : ViewModelBase
         DirectoryBrowser.PropertyChanged -= OnDirectoryBrowserPropertyChanged;
         DirectoryBrowser.PropertyChanged += OnDirectoryBrowserPropertyChanged;
 
+        DirectoryBrowser.RequestConfirmation = ShowConfirmationDialogAsync;
+
         CurrentFilePath = _fileService.CurrentFilePath;
         DirectoryBrowser.UpdateOpenFileStates(CurrentFilePath, GetDirtyFilePaths());
+    }
+
+    /// <summary>
+    /// Shows a confirmation dialog with the specified title and message.
+    /// </summary>
+    private async Task<bool> ShowConfirmationDialogAsync(string title, string message)
+    {
+        var dialog = new Views.MessageDialog
+        {
+            Title = title,
+            Message = message
+        };
+
+        var desktop = Avalonia.Application.Current?.ApplicationLifetime as Avalonia.Controls.ApplicationLifetimes.IClassicDesktopStyleApplicationLifetime;
+        if (desktop?.MainWindow is not null)
+        {
+            await dialog.ShowDialog(desktop.MainWindow);
+        }
+
+        return dialog.IsConfirmed;
     }
 
     /// <summary>

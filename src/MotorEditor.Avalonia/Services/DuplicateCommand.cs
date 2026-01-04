@@ -12,6 +12,8 @@ public class DuplicateCommand : IDirectoryBrowserCommand
 {
     public string DisplayName => "Duplicate";
 
+    public bool RequiresRefresh => true;
+
     public bool CanExecute(string path, bool isDirectory)
     {
         if (string.IsNullOrWhiteSpace(path))

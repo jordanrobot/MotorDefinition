@@ -1,5 +1,6 @@
 using Serilog;
 using System;
+using System.Diagnostics;
 using System.IO;
 using System.Runtime.InteropServices;
 using System.Threading.Tasks;
@@ -7,10 +8,8 @@ using System.Threading.Tasks;
 namespace CurveEditor.Services;
 
 /// <summary>
-/// Command to copy the file path to the clipboard.
-/// Note: This command copies the file path as text, not the file contents.
-/// Clipboard access in Avalonia requires TopLevel context which is not available in commands.
-/// This implementation uses platform-specific clipboard APIs.
+/// Command to copy a file or directory to the clipboard.
+/// The file/directory can then be pasted in File Explorer.
 /// </summary>
 public class CopyFileCommand : IDirectoryBrowserCommand
 {
@@ -23,8 +22,7 @@ public class CopyFileCommand : IDirectoryBrowserCommand
             return false;
         }
 
-        // Only enable for files, not directories
-        return !isDirectory && File.Exists(path);
+        return isDirectory ? Directory.Exists(path) : File.Exists(path);
     }
 
     public Task ExecuteAsync(string path, bool isDirectory)
@@ -37,67 +35,73 @@ public class CopyFileCommand : IDirectoryBrowserCommand
         try
         {
             CopyToClipboard(path);
-            Log.Information("Copied file path to clipboard: {Path}", path);
+            Log.Information("Copied {ItemType} to clipboard: {Path}", 
+                isDirectory ? "directory" : "file", path);
         }
         catch (Exception ex)
         {
-            Log.Information(ex, "Failed to copy file path to clipboard: {Path}", path);
+            Log.Information(ex, "Failed to copy {ItemType} to clipboard: {Path}",
+                isDirectory ? "directory" : "file", path);
         }
 
         return Task.CompletedTask;
     }
 
-    private static void CopyToClipboard(string text)
+    private static void CopyToClipboard(string path)
     {
         if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
         {
-            // Use clip.exe on Windows
-            System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo
+            // Windows: Use PowerShell to copy file/directory to clipboard
+            var escapedPath = path.Replace("'", "''");
+            var psCommand = $"Set-Clipboard -Path '{escapedPath}'";
+            
+            Process.Start(new ProcessStartInfo
             {
-                FileName = "cmd.exe",
-                Arguments = $"/c echo {text} | clip",
+                FileName = "powershell.exe",
+                Arguments = $"-NoProfile -Command \"{psCommand}\"",
                 CreateNoWindow = true,
-                UseShellExecute = false
+                UseShellExecute = false,
+                WindowStyle = ProcessWindowStyle.Hidden
             })?.WaitForExit();
         }
         else if (RuntimeInformation.IsOSPlatform(OSPlatform.OSX))
         {
-            // Use pbcopy on macOS
-            var process = System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo
+            // macOS: Use osascript to copy file/directory
+            var escapedPath = path.Replace("\"", "\\\"");
+            var script = $"set the clipboard to POSIX file \"{escapedPath}\"";
+            
+            var process = Process.Start(new ProcessStartInfo
             {
-                FileName = "pbcopy",
-                RedirectStandardInput = true,
-                UseShellExecute = false,
-                CreateNoWindow = true
+                FileName = "osascript",
+                Arguments = $"-e '{script}'",
+                CreateNoWindow = true,
+                UseShellExecute = false
             });
-            if (process is not null)
-            {
-                process.StandardInput.Write(text);
-                process.StandardInput.Close();
-                process.WaitForExit();
-            }
+            process?.WaitForExit();
         }
         else if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
         {
-            // Use xclip on Linux (if available)
-            var process = System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo
+            // Linux: Copy URI to clipboard for file managers that support it
+            var uri = $"file://{path}";
+            var process = Process.Start(new ProcessStartInfo
             {
                 FileName = "xclip",
-                Arguments = "-selection clipboard",
+                Arguments = "-selection clipboard -t text/uri-list",
                 RedirectStandardInput = true,
                 UseShellExecute = false,
                 CreateNoWindow = true
             });
+            
             if (process is not null)
             {
-                process.StandardInput.Write(text);
+                process.StandardInput.WriteLine(uri);
                 process.StandardInput.Close();
                 process.WaitForExit();
             }
         }
         else
         {
-            Log.Information("Unsupported platform for clipboard operations");
+            Log.Information("Unsupported platform for clipboard file operations");
         }
     }
 }

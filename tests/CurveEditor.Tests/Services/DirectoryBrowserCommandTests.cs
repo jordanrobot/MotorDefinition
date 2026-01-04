@@ -129,13 +129,13 @@ public sealed class DirectoryBrowserCommandTests
     }
 
     [Fact]
-    public void CopyFileCommand_CanExecute_ReturnsFalseForDirectory()
+    public void CopyFileCommand_CanExecute_ReturnsTrueForDirectory()
     {
         var command = new CopyFileCommand();
         var tempDir = Directory.CreateTempSubdirectory("copy-test-");
         try
         {
-            Assert.False(command.CanExecute(tempDir.FullName, isDirectory: true));
+            Assert.True(command.CanExecute(tempDir.FullName, isDirectory: true));
         }
         finally
         {
@@ -413,6 +413,70 @@ public sealed class DirectoryBrowserCommandTests
         {
             try { tempDir.Delete(recursive: true); } catch { }
         }
+    }
+
+    // Command behavior tests
+
+    [Fact]
+    public void DeleteCommand_RequiresConfirmation()
+    {
+        var command = new DeleteCommand();
+        Assert.True(command.RequiresConfirmation);
+    }
+
+    [Fact]
+    public void DeleteCommand_RequiresRefresh()
+    {
+        var command = new DeleteCommand();
+        Assert.True(command.RequiresRefresh);
+    }
+
+    [Fact]
+    public void DeleteCommand_GetConfirmationMessage_ForFile()
+    {
+        var command = new DeleteCommand();
+        var tempFile = Path.GetTempFileName();
+        try
+        {
+            var message = command.GetConfirmationMessage(tempFile, isDirectory: false);
+            Assert.Contains("file", message, StringComparison.OrdinalIgnoreCase);
+            Assert.Contains(Path.GetFileName(tempFile), message);
+        }
+        finally
+        {
+            try { File.Delete(tempFile); } catch { }
+        }
+    }
+
+    [Fact]
+    public void DeleteCommand_GetConfirmationMessage_ForDirectory()
+    {
+        var command = new DeleteCommand();
+        var tempDir = Directory.CreateTempSubdirectory("delete-msg-test-");
+        try
+        {
+            var message = command.GetConfirmationMessage(tempDir.FullName, isDirectory: true);
+            Assert.Contains("directory", message, StringComparison.OrdinalIgnoreCase);
+            Assert.Contains("All contents will be deleted", message);
+        }
+        finally
+        {
+            try { tempDir.Delete(recursive: true); } catch { }
+        }
+    }
+
+    [Fact]
+    public void DuplicateCommand_RequiresRefresh()
+    {
+        var command = new DuplicateCommand();
+        Assert.True(command.RequiresRefresh);
+    }
+
+    [Fact]
+    public void NewDirectoryCommand_RequiresRefresh()
+    {
+        var command = new NewDirectoryCommand();
+        Assert.True(command.RequiresRefresh);
     }
 }
 

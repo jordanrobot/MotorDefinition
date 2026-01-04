@@ -12,6 +12,8 @@ public class NewDirectoryCommand : IDirectoryBrowserCommand
 {
     public string DisplayName => "New Directory";
 
+    public bool RequiresRefresh => true;
+
     public bool CanExecute(string path, bool isDirectory)
     {
         if (string.IsNullOrWhiteSpace(path))

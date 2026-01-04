@@ -69,6 +69,11 @@ public partial class DirectoryBrowserViewModel : ObservableObject
     /// </summary>
     public event Func<string, Task>? FileOpenRequested;
 
+    /// <summary>
+    /// Callback to request confirmation from the user. Returns true if confirmed, false if cancelled.
+    /// </summary>
+    public Func<string, string, Task<bool>>? RequestConfirmation { get; set; }
+
     public enum RestoreResult
     {
         NoSession,
@@ -1051,7 +1056,27 @@ public partial class DirectoryBrowserViewModel : ObservableObject
             return;
         }
 
+        // Request confirmation if required
+        if (command.RequiresConfirmation)
+        {
+            var confirmationMessage = command.GetConfirmationMessage(path, isDirectory);
+            if (!string.IsNullOrWhiteSpace(confirmationMessage) && RequestConfirmation is not null)
+            {
+                var confirmed = await RequestConfirmation("Confirm Action", confirmationMessage).ConfigureAwait(false);
+                if (!confirmed)
+                {
+                    return;
+                }
+            }
+        }
+
         await command.ExecuteAsync(path, isDirectory).ConfigureAwait(false);
+
+        // Refresh if the command modified the file system
+        if (command.RequiresRefresh)
+        {
+            await RefreshInternalAsync().ConfigureAwait(false);
+        }
     }
 
     protected virtual async Task InvokeOnUiAsync(Action action)
