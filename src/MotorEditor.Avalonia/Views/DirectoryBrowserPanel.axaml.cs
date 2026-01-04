@@ -46,14 +46,13 @@ public partial class DirectoryBrowserPanel : UserControl
                 CancelRename(textBox);
                 e.Handled = true;
             }
-            // Don't handle arrow keys - let TextBox process them for cursor movement
-            // This prevents tree navigation during rename
+            // Arrow keys are not handled - TextBox will process them for cursor movement
         }
     }
 
     private void OnExplorerTreeKeyDown(object? sender, KeyEventArgs e)
     {
-        // Block tree navigation shortcuts when rename is active
+        // Block tree navigation shortcuts during rename to prevent conflicts
         if (_activeRenameTextBox is not null)
         {
             return;
@@ -140,7 +139,7 @@ public partial class DirectoryBrowserPanel : UserControl
 
     /// <summary>
     /// Called when a rename TextBox is attached to the visual tree.
-    /// This ensures the TextBox is focused and all text is selected when rename starts.
+    /// Sets up event handlers and focuses the TextBox with text selected.
     /// </summary>
     private void OnRenameTextBoxAttached(object? sender, VisualTreeAttachmentEventArgs e)
     {
@@ -151,32 +150,60 @@ public partial class DirectoryBrowserPanel : UserControl
 
         _activeRenameTextBox = textBox;
 
+        // Subscribe to LostFocus to auto-complete rename when clicking elsewhere
+        textBox.LostFocus += OnRenameTextBoxLostFocus;
+        
+        // Subscribe to DetachedFromVisualTree to clean up
+        textBox.DetachedFromVisualTree += OnRenameTextBoxDetached;
+
         // Focus the TextBox and select all text
         textBox.Focus();
         textBox.SelectAll();
     }
 
-    private void OnExplorerTreePointerPressed(object? sender, PointerPressedEventArgs e)
+    /// <summary>
+    /// Called when the rename TextBox loses focus.
+    /// Completes the rename operation.
+    /// </summary>
+    private void OnRenameTextBoxLostFocus(object? sender, RoutedEventArgs e)
     {
-        // If we're renaming and the click is outside the TextBox, complete the rename first
-        if (_activeRenameTextBox is not null)
+        if (sender is not TextBox textBox)
         {
-            var clickedElement = e.Source as Visual;
-            var isInsideTextBox = clickedElement == _activeRenameTextBox || 
-                                  (clickedElement?.GetVisualAncestors().Contains(_activeRenameTextBox) ?? false);
-            
-            if (!isInsideTextBox)
-            {
-                CompleteRename(_activeRenameTextBox);
-                // Don't mark as handled - let the click propagate for normal tree interaction
-            }
-            else
-            {
-                // Click is inside the TextBox, don't process tree click
-                return;
-            }
+            return;
         }
 
+        // Unsubscribe from events
+        textBox.LostFocus -= OnRenameTextBoxLostFocus;
+        textBox.DetachedFromVisualTree -= OnRenameTextBoxDetached;
+
+        // Complete the rename
+        CompleteRename(textBox);
+    }
+
+    /// <summary>
+    /// Called when the rename TextBox is detached from the visual tree.
+    /// Cleans up event handlers and state.
+    /// </summary>
+    private void OnRenameTextBoxDetached(object? sender, VisualTreeAttachmentEventArgs e)
+    {
+        if (sender is not TextBox textBox)
+        {
+            return;
+        }
+
+        // Unsubscribe from events
+        textBox.LostFocus -= OnRenameTextBoxLostFocus;
+        textBox.DetachedFromVisualTree -= OnRenameTextBoxDetached;
+
+        // Clear the active reference
+        if (_activeRenameTextBox == textBox)
+        {
+            _activeRenameTextBox = null;
+        }
+    }
+
+    private void OnExplorerTreePointerPressed(object? sender, PointerPressedEventArgs e)
+    {
         // Let the built-in expander caret handle its own clicks.
         if (IsWithinExpander(e.Source as Visual))
         {
