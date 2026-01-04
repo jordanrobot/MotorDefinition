@@ -4,18 +4,30 @@
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:vm="using:CurveEditor.ViewModels"
              xmlns:lvc="using:LiveChartsCore.SkiaSharpView.Avalonia"
+             xmlns:converters="using:CurveEditor.Converters"
              mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="500"
              x:Class="CurveEditor.Views.ChartView"
              x:DataType="vm:ChartViewModel">
+    
+    <UserControl.Resources>
+        <converters:SKColorToAvaloniaBrushConverter x:Key="ColorConverter"/>
+        <converters:BooleanToDashArrayConverter x:Key="DashArrayConverter"/>
+    </UserControl.Resources>
     
     <Design.DataContext>
         <vm:ChartViewModel/>
     </Design.DataContext>
     
     <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+        
         <!-- Chart -->
         <lvc:CartesianChart
             x:Name="TorqueChart"
+            Grid.Row="0"
             Series="{Binding Series}"
             XAxes="{Binding XAxes}"
             YAxes="{Binding YAxes}"
@@ -44,12 +56,74 @@
         
         <!-- Title Overlay -->
         <TextBlock Text="{Binding Title}"
+                   Grid.Row="0"
                    FontSize="16"
                    FontWeight="SemiBold"
                    Foreground="Gray"
                    HorizontalAlignment="Center"
                    VerticalAlignment="Top"
-                   Margin="0,10,0,0"
+                   Margin="0,20,0,0"
                    IsHitTestVisible="False"/>
+        
+        <!-- Legend -->
+        <ItemsControl ItemsSource="{Binding LegendItems}"
+                      Grid.Row="1"
+                      Margin="10,5,10,10">
+            <ItemsControl.ItemsPanel>
+                <ItemsPanelTemplate>
+                    <WrapPanel HorizontalAlignment="Center" Orientation="Horizontal"/>
+                </ItemsPanelTemplate>
+            </ItemsControl.ItemsPanel>
+            <ItemsControl.ItemTemplate>
+                <DataTemplate x:DataType="vm:LegendItem">
+                    <StackPanel Orientation="Horizontal" Margin="10,2">
+                        <!-- Legend line indicator -->
+                        <Canvas Width="30" Height="16" VerticalAlignment="Center">
+                            <!-- Solid line (for non-dashed, non-dotted torque curves) -->
+                            <Rectangle Canvas.Left="0" Canvas.Top="7" Width="30" Height="2"
+                                      Fill="{Binding Color, Converter={StaticResource ColorConverter}}">
+                                <Rectangle.IsVisible>
+                                    <MultiBinding Converter="{x:Static BoolConverters.And}">
+                                        <Binding Path="!IsDashed"/>
+                                        <Binding Path="!IsDotted"/>
+                                    </MultiBinding>
+                                </Rectangle.IsVisible>
+                            </Rectangle>
+                            <!-- Dashed line (for reference lines like Motor Rated Speed, Voltage Max Speed, Brake Torque) -->
+                            <Rectangle Canvas.Left="0" Canvas.Top="7" Width="8" Height="2"
+                                      Fill="{Binding Color, Converter={StaticResource ColorConverter}}"
+                                      IsVisible="{Binding IsDashed}"/>
+                            <Rectangle Canvas.Left="12" Canvas.Top="7" Width="8" Height="2"
+                                      Fill="{Binding Color, Converter={StaticResource ColorConverter}}"
+                                      IsVisible="{Binding IsDashed}"/>
+                            <Rectangle Canvas.Left="24" Canvas.Top="7" Width="6" Height="2"
+                                      Fill="{Binding Color, Converter={StaticResource ColorConverter}}"
+                                      IsVisible="{Binding IsDashed}"/>
+                            <!-- Dotted line (for power curves) -->
+                            <Rectangle Canvas.Left="0" Canvas.Top="7" Width="3" Height="2"
+                                      Fill="{Binding Color, Converter={StaticResource ColorConverter}}"
+                                      IsVisible="{Binding IsDotted}"/>
+                            <Rectangle Canvas.Left="6" Canvas.Top="7" Width="3" Height="2"
+                                      Fill="{Binding Color, Converter={StaticResource ColorConverter}}"
+                                      IsVisible="{Binding IsDotted}"/>
+                            <Rectangle Canvas.Left="12" Canvas.Top="7" Width="3" Height="2"
+                                      Fill="{Binding Color, Converter={StaticResource ColorConverter}}"
+                                      IsVisible="{Binding IsDotted}"/>
+                            <Rectangle Canvas.Left="18" Canvas.Top="7" Width="3" Height="2"
+                                      Fill="{Binding Color, Converter={StaticResource ColorConverter}}"
+                                      IsVisible="{Binding IsDotted}"/>
+                            <Rectangle Canvas.Left="24" Canvas.Top="7" Width="3" Height="2"
+                                      Fill="{Binding Color, Converter={StaticResource ColorConverter}}"
+                                      IsVisible="{Binding IsDotted}"/>
+                        </Canvas>
+                        <!-- Legend text -->
+                        <TextBlock Text="{Binding Name}"
+                                   FontSize="12"
+                                   VerticalAlignment="Center"
+                                   Margin="5,0,0,0"/>
+                    </StackPanel>
+                </DataTemplate>
+            </ItemsControl.ItemTemplate>
+        </ItemsControl>
     </Grid>
 </UserControl>
