@@ -356,18 +356,6 @@ public partial class MainWindowViewModel : ViewModelBase
     /// Gets the observable list of recent folder paths, ordered from most recent to oldest.
     /// </summary>
     public ReadOnlyObservableCollection<string> RecentFolders => _recentFoldersService.RecentFolders;
-    
-    /// <summary>
-    /// Test property for debugging - returns a hard-coded collection
-    /// </summary>
-    public ReadOnlyObservableCollection<string> TestFolders
-    {
-        get
-        {
-            var test = new ObservableCollection<string> { "C:\\Test1", "C:\\Test2", "C:\\Test3" };
-            return new ReadOnlyObservableCollection<string>(test);
-        }
-    }
 
     /// <summary>
     /// Current file path (delegates to active tab).
