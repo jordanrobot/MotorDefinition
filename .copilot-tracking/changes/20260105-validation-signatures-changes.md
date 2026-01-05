@@ -14,6 +14,8 @@ Tracking implementation of validation signature checks and edit locking in Motor
 
 - .copilot-tracking/plans/20260105-validation-signatures-plan.md - Plan covering validation signature lock scope and tasks.
 - .copilot-tracking/details/20260105-validation-signatures-details.md - Task-level requirements for signature verification and edit locking.
+- samples/motor-with-signatures.json - Sample motor file with valid motor/drive/curve signatures for UI validation.
+- samples/motor-without-signatures.json - Sample motor file without signatures for editing scenarios.
 
 ### Modified
 
@@ -28,12 +30,14 @@ Tracking implementation of validation signature checks and edit locking in Motor
 
 ## Release Summary
 
-**Total Files Affected**: 6
+**Total Files Affected**: 8
 
-### Files Created (2)
+### Files Created (4)
 
 - .copilot-tracking/plans/20260105-validation-signatures-plan.md - Plan for validation signature locking.
 - .copilot-tracking/details/20260105-validation-signatures-details.md - Detailed steps for tasks in the plan.
+- samples/motor-with-signatures.json - Signed sample motor file.
+- samples/motor-without-signatures.json - Unsigned sample motor file.
 
 ### Files Modified (4)
 
