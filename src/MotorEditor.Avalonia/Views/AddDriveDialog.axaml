@@ -47,8 +47,8 @@
         
         <!-- Buttons -->
         <StackPanel Grid.Row="1" Orientation="Horizontal" HorizontalAlignment="Right" Spacing="8" Margin="0,16,0,0">
-            <Button Content="Cancel" Width="80" Click="OnCancelClick" HorizontalContentAlignment="Center"/>
-            <Button Content="Add" Width="80" Classes="accent" Click="OnAddClick" HorizontalContentAlignment="Center"/>
+            <Button Content="Cancel" Width="80" Click="OnCancelClick"/>
+            <Button Content="Add" Width="80" Classes="accent" Click="OnAddClick"/>
         </StackPanel>
     </Grid>
 </Window>

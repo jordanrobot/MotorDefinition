@@ -73,4 +73,10 @@
       </ResourceDictionary.ThemeDictionaries>
     </ResourceDictionary>
   </Styles.Resources>
+
+  <!-- Global Button style to center text content -->
+  <Style Selector="Button">
+    <Setter Property="HorizontalContentAlignment" Value="Center"/>
+    <Setter Property="VerticalContentAlignment" Value="Center"/>
+  </Style>
 </Styles>
