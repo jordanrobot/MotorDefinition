@@ -7,6 +7,7 @@ using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using CurveEditor.Services;
 using JordanRobot.MotorDefinition.Model;
+using JordanRobot.MotorDefinition.Services;
 using MotorEditor.Avalonia.Models;
 using Serilog;
 using System;
@@ -34,6 +35,7 @@ public partial class MainWindowViewModel : ViewModelBase
     private readonly IFileService _fileService;
     private readonly ICurveGeneratorService _curveGeneratorService;
     private readonly IValidationService _validationService;
+    private readonly IDataIntegrityService _dataIntegrityService;
     private readonly IDriveVoltageSeriesService _driveVoltageSeriesService;
     private readonly IMotorConfigurationWorkflow _motorConfigurationWorkflow;
     private readonly IUserSettingsStore _settingsStore;
@@ -41,6 +43,9 @@ public partial class MainWindowViewModel : ViewModelBase
     private readonly UnitPreferencesService _unitPreferencesService;
     private readonly IRecentFilesService _recentFilesService;
     private readonly IUserPreferencesService _userPreferencesService;
+    private bool _motorSignatureValid;
+    private readonly Dictionary<Drive, bool> _driveSignatureValidity = new();
+    private readonly Dictionary<Curve, bool> _curveSignatureValidity = new();
 
     // Track previous units for conversion
     private string? _previousTorqueUnit;
@@ -132,6 +137,46 @@ public partial class MainWindowViewModel : ViewModelBase
             }
         }
     }
+
+    /// <summary>
+    /// Indicates whether the current motor has a valid validation signature.
+    /// </summary>
+    public bool HasValidMotorSignature => _motorSignatureValid;
+
+    /// <summary>
+    /// Whether motor properties are editable (blocked when a valid motor signature exists).
+    /// </summary>
+    public bool CanEditMotorProperties => !_motorSignatureValid;
+
+    /// <summary>
+    /// Indicates whether the currently selected drive has a valid validation signature.
+    /// </summary>
+    public bool SelectedDriveHasValidSignature =>
+        SelectedDrive is not null &&
+        _driveSignatureValidity.TryGetValue(SelectedDrive, out var valid) &&
+        valid;
+
+    /// <summary>
+    /// Whether drive and voltage properties are editable for the selected drive.
+    /// </summary>
+    public bool CanEditSelectedDriveAndVoltages =>
+        SelectedDrive is not null &&
+        (!_driveSignatureValidity.TryGetValue(SelectedDrive, out var valid) || !valid);
+
+    /// <summary>
+    /// Indicates whether the currently selected series has a valid validation signature.
+    /// </summary>
+    public bool SelectedSeriesHasValidSignature =>
+        SelectedSeries is not null &&
+        _curveSignatureValidity.TryGetValue(SelectedSeries, out var valid) &&
+        valid;
+
+    /// <summary>
+    /// Whether the selected curve series is editable.
+    /// </summary>
+    public bool CanEditSelectedSeries =>
+        SelectedSeries is not null &&
+        (!_curveSignatureValidity.TryGetValue(SelectedSeries, out var valid) || !valid);
 
     /// <summary>
     /// Whether the current document has unsaved changes (delegates to active tab).
@@ -308,6 +353,108 @@ public partial class MainWindowViewModel : ViewModelBase
         {
             OnPropertyChanged(nameof(SelectedSeries));
         }
+
+        RaiseValidationLockPropertiesChanged();
+    }
+
+    private void RefreshValidationLockState()
+    {
+        _motorSignatureValid = false;
+        _driveSignatureValidity.Clear();
+        _curveSignatureValidity.Clear();
+
+        var motor = CurrentMotor;
+        if (motor is not null)
+        {
+            if (motor.MotorSignature is not null && motor.MotorSignature.IsValid())
+            {
+                _motorSignatureValid = _dataIntegrityService.VerifyMotorProperties(motor);
+            }
+
+            foreach (var drive in motor.Drives)
+            {
+                var driveValid = drive.DriveSignature is not null &&
+                                 drive.DriveSignature.IsValid() &&
+                                 _dataIntegrityService.VerifyDrive(drive);
+                _driveSignatureValidity[drive] = driveValid;
+
+                foreach (var voltage in drive.Voltages)
+                {
+                    foreach (var curve in voltage.Curves)
+                    {
+                        var curveValid = curve.CurveSignature is not null &&
+                                         curve.CurveSignature.IsValid() &&
+                                         _dataIntegrityService.VerifyCurve(curve);
+                        _curveSignatureValidity[curve] = curveValid;
+                    }
+                }
+            }
+        }
+
+        if (CurveDataTableViewModel is not null)
+        {
+            var locked = _curveSignatureValidity
+                .Where(kvp => kvp.Value)
+                .Select(kvp => kvp.Key)
+                .ToArray();
+            CurveDataTableViewModel.SignatureLockedSeries = locked;
+        }
+
+        RaiseValidationLockPropertiesChanged();
+    }
+
+    private void RaiseValidationLockPropertiesChanged()
+    {
+        OnPropertyChanged(nameof(HasValidMotorSignature));
+        OnPropertyChanged(nameof(CanEditMotorProperties));
+        OnPropertyChanged(nameof(SelectedDriveHasValidSignature));
+        OnPropertyChanged(nameof(CanEditSelectedDriveAndVoltages));
+        OnPropertyChanged(nameof(SelectedSeriesHasValidSignature));
+        OnPropertyChanged(nameof(CanEditSelectedSeries));
+    }
+
+    private bool EnsureMotorEditingAllowed()
+    {
+        if (_motorSignatureValid)
+        {
+            StatusMessage = "Motor properties are locked by a validation signature.";
+            return false;
+        }
+
+        return true;
+    }
+
+    private bool EnsureDriveEditingAllowed()
+    {
+        if (!CanEditSelectedDriveAndVoltages)
+        {
+            StatusMessage = "Drive properties are locked by a validation signature.";
+            return false;
+        }
+
+        return true;
+    }
+
+    private bool IsDriveLockedBySignature(Drive drive)
+        => _driveSignatureValidity.TryGetValue(drive, out var valid) && valid;
+
+    internal bool IsSeriesLockedBySignature(Curve series)
+        => _curveSignatureValidity.TryGetValue(series, out var valid) && valid;
+
+    internal bool EnsureSeriesEditingAllowed(Curve? series)
+    {
+        if (series is null)
+        {
+            return false;
+        }
+
+        if (IsSeriesLockedBySignature(series))
+        {
+            StatusMessage = $"Series '{series.Name}' is locked by a validation signature.";
+            return false;
+        }
+
+        return true;
     }
 
     /// <summary>
@@ -852,6 +999,7 @@ public partial class MainWindowViewModel : ViewModelBase
         _curveGeneratorService = new CurveGeneratorService();
         _fileService = new FileService(_curveGeneratorService);
         _validationService = new ValidationService();
+        _dataIntegrityService = new DataIntegrityService();
         _driveVoltageSeriesService = new DriveVoltageSeriesService();
         var chartViewModel = new ChartViewModel();
         var curveDataTableViewModel = new CurveDataTableViewModel();
@@ -905,6 +1053,7 @@ public partial class MainWindowViewModel : ViewModelBase
         _curveGeneratorService = new CurveGeneratorService();
         _fileService = new FileService(_curveGeneratorService);
         _validationService = new ValidationService();
+        _dataIntegrityService = new DataIntegrityService();
         _driveVoltageSeriesService = new DriveVoltageSeriesService();
         var chartViewModel = new ChartViewModel();
         var curveDataTableViewModel = new CurveDataTableViewModel();
@@ -946,6 +1095,7 @@ public partial class MainWindowViewModel : ViewModelBase
         _fileService = fileService ?? throw new ArgumentNullException(nameof(fileService));
         _curveGeneratorService = curveGeneratorService ?? throw new ArgumentNullException(nameof(curveGeneratorService));
         _validationService = new ValidationService();
+        _dataIntegrityService = new DataIntegrityService();
         _driveVoltageSeriesService = new DriveVoltageSeriesService();
         var chartViewModel = new ChartViewModel();
         var curveDataTableViewModel = new CurveDataTableViewModel();
@@ -997,11 +1147,13 @@ public partial class MainWindowViewModel : ViewModelBase
         ChartViewModel chartViewModel,
         CurveDataTableViewModel curveDataTableViewModel,
         IUserSettingsStore? settingsStore = null,
-        Func<string, Task<UnsavedChangesChoice>>? unsavedChangesPromptAsync = null)
+        Func<string, Task<UnsavedChangesChoice>>? unsavedChangesPromptAsync = null,
+        IDataIntegrityService? dataIntegrityService = null)
     {
         _fileService = fileService ?? throw new ArgumentNullException(nameof(fileService));
         _curveGeneratorService = curveGeneratorService ?? throw new ArgumentNullException(nameof(curveGeneratorService));
         _validationService = validationService ?? throw new ArgumentNullException(nameof(validationService));
+        _dataIntegrityService = dataIntegrityService ?? new DataIntegrityService();
         _driveVoltageSeriesService = driveVoltageSeriesService ?? throw new ArgumentNullException(nameof(driveVoltageSeriesService));
         _motorConfigurationWorkflow = motorConfigurationWorkflow ?? throw new ArgumentNullException(nameof(motorConfigurationWorkflow));
         _settingsStore = settingsStore ?? new PanelLayoutUserSettingsStore();
@@ -1208,6 +1360,8 @@ public partial class MainWindowViewModel : ViewModelBase
             Log.Information("[INIT] Auto-selected drive: {SelectedDrive}", SelectedDrive?.Name);
         }
 
+        RefreshValidationLockState();
+
         Log.Information("[INIT] Tab.SelectedDrive AFTER auto-select: {SelectedDrive}", ActiveTab?.SelectedDrive?.Name);
         Log.Information("[INIT] InitializeActiveTabWithMotor() - END");
     }
@@ -1263,6 +1417,8 @@ public partial class MainWindowViewModel : ViewModelBase
             OnPropertyChanged(nameof(SelectedDrive));
             OnPropertyChanged(nameof(SelectedVoltage));
             OnPropertyChanged(nameof(SelectedSeries));
+
+            RefreshValidationLockState();
 
             Log.Information(
                 "[TAB_CHANGE] Post-notify snapshot: AvailableDrives={AvailableDrives} AvailableVoltages={AvailableVoltages} AvailableSeries={AvailableSeries} SelectedDrive={SelectedDrive} SelectedVoltage={SelectedVoltage}",
@@ -1669,6 +1825,11 @@ public partial class MainWindowViewModel : ViewModelBase
             return;
         }
 
+        if (!EnsureMotorEditingAllowed())
+        {
+            return;
+        }
+
         var oldName = CurrentMotor.MotorName ?? string.Empty;
         var newNameValue = newName ?? string.Empty;
 
@@ -1695,6 +1856,11 @@ public partial class MainWindowViewModel : ViewModelBase
             return;
         }
 
+        if (!EnsureMotorEditingAllowed())
+        {
+            return;
+        }
+
         var oldManufacturer = CurrentMotor.Manufacturer ?? string.Empty;
         var newManufacturerValue = newManufacturer ?? string.Empty;
 
@@ -1715,6 +1881,11 @@ public partial class MainWindowViewModel : ViewModelBase
     public void EditMotorMaxSpeed()
     {
         if (CurrentMotor is null)
+        {
+            return;
+        }
+
+        if (!EnsureMotorEditingAllowed())
         {
             return;
         }
@@ -1745,6 +1916,11 @@ public partial class MainWindowViewModel : ViewModelBase
     public void EditMotorPartNumber(string newPartNumber)
     {
         if (CurrentMotor is null)
+        {
+            return;
+        }
+
+        if (!EnsureMotorEditingAllowed())
         {
             return;
         }
@@ -1841,6 +2017,11 @@ public partial class MainWindowViewModel : ViewModelBase
             return;
         }
 
+        if (!EnsureDriveEditingAllowed())
+        {
+            return;
+        }
+
         var oldValue = SelectedDrive.Name ?? string.Empty;
         var newValue = DriveNameEditor ?? string.Empty;
 
@@ -1858,6 +2039,11 @@ public partial class MainWindowViewModel : ViewModelBase
     public void EditDrivePartNumber()
     {
         if (SelectedDrive is null)
+        {
+            return;
+        }
+
+        if (!EnsureDriveEditingAllowed())
         {
             return;
         }
@@ -1883,6 +2069,11 @@ public partial class MainWindowViewModel : ViewModelBase
             return;
         }
 
+        if (!EnsureDriveEditingAllowed())
+        {
+            return;
+        }
+
         var oldValue = SelectedDrive.Manufacturer ?? string.Empty;
         var newValue = DriveManufacturerEditor ?? string.Empty;
 
@@ -1900,6 +2091,11 @@ public partial class MainWindowViewModel : ViewModelBase
     public void EditSelectedVoltageValue()
     {
         if (SelectedVoltage is null)
+        {
+            return;
+        }
+
+        if (!EnsureDriveEditingAllowed())
         {
             return;
         }
@@ -1932,6 +2128,11 @@ public partial class MainWindowViewModel : ViewModelBase
             return;
         }
 
+        if (!EnsureDriveEditingAllowed())
+        {
+            return;
+        }
+
         var oldValue = SelectedVoltage.Power;
         if (!TryParseDouble(VoltagePowerEditor, oldValue, out var newValue))
         {
@@ -1956,6 +2157,11 @@ public partial class MainWindowViewModel : ViewModelBase
     public void EditSelectedVoltageMaxSpeed()
     {
         if (SelectedVoltage is null)
+        {
+            return;
+        }
+
+        if (!EnsureDriveEditingAllowed())
         {
             return;
         }
@@ -1988,6 +2194,11 @@ public partial class MainWindowViewModel : ViewModelBase
             return;
         }
 
+        if (!EnsureDriveEditingAllowed())
+        {
+            return;
+        }
+
         var oldValue = SelectedVoltage.RatedPeakTorque;
         if (!TryParseDouble(VoltagePeakTorqueEditor, oldValue, out var newValue))
         {
@@ -2012,6 +2223,11 @@ public partial class MainWindowViewModel : ViewModelBase
     public void EditSelectedVoltageContinuousTorque()
     {
         if (SelectedVoltage is null)
+        {
+            return;
+        }
+
+        if (!EnsureDriveEditingAllowed())
         {
             return;
         }
@@ -2044,6 +2260,11 @@ public partial class MainWindowViewModel : ViewModelBase
             return;
         }
 
+        if (!EnsureDriveEditingAllowed())
+        {
+            return;
+        }
+
         var oldValue = SelectedVoltage.ContinuousAmperage;
         if (!TryParseDouble(VoltageContinuousAmpsEditor, oldValue, out var newValue))
         {
@@ -2068,6 +2289,11 @@ public partial class MainWindowViewModel : ViewModelBase
     public void EditSelectedVoltagePeakAmps()
     {
         if (SelectedVoltage is null)
+        {
+            return;
+        }
+
+        if (!EnsureDriveEditingAllowed())
         {
             return;
         }
@@ -2100,6 +2326,11 @@ public partial class MainWindowViewModel : ViewModelBase
             return;
         }
 
+        if (!EnsureMotorEditingAllowed())
+        {
+            return;
+        }
+
         var oldValue = CurrentMotor.RatedSpeed;
         if (!TryParseDouble(RatedSpeedEditor, oldValue, out var newValue))
         {
@@ -2122,6 +2353,11 @@ public partial class MainWindowViewModel : ViewModelBase
     public void EditMotorRatedPeakTorque()
     {
         if (CurrentMotor is null)
+        {
+            return;
+        }
+
+        if (!EnsureMotorEditingAllowed())
         {
             return;
         }
@@ -2151,6 +2387,11 @@ public partial class MainWindowViewModel : ViewModelBase
             return;
         }
 
+        if (!EnsureMotorEditingAllowed())
+        {
+            return;
+        }
+
         var oldValue = CurrentMotor.RatedContinuousTorque;
         if (!TryParseDouble(RatedContinuousTorqueEditor, oldValue, out var newValue))
         {
@@ -2172,6 +2413,11 @@ public partial class MainWindowViewModel : ViewModelBase
     public void EditMotorPower()
     {
         if (CurrentMotor is null)
+        {
+            return;
+        }
+
+        if (!EnsureMotorEditingAllowed())
         {
             return;
         }
@@ -2201,6 +2447,11 @@ public partial class MainWindowViewModel : ViewModelBase
             return;
         }
 
+        if (!EnsureMotorEditingAllowed())
+        {
+            return;
+        }
+
         var oldValue = CurrentMotor.Weight;
         if (!TryParseDouble(WeightEditor, oldValue, out var newValue))
         {
@@ -2222,6 +2473,11 @@ public partial class MainWindowViewModel : ViewModelBase
     public void EditMotorRotorInertia()
     {
         if (CurrentMotor is null)
+        {
+            return;
+        }
+
+        if (!EnsureMotorEditingAllowed())
         {
             return;
         }
@@ -2251,6 +2507,11 @@ public partial class MainWindowViewModel : ViewModelBase
             return;
         }
 
+        if (!EnsureMotorEditingAllowed())
+        {
+            return;
+        }
+
         var oldValue = CurrentMotor.FeedbackPpr;
         if (!int.TryParse(FeedbackPprEditor, out var newValue))
         {
@@ -2276,6 +2537,11 @@ public partial class MainWindowViewModel : ViewModelBase
             return;
         }
 
+        if (!EnsureMotorEditingAllowed())
+        {
+            return;
+        }
+
         var oldValue = CurrentMotor.HasBrake;
         var newValue = HasBrakeEditor;
 
@@ -2294,6 +2560,11 @@ public partial class MainWindowViewModel : ViewModelBase
     public void EditMotorBrakeTorque()
     {
         if (CurrentMotor is null)
+        {
+            return;
+        }
+
+        if (!EnsureMotorEditingAllowed())
         {
             return;
         }
@@ -2324,6 +2595,11 @@ public partial class MainWindowViewModel : ViewModelBase
             return;
         }
 
+        if (!EnsureMotorEditingAllowed())
+        {
+            return;
+        }
+
         var oldValue = CurrentMotor.BrakeAmperage;
         if (!TryParseDouble(BrakeAmperageEditor, oldValue, out var newValue))
         {
@@ -2345,6 +2621,11 @@ public partial class MainWindowViewModel : ViewModelBase
     public void EditMotorBrakeVoltage()
     {
         if (CurrentMotor is null)
+        {
+            return;
+        }
+
+        if (!EnsureMotorEditingAllowed())
         {
             return;
         }
@@ -2374,6 +2655,11 @@ public partial class MainWindowViewModel : ViewModelBase
             return;
         }
 
+        if (!EnsureMotorEditingAllowed())
+        {
+            return;
+        }
+
         var oldValue = CurrentMotor.BrakeReleaseTime;
         if (!TryParseDouble(BrakeReleaseTimeEditor, oldValue, out var newValue))
         {
@@ -2395,6 +2681,11 @@ public partial class MainWindowViewModel : ViewModelBase
     public void EditMotorBrakeEngageTimeMov()
     {
         if (CurrentMotor is null)
+        {
+            return;
+        }
+
+        if (!EnsureMotorEditingAllowed())
         {
             return;
         }
@@ -2424,6 +2715,11 @@ public partial class MainWindowViewModel : ViewModelBase
             return;
         }
 
+        if (!EnsureMotorEditingAllowed())
+        {
+            return;
+        }
+
         var oldValue = CurrentMotor.BrakeEngageTimeDiode;
         if (!TryParseDouble(BrakeEngageTimeDiodeEditor, oldValue, out var newValue))
         {
@@ -2445,6 +2741,11 @@ public partial class MainWindowViewModel : ViewModelBase
     public void EditMotorBrakeBacklash()
     {
         if (CurrentMotor is null)
+        {
+            return;
+        }
+
+        if (!EnsureMotorEditingAllowed())
         {
             return;
         }
@@ -2637,6 +2938,8 @@ public partial class MainWindowViewModel : ViewModelBase
             VoltagePeakAmpsEditor = SelectedVoltage?.PeakAmperage.ToString(System.Globalization.CultureInfo.InvariantCulture) ?? string.Empty;
         }
 
+        RefreshValidationLockState();
+
         // Populate ValidationErrors/ValidationErrorsList immediately when switching or loading motors.
         // Without this, errors only show up after an edit (MarkDirty) or manual refresh.
         ValidateMotor();
@@ -2760,6 +3063,11 @@ public partial class MainWindowViewModel : ViewModelBase
     private void OnUnitsPropertyChanged(object? sender, System.ComponentModel.PropertyChangedEventArgs e)
     {
         if (CurrentMotor == null || CurrentMotor.Units == null)
+        {
+            return;
+        }
+
+        if (!EnsureMotorEditingAllowed())
         {
             return;
         }
@@ -3349,6 +3657,11 @@ public partial class MainWindowViewModel : ViewModelBase
     {
         if (CurrentMotor is null || SelectedDrive is null) return;
 
+        if (!EnsureDriveEditingAllowed())
+        {
+            return;
+        }
+
         // Show confirmation dialog
         var dialog = new Views.MessageDialog
         {
@@ -3401,6 +3714,11 @@ public partial class MainWindowViewModel : ViewModelBase
     private async Task RemoveVoltageAsync()
     {
         if (SelectedDrive is null || SelectedVoltage is null) return;
+
+        if (!EnsureDriveEditingAllowed())
+        {
+            return;
+        }
 
         // Show confirmation dialog
         var dialog = new Views.MessageDialog
@@ -3537,6 +3855,12 @@ public partial class MainWindowViewModel : ViewModelBase
             // The target drive is selected in the dialog
             var targetDrive = result.TargetDrive;
 
+            if (IsDriveLockedBySignature(targetDrive))
+            {
+                StatusMessage = $"Drive '{targetDrive.Name}' is locked by a validation signature.";
+                return;
+            }
+
             // Delegate duplicate check and creation to the workflow
             var voltageResult = _motorConfigurationWorkflow.CreateVoltageWithOptionalSeries(targetDrive, result);
             if (voltageResult.IsDuplicate)
@@ -3637,6 +3961,11 @@ public partial class MainWindowViewModel : ViewModelBase
     {
         if (SelectedVoltage is null || SelectedSeries is null) return;
 
+        if (!EnsureSeriesEditingAllowed(SelectedSeries))
+        {
+            return;
+        }
+
         // Show confirmation dialog
         var dialog = new Views.MessageDialog
         {
@@ -3677,6 +4006,11 @@ public partial class MainWindowViewModel : ViewModelBase
     private void ToggleSeriesLock(Curve? series)
     {
         if (series is null)
+        {
+            return;
+        }
+
+        if (!EnsureSeriesEditingAllowed(series))
         {
             return;
         }

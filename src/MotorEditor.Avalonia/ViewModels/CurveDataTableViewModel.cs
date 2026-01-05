@@ -125,6 +125,7 @@ public partial class CurveDataTableViewModel : ViewModelBase
 {
     private Voltage? _currentVoltage;
     private CellPosition? _anchorCell;
+    private ISet<Curve> _signatureLockedSeries = new HashSet<Curve>();
 
     [ObservableProperty]
     private ObservableCollection<CurveDataRow> _rows = [];
@@ -223,6 +224,19 @@ public partial class CurveDataTableViewModel : ViewModelBase
             if (_currentVoltage == value) return;
             _currentVoltage = value;
             OnPropertyChanged();
+            RefreshData();
+        }
+    }
+
+    /// <summary>
+    /// Gets or sets the set of series that are locked due to validation signatures.
+    /// </summary>
+    public IEnumerable<Curve> SignatureLockedSeries
+    {
+        get => _signatureLockedSeries;
+        set
+        {
+            _signatureLockedSeries = new HashSet<Curve>(value ?? Enumerable.Empty<Curve>());
             RefreshData();
         }
     }
@@ -418,7 +432,8 @@ public partial class CurveDataTableViewModel : ViewModelBase
     public bool IsSeriesLocked(string seriesName)
     {
         var series = _currentVoltage?.Curves.FirstOrDefault(s => s.Name == seriesName);
-        return series?.Locked ?? false;
+        var isSignatureLocked = series is not null && _signatureLockedSeries.Contains(series);
+        return (series?.Locked ?? false) || isSignatureLocked;
     }
 
     /// <summary>
