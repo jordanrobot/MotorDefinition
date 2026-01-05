@@ -9,7 +9,7 @@
 
 ## Tasks
 
-- [ ] T1: Evaluate validation signatures on motor load and capture lock state for motor, drives, and curves.
+- [x] T1: Evaluate validation signatures on motor load and capture lock state for motor, drives, and curves.
 - [ ] T2: Enforce editing locks in UI/viewmodels based on signature validity for motor properties, drives/voltages, and curve series.
 - [ ] T3: Add or update tests covering validation signature detection and lock behavior.
 - [ ] T4: Update tracking changes file after each task and mark tasks complete.

@@ -7,6 +7,7 @@ using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using CurveEditor.Services;
 using JordanRobot.MotorDefinition.Model;
+using JordanRobot.MotorDefinition.Services;
 using MotorEditor.Avalonia.Models;
 using Serilog;
 using System;
@@ -34,6 +35,7 @@ public partial class MainWindowViewModel : ViewModelBase
     private readonly IFileService _fileService;
     private readonly ICurveGeneratorService _curveGeneratorService;
     private readonly IValidationService _validationService;
+    private readonly IDataIntegrityService _dataIntegrityService;
     private readonly IDriveVoltageSeriesService _driveVoltageSeriesService;
     private readonly IMotorConfigurationWorkflow _motorConfigurationWorkflow;
     private readonly IUserSettingsStore _settingsStore;
@@ -41,6 +43,9 @@ public partial class MainWindowViewModel : ViewModelBase
     private readonly UnitPreferencesService _unitPreferencesService;
     private readonly IRecentFilesService _recentFilesService;
     private readonly IUserPreferencesService _userPreferencesService;
+    private bool _motorSignatureValid;
+    private readonly Dictionary<Drive, bool> _driveSignatureValidity = new();
+    private readonly Dictionary<Curve, bool> _curveSignatureValidity = new();
 
     // Track previous units for conversion
     private string? _previousTorqueUnit;
@@ -132,6 +137,46 @@ public partial class MainWindowViewModel : ViewModelBase
             }
         }
     }
+
+    /// <summary>
+    /// Indicates whether the current motor has a valid validation signature.
+    /// </summary>
+    public bool HasValidMotorSignature => _motorSignatureValid;
+
+    /// <summary>
+    /// Whether motor properties are editable (blocked when a valid motor signature exists).
+    /// </summary>
+    public bool CanEditMotorProperties => !_motorSignatureValid;
+
+    /// <summary>
+    /// Indicates whether the currently selected drive has a valid validation signature.
+    /// </summary>
+    public bool SelectedDriveHasValidSignature =>
+        SelectedDrive is not null &&
+        _driveSignatureValidity.TryGetValue(SelectedDrive, out var valid) &&
+        valid;
+
+    /// <summary>
+    /// Whether drive and voltage properties are editable for the selected drive.
+    /// </summary>
+    public bool CanEditSelectedDriveAndVoltages =>
+        SelectedDrive is not null &&
+        (!_driveSignatureValidity.TryGetValue(SelectedDrive, out var valid) || !valid);
+
+    /// <summary>
+    /// Indicates whether the currently selected series has a valid validation signature.
+    /// </summary>
+    public bool SelectedSeriesHasValidSignature =>
+        SelectedSeries is not null &&
+        _curveSignatureValidity.TryGetValue(SelectedSeries, out var valid) &&
+        valid;
+
+    /// <summary>
+    /// Whether the selected curve series is editable.
+    /// </summary>
+    public bool CanEditSelectedSeries =>
+        SelectedSeries is not null &&
+        (!_curveSignatureValidity.TryGetValue(SelectedSeries, out var valid) || !valid);
 
     /// <summary>
     /// Whether the current document has unsaved changes (delegates to active tab).
@@ -308,6 +353,64 @@ public partial class MainWindowViewModel : ViewModelBase
         {
             OnPropertyChanged(nameof(SelectedSeries));
         }
+
+        RaiseValidationLockPropertiesChanged();
+    }
+
+    private void RefreshValidationLockState()
+    {
+        _motorSignatureValid = false;
+        _driveSignatureValidity.Clear();
+        _curveSignatureValidity.Clear();
+
+        var motor = CurrentMotor;
+        if (motor is not null)
+        {
+            if (motor.MotorSignature is not null && motor.MotorSignature.IsValid())
+            {
+                _motorSignatureValid = _dataIntegrityService.VerifyMotorProperties(motor);
+            }
+
+            foreach (var drive in motor.Drives)
+            {
+                var driveValid = drive.DriveSignature is not null &&
+                                 drive.DriveSignature.IsValid() &&
+                                 _dataIntegrityService.VerifyDrive(drive);
+                _driveSignatureValidity[drive] = driveValid;
+
+                foreach (var voltage in drive.Voltages)
+                {
+                    foreach (var curve in voltage.Curves)
+                    {
+                        var curveValid = curve.CurveSignature is not null &&
+                                         curve.CurveSignature.IsValid() &&
+                                         _dataIntegrityService.VerifyCurve(curve);
+                        _curveSignatureValidity[curve] = curveValid;
+                    }
+                }
+            }
+        }
+
+        if (CurveDataTableViewModel is not null)
+        {
+            var locked = _curveSignatureValidity
+                .Where(kvp => kvp.Value)
+                .Select(kvp => kvp.Key)
+                .ToArray();
+            CurveDataTableViewModel.SignatureLockedSeries = locked;
+        }
+
+        RaiseValidationLockPropertiesChanged();
+    }
+
+    private void RaiseValidationLockPropertiesChanged()
+    {
+        OnPropertyChanged(nameof(HasValidMotorSignature));
+        OnPropertyChanged(nameof(CanEditMotorProperties));
+        OnPropertyChanged(nameof(SelectedDriveHasValidSignature));
+        OnPropertyChanged(nameof(CanEditSelectedDriveAndVoltages));
+        OnPropertyChanged(nameof(SelectedSeriesHasValidSignature));
+        OnPropertyChanged(nameof(CanEditSelectedSeries));
     }
 
     /// <summary>
@@ -852,6 +955,7 @@ public partial class MainWindowViewModel : ViewModelBase
         _curveGeneratorService = new CurveGeneratorService();
         _fileService = new FileService(_curveGeneratorService);
         _validationService = new ValidationService();
+        _dataIntegrityService = new DataIntegrityService();
         _driveVoltageSeriesService = new DriveVoltageSeriesService();
         var chartViewModel = new ChartViewModel();
         var curveDataTableViewModel = new CurveDataTableViewModel();
@@ -905,6 +1009,7 @@ public partial class MainWindowViewModel : ViewModelBase
         _curveGeneratorService = new CurveGeneratorService();
         _fileService = new FileService(_curveGeneratorService);
         _validationService = new ValidationService();
+        _dataIntegrityService = new DataIntegrityService();
         _driveVoltageSeriesService = new DriveVoltageSeriesService();
         var chartViewModel = new ChartViewModel();
         var curveDataTableViewModel = new CurveDataTableViewModel();
@@ -946,6 +1051,7 @@ public partial class MainWindowViewModel : ViewModelBase
         _fileService = fileService ?? throw new ArgumentNullException(nameof(fileService));
         _curveGeneratorService = curveGeneratorService ?? throw new ArgumentNullException(nameof(curveGeneratorService));
         _validationService = new ValidationService();
+        _dataIntegrityService = new DataIntegrityService();
         _driveVoltageSeriesService = new DriveVoltageSeriesService();
         var chartViewModel = new ChartViewModel();
         var curveDataTableViewModel = new CurveDataTableViewModel();
@@ -997,11 +1103,13 @@ public partial class MainWindowViewModel : ViewModelBase
         ChartViewModel chartViewModel,
         CurveDataTableViewModel curveDataTableViewModel,
         IUserSettingsStore? settingsStore = null,
-        Func<string, Task<UnsavedChangesChoice>>? unsavedChangesPromptAsync = null)
+        Func<string, Task<UnsavedChangesChoice>>? unsavedChangesPromptAsync = null,
+        IDataIntegrityService? dataIntegrityService = null)
     {
         _fileService = fileService ?? throw new ArgumentNullException(nameof(fileService));
         _curveGeneratorService = curveGeneratorService ?? throw new ArgumentNullException(nameof(curveGeneratorService));
         _validationService = validationService ?? throw new ArgumentNullException(nameof(validationService));
+        _dataIntegrityService = dataIntegrityService ?? new DataIntegrityService();
         _driveVoltageSeriesService = driveVoltageSeriesService ?? throw new ArgumentNullException(nameof(driveVoltageSeriesService));
         _motorConfigurationWorkflow = motorConfigurationWorkflow ?? throw new ArgumentNullException(nameof(motorConfigurationWorkflow));
         _settingsStore = settingsStore ?? new PanelLayoutUserSettingsStore();
@@ -1208,6 +1316,8 @@ public partial class MainWindowViewModel : ViewModelBase
             Log.Information("[INIT] Auto-selected drive: {SelectedDrive}", SelectedDrive?.Name);
         }
 
+        RefreshValidationLockState();
+
         Log.Information("[INIT] Tab.SelectedDrive AFTER auto-select: {SelectedDrive}", ActiveTab?.SelectedDrive?.Name);
         Log.Information("[INIT] InitializeActiveTabWithMotor() - END");
     }
@@ -1263,6 +1373,8 @@ public partial class MainWindowViewModel : ViewModelBase
             OnPropertyChanged(nameof(SelectedDrive));
             OnPropertyChanged(nameof(SelectedVoltage));
             OnPropertyChanged(nameof(SelectedSeries));
+
+            RefreshValidationLockState();
 
             Log.Information(
                 "[TAB_CHANGE] Post-notify snapshot: AvailableDrives={AvailableDrives} AvailableVoltages={AvailableVoltages} AvailableSeries={AvailableSeries} SelectedDrive={SelectedDrive} SelectedVoltage={SelectedVoltage}",
@@ -2636,6 +2748,8 @@ public partial class MainWindowViewModel : ViewModelBase
             VoltageContinuousAmpsEditor = SelectedVoltage?.ContinuousAmperage.ToString(System.Globalization.CultureInfo.InvariantCulture) ?? string.Empty;
             VoltagePeakAmpsEditor = SelectedVoltage?.PeakAmperage.ToString(System.Globalization.CultureInfo.InvariantCulture) ?? string.Empty;
         }
+
+        RefreshValidationLockState();
 
         // Populate ValidationErrors/ValidationErrorsList immediately when switching or loading motors.
         // Without this, errors only show up after an edit (MarkDirty) or manual refresh.
