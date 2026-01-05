@@ -60,6 +60,23 @@ public const double DefaultVoltageTolerance = 0.1;
 [System\.Double](https://learn.microsoft.com/en-us/dotnet/api/system.double 'System\.Double')
 ### Properties
 
+<a name='JordanRobot.MotorDefinition.Model.Drive.DriveSignature'></a>
+
+## Drive\.DriveSignature Property
+
+Gets or sets the validation signature for this drive configuration\.
+
+```csharp
+public JordanRobot.MotorDefinition.Model.ValidationSignature? DriveSignature { get; set; }
+```
+
+#### Property Value
+[ValidationSignature](JordanRobot.MotorDefinition.Model.ValidationSignature.md 'JordanRobot\.MotorDefinition\.Model\.ValidationSignature')
+
+### Remarks
+This signature covers the drive properties including all voltages\.
+Null indicates the drive has not been signed\.
+
 <a name='JordanRobot.MotorDefinition.Model.Drive.Manufacturer'></a>
 
 ## Drive\.Manufacturer Property

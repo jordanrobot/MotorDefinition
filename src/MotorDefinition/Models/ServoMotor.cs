@@ -194,6 +194,17 @@ public class ServoMotor
     [JsonPropertyName("metadata")]
     public MotorMetadata Metadata { get; set; } = new();
 
+    // Data Integrity
+    /// <summary>
+    /// Gets or sets the validation signature for motor properties.
+    /// </summary>
+    /// <remarks>
+    /// This signature covers motor-level properties only (excludes drives and metadata).
+    /// Null indicates the motor properties have not been signed.
+    /// </remarks>
+    [JsonPropertyName("motorSignature")]
+    public ValidationSignature? MotorSignature { get; set; }
+
     /// <summary>
     /// Creates a new ServoMotor with default values.
     /// </summary>

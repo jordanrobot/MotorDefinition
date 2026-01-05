@@ -44,7 +44,8 @@ internal static class MotorFileMapper
             BrakeEngageTimeMov = motor.BrakeEngageTimeMov,
             BrakeBacklash = motor.BrakeBacklash,
             Units = MapUnits(motor.Units),
-            Metadata = MapMetadata(motor.Metadata)
+            Metadata = MapMetadata(motor.Metadata),
+            MotorSignature = MapValidationSignature(motor.MotorSignature)
         };
 
         foreach (var drive in motor.Drives)
@@ -53,7 +54,8 @@ internal static class MotorFileMapper
             {
                 Manufacturer = drive.Manufacturer,
                 PartNumber = drive.PartNumber,
-                Name = drive.Name
+                Name = drive.Name,
+                DriveSignature = MapValidationSignature(drive.DriveSignature)
             };
 
             foreach (var voltage in drive.Voltages)
@@ -83,7 +85,8 @@ internal static class MotorFileMapper
                     {
                         Locked = series.Locked,
                         Notes = string.IsNullOrWhiteSpace(series.Notes) ? null : series.Notes,
-                        Torque = torque
+                        Torque = torque,
+                        CurveSignature = MapValidationSignature(series.CurveSignature)
                     });
                 }
 
@@ -142,7 +145,8 @@ internal static class MotorFileMapper
             BrakeEngageTimeMov = dto.BrakeEngageTimeMov,
             BrakeBacklash = dto.BrakeBacklash,
             Units = MapUnits(dto.Units ?? new UnitSettingsDto()),
-            Metadata = MapMetadata(dto.Metadata)
+            Metadata = MapMetadata(dto.Metadata),
+            MotorSignature = MapValidationSignature(dto.MotorSignature)
         };
 
         if (dto.Drives is null || dto.Drives.Count == 0)
@@ -160,7 +164,8 @@ internal static class MotorFileMapper
             var drive = new Drive(driveDto.Name)
             {
                 Manufacturer = driveDto.Manufacturer ?? string.Empty,
-                PartNumber = driveDto.PartNumber ?? string.Empty
+                PartNumber = driveDto.PartNumber ?? string.Empty,
+                DriveSignature = MapValidationSignature(driveDto.DriveSignature)
             };
 
             if (driveDto.Voltages is null || driveDto.Voltages.Count == 0)
@@ -204,7 +209,8 @@ internal static class MotorFileMapper
                     var series = new Curve(seriesName)
                     {
                         Locked = entry.Locked,
-                        Notes = entry.Notes ?? string.Empty
+                        Notes = entry.Notes ?? string.Empty,
+                        CurveSignature = MapValidationSignature(entry.CurveSignature)
                     };
 
                     for (var i = 0; i < pointCount; i++)
@@ -284,6 +290,38 @@ internal static class MotorFileMapper
             Created = metadata.Created,
             Modified = metadata.Modified,
             Notes = string.IsNullOrWhiteSpace(metadata.Notes) ? null : metadata.Notes
+        };
+    }
+
+    private static ValidationSignature? MapValidationSignature(ValidationSignatureDto? dto)
+    {
+        if (dto is null)
+        {
+            return null;
+        }
+
+        return new ValidationSignature
+        {
+            Checksum = dto.Checksum,
+            Timestamp = dto.Timestamp,
+            VerifiedBy = dto.VerifiedBy,
+            Algorithm = dto.Algorithm
+        };
+    }
+
+    private static ValidationSignatureDto? MapValidationSignature(ValidationSignature? signature)
+    {
+        if (signature is null)
+        {
+            return null;
+        }
+
+        return new ValidationSignatureDto
+        {
+            Checksum = signature.Checksum,
+            Timestamp = signature.Timestamp,
+            VerifiedBy = signature.VerifiedBy,
+            Algorithm = signature.Algorithm
         };
     }
 }

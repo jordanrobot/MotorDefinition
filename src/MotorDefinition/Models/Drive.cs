@@ -81,6 +81,16 @@ public class Drive : INotifyPropertyChanged
     public IEnumerable<double> VoltageValues => Voltages.Select(v => v.Value);
 
     /// <summary>
+    /// Gets or sets the validation signature for this drive configuration.
+    /// </summary>
+    /// <remarks>
+    /// This signature covers the drive properties including all voltages.
+    /// Null indicates the drive has not been signed.
+    /// </remarks>
+    [JsonPropertyName("driveSignature")]
+    public ValidationSignature? DriveSignature { get; set; }
+
+    /// <summary>
     /// Creates a new Drive with default values.
     /// </summary>
     public Drive()
