@@ -52,8 +52,21 @@ public partial class DirectoryBrowserPanel : UserControl
     private static void FocusAndSelect(TextBox textBox)
     {
         textBox.Focus();
+        var text = textBox.Text ?? string.Empty;
+
+        if (textBox.DataContext is ExplorerNodeViewModel node && !node.IsDirectory)
+        {
+            var lastDot = text.LastIndexOf('.');
+            if (lastDot > 0)
+            {
+                textBox.SelectionStart = 0;
+                textBox.SelectionEnd = lastDot;
+                return;
+            }
+        }
+
         textBox.SelectionStart = 0;
-        textBox.SelectionEnd = textBox.Text?.Length ?? 0;
+        textBox.SelectionEnd = text.Length;
     }
 
 
@@ -110,7 +123,7 @@ public partial class DirectoryBrowserPanel : UserControl
             return;
         }
 
-        if (viewModel.SelectedNode?.IsRenaming == true)
+        if (viewModel.SelectedNode?.IsRenaming == true && e.Source is not TextBox)
         {
             // Let the inline editor handle keys; prevent tree shortcuts (Enter/Delete/Tab/etc.).
             if (e.Key == Key.Enter || e.Key == Key.Tab || e.Key == Key.Delete || e.Key == Key.Space)

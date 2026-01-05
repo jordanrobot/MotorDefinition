@@ -19,7 +19,7 @@ Tracking implementation of Directory Browser rename UX improvements and associat
 ### Modified
 
 - src/MotorEditor.Avalonia/ViewModels/DirectoryBrowserViewModel.cs - Avoids full refresh on rename, retaining expanded state while updating paths and clearing rename state.
-- src/MotorEditor.Avalonia/Views/DirectoryBrowserPanel.axaml.cs - Focuses the rename textbox reliably, re-focuses when shown, and blocks tree shortcuts (Enter/Delete) during rename.
+- src/MotorEditor.Avalonia/Views/DirectoryBrowserPanel.axaml.cs - Focuses/re-focuses the rename textbox, selects filename sans extension for files (full for directories), and lets Enter/Tab commit in the inline editor while blocking tree shortcuts.
 - .copilot-tracking/plans/20260104-directory-browser-rename-plan.md - Marked all rename tasks complete.
 - .copilot-tracking/changes/20260104-directory-browser-rename-changes.md - Recorded rename UX implementation progress.
 
