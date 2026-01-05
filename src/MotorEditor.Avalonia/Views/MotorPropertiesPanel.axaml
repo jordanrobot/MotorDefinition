@@ -26,6 +26,7 @@
                             Grid.IsSharedSizeScope="True"
                             IsVisible="{Binding CurrentMotor, Converter={x:Static ObjectConverters.IsNotNull}}">
 
+                    <StackPanel IsEnabled="{Binding CanEditMotorProperties}">
                     <!-- Motor Name -->
                     <Grid Classes="PropertyRow" ColumnDefinitions="Auto,*">
                         <TextBlock Grid.Column="0" Text="Motor Name" Classes="PropertyLabel"/>
@@ -396,6 +397,7 @@
                                       Classes="PropertyComboBox"/>
                         </Grid>
                     </StackPanel>
+                    </StackPanel>
 
                     <!-- DRIVE PROPERTIES SECTION -->
                     <TextBlock Text="Drive Properties"
@@ -433,6 +435,7 @@
                                 Padding="0"
                                 Margin="4,0,0,0"
                                 Command="{Binding RemoveDriveCommand}"
+                                IsEnabled="{Binding CanEditSelectedDriveAndVoltages}"
                                 ToolTip.Tip="Delete selected drive"
                                 HorizontalContentAlignment="Center"
                                 VerticalContentAlignment="Center">
@@ -445,6 +448,7 @@
                         <Grid Classes="PropertyRow" ColumnDefinitions="Auto,*">
                             <TextBlock Grid.Column="0" Text="Drive Name" Classes="PropertyLabel"/>
                             <TextBox Grid.Column="1"
+                                      IsEnabled="{Binding CanEditSelectedDriveAndVoltages}"
                                      Text="{Binding DriveNameEditor, Mode=TwoWay, UpdateSourceTrigger=LostFocus}"
                                      Classes="PropertyInput"
                                      IsUndoEnabled="False"
@@ -453,6 +457,7 @@
                         <Grid Classes="PropertyRow" ColumnDefinitions="Auto,*">
                             <TextBlock Grid.Column="0" Text="Manufacturer" Classes="PropertyLabel"/>
                             <TextBox Grid.Column="1"
+                                      IsEnabled="{Binding CanEditSelectedDriveAndVoltages}"
                                      Text="{Binding DriveManufacturerEditor, Mode=TwoWay, UpdateSourceTrigger=LostFocus}"
                                      Classes="PropertyInput"
                                      IsUndoEnabled="False"
@@ -461,6 +466,7 @@
                         <Grid Classes="PropertyRow" ColumnDefinitions="Auto,*">
                             <TextBlock Grid.Column="0" Text="Part Number" Classes="PropertyLabel"/>
                             <TextBox Grid.Column="1"
+                                      IsEnabled="{Binding CanEditSelectedDriveAndVoltages}"
                                      Text="{Binding DrivePartNumberEditor, Mode=TwoWay, UpdateSourceTrigger=LostFocus}"
                                      Classes="PropertyInput"
                                      IsUndoEnabled="False"
@@ -486,6 +492,7 @@
                                     Margin="4,0,0,0"
                                     Command="{Binding AddVoltageCommand}"
                                     ToolTip.Tip="Add new voltage"
+                                    IsEnabled="{Binding CanEditSelectedDriveAndVoltages}"
                                     HorizontalContentAlignment="Center"
                                     VerticalContentAlignment="Center">
                                 <TextBlock Text="+" FontSize="14" FontWeight="Bold"/>
@@ -496,6 +503,7 @@
                                     Margin="4,0,0,0"
                                     Command="{Binding RemoveVoltageCommand}"
                                     ToolTip.Tip="Delete selected voltage"
+                                    IsEnabled="{Binding CanEditSelectedDriveAndVoltages}"
                                     HorizontalContentAlignment="Center"
                                     VerticalContentAlignment="Center">
                                 <TextBlock Text="🗑" FontSize="12"/>
@@ -512,10 +520,11 @@
                                         <ColumnDefinition Width="Auto" SharedSizeGroup="Uom"/>
                                     </Grid.ColumnDefinitions>
                                     <TextBox Grid.Column="0"
-                                             Text="{Binding VoltageValueEditor, Mode=TwoWay, UpdateSourceTrigger=LostFocus}"
-                                             Classes="PropertyInput"
-                                             IsUndoEnabled="False"
-                                             LostFocus="OnVoltageValueLostFocus"/>
+                                              IsEnabled="{Binding CanEditSelectedDriveAndVoltages}"
+                                              Text="{Binding VoltageValueEditor, Mode=TwoWay, UpdateSourceTrigger=LostFocus}"
+                                              Classes="PropertyInput"
+                                              IsUndoEnabled="False"
+                                              LostFocus="OnVoltageValueLostFocus"/>
                                     <TextBlock Grid.Column="1" Text="{Binding CurrentMotor.Units.Voltage}" Classes="PropertyValue" Margin="4,0,0,0"/>
                                 </Grid>
                             </Grid>
@@ -527,10 +536,11 @@
                                         <ColumnDefinition Width="Auto" SharedSizeGroup="Uom"/>
                                     </Grid.ColumnDefinitions>
                                     <TextBox Grid.Column="0"
-                                             Text="{Binding VoltagePowerEditor, Mode=TwoWay, UpdateSourceTrigger=LostFocus}"
-                                             Classes="PropertyInput"
-                                             IsUndoEnabled="False"
-                                             LostFocus="OnVoltagePowerLostFocus"/>
+                                              IsEnabled="{Binding CanEditSelectedDriveAndVoltages}"
+                                              Text="{Binding VoltagePowerEditor, Mode=TwoWay, UpdateSourceTrigger=LostFocus}"
+                                              Classes="PropertyInput"
+                                              IsUndoEnabled="False"
+                                              LostFocus="OnVoltagePowerLostFocus"/>
                                     <TextBlock Grid.Column="1" Text="{Binding CurrentMotor.Units.Power}" Classes="PropertyValue" Margin="4,0,0,0"/>
                                 </Grid>
                             </Grid>
@@ -542,10 +552,11 @@
                                         <ColumnDefinition Width="Auto" SharedSizeGroup="Uom"/>
                                     </Grid.ColumnDefinitions>
                                     <TextBox Grid.Column="0"
-                                             Text="{Binding VoltageMaxSpeedEditor, Mode=TwoWay, UpdateSourceTrigger=LostFocus}"
-                                             Classes="PropertyInput"
-                                             IsUndoEnabled="False"
-                                             LostFocus="OnMaxSpeedLostFocus"/>
+                                              IsEnabled="{Binding CanEditSelectedDriveAndVoltages}"
+                                              Text="{Binding VoltageMaxSpeedEditor, Mode=TwoWay, UpdateSourceTrigger=LostFocus}"
+                                              Classes="PropertyInput"
+                                              IsUndoEnabled="False"
+                                              LostFocus="OnMaxSpeedLostFocus"/>
                                     <TextBlock Grid.Column="1" Text="{Binding CurrentMotor.Units.Speed}" Classes="PropertyValue" Margin="4,0,0,0"/>
                                 </Grid>
                             </Grid>
@@ -557,10 +568,11 @@
                                         <ColumnDefinition Width="Auto" SharedSizeGroup="Uom"/>
                                     </Grid.ColumnDefinitions>
                                     <TextBox Grid.Column="0"
-                                             Text="{Binding VoltagePeakTorqueEditor, Mode=TwoWay, UpdateSourceTrigger=LostFocus}"
-                                             Classes="PropertyInput"
-                                             IsUndoEnabled="False"
-                                             LostFocus="OnVoltagePeakTorqueLostFocus"/>
+                                              IsEnabled="{Binding CanEditSelectedDriveAndVoltages}"
+                                              Text="{Binding VoltagePeakTorqueEditor, Mode=TwoWay, UpdateSourceTrigger=LostFocus}"
+                                              Classes="PropertyInput"
+                                              IsUndoEnabled="False"
+                                              LostFocus="OnVoltagePeakTorqueLostFocus"/>
                                     <TextBlock Grid.Column="1" Text="{Binding CurrentMotor.Units.Torque}" Classes="PropertyValue" Margin="4,0,0,0"/>
                                 </Grid>
                             </Grid>
@@ -572,10 +584,11 @@
                                         <ColumnDefinition Width="Auto" SharedSizeGroup="Uom"/>
                                     </Grid.ColumnDefinitions>
                                     <TextBox Grid.Column="0"
-                                             Text="{Binding VoltageContinuousTorqueEditor, Mode=TwoWay, UpdateSourceTrigger=LostFocus}"
-                                             Classes="PropertyInput"
-                                             IsUndoEnabled="False"
-                                             LostFocus="OnVoltageContinuousTorqueLostFocus"/>
+                                              IsEnabled="{Binding CanEditSelectedDriveAndVoltages}"
+                                              Text="{Binding VoltageContinuousTorqueEditor, Mode=TwoWay, UpdateSourceTrigger=LostFocus}"
+                                              Classes="PropertyInput"
+                                              IsUndoEnabled="False"
+                                              LostFocus="OnVoltageContinuousTorqueLostFocus"/>
                                     <TextBlock Grid.Column="1" Text="{Binding CurrentMotor.Units.Torque}" Classes="PropertyValue" Margin="4,0,0,0"/>
                                 </Grid>
                             </Grid>
@@ -587,10 +600,11 @@
                                         <ColumnDefinition Width="Auto" SharedSizeGroup="Uom"/>
                                     </Grid.ColumnDefinitions>
                                     <TextBox Grid.Column="0"
-                                             Text="{Binding VoltageContinuousAmpsEditor, Mode=TwoWay, UpdateSourceTrigger=LostFocus}"
-                                             Classes="PropertyInput"
-                                             IsUndoEnabled="False"
-                                             LostFocus="OnVoltageContinuousAmpsLostFocus"/>
+                                              IsEnabled="{Binding CanEditSelectedDriveAndVoltages}"
+                                              Text="{Binding VoltageContinuousAmpsEditor, Mode=TwoWay, UpdateSourceTrigger=LostFocus}"
+                                              Classes="PropertyInput"
+                                              IsUndoEnabled="False"
+                                              LostFocus="OnVoltageContinuousAmpsLostFocus"/>
                                     <TextBlock Grid.Column="1" Text="{Binding CurrentMotor.Units.Current}" Classes="PropertyValue" Margin="4,0,0,0"/>
                                 </Grid>
                             </Grid>
@@ -602,10 +616,11 @@
                                         <ColumnDefinition Width="Auto" SharedSizeGroup="Uom"/>
                                     </Grid.ColumnDefinitions>
                                     <TextBox Grid.Column="0"
-                                             Text="{Binding VoltagePeakAmpsEditor, Mode=TwoWay, UpdateSourceTrigger=LostFocus}"
-                                             Classes="PropertyInput"
-                                             IsUndoEnabled="False"
-                                             LostFocus="OnVoltagePeakAmpsLostFocus"/>
+                                              IsEnabled="{Binding CanEditSelectedDriveAndVoltages}"
+                                              Text="{Binding VoltagePeakAmpsEditor, Mode=TwoWay, UpdateSourceTrigger=LostFocus}"
+                                              Classes="PropertyInput"
+                                              IsUndoEnabled="False"
+                                              LostFocus="OnVoltagePeakAmpsLostFocus"/>
                                     <TextBlock Grid.Column="1" Text="{Binding CurrentMotor.Units.Current}" Classes="PropertyValue" Margin="4,0,0,0"/>
                                 </Grid>
                             </Grid>

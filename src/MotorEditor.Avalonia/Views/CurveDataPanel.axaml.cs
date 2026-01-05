@@ -891,6 +891,16 @@ public partial class CurveDataPanel : UserControl
     {
         if (sender is TextBlock textBlock && textBlock.DataContext is Curve series)
         {
+            if (DataContext is not MainWindowViewModel viewModel)
+            {
+                return;
+            }
+
+            if (!viewModel.EnsureSeriesEditingAllowed(series))
+            {
+                return;
+            }
+
             // Show a simple input dialog for renaming
             var dialog = new Window
             {
@@ -951,11 +961,8 @@ public partial class CurveDataPanel : UserControl
                 if (result && !string.IsNullOrWhiteSpace(textBox.Text))
                 {
                     series.Name = textBox.Text;
-                    if (DataContext is MainWindowViewModel viewModel)
-                    {
-                        viewModel.MarkDirty();
-                        viewModel.ChartViewModel.RefreshChart();
-                    }
+                    viewModel.MarkDirty();
+                    viewModel.ChartViewModel.RefreshChart();
                 }
             }
         }
@@ -993,6 +1000,12 @@ public partial class CurveDataPanel : UserControl
             return;
         }
 
+        if (!viewModel.EnsureSeriesEditingAllowed(series))
+        {
+            toggleButton.IsChecked = series.Locked;
+            return;
+        }
+
         if (viewModel.ToggleSeriesLockCommand.CanExecute(series))
         {
             viewModel.ToggleSeriesLockCommand.Execute(series);
@@ -1008,6 +1021,11 @@ public partial class CurveDataPanel : UserControl
         {
             if (DataContext is MainWindowViewModel viewModel && viewModel.SelectedVoltage is not null)
             {
+                if (!viewModel.EnsureSeriesEditingAllowed(series))
+                {
+                    return;
+                }
+
                 // Check if series is locked - prevent deletion of locked series
                 if (series.Locked)
                 {
@@ -2152,6 +2170,13 @@ public partial class CurveDataPanel : UserControl
             return;
         }
 
+        if (viewModel.SelectedVoltage.Curves.Any(viewModel.IsSeriesLockedBySignature))
+        {
+            viewModel.StatusMessage = "Cannot change percent lock: a series is locked by validation signature.";
+            PercentLockToggle.IsChecked = viewModel.SelectedVoltage.Curves.All(s => s.LockedPercent);
+            return;
+        }
+
         // Determine current lock state (if any series allows percent editing, we consider it unlocked)
         var isCurrentlyLocked = viewModel.SelectedVoltage.Curves.All(s => s.LockedPercent);
         var newLockedState = !isCurrentlyLocked;
@@ -2179,6 +2204,13 @@ public partial class CurveDataPanel : UserControl
     {
         if (DataContext is not MainWindowViewModel viewModel || viewModel.SelectedVoltage is null)
         {
+            return;
+        }
+
+        if (viewModel.SelectedVoltage.Curves.Any(viewModel.IsSeriesLockedBySignature))
+        {
+            viewModel.StatusMessage = "Cannot change RPM lock: a series is locked by validation signature.";
+            RpmLockToggle.IsChecked = viewModel.SelectedVoltage.Curves.All(s => s.LockedRpm);
             return;
         }
 
