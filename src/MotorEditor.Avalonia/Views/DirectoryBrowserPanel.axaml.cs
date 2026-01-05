@@ -131,7 +131,14 @@ public partial class DirectoryBrowserPanel : UserControl
                 return;
             }
 
-            if (e.Key == Key.Enter || e.Key == Key.Tab || e.Key == Key.Delete || e.Key == Key.Space)
+            if (e.Key == Key.Enter
+                || e.Key == Key.Tab
+                || e.Key == Key.Delete
+                || e.Key == Key.Space
+                || e.Key == Key.Left
+                || e.Key == Key.Right
+                || e.Key == Key.Up
+                || e.Key == Key.Down)
             {
                 e.Handled = true;
             }
