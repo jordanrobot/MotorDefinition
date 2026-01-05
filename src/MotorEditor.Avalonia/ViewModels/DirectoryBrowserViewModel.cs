@@ -1122,16 +1122,32 @@ public partial class DirectoryBrowserViewModel : ObservableObject
         }
 
         var originalName = node.OriginalDisplayName ?? node.DisplayName;
+        var directory = Path.GetDirectoryName(node.FullPath);
         var success = await RenameCommand.PerformRenameAsync(node.FullPath, trimmedName, node.IsDirectory).ConfigureAwait(false);
-
-        if (success)
-        {
-            await RefreshInternalAsync().ConfigureAwait(false);
-        }
 
         await InvokeOnUiAsync(() =>
         {
-            node.DisplayName = success ? trimmedName : originalName;
+            if (success)
+            {
+                if (!string.IsNullOrWhiteSpace(directory))
+                {
+                    var newPath = Path.Combine(directory, trimmedName);
+                    node.FullPath = newPath;
+
+                    var rootDirectoryPath = RootDirectoryPath;
+                    if (!string.IsNullOrWhiteSpace(rootDirectoryPath))
+                    {
+                        node.RelativePath = NormalizeRelativePath(Path.GetRelativePath(rootDirectoryPath, newPath));
+                    }
+                }
+
+                node.DisplayName = trimmedName;
+            }
+            else
+            {
+                node.DisplayName = originalName;
+            }
+
             node.OriginalDisplayName = null;
             node.IsRenaming = false;
         }).ConfigureAwait(false);

@@ -37,16 +37,25 @@ public partial class DirectoryBrowserPanel : UserControl
             return;
         }
 
-        void FocusAndSelect()
+        textBox.PropertyChanged += (s, args) =>
         {
-            textBox.Focus();
-            textBox.SelectionStart = 0;
-            textBox.SelectionEnd = textBox.Text?.Length ?? 0;
-        }
+            if (args.Property == Visual.IsVisibleProperty && textBox.IsVisible)
+            {
+                FocusAndSelect(textBox);
+            }
+        };
 
-        FocusAndSelect();
-        Dispatcher.UIThread.Post(FocusAndSelect, DispatcherPriority.Render);
+        FocusAndSelect(textBox);
+        Dispatcher.UIThread.Post(() => FocusAndSelect(textBox), DispatcherPriority.Render);
     }
+
+    private static void FocusAndSelect(TextBox textBox)
+    {
+        textBox.Focus();
+        textBox.SelectionStart = 0;
+        textBox.SelectionEnd = textBox.Text?.Length ?? 0;
+    }
+
 
     private void OnPanelKeyDown(object? sender, KeyEventArgs e)
     {
@@ -101,11 +110,14 @@ public partial class DirectoryBrowserPanel : UserControl
             return;
         }
 
-        if (viewModel.SelectedNode?.IsRenaming == true && e.Source is not TextBox)
+        if (viewModel.SelectedNode?.IsRenaming == true)
         {
             // Let the inline editor handle keys; prevent tree shortcuts (Enter/Delete/Tab/etc.).
-            e.Handled = true;
-            return;
+            if (e.Key == Key.Enter || e.Key == Key.Tab || e.Key == Key.Delete || e.Key == Key.Space)
+            {
+                e.Handled = true;
+                return;
+            }
         }
 
         // F2 - Rename
