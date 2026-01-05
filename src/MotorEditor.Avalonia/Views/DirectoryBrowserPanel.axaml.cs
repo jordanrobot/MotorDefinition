@@ -126,6 +126,11 @@ public partial class DirectoryBrowserPanel : UserControl
         if (viewModel.SelectedNode?.IsRenaming == true)
         {
             // Let the inline editor handle keys; prevent tree shortcuts (Enter/Delete/Tab/etc.).
+            if (e.Source is TextBox)
+            {
+                return;
+            }
+
             if (e.Key == Key.Enter || e.Key == Key.Tab || e.Key == Key.Delete || e.Key == Key.Space)
             {
                 e.Handled = true;
