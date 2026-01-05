@@ -11,7 +11,7 @@
 - [x] T1: Improve rename initiation to focus the inline editor, pre-select the name, and retain the original value for cancel/revert.
 - [x] T2: Handle rename completion and cancellation inputs (Enter/Tab/click outside commit; Escape reverts) without collapsing nodes.
 - [x] T3: Add/update targeted tests covering rename initiation and completion flows.
-- [ ] T4: Update tracking changes file after each task and capture final artifacts (tests/screenshots).
+- [x] T4: Update tracking changes file after each task and capture final artifacts (tests/screenshots).
 
 ## References
 

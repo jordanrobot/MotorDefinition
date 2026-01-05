@@ -37,12 +37,15 @@ public partial class DirectoryBrowserPanel : UserControl
             return;
         }
 
-        Dispatcher.UIThread.Post(() =>
+        void FocusAndSelect()
         {
             textBox.Focus();
             textBox.SelectionStart = 0;
             textBox.SelectionEnd = textBox.Text?.Length ?? 0;
-        }, DispatcherPriority.Input);
+        }
+
+        FocusAndSelect();
+        Dispatcher.UIThread.Post(FocusAndSelect, DispatcherPriority.Render);
     }
 
     private void OnPanelKeyDown(object? sender, KeyEventArgs e)
@@ -95,6 +98,13 @@ public partial class DirectoryBrowserPanel : UserControl
     {
         if (DataContext is not DirectoryBrowserViewModel viewModel)
         {
+            return;
+        }
+
+        if (viewModel.SelectedNode?.IsRenaming == true && e.Source is not TextBox)
+        {
+            // Let the inline editor handle keys; prevent tree shortcuts (Enter/Delete/Tab/etc.).
+            e.Handled = true;
             return;
         }
 

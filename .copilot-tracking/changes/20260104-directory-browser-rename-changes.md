@@ -19,8 +19,8 @@ Tracking implementation of Directory Browser rename UX improvements and associat
 ### Modified
 
 - src/MotorEditor.Avalonia/ViewModels/DirectoryBrowserViewModel.cs - Trimmed rename inputs and ensured rename state clears with originals preserved on cancel.
-- src/MotorEditor.Avalonia/Views/DirectoryBrowserPanel.axaml.cs - Guarded rename completion to avoid duplicate commits when no rename is active.
-- .copilot-tracking/plans/20260104-directory-browser-rename-plan.md - Marked progress through T1-T3 with T4 still pending.
+- src/MotorEditor.Avalonia/Views/DirectoryBrowserPanel.axaml.cs - Focuses the rename textbox reliably, blocks tree shortcuts (Enter/Delete) during rename, and prevents duplicate commits when no rename is active.
+- .copilot-tracking/plans/20260104-directory-browser-rename-plan.md - Marked all rename tasks complete.
 - .copilot-tracking/changes/20260104-directory-browser-rename-changes.md - Recorded rename UX implementation progress.
 
 ### Removed
