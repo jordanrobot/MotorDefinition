@@ -123,14 +123,14 @@ public partial class DirectoryBrowserPanel : UserControl
             return;
         }
 
-        if (viewModel.SelectedNode?.IsRenaming == true && e.Source is not TextBox)
+        if (viewModel.SelectedNode?.IsRenaming == true)
         {
             // Let the inline editor handle keys; prevent tree shortcuts (Enter/Delete/Tab/etc.).
             if (e.Key == Key.Enter || e.Key == Key.Tab || e.Key == Key.Delete || e.Key == Key.Space)
             {
                 e.Handled = true;
-                return;
             }
+            return;
         }
 
         // F2 - Rename
