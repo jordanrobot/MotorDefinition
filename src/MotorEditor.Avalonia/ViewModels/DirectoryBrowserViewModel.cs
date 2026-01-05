@@ -1065,7 +1065,7 @@ public partial class DirectoryBrowserViewModel : ObservableObject
         // Handle rename command specially - just enter rename mode
         if (command is RenameCommand)
         {
-            await InvokeOnUiAsync(() => SelectedNode.IsRenaming = true).ConfigureAwait(false);
+            await BeginRenameAsync(SelectedNode).ConfigureAwait(false);
             return;
         }
 
@@ -1093,23 +1093,64 @@ public partial class DirectoryBrowserViewModel : ObservableObject
     }
 
     /// <summary>
+    /// Places a node into rename mode while preserving its original display name.
+    /// </summary>
+    private Task BeginRenameAsync(ExplorerNodeViewModel node)
+    {
+        return InvokeOnUiAsync(() =>
+        {
+            node.OriginalDisplayName = node.DisplayName;
+            node.IsRenaming = true;
+        });
+    }
+
+    /// <summary>
     /// Completes a rename operation on the selected node.
     /// </summary>
     public async Task<bool> CompleteRenameAsync(ExplorerNodeViewModel node, string newName)
     {
-        if (node is null || string.IsNullOrWhiteSpace(newName))
+        if (node is null)
         {
             return false;
         }
 
-        var success = await RenameCommand.PerformRenameAsync(node.FullPath, newName, node.IsDirectory).ConfigureAwait(false);
-        
-        if (success)
+        var trimmedName = newName?.Trim();
+        if (string.IsNullOrWhiteSpace(trimmedName))
         {
-            await RefreshInternalAsync().ConfigureAwait(false);
+            await CancelRenameAsync(node).ConfigureAwait(false);
+            return false;
         }
 
-        await InvokeOnUiAsync(() => node.IsRenaming = false).ConfigureAwait(false);
+        var originalName = node.OriginalDisplayName ?? node.DisplayName;
+        var directory = Path.GetDirectoryName(node.FullPath);
+        var success = await RenameCommand.PerformRenameAsync(node.FullPath, trimmedName, node.IsDirectory).ConfigureAwait(false);
+
+        await InvokeOnUiAsync(() =>
+        {
+            if (success)
+            {
+                if (!string.IsNullOrWhiteSpace(directory))
+                {
+                    var newPath = Path.Combine(directory, trimmedName);
+                    node.FullPath = newPath;
+
+                    var rootDirectoryPath = RootDirectoryPath;
+                    if (!string.IsNullOrWhiteSpace(rootDirectoryPath))
+                    {
+                        node.RelativePath = NormalizeRelativePath(Path.GetRelativePath(rootDirectoryPath, newPath));
+                    }
+                }
+
+                node.DisplayName = trimmedName;
+            }
+            else
+            {
+                node.DisplayName = originalName;
+            }
+
+            node.OriginalDisplayName = null;
+            node.IsRenaming = false;
+        }).ConfigureAwait(false);
         return success;
     }
 
@@ -1123,7 +1164,16 @@ public partial class DirectoryBrowserViewModel : ObservableObject
             return;
         }
 
-        await InvokeOnUiAsync(() => node.IsRenaming = false).ConfigureAwait(false);
+        await InvokeOnUiAsync(() =>
+        {
+            if (!string.IsNullOrWhiteSpace(node.OriginalDisplayName))
+            {
+                node.DisplayName = node.OriginalDisplayName!;
+            }
+
+            node.IsRenaming = false;
+            node.OriginalDisplayName = null;
+        }).ConfigureAwait(false);
     }
 
     /// <summary>
@@ -1137,7 +1187,7 @@ public partial class DirectoryBrowserViewModel : ObservableObject
             return;
         }
 
-        await InvokeOnUiAsync(() => SelectedNode.IsRenaming = true).ConfigureAwait(false);
+        await BeginRenameAsync(SelectedNode).ConfigureAwait(false);
     }
 
     /// <summary>

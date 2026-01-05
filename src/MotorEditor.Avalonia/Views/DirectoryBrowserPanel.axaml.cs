@@ -5,6 +5,7 @@ using Avalonia.Interactivity;
 using Avalonia.Input;
 using Avalonia.VisualTree;
 using Avalonia.LogicalTree;
+using Avalonia.Threading;
 using CurveEditor.ViewModels;
 using System.Linq;
 
@@ -29,6 +30,46 @@ public partial class DirectoryBrowserPanel : UserControl
         this.AddHandler(KeyDownEvent, OnPanelKeyDown, RoutingStrategies.Bubble);
     }
 
+    private void RenameTextBox_AttachedToVisualTree(object? sender, VisualTreeAttachmentEventArgs e)
+    {
+        if (sender is not TextBox textBox)
+        {
+            return;
+        }
+
+        textBox.PropertyChanged += (s, args) =>
+        {
+            if (args.Property == Visual.IsVisibleProperty && textBox.IsVisible)
+            {
+                FocusAndSelect(textBox);
+            }
+        };
+
+        FocusAndSelect(textBox);
+        Dispatcher.UIThread.Post(() => FocusAndSelect(textBox), DispatcherPriority.Render);
+    }
+
+    private static void FocusAndSelect(TextBox textBox)
+    {
+        textBox.Focus();
+        var text = textBox.Text ?? string.Empty;
+
+        if (textBox.DataContext is ExplorerNodeViewModel node && !node.IsDirectory)
+        {
+            var lastDot = text.LastIndexOf('.');
+            if (lastDot > 0)
+            {
+                textBox.SelectionStart = 0;
+                textBox.SelectionEnd = lastDot;
+                return;
+            }
+        }
+
+        textBox.SelectionStart = 0;
+        textBox.SelectionEnd = text.Length;
+    }
+
+
     private void OnPanelKeyDown(object? sender, KeyEventArgs e)
     {
         // Check if we're in a rename text box
@@ -47,10 +88,60 @@ public partial class DirectoryBrowserPanel : UserControl
         }
     }
 
+    private void RenameTextBox_LostFocus(object? sender, RoutedEventArgs e)
+    {
+        if (DataContext is not DirectoryBrowserViewModel viewModel)
+        {
+            return;
+        }
+
+        if (sender is not TextBox textBox || textBox.DataContext is not ExplorerNodeViewModel node)
+        {
+            return;
+        }
+
+        if (!node.IsRenaming)
+        {
+            return;
+        }
+
+        var newName = textBox.Text?.Trim();
+        if (string.IsNullOrWhiteSpace(newName))
+        {
+            _ = viewModel.CancelRenameAsync(node);
+        }
+        else
+        {
+            _ = viewModel.CompleteRenameAsync(node, newName);
+        }
+    }
+
     private void OnExplorerTreeKeyDown(object? sender, KeyEventArgs e)
     {
         if (DataContext is not DirectoryBrowserViewModel viewModel)
         {
+            return;
+        }
+
+        if (viewModel.SelectedNode?.IsRenaming == true)
+        {
+            // Let the inline editor handle keys; prevent tree shortcuts (Enter/Delete/Tab/etc.).
+            if (e.Source is TextBox)
+            {
+                return;
+            }
+
+            if (e.Key == Key.Enter
+                || e.Key == Key.Tab
+                || e.Key == Key.Delete
+                || e.Key == Key.Space
+                || e.Key == Key.Left
+                || e.Key == Key.Right
+                || e.Key == Key.Up
+                || e.Key == Key.Down)
+            {
+                e.Handled = true;
+            }
             return;
         }
 
@@ -99,6 +190,11 @@ public partial class DirectoryBrowserPanel : UserControl
             return;
         }
 
+        if (!node.IsRenaming)
+        {
+            return;
+        }
+
         var newName = textBox.Text?.Trim();
         if (!string.IsNullOrWhiteSpace(newName))
         {
@@ -133,8 +229,18 @@ public partial class DirectoryBrowserPanel : UserControl
             return;
         }
 
+        if (DataContext is DirectoryBrowserViewModel viewModel && viewModel.SelectedNode?.IsRenaming == true)
+        {
+            return;
+        }
+
         var treeViewItem = (e.Source as Visual)?.GetVisualAncestors().OfType<TreeViewItem>().FirstOrDefault();
         if (treeViewItem?.DataContext is not ExplorerNodeViewModel node)
+        {
+            return;
+        }
+
+        if (node.IsRenaming)
         {
             return;
         }

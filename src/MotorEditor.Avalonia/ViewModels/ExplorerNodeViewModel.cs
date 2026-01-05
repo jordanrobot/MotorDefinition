@@ -60,6 +60,8 @@ public partial class ExplorerNodeViewModel : ObservableObject
     [ObservableProperty]
     private bool _isRenaming;
 
+    public string? OriginalDisplayName { get; set; }
+
     public bool ShowChevron => IsDirectory && !IsRoot;
 
     public bool ShowValidationMarker => !IsDirectory && !IsPlaceholder;
