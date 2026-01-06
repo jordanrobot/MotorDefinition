@@ -779,7 +779,7 @@ public partial class CurveDataTableViewModel : ViewModelBase
     }
 
     /// <summary>
-    /// Executes an EditingCoordinator update initiated by the table without reacting to its SelectionChanged event.
+    /// Temporarily suppresses coordinator selection change notifications while executing table-driven coordinator updates to prevent circular feedback loops that would clear the table selection.
     /// </summary>
     /// <param name="action">Update to perform while suppressing table-side sync to keep the current selection intact.</param>
     private void WithCoordinatorSyncSuppressed(Action action)
