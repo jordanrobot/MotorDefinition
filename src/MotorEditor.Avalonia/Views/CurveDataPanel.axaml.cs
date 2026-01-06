@@ -1496,14 +1496,26 @@ public partial class CurveDataPanel : UserControl
         if (firstSelected.RowIndex >= 0 && firstSelected.RowIndex < vm.CurveDataTableViewModel.Rows.Count)
         {
             var row = vm.CurveDataTableViewModel.Rows[firstSelected.RowIndex];
+            // Ensure the DataGrid has a current row before updating CurrentColumn to avoid InvalidOperationException.
+            dataGrid.SelectedIndex = firstSelected.RowIndex;
+            dataGrid.SelectedItem = row;
             
             // Update DataGrid's CurrentColumn to keep navigation in sync
             // but don't pass it to ScrollIntoView to avoid DataGrid's native selection
-            if (firstSelected.ColumnIndex >= 0 && firstSelected.ColumnIndex < dataGrid.Columns.Count)
+            if (dataGrid.SelectedItem is not null &&
+                firstSelected.ColumnIndex >= 0 &&
+                firstSelected.ColumnIndex < dataGrid.Columns.Count)
             {
-                var oldColumn = dataGrid.CurrentColumn?.DisplayIndex ?? -1;
-                dataGrid.CurrentColumn = dataGrid.Columns[firstSelected.ColumnIndex];
-                Log.Debug("[NAV] Updated CurrentColumn from {OldCol} to {NewCol}", oldColumn, firstSelected.ColumnIndex);
+                try
+                {
+                    var oldColumn = dataGrid.CurrentColumn?.DisplayIndex ?? -1;
+                    dataGrid.CurrentColumn = dataGrid.Columns[firstSelected.ColumnIndex];
+                    Log.Debug("[NAV] Updated CurrentColumn from {OldCol} to {NewCol}", oldColumn, firstSelected.ColumnIndex);
+                }
+                catch (InvalidOperationException ex)
+                {
+                    Log.Warning(ex, "[NAV] Skipped updating CurrentColumn because no current row was active");
+                }
             }
             
             // Pass null for column to avoid DataGrid showing its own selection border
