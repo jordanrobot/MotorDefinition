@@ -9,6 +9,12 @@ namespace JordanRobot.MotorDefinition.Services;
 public class UnitService
 {
     /// <summary>
+    /// Gets or sets the threshold used to correct floating-point precision artifacts.
+    /// A value of 0 disables correction.
+    /// </summary>
+    public double PrecisionErrorThreshold { get; set; } = 1e-10;
+
+    /// <summary>
     /// Gets the supported torque units.
     /// </summary>
     public static string[] SupportedTorqueUnits => ["Nm", "lbf-ft", "lbf-in", "oz-in"];
@@ -83,7 +89,7 @@ public class UnitService
 
         if (fromUnit == toUnit)
         {
-            return value;
+            return ApplyPrecisionCorrection(value);
         }
 
         // Handle hp specially as it's not natively supported by Tare
@@ -104,7 +110,7 @@ public class UnitService
         var quantity = Quantity.Parse($"{value} {tareFromUnit}");
         var converted = quantity.As(tareToUnit);
 
-        return (double)converted.Value;
+        return ApplyPrecisionCorrection((double)converted.Value);
     }
 
     /// <summary>
@@ -120,15 +126,15 @@ public class UnitService
             var watts = value * HpToWatts;
             if (toUnit == "W")
             {
-                return watts;
+                return ApplyPrecisionCorrection(watts);
             }
             else if (toUnit == "kW")
             {
-                return watts / 1000.0;
+                return ApplyPrecisionCorrection(watts / 1000.0);
             }
             else if (toUnit == "hp")
             {
-                return value;
+                return ApplyPrecisionCorrection(value);
             }
             else
             {
@@ -152,7 +158,7 @@ public class UnitService
             {
                 throw new ArgumentException($"Cannot convert from {fromUnit} to hp", nameof(fromUnit));
             }
-            return watts / HpToWatts;
+            return ApplyPrecisionCorrection(watts / HpToWatts);
         }
 
         throw new ArgumentException($"Invalid hp conversion: {fromUnit} to {toUnit}");
@@ -171,11 +177,11 @@ public class UnitService
         {
             if (toUnit == "mA")
             {
-                return value * AToMA;
+                return ApplyPrecisionCorrection(value * AToMA);
             }
             else if (toUnit == "A")
             {
-                return value;
+                return ApplyPrecisionCorrection(value);
             }
             else
             {
@@ -188,11 +194,11 @@ public class UnitService
         {
             if (toUnit == "A")
             {
-                return value / AToMA;
+                return ApplyPrecisionCorrection(value / AToMA);
             }
             else if (toUnit == "mA")
             {
-                return value;
+                return ApplyPrecisionCorrection(value);
             }
             else
             {
@@ -341,5 +347,15 @@ public class UnitService
         {
             return false;
         }
+    }
+
+    /// <summary>
+    /// Applies precision correction using the configured threshold.
+    /// </summary>
+    /// <param name="value">The value to correct.</param>
+    /// <returns>The corrected value if within threshold; otherwise, the original value.</returns>
+    private double ApplyPrecisionCorrection(double value)
+    {
+        return PrecisionRounding.CorrectPrecisionError(value, PrecisionErrorThreshold);
     }
 }
