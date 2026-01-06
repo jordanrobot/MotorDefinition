@@ -784,8 +784,6 @@ public partial class CurveDataTableViewModel : ViewModelBase
     /// <param name="action">Update to perform while suppressing table-side sync to keep the current selection intact.</param>
     private void WithCoordinatorSyncSuppressed(Action action)
     {
-        ArgumentNullException.ThrowIfNull(action);
-
         _suppressCoordinatorSelectionUpdate = true;
         try
         {
