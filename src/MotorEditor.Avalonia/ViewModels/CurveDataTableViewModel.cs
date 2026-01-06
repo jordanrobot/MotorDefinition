@@ -787,6 +787,11 @@ public partial class CurveDataTableViewModel : ViewModelBase
         _suppressCoordinatorSelectionUpdate = true;
         try
         {
+            if (action is null)
+            {
+                throw new ArgumentNullException(nameof(action));
+            }
+
             action();
         }
         finally

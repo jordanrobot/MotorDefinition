@@ -298,6 +298,7 @@ public class CurveDataTableViewModelTests
         var viewModel = CreateViewModelWithData();
         viewModel.EditingCoordinator = new EditingCoordinator();
         viewModel.SelectCell(5, 2);
+        Assert.True(viewModel.IsCellSelected(5, 2));
 
         // Act
         viewModel.MoveSelection(0, -1);
@@ -331,7 +332,7 @@ public class CurveDataTableViewModelTests
         var viewModel = CreateViewModelWithData();
         var coordinator = new EditingCoordinator();
         viewModel.EditingCoordinator = coordinator;
-        var targetSeries = viewModel.SeriesColumns.First();
+        var targetSeries = viewModel.SeriesColumns.First(s => s.Name == "Peak");
         var targetPoint = new EditingCoordinator.PointSelection(targetSeries, 4);
 
         // Act
