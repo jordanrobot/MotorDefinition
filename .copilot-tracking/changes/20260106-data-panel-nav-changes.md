@@ -17,7 +17,10 @@ Track fixes for Data Panel navigation/selection so arrow keys and highlights sta
 
 ### Modified
 
-- None.
+- .copilot-tracking/plans/20260106-data-panel-nav-plan.md - Marked all Data Panel navigation tasks complete.
+- .copilot-tracking/changes/20260106-data-panel-nav-changes.md - Recorded Data Panel navigation progress and file updates.
+- src/MotorEditor.Avalonia/ViewModels/CurveDataTableViewModel.cs - Suppressed coordinator-driven clears so selection persists across non-series columns.
+- tests/CurveEditor.Tests/ViewModels/CurveDataTableViewModelTests.cs - Added coverage for RPM navigation with coordinator and coordinator-driven selection sync.
 
 ### Removed
 
@@ -25,16 +28,19 @@ Track fixes for Data Panel navigation/selection so arrow keys and highlights sta
 
 ## Release Summary
 
-**Total Files Affected**: 2
+**Total Files Affected**: 6
 
 ### Files Created (2)
 
 - .copilot-tracking/plans/20260106-data-panel-nav-plan.md - Navigation/selection fix plan.
 - .copilot-tracking/details/20260106-data-panel-nav-details.md - Supporting task details.
 
-### Files Modified (0)
+### Files Modified (4)
 
-- None.
+- .copilot-tracking/plans/20260106-data-panel-nav-plan.md - Marked navigation tasks complete.
+- .copilot-tracking/changes/20260106-data-panel-nav-changes.md - Logged navigation fixes and testing coverage.
+- src/MotorEditor.Avalonia/ViewModels/CurveDataTableViewModel.cs - Prevented coordinator sync from clearing table selection when navigating non-series columns.
+- tests/CurveEditor.Tests/ViewModels/CurveDataTableViewModelTests.cs - Added navigation and coordinator sync tests.
 
 ### Files Removed (0)
 

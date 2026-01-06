@@ -9,10 +9,10 @@
 
 ## Tasks
 
-- [ ] T1: Analyze logs/repro to identify why selection is lost when moving between torque and non-series columns, causing jumps to the top-left cell.
-- [ ] T2: Implement selection/visual sync fix so left/right navigation across torque/RPM/% keeps the current cell highlighted and in-place.
-- [ ] T3: Add or update focused tests covering navigation into non-series columns and selection persistence.
-- [ ] T4: Update tracking changes file after each task and capture any supporting artifacts (logs/tests/screenshots).
+- [x] T1: Analyze logs/repro to identify why selection is lost when moving between torque and non-series columns, causing jumps to the top-left cell.
+- [x] T2: Implement selection/visual sync fix so left/right navigation across torque/RPM/% keeps the current cell highlighted and in-place.
+- [x] T3: Add or update focused tests covering navigation into non-series columns and selection persistence.
+- [x] T4: Update tracking changes file after each task and capture any supporting artifacts (logs/tests/screenshots).
 
 ## References
 
