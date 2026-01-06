@@ -22,16 +22,13 @@
                     HorizontalAlignment="Right"
                     Spacing="8"
                     Margin="0,16,0,0">
-            <Button x:Name="CancelButton" MinWidth="80" Click="OnCancelClick"
-                HorizontalContentAlignment="Center" VerticalContentAlignment="Center">
+            <Button x:Name="CancelButton" MinWidth="80" Click="OnCancelClick">
                 <TextBlock Text="Cancel" TextWrapping="NoWrap" />
             </Button>
-            <Button x:Name="IgnoreButton" MinWidth="80" Click="OnIgnoreClick"
-                HorizontalContentAlignment="Center" VerticalContentAlignment="Center">
+            <Button x:Name="IgnoreButton" MinWidth="80" Click="OnIgnoreClick">
                 <TextBlock Text="Don't Save" TextWrapping="NoWrap" />
             </Button>
-            <Button x:Name="SaveButton" MinWidth="80" Classes="accent" Click="OnSaveClick"
-                HorizontalContentAlignment="Center" VerticalContentAlignment="Center">
+            <Button x:Name="SaveButton" MinWidth="80" Classes="accent" Click="OnSaveClick">
                 <TextBlock Text="Save" TextWrapping="NoWrap" />
             </Button>
         </StackPanel>
