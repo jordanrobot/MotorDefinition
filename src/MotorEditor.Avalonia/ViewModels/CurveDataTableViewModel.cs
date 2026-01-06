@@ -185,6 +185,7 @@ public partial class CurveDataTableViewModel : ViewModelBase
     }
 
     private EditingCoordinator? _editingCoordinator;
+    private bool _suppressCoordinatorSelectionUpdate;
 
     /// <summary>
     /// Collection of currently selected cells.
@@ -673,13 +674,13 @@ public partial class CurveDataTableViewModel : ViewModelBase
 
         if (_currentVoltage is null || SeriesColumns.Count == 0)
         {
-            EditingCoordinator.ClearSelection();
+            WithCoordinatorSyncSuppressed(() => EditingCoordinator.ClearSelection());
             return;
         }
 
         if (SelectedCells.Count == 0)
         {
-            EditingCoordinator.ClearSelection();
+            WithCoordinatorSyncSuppressed(() => EditingCoordinator.ClearSelection());
             return;
         }
 
@@ -718,14 +719,17 @@ public partial class CurveDataTableViewModel : ViewModelBase
             selections.Add(new EditingCoordinator.PointSelection(series, cell.RowIndex));
         }
 
-        if (selections.Count == 0)
+        WithCoordinatorSyncSuppressed(() =>
         {
-            EditingCoordinator.ClearSelection();
-        }
-        else
-        {
-            EditingCoordinator.SetSelection(selections);
-        }
+            if (selections.Count == 0)
+            {
+                EditingCoordinator.ClearSelection();
+            }
+            else
+            {
+                EditingCoordinator.SetSelection(selections);
+            }
+        });
     }
 
     /// <summary>
@@ -736,6 +740,11 @@ public partial class CurveDataTableViewModel : ViewModelBase
     /// </summary>
     private void OnCoordinatorSelectionChanged(object? sender, EventArgs e)
     {
+        if (_suppressCoordinatorSelectionUpdate)
+        {
+            return;
+        }
+
         if (_editingCoordinator is null || _currentVoltage is null)
         {
             return;
@@ -767,6 +776,28 @@ public partial class CurveDataTableViewModel : ViewModelBase
         _anchorCell = SelectedCells.FirstOrDefault();
 
         SelectionChanged?.Invoke(this, EventArgs.Empty);
+    }
+
+    /// <summary>
+    /// Temporarily suppresses coordinator selection change notifications while executing table-driven coordinator updates to prevent circular feedback loops that would clear the table selection.
+    /// </summary>
+    /// <param name="action">Update to perform while suppressing table-side sync to keep the current selection intact.</param>
+    private void WithCoordinatorSyncSuppressed(Action action)
+    {
+        _suppressCoordinatorSelectionUpdate = true;
+        try
+        {
+            if (action is null)
+            {
+                throw new ArgumentNullException(nameof(action));
+            }
+
+            action();
+        }
+        finally
+        {
+            _suppressCoordinatorSelectionUpdate = false;
+        }
     }
 
     /// <summary>

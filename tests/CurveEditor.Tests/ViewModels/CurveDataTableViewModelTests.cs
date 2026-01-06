@@ -292,6 +292,24 @@ public class CurveDataTableViewModelTests
     }
 
     [Fact]
+    public void MoveSelection_ToRpmColumn_RetainsSelectionWithCoordinator()
+    {
+        // Arrange
+        var viewModel = CreateViewModelWithData();
+        viewModel.EditingCoordinator = new EditingCoordinator();
+        viewModel.SelectCell(5, 2);
+        Assert.True(viewModel.IsCellSelected(5, 2));
+
+        // Act
+        viewModel.MoveSelection(0, -1);
+
+        // Assert
+        Assert.Single(viewModel.SelectedCells);
+        Assert.True(viewModel.IsCellSelected(5, 1));
+        Assert.Empty(viewModel.EditingCoordinator!.SelectedPoints);
+    }
+
+    [Fact]
     public void MoveSelection_ClampsToBounds()
     {
         // Arrange
@@ -305,6 +323,24 @@ public class CurveDataTableViewModelTests
         // Assert - should stay at (0,0)
         Assert.Single(viewModel.SelectedCells);
         Assert.True(viewModel.IsCellSelected(0, 0));
+    }
+
+    [Fact]
+    public void CoordinatorSelection_PopulatesSelectedCells()
+    {
+        // Arrange
+        var viewModel = CreateViewModelWithData();
+        var coordinator = new EditingCoordinator();
+        viewModel.EditingCoordinator = coordinator;
+        var targetSeries = viewModel.SeriesColumns.First(s => s.Name == "Peak");
+        var targetPoint = new EditingCoordinator.PointSelection(targetSeries, 4);
+
+        // Act
+        coordinator.SetSelection(new[] { targetPoint });
+
+        // Assert
+        Assert.Single(viewModel.SelectedCells);
+        Assert.True(viewModel.IsCellSelected(4, 2));
     }
 
     [Fact]
