@@ -1501,8 +1501,7 @@ public partial class CurveDataPanel : UserControl
             
             // Update DataGrid's CurrentColumn to keep navigation in sync
             // but don't pass it to ScrollIntoView to avoid DataGrid's native selection
-            if (dataGrid.SelectedItem is not null &&
-                firstSelected.ColumnIndex >= 0 &&
+            if (firstSelected.ColumnIndex >= 0 &&
                 firstSelected.ColumnIndex < dataGrid.Columns.Count)
             {
                 try
@@ -1513,7 +1512,7 @@ public partial class CurveDataPanel : UserControl
                 }
                 catch (InvalidOperationException ex)
                 {
-                    Log.Warning(ex, "[NAV] Skipped updating CurrentColumn because no current row was active");
+                    Log.Warning(ex, "[NAV] Failed to update CurrentColumn for Row={Row} Col={Col}", firstSelected.RowIndex, firstSelected.ColumnIndex);
                 }
             }
             
