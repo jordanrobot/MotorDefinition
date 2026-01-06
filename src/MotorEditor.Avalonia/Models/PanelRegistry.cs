@@ -76,8 +76,8 @@ public static class PanelRegistry
         new PanelDescriptor
         {
             PanelId = PanelIds.BottomPanel,
-            DisplayName = "Bottom Panel",
-            PanelBarLabel = "Bottom",
+            DisplayName = "Image Panel",
+            PanelBarLabel = "Image",
             EnableIcon = true,
             EnableCollapse = true,
             Zone = PanelZone.Bottom,

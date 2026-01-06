@@ -41,6 +41,7 @@ public partial class MainWindowViewModel : ViewModelBase
     private readonly UnitPreferencesService _unitPreferencesService;
     private readonly IRecentFilesService _recentFilesService;
     private readonly IUserPreferencesService _userPreferencesService;
+    private readonly IBackgroundImageService _backgroundImageService;
 
     // Track previous units for conversion
     private string? _previousTorqueUnit;
@@ -410,6 +411,19 @@ public partial class MainWindowViewModel : ViewModelBase
     /// </summary>
     [ObservableProperty]
     private bool _isBottomPanelExpanded;
+
+    /// <summary>
+    /// Background image settings for the current motor.
+    /// </summary>
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(HasBackgroundImages))]
+    private MotorBackgroundImageSettings? _backgroundImageSettings;
+
+    /// <summary>
+    /// Whether any background images are loaded.
+    /// </summary>
+    public bool HasBackgroundImages => 
+        BackgroundImageSettings?.Images.Count > 0;
 
     /// <summary>
     /// The ID of the currently active panel in the Panel Bar, or null if all are collapsed.
@@ -860,6 +874,7 @@ public partial class MainWindowViewModel : ViewModelBase
         _settingsStore = new PanelLayoutUserSettingsStore();
         _recentFilesService = new RecentFilesService(_settingsStore);
         _userPreferencesService = new UserPreferencesService();
+        _backgroundImageService = new BackgroundImageService();
         UnsavedChangesPromptAsync = ShowUnsavedChangesPromptAsync;
         
         // Initialize unit services
@@ -912,6 +927,7 @@ public partial class MainWindowViewModel : ViewModelBase
         _motorConfigurationWorkflow = new MotorConfigurationWorkflow(_driveVoltageSeriesService);
         _settingsStore = new PanelLayoutUserSettingsStore();
         _recentFilesService = new RecentFilesService(_settingsStore);
+        _backgroundImageService = new BackgroundImageService();
         UnsavedChangesPromptAsync = ShowUnsavedChangesPromptAsync;
         
         // Initialize unit services
@@ -954,6 +970,7 @@ public partial class MainWindowViewModel : ViewModelBase
         _settingsStore = new PanelLayoutUserSettingsStore();
         _recentFilesService = new RecentFilesService(_settingsStore);
         _userPreferencesService = new UserPreferencesService();
+        _backgroundImageService = new BackgroundImageService();
         UnsavedChangesPromptAsync = ShowUnsavedChangesPromptAsync;
         
         // Initialize unit services
@@ -1007,6 +1024,7 @@ public partial class MainWindowViewModel : ViewModelBase
         _settingsStore = settingsStore ?? new PanelLayoutUserSettingsStore();
         _recentFilesService = new RecentFilesService(_settingsStore);
         _userPreferencesService = new UserPreferencesService();
+        _backgroundImageService = new BackgroundImageService();
         UnsavedChangesPromptAsync = unsavedChangesPromptAsync ?? ShowUnsavedChangesPromptAsync;
 
         // Initialize unit services
@@ -3088,6 +3106,103 @@ public partial class MainWindowViewModel : ViewModelBase
         {
             Log.Error(ex, "Failed to open recent file: {FilePath}", filePath);
             StatusMessage = $"Error opening file: {ex.Message}";
+        }
+    }
+
+    [RelayCommand]
+    private async Task LoadBackgroundImageAsync()
+    {
+        try
+        {
+            if (CurrentMotor is null || SelectedDrive is null || SelectedVoltage is null)
+            {
+                StatusMessage = "Please select a drive and voltage first.";
+                return;
+            }
+
+            var storageProvider = GetStorageProvider();
+            if (storageProvider is null)
+            {
+                StatusMessage = "File dialogs are not supported on this platform.";
+                return;
+            }
+
+            // Define image file types
+            var imageFileType = new FilePickerFileType("Image Files")
+            {
+                Patterns = ["*.png", "*.jpg", "*.jpeg", "*.bmp"],
+                MimeTypes = ["image/png", "image/jpeg", "image/bmp"]
+            };
+
+            var files = await storageProvider.OpenFilePickerAsync(new FilePickerOpenOptions
+            {
+                Title = "Load Background Image",
+                AllowMultiple = false,
+                FileTypeFilter = [imageFileType]
+            });
+
+            if (files.Count == 0)
+            {
+                StatusMessage = "Image load cancelled.";
+                return;
+            }
+
+            var file = files[0];
+            var imagePath = file.Path.LocalPath;
+
+            // Initialize background image settings if needed
+            if (BackgroundImageSettings is null)
+            {
+                BackgroundImageSettings = new MotorBackgroundImageSettings();
+            }
+
+            // Check if an image already exists for this drive/voltage combination
+            var existingImage = BackgroundImageSettings.Images.FirstOrDefault(img => 
+                img.DriveName == SelectedDrive.Name && 
+                Math.Abs(img.VoltageValue - SelectedVoltage.Value) < 0.001);
+
+            if (existingImage != null)
+            {
+                // Update existing image
+                existingImage.ImagePath = imagePath;
+                Log.Information("Updated background image for {Drive}/{Voltage}V", 
+                    SelectedDrive.Name, SelectedVoltage.Value);
+            }
+            else
+            {
+                // Add new image
+                var newImage = new BackgroundImageSettings
+                {
+                    ImagePath = imagePath,
+                    DriveName = SelectedDrive.Name,
+                    VoltageValue = SelectedVoltage.Value,
+                    IsVisible = true,
+                    IsLockedToZero = true,
+                    OffsetX = 0,
+                    OffsetY = 0,
+                    ScaleX = 1.0,
+                    ScaleY = 1.0
+                };
+                BackgroundImageSettings.Images.Add(newImage);
+                Log.Information("Added background image for {Drive}/{Voltage}V", 
+                    SelectedDrive.Name, SelectedVoltage.Value);
+            }
+
+            // Save settings if file is saved
+            if (!string.IsNullOrEmpty(CurrentFilePath))
+            {
+                await _backgroundImageService.SaveSettingsAsync(CurrentFilePath, BackgroundImageSettings);
+            }
+
+            OnPropertyChanged(nameof(BackgroundImageSettings));
+            OnPropertyChanged(nameof(HasBackgroundImages));
+
+            StatusMessage = $"Loaded background image: {Path.GetFileName(imagePath)}";
+        }
+        catch (Exception ex)
+        {
+            Log.Error(ex, "Failed to load background image");
+            StatusMessage = $"Error loading image: {ex.Message}";
         }
     }
 

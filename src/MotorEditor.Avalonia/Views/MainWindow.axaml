@@ -164,7 +164,7 @@
                           IsChecked="{Binding IsCurveDataExpanded}"
                           Command="{Binding ToggleCurveDataPanelCommand}"
                           InputGesture="Ctrl+G"/>
-                <MenuItem Header="Show _Bottom Panel"
+                <MenuItem Header="Show _Image Panel"
                           IsChecked="{Binding IsBottomPanelExpanded}"
                           Command="{Binding ToggleBottomPanelCommand}"
                           InputGesture="Ctrl+E"/>
