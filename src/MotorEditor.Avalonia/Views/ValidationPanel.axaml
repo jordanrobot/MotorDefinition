@@ -3,6 +3,7 @@
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:vm="using:CurveEditor.ViewModels"
+             xmlns:models="using:MotorEditor.Avalonia.Models"
              mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="200"
              x:Class="CurveEditor.Views.ValidationPanel"
              x:DataType="vm:MainWindowViewModel">
@@ -25,11 +26,69 @@
         <Border Grid.Row="1" Background="{DynamicResource CurveEditor.SideBar.BackgroundBrush}">
             <ScrollViewer>
                 <StackPanel Margin="8" Spacing="8">
-                    <!-- Placeholder for image controls -->
+                    <!-- No images message -->
                     <TextBlock Text="No background images loaded"
                                Foreground="{DynamicResource SystemControlForegroundBaseMediumBrush}"
                                FontStyle="Italic"
                                IsVisible="{Binding !HasBackgroundImages}"/>
+                    
+                    <!-- Images list -->
+                    <ItemsControl ItemsSource="{Binding BackgroundImageSettings.Images}"
+                                  IsVisible="{Binding HasBackgroundImages}">
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate DataType="models:BackgroundImageSettings">
+                                <Border BorderBrush="{DynamicResource CurveEditor.SideBar.BorderBrush}"
+                                        BorderThickness="1"
+                                        CornerRadius="4"
+                                        Padding="8"
+                                        Margin="0,0,0,8">
+                                    <Grid RowDefinitions="Auto,Auto,Auto,Auto,Auto" ColumnDefinitions="Auto,*" RowSpacing="4">
+                                        <!-- Drive Name -->
+                                        <TextBlock Grid.Row="0" Grid.Column="0"
+                                                   Text="Drive:"
+                                                   FontWeight="SemiBold"
+                                                   Margin="0,0,8,0"/>
+                                        <TextBlock Grid.Row="0" Grid.Column="1"
+                                                   Text="{Binding DriveName}"/>
+                                        
+                                        <!-- Voltage -->
+                                        <TextBlock Grid.Row="1" Grid.Column="0"
+                                                   Text="Voltage:"
+                                                   FontWeight="SemiBold"
+                                                   Margin="0,0,8,0"/>
+                                        <TextBlock Grid.Row="1" Grid.Column="1">
+                                            <Run Text="{Binding VoltageValue}"/>
+                                            <Run Text="V"/>
+                                        </TextBlock>
+                                        
+                                        <!-- Image Path -->
+                                        <TextBlock Grid.Row="2" Grid.Column="0"
+                                                   Text="Image:"
+                                                   FontWeight="SemiBold"
+                                                   Margin="0,0,8,0"
+                                                   VerticalAlignment="Top"/>
+                                        <TextBlock Grid.Row="2" Grid.Column="1"
+                                                   Text="{Binding ImagePath}"
+                                                   TextWrapping="Wrap"
+                                                   FontSize="10"
+                                                   ToolTip.Tip="{Binding ImagePath}"/>
+                                        
+                                        <!-- Visibility Toggle -->
+                                        <CheckBox Grid.Row="3" Grid.Column="0" Grid.ColumnSpan="2"
+                                                  IsChecked="{Binding IsVisible}"
+                                                  Content="Visible"
+                                                  Margin="0,4,0,0"/>
+                                        
+                                        <!-- Lock to Zero Toggle -->
+                                        <CheckBox Grid.Row="4" Grid.Column="0" Grid.ColumnSpan="2"
+                                                  IsChecked="{Binding IsLockedToZero}"
+                                                  Content="Lock to Zero"
+                                                  ToolTip.Tip="When checked, image stays fixed to the graph zero point"/>
+                                    </Grid>
+                                </Border>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
                 </StackPanel>
             </ScrollViewer>
         </Border>

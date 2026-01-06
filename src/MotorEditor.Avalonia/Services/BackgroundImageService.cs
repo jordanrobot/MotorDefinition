@@ -37,6 +37,30 @@ public interface IBackgroundImageService
 }
 
 /// <summary>
+/// DTO for serialization of background image settings.
+/// </summary>
+internal class BackgroundImageSettingsDto
+{
+    public string ImagePath { get; set; } = string.Empty;
+    public string DriveName { get; set; } = string.Empty;
+    public double VoltageValue { get; set; }
+    public bool IsVisible { get; set; } = true;
+    public bool IsLockedToZero { get; set; } = true;
+    public double OffsetX { get; set; }
+    public double OffsetY { get; set; }
+    public double ScaleX { get; set; } = 1.0;
+    public double ScaleY { get; set; } = 1.0;
+}
+
+/// <summary>
+/// DTO for serialization of motor background image settings.
+/// </summary>
+internal class MotorBackgroundImageSettingsDto
+{
+    public List<BackgroundImageSettingsDto> Images { get; set; } = new();
+}
+
+/// <summary>
 /// Service for managing background image settings persistence.
 /// </summary>
 public class BackgroundImageService : IBackgroundImageService
@@ -83,25 +107,38 @@ public class BackgroundImageService : IBackgroundImageService
             }
 
             var json = await File.ReadAllTextAsync(settingsPath);
-            var settings = JsonSerializer.Deserialize<MotorBackgroundImageSettings>(json, JsonOptions);
+            var dto = JsonSerializer.Deserialize<MotorBackgroundImageSettingsDto>(json, JsonOptions);
 
-            if (settings == null)
+            if (dto == null)
             {
                 Log.Warning("Failed to deserialize background image settings from {SettingsPath}", settingsPath);
                 return new MotorBackgroundImageSettings();
             }
 
+            var settings = new MotorBackgroundImageSettings();
+            
             // Convert relative paths to absolute paths
             var motorDirectory = Path.GetDirectoryName(motorFilePath);
-            if (!string.IsNullOrEmpty(motorDirectory))
+            foreach (var imgDto in dto.Images)
             {
-                foreach (var image in settings.Images)
+                var imagePath = imgDto.ImagePath;
+                if (!string.IsNullOrEmpty(motorDirectory) && !Path.IsPathRooted(imagePath))
                 {
-                    if (!Path.IsPathRooted(image.ImagePath))
-                    {
-                        image.ImagePath = Path.GetFullPath(Path.Combine(motorDirectory, image.ImagePath));
-                    }
+                    imagePath = Path.GetFullPath(Path.Combine(motorDirectory, imagePath));
                 }
+
+                settings.Images.Add(new BackgroundImageSettings
+                {
+                    ImagePath = imagePath,
+                    DriveName = imgDto.DriveName,
+                    VoltageValue = imgDto.VoltageValue,
+                    IsVisible = imgDto.IsVisible,
+                    IsLockedToZero = imgDto.IsLockedToZero,
+                    OffsetX = imgDto.OffsetX,
+                    OffsetY = imgDto.OffsetY,
+                    ScaleX = imgDto.ScaleX,
+                    ScaleY = imgDto.ScaleY
+                });
             }
 
             Log.Information("Loaded {Count} background image settings from {SettingsPath}", 
@@ -138,9 +175,9 @@ public class BackgroundImageService : IBackgroundImageService
 
             // Convert absolute paths to relative paths for portability
             var motorDirectory = Path.GetDirectoryName(motorFilePath);
-            var settingsToSave = new MotorBackgroundImageSettings
+            var dto = new MotorBackgroundImageSettingsDto
             {
-                Images = settings.Images.Select(img => new BackgroundImageSettings
+                Images = settings.Images.Select(img => new BackgroundImageSettingsDto
                 {
                     ImagePath = MakeRelativePath(motorDirectory ?? string.Empty, img.ImagePath),
                     DriveName = img.DriveName,
@@ -154,7 +191,7 @@ public class BackgroundImageService : IBackgroundImageService
                 }).ToList()
             };
 
-            var json = JsonSerializer.Serialize(settingsToSave, JsonOptions);
+            var json = JsonSerializer.Serialize(dto, JsonOptions);
             await File.WriteAllTextAsync(settingsPath, json);
 
             Log.Information("Saved {Count} background image settings to {SettingsPath}", 

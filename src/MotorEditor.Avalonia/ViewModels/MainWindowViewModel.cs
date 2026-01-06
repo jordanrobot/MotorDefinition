@@ -1227,7 +1227,31 @@ public partial class MainWindowViewModel : ViewModelBase
         }
 
         Log.Information("[INIT] Tab.SelectedDrive AFTER auto-select: {SelectedDrive}", ActiveTab?.SelectedDrive?.Name);
+        
+        // Load background image settings if file path is available
+        if (!string.IsNullOrEmpty(CurrentFilePath))
+        {
+            _ = LoadBackgroundImageSettingsAsync(CurrentFilePath);
+        }
+        
         Log.Information("[INIT] InitializeActiveTabWithMotor() - END");
+    }
+
+    /// <summary>
+    /// Loads background image settings for the specified motor file.
+    /// </summary>
+    private async Task LoadBackgroundImageSettingsAsync(string motorFilePath)
+    {
+        try
+        {
+            BackgroundImageSettings = await _backgroundImageService.LoadSettingsAsync(motorFilePath);
+            Log.Information("Loaded background image settings for {FilePath}: {Count} images", 
+                motorFilePath, BackgroundImageSettings?.Images.Count ?? 0);
+        }
+        catch (Exception ex)
+        {
+            Log.Error(ex, "Failed to load background image settings for {FilePath}", motorFilePath);
+        }
     }
 
     /// <summary>
