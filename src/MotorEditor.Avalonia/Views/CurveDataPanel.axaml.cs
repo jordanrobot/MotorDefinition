@@ -1497,7 +1497,6 @@ public partial class CurveDataPanel : UserControl
         {
             var row = vm.CurveDataTableViewModel.Rows[firstSelected.RowIndex];
             // Ensure the DataGrid has a current row before updating CurrentColumn to avoid InvalidOperationException.
-            dataGrid.SelectedIndex = firstSelected.RowIndex;
             dataGrid.SelectedItem = row;
             
             // Update DataGrid's CurrentColumn to keep navigation in sync
