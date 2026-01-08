@@ -24,6 +24,22 @@
             <RowDefinition Height="Auto"/>
         </Grid.RowDefinitions>
         
+        <!-- Background Image (behind the chart) -->
+        <Image Grid.Row="0"
+               Source="{Binding BackgroundImagePath}"
+               IsVisible="{Binding BackgroundImageVisible}"
+               Stretch="Fill"
+               Opacity="0.6"
+               RenderTransformOrigin="0,1"
+               HorizontalAlignment="Left"
+               VerticalAlignment="Bottom"
+               ZIndex="-1">
+            <Image.RenderTransform>
+                <ScaleTransform ScaleX="{Binding BackgroundImageScaleX}"
+                                ScaleY="{Binding BackgroundImageScaleY}"/>
+            </Image.RenderTransform>
+        </Image>
+        
         <!-- Chart -->
         <lvc:CartesianChart
             x:Name="TorqueChart"

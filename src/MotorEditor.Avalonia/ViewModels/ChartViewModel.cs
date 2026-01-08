@@ -125,6 +125,42 @@ public partial class ChartViewModel : ViewModelBase
     private double _brakeTorque;
 
     /// <summary>
+    /// Background image path for the current voltage/drive combination.
+    /// </summary>
+    [ObservableProperty]
+    private string? _backgroundImagePath;
+
+    /// <summary>
+    /// Background image visibility.
+    /// </summary>
+    [ObservableProperty]
+    private bool _backgroundImageVisible;
+
+    /// <summary>
+    /// Background image scale X.
+    /// </summary>
+    [ObservableProperty]
+    private double _backgroundImageScaleX = 1.0;
+
+    /// <summary>
+    /// Background image scale Y.
+    /// </summary>
+    [ObservableProperty]
+    private double _backgroundImageScaleY = 1.0;
+
+    /// <summary>
+    /// Background image offset X.
+    /// </summary>
+    [ObservableProperty]
+    private double _backgroundImageOffsetX;
+
+    /// <summary>
+    /// Background image offset Y.
+    /// </summary>
+    [ObservableProperty]
+    private double _backgroundImageOffsetY;
+
+    /// <summary>
     /// Optional undo stack associated with the active document. When set,
     /// data mutations are routed through commands so they can be undone.
     /// </summary>
@@ -368,6 +404,42 @@ public partial class ChartViewModel : ViewModelBase
     public void RefreshChart()
     {
         UpdateChart();
+    }
+
+    /// <summary>
+    /// Updates the background image for the current drive/voltage combination.
+    /// </summary>
+    /// <param name="driveName">Name of the drive.</param>
+    /// <param name="voltageValue">Voltage value.</param>
+    /// <param name="imageSettings">Background image settings for all drive/voltage combinations.</param>
+    public void UpdateBackgroundImage(string? driveName, double voltageValue, MotorEditor.Avalonia.Models.MotorBackgroundImageSettings? imageSettings)
+    {
+        // Clear existing background image
+        BackgroundImagePath = null;
+        BackgroundImageVisible = false;
+
+        if (imageSettings == null || string.IsNullOrEmpty(driveName))
+        {
+            return;
+        }
+
+        // Find matching image for this drive/voltage
+        var matchingImage = imageSettings.Images.FirstOrDefault(img =>
+            img.DriveName == driveName &&
+            Math.Abs(img.VoltageValue - voltageValue) < 0.001);
+
+        if (matchingImage == null)
+        {
+            return;
+        }
+
+        // Update properties
+        BackgroundImagePath = matchingImage.ImagePath;
+        BackgroundImageVisible = matchingImage.IsVisible && System.IO.File.Exists(matchingImage.ImagePath);
+        BackgroundImageScaleX = matchingImage.ScaleX;
+        BackgroundImageScaleY = matchingImage.ScaleY;
+        BackgroundImageOffsetX = matchingImage.OffsetX;
+        BackgroundImageOffsetY = matchingImage.OffsetY;
     }
 
     private void OnCoordinatorSelectionChanged(object? sender, EventArgs e)

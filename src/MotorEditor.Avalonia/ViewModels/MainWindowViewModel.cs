@@ -420,6 +420,18 @@ public partial class MainWindowViewModel : ViewModelBase
     private MotorBackgroundImageSettings? _backgroundImageSettings;
 
     /// <summary>
+    /// Called when BackgroundImageSettings changes to update the chart.
+    /// </summary>
+    partial void OnBackgroundImageSettingsChanged(MotorBackgroundImageSettings? value)
+    {
+        // Update chart with new background image for current drive/voltage
+        ChartViewModel?.UpdateBackgroundImage(
+            ActiveTab?.SelectedDrive?.Name,
+            ActiveTab?.SelectedVoltage?.Value ?? 0,
+            value);
+    }
+
+    /// <summary>
     /// Whether any background images are loaded.
     /// </summary>
     public bool HasBackgroundImages => 
@@ -2771,6 +2783,12 @@ public partial class MainWindowViewModel : ViewModelBase
         ChartViewModel.HasBrake = CurrentMotor?.HasBrake ?? false;
         ChartViewModel.BrakeTorque = CurrentMotor?.BrakeTorque ?? 0;
         ChartViewModel.CurrentVoltage = value;
+        
+        // Update background image for the new drive/voltage combination
+        ChartViewModel.UpdateBackgroundImage(
+            ActiveTab?.SelectedDrive?.Name,
+            value?.Value ?? 0,
+            BackgroundImageSettings);
 
         // Update data table with new voltage configuration
         CurveDataTableViewModel.CurrentVoltage = value;
