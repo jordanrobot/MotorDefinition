@@ -76,13 +76,13 @@ public static class PanelRegistry
         new PanelDescriptor
         {
             PanelId = PanelIds.BottomPanel,
-            DisplayName = "Image Panel",
-            PanelBarLabel = "Image",
+            DisplayName = "Chart Format",
+            PanelBarLabel = "Format",
             EnableIcon = true,
             EnableCollapse = true,
-            Zone = PanelZone.Bottom,
-            DefaultHeight = 150,
-            IconGlyph = "Bottom"
+            Zone = PanelZone.Left,
+            DefaultWidth = 200,
+            IconGlyph = "Format"
         }
     };
 

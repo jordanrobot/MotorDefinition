@@ -164,7 +164,7 @@
                           IsChecked="{Binding IsCurveDataExpanded}"
                           Command="{Binding ToggleCurveDataPanelCommand}"
                           InputGesture="Ctrl+G"/>
-                <MenuItem Header="Show _Image Panel"
+                <MenuItem Header="Show _Chart Format Panel"
                           IsChecked="{Binding IsBottomPanelExpanded}"
                           Command="{Binding ToggleBottomPanelCommand}"
                           InputGesture="Ctrl+E"/>
@@ -229,7 +229,7 @@
                   ColumnDefinitions="200,4,*,4,280">
             
             <!-- Top Row: Left, Center, Right panels -->
-            <!-- Left Zone: Browser and Data panels (zone exclusivity: only one visible at a time) -->
+            <!-- Left Zone: Browser, Data, and Chart Format panels (zone exclusivity: only one visible at a time) -->
             <Grid Grid.Row="0" Grid.RowSpan="3" Grid.Column="0" RowDefinitions="*">
                 <!-- Browser Panel -->
                 <Border Grid.Row="0"
@@ -276,6 +276,17 @@
                             <views:CurveDataPanel DataContext="{Binding}"/>
                         </ScrollViewer>
                     </Grid>
+                </Border>
+                
+                <!-- Chart Format Panel -->
+                <Border Grid.Row="0"
+                        IsVisible="{Binding IsBottomPanelExpanded}"
+                        Background="{DynamicResource CurveEditor.SideBar.BackgroundBrush}"
+                        BorderBrush="{DynamicResource CurveEditor.SideBar.BorderBrush}"
+                        BorderThickness="0,0,1,0"
+                        Padding="0"
+                        IsEnabled="{Binding CurrentMotor, Converter={x:Static ObjectConverters.IsNotNull}}">
+                    <views:ValidationPanel DataContext="{Binding}"/>
                 </Border>
             </Grid>
             
@@ -375,30 +386,6 @@
 
             <!-- Right: Motor Properties Panel -->
             <views:MotorPropertiesPanel Grid.Row="0" Grid.RowSpan="3" Grid.Column="4"/>
-            
-            <!-- Bottom GridSplitter (horizontal) -->
-            <GridSplitter x:Name="BottomSplitter" 
-                          Grid.Row="1" 
-                          Grid.Column="2" 
-                          Grid.ColumnSpan="1" 
-                          Height="4" 
-                          ResizeDirection="Rows"
-                          IsVisible="{Binding IsBottomPanelExpanded}"/>
-            
-            <!-- Bottom: Bottom Panel -->
-            <Border Grid.Row="2" 
-                    Grid.Column="2" 
-                    Grid.ColumnSpan="1"
-                    IsVisible="{Binding IsBottomPanelExpanded}"
-                    Background="{DynamicResource CurveEditor.SideBar.BackgroundBrush}"
-                    BorderBrush="{DynamicResource CurveEditor.SideBar.BorderBrush}"
-                    BorderThickness="0,1,0,0"
-                    MinHeight="100"
-                    MaxHeight="400">
-                <Grid x:Name="BottomPanelGrid" RowDefinitions="Auto,*">
-                    <views:ValidationPanel Grid.Row="0" Grid.RowSpan="2" DataContext="{Binding}"/>
-                </Grid>
-            </Border>
         </Grid>
         
         </Grid> <!-- Close RootLayoutGrid -->
