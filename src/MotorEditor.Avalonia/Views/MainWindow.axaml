@@ -292,7 +292,87 @@
                                        Classes="PanelHeader"/>
                         </Border>
                         <ScrollViewer Grid.Row="1" Margin="8">
-                            <StackPanel x:Name="ChartFormatPanelContent" Spacing="8"/>
+                            <StackPanel x:Name="ChartFormatPanelContent" Spacing="12">
+                                <StackPanel Spacing="6">
+                                    <TextBlock Text="Chart Elements"
+                                               Classes="PanelHeader"/>
+                                    <CheckBox Content="Show Power Curves"
+                                              IsChecked="{Binding ChartViewModel.ShowPowerCurves, Mode=TwoWay}"
+                                              Command="{Binding ToggleShowPowerCurvesCommand}"
+                                              CommandParameter="{Binding IsChecked, RelativeSource={RelativeSource Self}}"/>
+                                    <CheckBox Content="Show Motor Rated Speed Line"
+                                              IsChecked="{Binding ChartViewModel.ShowMotorRatedSpeedLine, Mode=TwoWay}"
+                                              Command="{Binding ToggleShowMotorRatedSpeedLineCommand}"
+                                              CommandParameter="{Binding IsChecked, RelativeSource={RelativeSource Self}}"/>
+                                    <CheckBox Content="Show Voltage Max Speed Line"
+                                              IsChecked="{Binding ChartViewModel.ShowVoltageMaxSpeedLine, Mode=TwoWay}"
+                                              Command="{Binding ToggleShowVoltageMaxSpeedLineCommand}"
+                                              CommandParameter="{Binding IsChecked, RelativeSource={RelativeSource Self}}"/>
+                                </StackPanel>
+
+                                <Separator/>
+
+                                <StackPanel x:Name="ImageUnderlaySection" Spacing="8">
+                                    <TextBlock Text="Image Underlay"
+                                               Classes="PanelHeader"/>
+                                    <Grid ColumnDefinitions="* Auto Auto" ColumnSpacing="6">
+                                        <TextBox Grid.Column="0"
+                                                 MinWidth="120"
+                                                 HorizontalAlignment="Stretch"
+                                                 IsReadOnly="True"
+                                                 Watermark="No image loaded"
+                                                 Text="{Binding ChartViewModel.UnderlayFileName}"/>
+                                        <Button Grid.Column="1"
+                                                Content="Load Image"
+                                                Command="{Binding LoadUnderlayImageAsyncCommand}"
+                                                ToolTip.Tip="Load PNG, JPG, or BMP image as an underlay."/>
+                                        <Button Grid.Column="2"
+                                                Content="Clear"
+                                                Command="{Binding ClearUnderlayImageCommand}"
+                                                IsEnabled="{Binding ChartViewModel.HasUnderlayImage}"/>
+                                    </Grid>
+
+                                    <CheckBox Content="Show Image"
+                                              IsChecked="{Binding ChartViewModel.UnderlayVisible, Mode=TwoWay}"
+                                              IsEnabled="{Binding ChartViewModel.HasUnderlayImage}"/>
+                                    <CheckBox Content="Lock Zero"
+                                              IsChecked="{Binding ChartViewModel.UnderlayLockZero, Mode=TwoWay}"
+                                              IsEnabled="{Binding ChartViewModel.HasUnderlayImage}"/>
+
+                                    <StackPanel Spacing="4" IsEnabled="{Binding ChartViewModel.HasUnderlayImage}">
+                                        <DockPanel>
+                                            <TextBlock Text="X Scale" DockPanel.Dock="Left"/>
+                                            <TextBlock Text="{Binding ChartViewModel.UnderlayXScale, Mode=OneWay, StringFormat=0.00x}"
+                                                       HorizontalAlignment="Right"
+                                                       Foreground="Gray"
+                                                       DockPanel.Dock="Right"/>
+                                        </DockPanel>
+                                        <Slider Minimum="0.1"
+                                                Maximum="5"
+                                                SmallChange="0.05"
+                                                Value="{Binding ChartViewModel.UnderlayXScale, Mode=TwoWay}"/>
+                                    </StackPanel>
+
+                                    <StackPanel Spacing="4" IsEnabled="{Binding ChartViewModel.HasUnderlayImage}">
+                                        <DockPanel>
+                                            <TextBlock Text="Y Scale" DockPanel.Dock="Left"/>
+                                            <TextBlock Text="{Binding ChartViewModel.UnderlayYScale, Mode=OneWay, StringFormat=0.00x}"
+                                                       HorizontalAlignment="Right"
+                                                       Foreground="Gray"
+                                                       DockPanel.Dock="Right"/>
+                                        </DockPanel>
+                                        <Slider Minimum="0.1"
+                                                Maximum="5"
+                                                SmallChange="0.05"
+                                                Value="{Binding ChartViewModel.UnderlayYScale, Mode=TwoWay}"/>
+                                    </StackPanel>
+
+                                    <TextBlock Text="Drag the image on the chart to pan when unlocked."
+                                               FontSize="11"
+                                               Foreground="Gray"
+                                               TextWrapping="Wrap"/>
+                                </StackPanel>
+                            </StackPanel>
                         </ScrollViewer>
                     </Grid>
                 </Border>
