@@ -8,11 +8,12 @@
              x:Class="CurveEditor.Views.ValidationPanel"
              x:DataType="vm:MainWindowViewModel">
 
-    <StackPanel Spacing="8">
+    <StackPanel Spacing="8" MinHeight="50">
         <!-- No images message -->
         <TextBlock Text="No background images loaded"
                    Foreground="{DynamicResource SystemControlForegroundBaseMediumBrush}"
                    FontStyle="Italic"
+                   TextWrapping="Wrap"
                    IsVisible="{Binding !HasBackgroundImages}"/>
         
         <!-- Images list -->
@@ -24,7 +25,8 @@
                             BorderThickness="1"
                             CornerRadius="4"
                             Padding="8"
-                            Margin="0,0,0,8">
+                            Margin="0,0,0,8"
+                            Background="{DynamicResource CurveEditor.Editor.BackgroundBrush}">
                         <Grid RowDefinitions="Auto,Auto,Auto,Auto,Auto,Auto,Auto" ColumnDefinitions="Auto,*" RowSpacing="4">
                             <!-- Drive Name -->
                             <TextBlock Grid.Row="0" Grid.Column="0"
