@@ -391,6 +391,13 @@ public partial class MainWindowViewModel : ViewModelBase
         ActiveLeftPanelId == PanelRegistry.PanelIds.CurveData;
 
     /// <summary>
+    /// Whether the chart format panel is expanded.
+    /// Derived from ActiveLeftPanelId since Chart Format is in the left zone.
+    /// </summary>
+    public bool IsChartFormatExpanded =>
+        ActiveLeftPanelId == PanelRegistry.PanelIds.ChartFormat;
+
+    /// <summary>
     /// Whether the directory browser panel is expanded.
     /// Derived from ActiveLeftPanelId since Browser is in the left zone.
     /// </summary>
@@ -426,6 +433,7 @@ public partial class MainWindowViewModel : ViewModelBase
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(IsBrowserPanelExpanded))]
     [NotifyPropertyChangedFor(nameof(IsCurveDataExpanded))]
+    [NotifyPropertyChangedFor(nameof(IsChartFormatExpanded))]
     private string? _activeLeftPanelId = PanelRegistry.PanelIds.DirectoryBrowser; // Default to Browser expanded
 
     /// <summary>

@@ -17,6 +17,7 @@ public static class PanelRegistry
         public const string DirectoryBrowser = "DirectoryBrowser";
         public const string MotorProperties = "MotorProperties";
         public const string CurveData = "CurveData";
+        public const string ChartFormat = "ChartFormat";
         public const string CurveGraph = "CurveGraph";
         // NOTE: This ID is persisted in user settings. Do not change its string value.
         public const string ValidationErrors = "ValidationErrors";
@@ -51,6 +52,17 @@ public static class PanelRegistry
             Zone = PanelZone.Left,
             DefaultWidth = 200,
             IconGlyph = "Data"
+        },
+        new PanelDescriptor
+        {
+            PanelId = PanelIds.ChartFormat,
+            DisplayName = "Chart Format",
+            PanelBarLabel = "Format",
+            EnableIcon = true,
+            EnableCollapse = true,
+            Zone = PanelZone.Left,
+            DefaultWidth = 220,
+            IconGlyph = "Format"
         },
         new PanelDescriptor
         {

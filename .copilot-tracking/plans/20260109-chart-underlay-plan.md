@@ -10,7 +10,7 @@
 
 ## Tasks
 
-- [ ] T1: Panel infrastructure
+- [x] T1: Panel infrastructure
   - Register a new left-zone panel descriptor and PanelBar button labeled "Chart Format".
   - Add the panel layout shell to MainWindow left zone, matching existing collapsible behavior.
 - [ ] T2: Chart format controls

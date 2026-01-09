@@ -277,6 +277,25 @@
                         </ScrollViewer>
                     </Grid>
                 </Border>
+
+                <!-- Chart Format Panel -->
+                <Border Grid.Row="0"
+                        IsVisible="{Binding IsChartFormatExpanded}"
+                        Background="{DynamicResource CurveEditor.SideBar.BackgroundBrush}"
+                        BorderBrush="{DynamicResource CurveEditor.SideBar.BorderBrush}"
+                        BorderThickness="0,0,1,0"
+                        Padding="0"
+                        IsEnabled="{Binding CurrentMotor, Converter={x:Static ObjectConverters.IsNotNull}}">
+                    <Grid RowDefinitions="Auto,*">
+                        <Border Grid.Row="0" Classes="PanelHeaderContainer">
+                            <TextBlock Text="Chart Format"
+                                       Classes="PanelHeader"/>
+                        </Border>
+                        <ScrollViewer Grid.Row="1" Margin="8">
+                            <StackPanel x:Name="ChartFormatPanelContent" Spacing="8"/>
+                        </ScrollViewer>
+                    </Grid>
+                </Border>
             </Grid>
             
             <!-- Left GridSplitter -->

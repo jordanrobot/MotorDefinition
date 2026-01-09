@@ -12,11 +12,16 @@ Tracking work to add a Chart Format panel with image underlay controls and persi
 
 ### Added
 
-- None yet.
+- .copilot-tracking/plans/20260109-chart-underlay-plan.md - Plan for Chart Format panel and image underlay.
+- .copilot-tracking/details/20260109-chart-underlay-details.md - Task-level requirements for the Chart Format panel and underlay feature set.
+- .copilot-tracking/changes/20260109-chart-underlay-changes.md - Tracking log for Chart Format and image underlay implementation.
 
 ### Modified
 
-- None yet.
+- .copilot-tracking/plans/20260109-chart-underlay-plan.md - Marked panel infrastructure task complete.
+- src/MotorEditor.Avalonia/Models/PanelRegistry.cs - Added Chart Format panel descriptor for the left zone and PanelBar.
+- src/MotorEditor.Avalonia/ViewModels/MainWindowViewModel.cs - Exposed Chart Format panel expanded state derived from the left panel selection.
+- src/MotorEditor.Avalonia/Views/MainWindow.axaml - Added Chart Format panel shell and wiring in the left zone.
 
 ### Removed
 
@@ -24,15 +29,20 @@ Tracking work to add a Chart Format panel with image underlay controls and persi
 
 ## Release Summary
 
-**Total Files Affected**: 0
+**Total Files Affected**: 7
 
-### Files Created (0)
+### Files Created (3)
 
-- None.
+- .copilot-tracking/plans/20260109-chart-underlay-plan.md - Plan document for Chart Format panel and underlay work.
+- .copilot-tracking/details/20260109-chart-underlay-details.md - Detailed task breakdown for the new feature.
+- .copilot-tracking/changes/20260109-chart-underlay-changes.md - Change log for this workstream.
 
-### Files Modified (0)
+### Files Modified (4)
 
-- None.
+- .copilot-tracking/plans/20260109-chart-underlay-plan.md - Updated status for T1 panel infrastructure.
+- src/MotorEditor.Avalonia/Models/PanelRegistry.cs - Registered the Chart Format panel in the left zone registry.
+- src/MotorEditor.Avalonia/ViewModels/MainWindowViewModel.cs - Added Chart Format expansion state tied to ActiveLeftPanelId.
+- src/MotorEditor.Avalonia/Views/MainWindow.axaml - Added Chart Format panel container to the left zone layout.
 
 ### Files Removed (0)
 
