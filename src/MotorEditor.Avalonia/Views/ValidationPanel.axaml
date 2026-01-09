@@ -4,21 +4,38 @@
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:vm="using:CurveEditor.ViewModels"
              xmlns:models="using:MotorEditor.Avalonia.Models"
-             mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="200"
+             mc:Ignorable="d" d:DesignWidth="200" d:DesignHeight="400"
              x:Class="CurveEditor.Views.ValidationPanel"
              x:DataType="vm:MainWindowViewModel">
 
-    <StackPanel Spacing="8" MinHeight="50">
+    <StackPanel Spacing="8">
+        <!-- Debug: Always visible text to verify panel is rendering -->
+        <TextBlock Text="Chart Format Panel Content"
+                   FontWeight="Bold"
+                   Margin="0,0,0,8"/>
+        
         <!-- No images message -->
-        <TextBlock Text="No background images loaded"
+        <TextBlock Text="No background images loaded. Click 'Load Background Image' button above to add an image."
                    Foreground="{DynamicResource SystemControlForegroundBaseMediumBrush}"
                    FontStyle="Italic"
                    TextWrapping="Wrap"
-                   IsVisible="{Binding !HasBackgroundImages}"/>
+                   Margin="0,0,0,8">
+            <TextBlock.IsVisible>
+                <MultiBinding Converter="{x:Static BoolConverters.Or}">
+                    <Binding Path="BackgroundImageSettings" Converter="{x:Static ObjectConverters.IsNull}"/>
+                    <Binding Path="!HasBackgroundImages"/>
+                </MultiBinding>
+            </TextBlock.IsVisible>
+        </TextBlock>
         
         <!-- Images list -->
-        <ItemsControl ItemsSource="{Binding BackgroundImageSettings.Images}"
-                      IsVisible="{Binding HasBackgroundImages}">
+        <ItemsControl ItemsSource="{Binding BackgroundImageSettings.Images}">
+            <ItemsControl.IsVisible>
+                <MultiBinding Converter="{x:Static BoolConverters.And}">
+                    <Binding Path="BackgroundImageSettings" Converter="{x:Static ObjectConverters.IsNotNull}"/>
+                    <Binding Path="HasBackgroundImages"/>
+                </MultiBinding>
+            </ItemsControl.IsVisible>
             <ItemsControl.ItemTemplate>
                 <DataTemplate DataType="models:BackgroundImageSettings">
                     <Border BorderBrush="{DynamicResource CurveEditor.SideBar.BorderBrush}"
@@ -80,11 +97,11 @@
                                 <Slider Value="{Binding ScaleX}"
                                         Minimum="0.1"
                                         Maximum="5.0"
-                                        Width="120"
+                                        Width="100"
                                         TickFrequency="0.1"
                                         VerticalAlignment="Center"/>
                                 <TextBlock Text="{Binding ScaleX, StringFormat='{}{0:F2}x'}"
-                                           MinWidth="45"
+                                           MinWidth="40"
                                            VerticalAlignment="Center"/>
                             </StackPanel>
                             
@@ -98,11 +115,11 @@
                                 <Slider Value="{Binding ScaleY}"
                                         Minimum="0.1"
                                         Maximum="5.0"
-                                        Width="120"
+                                        Width="100"
                                         TickFrequency="0.1"
                                         VerticalAlignment="Center"/>
                                 <TextBlock Text="{Binding ScaleY, StringFormat='{}{0:F2}x'}"
-                                           MinWidth="45"
+                                           MinWidth="40"
                                            VerticalAlignment="Center"/>
                             </StackPanel>
                         </Grid>
