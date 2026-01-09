@@ -286,7 +286,25 @@
                         BorderThickness="0,0,1,0"
                         Padding="0"
                         IsEnabled="{Binding CurrentMotor, Converter={x:Static ObjectConverters.IsNotNull}}">
-                    <views:ValidationPanel DataContext="{Binding}"/>
+                    <Grid RowDefinitions="Auto,*">
+                        <Border Grid.Row="0" Classes="PanelHeaderContainer">
+                            <Grid ColumnDefinitions="*,Auto" ColumnSpacing="8">
+                                <TextBlock Grid.Column="0"
+                                           Text="Chart Format"
+                                           Classes="PanelHeader"/>
+                                <Button Grid.Column="1"
+                                        Content="Load Background Image"
+                                        Command="{Binding LoadBackgroundImageCommand}"
+                                        IsEnabled="{Binding CurrentMotor, Converter={x:Static ObjectConverters.IsNotNull}}"
+                                        Padding="8,4"
+                                        VerticalAlignment="Center"/>
+                            </Grid>
+                        </Border>
+                        
+                        <ScrollViewer Grid.Row="1">
+                            <views:ValidationPanel DataContext="{Binding}" Margin="8"/>
+                        </ScrollViewer>
+                    </Grid>
                 </Border>
             </Grid>
             

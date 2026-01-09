@@ -8,125 +8,105 @@
              x:Class="CurveEditor.Views.ValidationPanel"
              x:DataType="vm:MainWindowViewModel">
 
-    <Grid RowDefinitions="Auto,*">
-        <Border Grid.Row="0" Classes="PanelHeaderContainer">
-            <Grid ColumnDefinitions="*,Auto" ColumnSpacing="8">
-                <TextBlock Grid.Column="0"
-                           Text="Chart Format"
-                           Classes="PanelHeader"/>
-                <Button Grid.Column="1"
-                        Content="Load Background Image"
-                        Command="{Binding LoadBackgroundImageCommand}"
-                        IsEnabled="{Binding CurrentMotor, Converter={x:Static ObjectConverters.IsNotNull}}"
-                        Padding="8,4"
-                        VerticalAlignment="Center"/>
-            </Grid>
-        </Border>
+    <StackPanel Spacing="8">
+        <!-- No images message -->
+        <TextBlock Text="No background images loaded"
+                   Foreground="{DynamicResource SystemControlForegroundBaseMediumBrush}"
+                   FontStyle="Italic"
+                   IsVisible="{Binding !HasBackgroundImages}"/>
         
-        <Border Grid.Row="1" Background="{DynamicResource CurveEditor.SideBar.BackgroundBrush}">
-            <ScrollViewer>
-                <StackPanel Margin="8" Spacing="8">
-                    <!-- No images message -->
-                    <TextBlock Text="No background images loaded"
-                               Foreground="{DynamicResource SystemControlForegroundBaseMediumBrush}"
-                               FontStyle="Italic"
-                               IsVisible="{Binding !HasBackgroundImages}"/>
-                    
-                    <!-- Images list -->
-                    <ItemsControl ItemsSource="{Binding BackgroundImageSettings.Images}"
-                                  IsVisible="{Binding HasBackgroundImages}">
-                        <ItemsControl.ItemTemplate>
-                            <DataTemplate DataType="models:BackgroundImageSettings">
-                                <Border BorderBrush="{DynamicResource CurveEditor.SideBar.BorderBrush}"
-                                        BorderThickness="1"
-                                        CornerRadius="4"
-                                        Padding="8"
-                                        Margin="0,0,0,8">
-                                    <Grid RowDefinitions="Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto" ColumnDefinitions="Auto,*" RowSpacing="4">
-                                        <!-- Drive Name -->
-                                        <TextBlock Grid.Row="0" Grid.Column="0"
-                                                   Text="Drive:"
-                                                   FontWeight="SemiBold"
-                                                   Margin="0,0,8,0"/>
-                                        <TextBlock Grid.Row="0" Grid.Column="1"
-                                                   Text="{Binding DriveName}"/>
-                                        
-                                        <!-- Voltage -->
-                                        <TextBlock Grid.Row="1" Grid.Column="0"
-                                                   Text="Voltage:"
-                                                   FontWeight="SemiBold"
-                                                   Margin="0,0,8,0"/>
-                                        <TextBlock Grid.Row="1" Grid.Column="1">
-                                            <Run Text="{Binding VoltageValue}"/>
-                                            <Run Text="V"/>
-                                        </TextBlock>
-                                        
-                                        <!-- Image Path -->
-                                        <TextBlock Grid.Row="2" Grid.Column="0"
-                                                   Text="Image:"
-                                                   FontWeight="SemiBold"
-                                                   Margin="0,0,8,0"
-                                                   VerticalAlignment="Top"/>
-                                        <TextBlock Grid.Row="2" Grid.Column="1"
-                                                   Text="{Binding ImagePath}"
-                                                   TextWrapping="Wrap"
-                                                   FontSize="10"
-                                                   ToolTip.Tip="{Binding ImagePath}"/>
-                                        
-                                        <!-- Visibility Toggle -->
-                                        <CheckBox Grid.Row="3" Grid.Column="0" Grid.ColumnSpan="2"
-                                                  IsChecked="{Binding IsVisible}"
-                                                  Content="Visible"
-                                                  Margin="0,4,0,0"/>
-                                        
-                                        <!-- Lock to Zero Toggle -->
-                                        <CheckBox Grid.Row="4" Grid.Column="0" Grid.ColumnSpan="2"
-                                                  IsChecked="{Binding IsLockedToZero}"
-                                                  Content="Lock to Zero"
-                                                  ToolTip.Tip="When checked, image stays fixed to the graph zero point"/>
-                                        
-                                        <!-- X Scale Slider -->
-                                        <TextBlock Grid.Row="5" Grid.Column="0"
-                                                   Text="X Scale:"
-                                                   FontWeight="SemiBold"
-                                                   Margin="0,4,8,0"
-                                                   VerticalAlignment="Center"/>
-                                        <StackPanel Grid.Row="5" Grid.Column="1" Orientation="Horizontal" Spacing="4" Margin="0,4,0,0">
-                                            <Slider Value="{Binding ScaleX}"
-                                                    Minimum="0.1"
-                                                    Maximum="5.0"
-                                                    Width="120"
-                                                    TickFrequency="0.1"
-                                                    VerticalAlignment="Center"/>
-                                            <TextBlock Text="{Binding ScaleX, StringFormat='{}{0:F2}x'}"
-                                                       MinWidth="45"
-                                                       VerticalAlignment="Center"/>
-                                        </StackPanel>
-                                        
-                                        <!-- Y Scale Slider -->
-                                        <TextBlock Grid.Row="6" Grid.Column="0"
-                                                   Text="Y Scale:"
-                                                   FontWeight="SemiBold"
-                                                   Margin="0,4,8,0"
-                                                   VerticalAlignment="Center"/>
-                                        <StackPanel Grid.Row="6" Grid.Column="1" Orientation="Horizontal" Spacing="4" Margin="0,4,0,0">
-                                            <Slider Value="{Binding ScaleY}"
-                                                    Minimum="0.1"
-                                                    Maximum="5.0"
-                                                    Width="120"
-                                                    TickFrequency="0.1"
-                                                    VerticalAlignment="Center"/>
-                                            <TextBlock Text="{Binding ScaleY, StringFormat='{}{0:F2}x'}"
-                                                       MinWidth="45"
-                                                       VerticalAlignment="Center"/>
-                                        </StackPanel>
-                                    </Grid>
-                                </Border>
-                            </DataTemplate>
-                        </ItemsControl.ItemTemplate>
-                    </ItemsControl>
-                </StackPanel>
-            </ScrollViewer>
-        </Border>
-    </Grid>
+        <!-- Images list -->
+        <ItemsControl ItemsSource="{Binding BackgroundImageSettings.Images}"
+                      IsVisible="{Binding HasBackgroundImages}">
+            <ItemsControl.ItemTemplate>
+                <DataTemplate DataType="models:BackgroundImageSettings">
+                    <Border BorderBrush="{DynamicResource CurveEditor.SideBar.BorderBrush}"
+                            BorderThickness="1"
+                            CornerRadius="4"
+                            Padding="8"
+                            Margin="0,0,0,8">
+                        <Grid RowDefinitions="Auto,Auto,Auto,Auto,Auto,Auto,Auto" ColumnDefinitions="Auto,*" RowSpacing="4">
+                            <!-- Drive Name -->
+                            <TextBlock Grid.Row="0" Grid.Column="0"
+                                       Text="Drive:"
+                                       FontWeight="SemiBold"
+                                       Margin="0,0,8,0"/>
+                            <TextBlock Grid.Row="0" Grid.Column="1"
+                                       Text="{Binding DriveName}"/>
+                            
+                            <!-- Voltage -->
+                            <TextBlock Grid.Row="1" Grid.Column="0"
+                                       Text="Voltage:"
+                                       FontWeight="SemiBold"
+                                       Margin="0,0,8,0"/>
+                            <TextBlock Grid.Row="1" Grid.Column="1">
+                                <Run Text="{Binding VoltageValue}"/>
+                                <Run Text="V"/>
+                            </TextBlock>
+                            
+                            <!-- Image Path -->
+                            <TextBlock Grid.Row="2" Grid.Column="0"
+                                       Text="Image:"
+                                       FontWeight="SemiBold"
+                                       Margin="0,0,8,0"
+                                       VerticalAlignment="Top"/>
+                            <TextBlock Grid.Row="2" Grid.Column="1"
+                                       Text="{Binding ImagePath}"
+                                       TextWrapping="Wrap"
+                                       FontSize="10"
+                                       ToolTip.Tip="{Binding ImagePath}"/>
+                            
+                            <!-- Visibility Toggle -->
+                            <CheckBox Grid.Row="3" Grid.Column="0" Grid.ColumnSpan="2"
+                                      IsChecked="{Binding IsVisible}"
+                                      Content="Visible"
+                                      Margin="0,4,0,0"/>
+                            
+                            <!-- Lock to Zero Toggle -->
+                            <CheckBox Grid.Row="4" Grid.Column="0" Grid.ColumnSpan="2"
+                                      IsChecked="{Binding IsLockedToZero}"
+                                      Content="Lock to Zero"
+                                      ToolTip.Tip="When checked, image stays fixed to the graph zero point"/>
+                            
+                            <!-- X Scale Slider -->
+                            <TextBlock Grid.Row="5" Grid.Column="0"
+                                       Text="X Scale:"
+                                       FontWeight="SemiBold"
+                                       Margin="0,4,8,0"
+                                       VerticalAlignment="Center"/>
+                            <StackPanel Grid.Row="5" Grid.Column="1" Orientation="Horizontal" Spacing="4" Margin="0,4,0,0">
+                                <Slider Value="{Binding ScaleX}"
+                                        Minimum="0.1"
+                                        Maximum="5.0"
+                                        Width="120"
+                                        TickFrequency="0.1"
+                                        VerticalAlignment="Center"/>
+                                <TextBlock Text="{Binding ScaleX, StringFormat='{}{0:F2}x'}"
+                                           MinWidth="45"
+                                           VerticalAlignment="Center"/>
+                            </StackPanel>
+                            
+                            <!-- Y Scale Slider -->
+                            <TextBlock Grid.Row="6" Grid.Column="0"
+                                       Text="Y Scale:"
+                                       FontWeight="SemiBold"
+                                       Margin="0,4,8,0"
+                                       VerticalAlignment="Center"/>
+                            <StackPanel Grid.Row="6" Grid.Column="1" Orientation="Horizontal" Spacing="4" Margin="0,4,0,0">
+                                <Slider Value="{Binding ScaleY}"
+                                        Minimum="0.1"
+                                        Maximum="5.0"
+                                        Width="120"
+                                        TickFrequency="0.1"
+                                        VerticalAlignment="Center"/>
+                                <TextBlock Text="{Binding ScaleY, StringFormat='{}{0:F2}x'}"
+                                           MinWidth="45"
+                                           VerticalAlignment="Center"/>
+                            </StackPanel>
+                        </Grid>
+                    </Border>
+                </DataTemplate>
+            </ItemsControl.ItemTemplate>
+        </ItemsControl>
+    </StackPanel>
 </UserControl>
