@@ -13,10 +13,10 @@
 - [x] T1: Panel infrastructure
   - Register a new left-zone panel descriptor and PanelBar button labeled "Chart Format".
   - Add the panel layout shell to MainWindow left zone, matching existing collapsible behavior.
-- [ ] T2: Chart format controls
+- [x] T2: Chart format controls
   - Move/expose existing chart visibility toggles inside the new panel (power curves, motor rated speed line, voltage max speed line) and wire them to current settings.
   - Ensure toggles sync with menu commands and persisted preferences.
-- [ ] T3: Image underlay UI + interaction
+- [x] T3: Image underlay UI + interaction
   - Add underlay controls (file name display, Load Image button with dialog, visibility checkbox, lock-zero toggle, X/Y scale sliders, pan via drag).
   - Render the selected image behind the chart with proper z-order and per-voltage isolation.
 - [ ] T4: Persistence & tests

@@ -309,14 +309,6 @@ public partial class ChartViewModel : ViewModelBase
             return;
         }
 
-        if (value)
-        {
-            _suppressUnderlayNotifications = true;
-            UnderlayOffsetX = 0;
-            UnderlayOffsetY = 0;
-            _suppressUnderlayNotifications = false;
-        }
-
         UpdateUnderlayMetadata(state => state.Metadata.LockZero = value);
     }
 
