@@ -38,7 +38,6 @@
             <lvc:CartesianChart
                 x:Name="TorqueChart"
                 Grid.Row="0"
-                Panel.ZIndex="1"
                 Series="{Binding Series}"
                 XAxes="{Binding XAxes}"
                 YAxes="{Binding YAxes}"
@@ -68,7 +67,6 @@
             <!-- Title Overlay -->
             <TextBlock Text="{Binding Title}"
                        Grid.Row="0"
-                       Panel.ZIndex="2"
                        FontSize="16"
                        FontWeight="SemiBold"
                        Foreground="Gray"

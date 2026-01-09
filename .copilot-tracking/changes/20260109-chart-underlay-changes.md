@@ -15,13 +15,18 @@ Tracking work to add a Chart Format panel with image underlay controls and persi
 - .copilot-tracking/plans/20260109-chart-underlay-plan.md - Plan for Chart Format panel and image underlay.
 - .copilot-tracking/details/20260109-chart-underlay-details.md - Task-level requirements for the Chart Format panel and underlay feature set.
 - .copilot-tracking/changes/20260109-chart-underlay-changes.md - Tracking log for Chart Format and image underlay implementation.
+- src/MotorEditor.Avalonia/Models/UnderlayMetadata.cs - Value model for per-drive/voltage underlay persistence.
+- src/MotorEditor.Avalonia/Services/UnderlayMetadataService.cs - JSON persistence service for underlay metadata in .motorEditor.
 
 ### Modified
 
 - .copilot-tracking/plans/20260109-chart-underlay-plan.md - Marked panel infrastructure task complete.
 - src/MotorEditor.Avalonia/Models/PanelRegistry.cs - Added Chart Format panel descriptor for the left zone and PanelBar.
 - src/MotorEditor.Avalonia/ViewModels/MainWindowViewModel.cs - Exposed Chart Format panel expanded state derived from the left panel selection.
-- src/MotorEditor.Avalonia/Views/MainWindow.axaml - Added Chart Format panel shell and wiring in the left zone.
+- src/MotorEditor.Avalonia/ViewModels/ChartViewModel.cs - Added underlay state, commands, and persistence hooks; fixed HasUnderlayImage property to use generated backing.
+- src/MotorEditor.Avalonia/Views/ChartView.axaml - Inserted underlay canvas and LiveCharts chart layout.
+- src/MotorEditor.Avalonia/Views/ChartView.axaml.cs - Added underlay rendering, drag-to-pan, and layout logic.
+- src/MotorEditor.Avalonia/Views/MainWindow.axaml - Added Chart Format panel UI, underlay controls, and corrected Load Underlay command binding.
 
 ### Removed
 
@@ -29,20 +34,25 @@ Tracking work to add a Chart Format panel with image underlay controls and persi
 
 ## Release Summary
 
-**Total Files Affected**: 7
+**Total Files Affected**: 12
 
-### Files Created (3)
+### Files Created (5)
 
 - .copilot-tracking/plans/20260109-chart-underlay-plan.md - Plan document for Chart Format panel and underlay work.
 - .copilot-tracking/details/20260109-chart-underlay-details.md - Detailed task breakdown for the new feature.
 - .copilot-tracking/changes/20260109-chart-underlay-changes.md - Change log for this workstream.
+- src/MotorEditor.Avalonia/Models/UnderlayMetadata.cs - Underlay persistence model.
+- src/MotorEditor.Avalonia/Services/UnderlayMetadataService.cs - Underlay metadata persistence service.
 
-### Files Modified (4)
+### Files Modified (7)
 
 - .copilot-tracking/plans/20260109-chart-underlay-plan.md - Updated status for T1 panel infrastructure.
 - src/MotorEditor.Avalonia/Models/PanelRegistry.cs - Registered the Chart Format panel in the left zone registry.
-- src/MotorEditor.Avalonia/ViewModels/MainWindowViewModel.cs - Added Chart Format expansion state tied to ActiveLeftPanelId.
-- src/MotorEditor.Avalonia/Views/MainWindow.axaml - Added Chart Format panel container to the left zone layout.
+- src/MotorEditor.Avalonia/ViewModels/MainWindowViewModel.cs - Added Chart Format expansion state tied to ActiveLeftPanelId and underlay command handlers.
+- src/MotorEditor.Avalonia/Views/MainWindow.axaml - Added Chart Format panel container and underlay control bindings.
+- src/MotorEditor.Avalonia/ViewModels/ChartViewModel.cs - Added underlay state, commands, and persistence hooks; fixed HasUnderlayImage property to use generated backing.
+- src/MotorEditor.Avalonia/Views/ChartView.axaml - Inserted underlay canvas and LiveCharts chart layout.
+- src/MotorEditor.Avalonia/Views/ChartView.axaml.cs - Added underlay rendering, drag-to-pan, and layout logic.
 
 ### Files Removed (0)
 

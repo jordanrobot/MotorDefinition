@@ -190,7 +190,7 @@ public partial class ChartViewModel : ViewModelBase
     /// <summary>
     /// True when an underlay image is loaded for the active selection.
     /// </summary>
-    public bool HasUnderlayImage => _underlayImage is not null;
+    public bool HasUnderlayImage => UnderlayImage is not null;
 
     private sealed class UnderlayState
     {

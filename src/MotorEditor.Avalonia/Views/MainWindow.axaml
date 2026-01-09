@@ -324,7 +324,7 @@
                                                  Text="{Binding ChartViewModel.UnderlayFileName}"/>
                                         <Button Grid.Column="1"
                                                 Content="Load Image"
-                                                Command="{Binding LoadUnderlayImageAsyncCommand}"
+                                                Command="{Binding LoadUnderlayImageCommand}"
                                                 ToolTip.Tip="Load PNG, JPG, or BMP image as an underlay."/>
                                         <Button Grid.Column="2"
                                                 Content="Clear"
