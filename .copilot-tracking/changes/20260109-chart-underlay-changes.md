@@ -51,7 +51,7 @@ Tracking work to add a Chart Format panel with image underlay controls and persi
 - src/MotorEditor.Avalonia/ViewModels/MainWindowViewModel.cs - Added Chart Format expansion state tied to ActiveLeftPanelId and underlay command handlers.
 - src/MotorEditor.Avalonia/Views/MainWindow.axaml - Added Chart Format panel container and underlay control bindings.
 - src/MotorEditor.Avalonia/ViewModels/ChartViewModel.cs - Added underlay state, commands, and persistence hooks; fixed HasUnderlayImage property to use generated backing.
-- src/MotorEditor.Avalonia/Views/ChartView.axaml - Inserted underlay canvas and LiveCharts chart layout.
+- src/MotorEditor.Avalonia/Views/ChartView.axaml - Inserted underlay canvas and LiveCharts chart layout; temporarily overlaid underlay canvas above chart for validation.
 - src/MotorEditor.Avalonia/Views/ChartView.axaml.cs - Added underlay rendering, drag-to-pan, and layout logic.
 
 ### Files Removed (0)

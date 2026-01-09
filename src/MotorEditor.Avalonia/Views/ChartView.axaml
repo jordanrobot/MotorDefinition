@@ -25,15 +25,6 @@
         </Grid.RowDefinitions>
 
         <Grid Grid.Row="0">
-            <Canvas x:Name="UnderlayCanvas"
-                    HorizontalAlignment="Stretch"
-                    VerticalAlignment="Stretch">
-                <Image x:Name="UnderlayImage"
-                       Stretch="Fill"
-                       Opacity="0.45"
-                       IsHitTestVisible="False"/>
-            </Canvas>
-
             <!-- Chart -->
             <lvc:CartesianChart
                 x:Name="TorqueChart"
@@ -63,6 +54,15 @@
                     highlighted index map changes.
                 -->
             </lvc:CartesianChart>
+
+            <Canvas x:Name="UnderlayCanvas"
+                    HorizontalAlignment="Stretch"
+                    VerticalAlignment="Stretch">
+                <Image x:Name="UnderlayImage"
+                       Stretch="Fill"
+                       Opacity="0.45"
+                       IsHitTestVisible="False"/>
+            </Canvas>
             
             <!-- Title Overlay -->
             <TextBlock Text="{Binding Title}"
