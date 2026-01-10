@@ -493,7 +493,7 @@ public partial class ChartViewModel : ViewModelBase
         {
             ImagePath = path,
             IsVisible = true,
-            LockZero = true,
+            LockZero = false,
             XScale = 1d,
             YScale = 1d,
             OffsetX = 0,
@@ -540,6 +540,12 @@ public partial class ChartViewModel : ViewModelBase
 
         _underlayImagePath = metadata.ImagePath;
         ApplyUnderlayState(state);
+        // Ensure visibility is applied when metadata indicates it should be shown.
+        if (metadata.IsVisible && state.Bitmap is not null)
+        {
+            UnderlayVisible = false;
+            UnderlayVisible = true;
+        }
         RaiseUnderlayChanged(state.Metadata);
         return true;
     }
