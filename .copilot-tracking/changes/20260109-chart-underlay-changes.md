@@ -21,14 +21,15 @@ Tracking work to add a Chart Format panel with image underlay controls and persi
 
 ### Modified
 
-- .copilot-tracking/plans/20260109-chart-underlay-plan.md - Marked panel infrastructure, controls, underlay interaction, and persistence tasks complete; added T5 for underlay coordinate synchronization.
-- .copilot-tracking/details/20260109-chart-underlay-details.md - Documented T5 requirements for anchor/scale origin synchronization with chart origin.
-- src/MotorEditor.Avalonia/Models/PanelRegistry.cs - Added Chart Format panel descriptor for the left zone and PanelBar.
-- src/MotorEditor.Avalonia/ViewModels/MainWindowViewModel.cs - Exposed Chart Format panel expanded state derived from the left panel selection.
-- src/MotorEditor.Avalonia/ViewModels/ChartViewModel.cs - Added underlay state, commands, and persistence hooks; fixed HasUnderlayImage property to use generated backing; lock toggle no longer resets offsets.
-- src/MotorEditor.Avalonia/Views/ChartView.axaml - Inserted underlay canvas and LiveCharts chart layout; temporarily overlaid underlay canvas above chart for validation.
-- src/MotorEditor.Avalonia/Views/ChartView.axaml.cs - Added underlay rendering, drag-to-pan, and layout logic.
-- src/MotorEditor.Avalonia/Views/MainWindow.axaml - Added Chart Format panel UI, underlay controls, numeric scale inputs, and corrected Load Underlay command binding.
+ - .copilot-tracking/plans/20260109-chart-underlay-plan.md - Marked panel infrastructure, controls, underlay interaction, persistence, and T5 coordinate synchronization complete.
+ - .copilot-tracking/details/20260109-chart-underlay-details.md - Documented T5 requirements for anchor/scale origin synchronization with chart origin.
+ - src/MotorEditor.Avalonia/Models/PanelRegistry.cs - Added Chart Format panel descriptor for the left zone and PanelBar.
+ - src/MotorEditor.Avalonia/ViewModels/MainWindowViewModel.cs - Exposed Chart Format panel expanded state derived from the left panel selection.
+ - src/MotorEditor.Avalonia/ViewModels/ChartViewModel.cs - Added underlay state, commands, and persistence hooks; fixed HasUnderlayImage property to use generated backing; lock toggle no longer resets offsets; anchor-aware scaling keeps chart origin aligned when changing scale or offsets.
+ - src/MotorEditor.Avalonia/Views/ChartView.axaml - Inserted underlay canvas and LiveCharts chart layout; temporarily overlaid underlay canvas above chart for validation.
+ - src/MotorEditor.Avalonia/Views/ChartView.axaml.cs - Added underlay rendering, drag-to-pan, and layout logic; refreshes anchor when chart layout changes.
+ - src/MotorEditor.Avalonia/Views/MainWindow.axaml - Added Chart Format panel UI, underlay controls, numeric scale inputs, and corrected Load Underlay command binding.
+ - tests/CurveEditor.Tests/ViewModels/UnderlayPersistenceTests.cs - Added coverage for scaling around positive and negative underlay anchors to keep chart origin synchronized.
 
 ### Removed
 
