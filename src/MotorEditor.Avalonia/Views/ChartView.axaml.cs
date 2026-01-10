@@ -247,6 +247,8 @@ public partial class ChartView : UserControl
             return;
         }
 
+        _chartViewModel.RefreshUnderlayAnchors();
+
         if (_chartViewModel.UnderlayImage is null || !_chartViewModel.UnderlayVisible)
         {
             UnderlayImage.IsVisible = false;

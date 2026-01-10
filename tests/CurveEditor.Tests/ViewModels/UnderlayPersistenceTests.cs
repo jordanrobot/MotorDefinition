@@ -78,6 +78,40 @@ public sealed class UnderlayPersistenceTests : IDisposable
         Assert.False(vm.HasUnderlayImage);
     }
 
+    [Fact]
+    public void UnderlayScaleChange_WithPositiveAnchor_KeepsOriginAligned()
+    {
+        var vm = new ChartViewModel();
+        vm.SetActiveUnderlayKey("drive|480");
+        vm.UnderlayOffsetX = -0.5;
+        vm.UnderlayOffsetY = -0.25;
+
+        vm.UnderlayXScale = 2.0;
+        vm.UnderlayYScale = 0.5;
+
+        Assert.Equal(-1.0, vm.UnderlayOffsetX);
+        Assert.Equal(-0.125, vm.UnderlayOffsetY);
+        Assert.Equal(0.5, -vm.UnderlayOffsetX / vm.UnderlayXScale);
+        Assert.Equal(0.25, -vm.UnderlayOffsetY / vm.UnderlayYScale);
+    }
+
+    [Fact]
+    public void UnderlayScaleChange_WithNegativeAnchor_KeepsOriginAligned()
+    {
+        var vm = new ChartViewModel();
+        vm.SetActiveUnderlayKey("drive|208");
+        vm.UnderlayOffsetX = 0.25;
+        vm.UnderlayOffsetY = 0.1;
+
+        vm.UnderlayXScale = 3.0;
+        vm.UnderlayYScale = 2.0;
+
+        Assert.Equal(0.75, vm.UnderlayOffsetX);
+        Assert.Equal(0.2, vm.UnderlayOffsetY);
+        Assert.Equal(-0.25, -vm.UnderlayOffsetX / vm.UnderlayXScale);
+        Assert.Equal(-0.1, -vm.UnderlayOffsetY / vm.UnderlayYScale);
+    }
+
     public void Dispose()
     {
         try
