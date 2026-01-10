@@ -2898,7 +2898,7 @@ public partial class MainWindowViewModel : ViewModelBase
             return;
         }
 
-        if (chartViewModel.HasUnderlayState(key))
+        if (chartViewModel.HasUnderlayImage)
         {
             return;
         }
