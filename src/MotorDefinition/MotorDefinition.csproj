@@ -7,11 +7,24 @@
 
 		<!-- NuGet package metadata (Phase 3.1.7) -->
 		<PackageId>JordanRobot.MotorDefinition</PackageId>
+		<Title>JordanRobot.MotorDefinition</Title>
 		<Version>1.0.0-alpha.1</Version>
+		<RootNamespace>JordanRobot.MotorDefinition</RootNamespace>
+    	<AssemblyName>JordanRobot.MotorDefinition</AssemblyName>
+	    <Copyright>(C) 2025</Copyright>
 		<Authors>JordanRobot</Authors>
 		<Description>Definitions for electrical motor properties and performance data. Allows mapping of performance (torque/speed curves) per drive and voltage. Includes JSON load/save functionality and object models.</Description>
 		<RepositoryUrl>https://github.com/jordanrobot/MotorDefinition</RepositoryUrl>
 		<PackageReadmeFile>README.md</PackageReadmeFile>
+      	<PackageProjectUrl>https://github.com/jordanrobot/MotorDefinition</PackageProjectUrl>
+    	<PackageLicenseExpression>MIT</PackageLicenseExpression>
+	    <IncludeSymbols>true</IncludeSymbols>
+    	<SymbolPackageFormat>snupkg</SymbolPackageFormat>
+    	<PackageTags>motor, performance, torque, power transmission, power</PackageTags>
+	    <RepositoryType>git</RepositoryType>
+    	<PackageIcon>nugeticon.64.png</PackageIcon>
+    	<PackageIconUrl>https://raw.githubusercontent.com/jordanrobot/MotorDefinition/refs/heads/main/src/MotorDefinition/nugeticon.64.png</PackageIconUrl>
+    	<AssemblyName>JordanRobot.MotorDefinition</AssemblyName>
   </PropertyGroup>
 
   <ItemGroup>
