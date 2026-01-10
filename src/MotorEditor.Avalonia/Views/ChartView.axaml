@@ -60,7 +60,7 @@
                     VerticalAlignment="Stretch">
                 <Image x:Name="UnderlayImage"
                        Stretch="Fill"
-                       Opacity="0.45"
+                       Opacity="{Binding UnderlayOpacity}"
                        IsHitTestVisible="False"/>
             </Canvas>
             

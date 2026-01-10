@@ -35,3 +35,8 @@
 - Recalculate and store the transformed chart-origin anchor in the image coordinate system after drag/pan, scale adjustments, or applying metadata so future scaling uses the same origin.
 - Refresh the anchor after chart size/layout changes (axes/series updates or draw-margin changes) so the underlay stays aligned with the chart origin.
 - Add unit coverage verifying scale-around-origin behavior for positive and negative anchors.
+
+## T6: Underlay opacity control
+- Add a transparency/opacity slider to the Format panel grouped with image controls, updating the underlay in real time.
+- Persist opacity in underlay metadata with a sensible default matching the current constant value.
+- Load persisted opacity into the UI and applied image state on startup/selection.

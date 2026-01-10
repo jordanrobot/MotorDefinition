@@ -42,4 +42,9 @@ public sealed class UnderlayMetadata
     /// Positive values move the image upward.
     /// </summary>
     public double OffsetY { get; set; }
+
+    /// <summary>
+    /// Opacity applied to the underlay image (0 = fully transparent, 1 = fully opaque).
+    /// </summary>
+    public double Opacity { get; set; } = 0.45;
 }

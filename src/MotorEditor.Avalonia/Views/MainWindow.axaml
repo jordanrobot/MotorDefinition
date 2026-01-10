@@ -341,6 +341,20 @@
 
                                     <StackPanel Spacing="4" IsEnabled="{Binding ChartViewModel.HasUnderlayImage}">
                                         <DockPanel>
+                                            <TextBlock Text="Transparency" DockPanel.Dock="Left"/>
+                                            <TextBlock Text="{Binding ChartViewModel.UnderlayOpacity, Mode=OneWay, StringFormat=Opacity: {0:P0}}"
+                                                       HorizontalAlignment="Right"
+                                                       Foreground="Gray"
+                                                       DockPanel.Dock="Right"/>
+                                        </DockPanel>
+                                        <Slider Minimum="0"
+                                                Maximum="1"
+                                                SmallChange="0.05"
+                                                Value="{Binding ChartViewModel.UnderlayOpacity, Mode=TwoWay}"/>
+                                    </StackPanel>
+
+                                    <StackPanel Spacing="4" IsEnabled="{Binding ChartViewModel.HasUnderlayImage}">
+                                        <DockPanel>
                                             <TextBlock Text="X Scale" DockPanel.Dock="Left"/>
                                             <TextBlock Text="{Binding ChartViewModel.UnderlayXScale, Mode=OneWay, StringFormat=0.00x}"
                                                        HorizontalAlignment="Right"

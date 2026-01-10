@@ -177,10 +177,15 @@ public partial class ChartViewModel : ViewModelBase
     [ObservableProperty]
     private double _underlayOffsetY;
 
+    [ObservableProperty]
+    private double _underlayOpacity = DefaultUnderlayOpacity;
+
     /// <summary>
     /// Raised when persisted underlay metadata should be updated.
     /// </summary>
     public event EventHandler<UnderlayChangedEventArgs>? UnderlayChanged;
+
+    private const double DefaultUnderlayOpacity = 0.45;
 
     /// <summary>
     /// Display name of the loaded underlay image (file name only).
@@ -386,6 +391,24 @@ public partial class ChartViewModel : ViewModelBase
         RecalculateUnderlayAnchors();
     }
 
+    partial void OnUnderlayOpacityChanged(double value)
+    {
+        if (_suppressUnderlayNotifications)
+        {
+            return;
+        }
+
+        var clamped = Math.Clamp(value, 0d, 1d);
+        if (!clamped.Equals(value))
+        {
+            _suppressUnderlayNotifications = true;
+            UnderlayOpacity = clamped;
+            _suppressUnderlayNotifications = false;
+        }
+
+        UpdateUnderlayMetadata(state => state.Metadata.Opacity = clamped);
+    }
+
     partial void OnUnderlayImageChanged(Bitmap? value)
     {
         if (value is null && UnderlayVisible)
@@ -490,6 +513,7 @@ public partial class ChartViewModel : ViewModelBase
         UnderlayYScale = 1d;
         UnderlayOffsetX = 0;
         UnderlayOffsetY = 0;
+        UnderlayOpacity = DefaultUnderlayOpacity;
         _suppressUnderlayNotifications = false;
 
         OnPropertyChanged(nameof(UnderlayFileName));
@@ -647,6 +671,8 @@ public partial class ChartViewModel : ViewModelBase
             UnderlayYScale = metadata.YScale <= 0 ? 1d : metadata.YScale;
             UnderlayOffsetX = metadata.OffsetX;
             UnderlayOffsetY = metadata.OffsetY;
+            var opacity = double.IsNaN(metadata.Opacity) ? DefaultUnderlayOpacity : metadata.Opacity;
+            UnderlayOpacity = Math.Clamp(opacity, 0d, 1d);
             OnPropertyChanged(nameof(UnderlayFileName));
         }
         finally
@@ -693,7 +719,8 @@ public partial class ChartViewModel : ViewModelBase
             XScale = metadata.XScale,
             YScale = metadata.YScale,
             OffsetX = metadata.OffsetX,
-            OffsetY = metadata.OffsetY
+            OffsetY = metadata.OffsetY,
+            Opacity = metadata.Opacity
         };
     }
 

@@ -27,6 +27,8 @@
   - Keep the image anchor/scale origin aligned to the chart origin during scale/offset changes (including negative/out-of-bounds anchors).
   - Recalculate anchor/scale origin after underlay manipulations and chart size/layout changes so the image stays visually locked to chart (0,0).
   - Add focused tests covering scale-around-origin scenarios.
+- [x] T6: Underlay opacity control
+  - Add transparency/opacity slider in the Format panel, apply changes live to the image, and persist/load the value with underlay metadata.
 
 ## References
 
