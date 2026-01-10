@@ -19,7 +19,7 @@
 - [x] T3: Image underlay UI + interaction
   - Add underlay controls (file name display, Load Image button with dialog, visibility checkbox, lock-zero toggle, X/Y scale sliders, pan via drag).
   - Render the selected image behind the chart with proper z-order and per-voltage isolation.
-- [ ] T4: Persistence & tests
+- [x] T4: Persistence & tests
   - Persist underlay metadata (path, visibility, lock-zero, X-scale, Y-scale, offsets) per motor/drive/voltage in `.motorEditor` JSON files; handle missing files with user error notification and allow clearing metadata.
   - Add targeted tests covering metadata load/save and viewmodel state updates for underlay settings.
   - Update changes tracking after each task and mark tasks complete.

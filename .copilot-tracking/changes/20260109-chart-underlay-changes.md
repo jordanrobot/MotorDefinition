@@ -17,10 +17,11 @@ Tracking work to add a Chart Format panel with image underlay controls and persi
 - .copilot-tracking/changes/20260109-chart-underlay-changes.md - Tracking log for Chart Format and image underlay implementation.
 - src/MotorEditor.Avalonia/Models/UnderlayMetadata.cs - Value model for per-drive/voltage underlay persistence.
 - src/MotorEditor.Avalonia/Services/UnderlayMetadataService.cs - JSON persistence service for underlay metadata in .motorEditor.
+- tests/CurveEditor.Tests/ViewModels/UnderlayPersistenceTests.cs - Coverage for underlay metadata save/load and view model application (including lock).
 
 ### Modified
 
-- .copilot-tracking/plans/20260109-chart-underlay-plan.md - Marked panel infrastructure, controls, and underlay interaction tasks complete.
+- .copilot-tracking/plans/20260109-chart-underlay-plan.md - Marked panel infrastructure, controls, underlay interaction, and persistence tasks complete.
 - src/MotorEditor.Avalonia/Models/PanelRegistry.cs - Added Chart Format panel descriptor for the left zone and PanelBar.
 - src/MotorEditor.Avalonia/ViewModels/MainWindowViewModel.cs - Exposed Chart Format panel expanded state derived from the left panel selection.
 - src/MotorEditor.Avalonia/ViewModels/ChartViewModel.cs - Added underlay state, commands, and persistence hooks; fixed HasUnderlayImage property to use generated backing; lock toggle no longer resets offsets.
@@ -34,15 +35,16 @@ Tracking work to add a Chart Format panel with image underlay controls and persi
 
 ## Release Summary
 
-**Total Files Affected**: 12
+**Total Files Affected**: 13
 
-### Files Created (5)
+### Files Created (6)
 
 - .copilot-tracking/plans/20260109-chart-underlay-plan.md - Plan document for Chart Format panel and underlay work.
 - .copilot-tracking/details/20260109-chart-underlay-details.md - Detailed task breakdown for the new feature.
 - .copilot-tracking/changes/20260109-chart-underlay-changes.md - Change log for this workstream.
 - src/MotorEditor.Avalonia/Models/UnderlayMetadata.cs - Underlay persistence model.
 - src/MotorEditor.Avalonia/Services/UnderlayMetadataService.cs - Underlay metadata persistence service.
+- tests/CurveEditor.Tests/ViewModels/UnderlayPersistenceTests.cs - Tests for underlay metadata persistence and application.
 
 ### Files Modified (7)
 
