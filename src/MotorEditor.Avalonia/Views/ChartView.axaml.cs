@@ -1,9 +1,12 @@
+using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Linq;
 using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Input;
+using Avalonia.Media;
 using CurveEditor.ViewModels;
 using LiveChartsCore;
 using LiveChartsCore.Defaults;
@@ -17,12 +20,24 @@ namespace CurveEditor.Views;
 /// </summary>
 public partial class ChartView : UserControl
 {
+    private ChartViewModel? _chartViewModel;
+    private bool _isUnderlayDragging;
+    private Point _dragStart;
+    private double _startOffsetX;
+    private double _startOffsetY;
+    private Rect _underlayBounds = new();
+
     /// <summary>
     /// Creates a new ChartView instance.
     /// </summary>
     public ChartView()
     {
         InitializeComponent();
+
+        TorqueChart.PointerMoved += OnChartPointerMoved;
+        TorqueChart.PointerReleased += OnChartPointerReleased;
+        TorqueChart.PointerCaptureLost += OnChartPointerCaptureLost;
+        TorqueChart.SizeChanged += (_, _) => UpdateUnderlayLayout();
 
         // Handle mouse clicks on the chart to support basic point
         // selection. This wiring keeps the interaction logic in the
@@ -31,8 +46,31 @@ public partial class ChartView : UserControl
         TorqueChart.PointerPressed += OnChartPointerPressed;
     }
 
+    protected override void OnDataContextChanged(EventArgs e)
+    {
+        if (_chartViewModel is not null)
+        {
+            _chartViewModel.PropertyChanged -= OnChartViewModelPropertyChanged;
+        }
+
+        _chartViewModel = DataContext as ChartViewModel;
+        if (_chartViewModel is not null)
+        {
+            _chartViewModel.PropertyChanged += OnChartViewModelPropertyChanged;
+        }
+
+        base.OnDataContextChanged(e);
+        UpdateUnderlayLayout();
+    }
+
     private void OnChartPointerPressed(object? sender, PointerPressedEventArgs e)
     {
+        if (TryBeginUnderlayDrag(e))
+        {
+            e.Handled = true;
+            return;
+        }
+
         if (DataContext is not ChartViewModel vm)
         {
             return;
@@ -97,5 +135,150 @@ public partial class ChartView : UserControl
         }
 
         vm.HandleChartPointClick(seriesName, index, e.KeyModifiers);
+    }
+
+    private void OnChartPointerMoved(object? sender, PointerEventArgs e)
+    {
+        if (!_isUnderlayDragging || _chartViewModel is null)
+        {
+            return;
+        }
+
+        var chart = TorqueChart.CoreChart;
+        if (chart is null)
+        {
+            return;
+        }
+
+        var drawSize = chart.DrawMarginSize;
+        if (drawSize.Width <= 0 || drawSize.Height <= 0)
+        {
+            return;
+        }
+
+        var position = e.GetPosition(TorqueChart);
+        var delta = position - _dragStart;
+        var newOffsetX = _startOffsetX + delta.X / drawSize.Width;
+        var newOffsetY = _startOffsetY + (-delta.Y / drawSize.Height);
+
+        _chartViewModel.UnderlayOffsetX = newOffsetX;
+        _chartViewModel.UnderlayOffsetY = newOffsetY;
+
+        UpdateUnderlayLayout();
+        e.Handled = true;
+    }
+
+    private void OnChartPointerReleased(object? sender, PointerEventArgs e)
+    {
+        if (!_isUnderlayDragging)
+        {
+            return;
+        }
+
+        _isUnderlayDragging = false;
+        e.Pointer.Capture(null);
+        e.Handled = true;
+    }
+
+    private void OnChartPointerCaptureLost(object? sender, PointerCaptureLostEventArgs e)
+    {
+        _isUnderlayDragging = false;
+    }
+
+    private void OnChartViewModelPropertyChanged(object? sender, PropertyChangedEventArgs e)
+    {
+        if (e.PropertyName is nameof(ChartViewModel.UnderlayImage)
+            or nameof(ChartViewModel.UnderlayVisible)
+            or nameof(ChartViewModel.UnderlayLockZero)
+            or nameof(ChartViewModel.UnderlayXScale)
+            or nameof(ChartViewModel.UnderlayYScale)
+            or nameof(ChartViewModel.UnderlayOffsetX)
+            or nameof(ChartViewModel.UnderlayOffsetY)
+            or nameof(ChartViewModel.XAxes)
+            or nameof(ChartViewModel.YAxes)
+            or nameof(ChartViewModel.Series))
+        {
+            UpdateUnderlayLayout();
+        }
+    }
+
+    private bool TryBeginUnderlayDrag(PointerPressedEventArgs e)
+    {
+        if (_chartViewModel is null ||
+            !_chartViewModel.UnderlayVisible ||
+            _chartViewModel.UnderlayLockZero ||
+            _chartViewModel.UnderlayImage is null ||
+            _underlayBounds.Width <= 0 ||
+            _underlayBounds.Height <= 0)
+        {
+            return false;
+        }
+
+        var position = e.GetPosition(TorqueChart);
+        if (!_underlayBounds.Contains(position))
+        {
+            return false;
+        }
+
+        var chart = TorqueChart.CoreChart;
+        if (chart is null)
+        {
+            return false;
+        }
+
+        var drawSize = chart.DrawMarginSize;
+        if (drawSize.Width <= 0 || drawSize.Height <= 0)
+        {
+            return false;
+        }
+
+        _isUnderlayDragging = true;
+        _dragStart = position;
+        _startOffsetX = _chartViewModel.UnderlayOffsetX;
+        _startOffsetY = _chartViewModel.UnderlayOffsetY;
+        e.Pointer.Capture(TorqueChart);
+        return true;
+    }
+
+    private void UpdateUnderlayLayout()
+    {
+        if (_chartViewModel is null)
+        {
+            return;
+        }
+
+        if (_chartViewModel.UnderlayImage is null || !_chartViewModel.UnderlayVisible)
+        {
+            UnderlayImage.IsVisible = false;
+            _underlayBounds = new Rect();
+            return;
+        }
+
+        var chart = TorqueChart.CoreChart;
+        if (chart is null)
+        {
+            return;
+        }
+
+        var drawLocation = chart.DrawMarginLocation;
+        var drawSize = chart.DrawMarginSize;
+        if (drawSize.Width <= 0 || drawSize.Height <= 0)
+        {
+            return;
+        }
+
+        var imageWidth = drawSize.Width * _chartViewModel.UnderlayXScale;
+        var imageHeight = drawSize.Height * _chartViewModel.UnderlayYScale;
+
+        var x = drawLocation.X + (_chartViewModel.UnderlayOffsetX * drawSize.Width);
+        var y = drawLocation.Y + drawSize.Height - imageHeight - (_chartViewModel.UnderlayOffsetY * drawSize.Height);
+
+        Canvas.SetLeft(UnderlayImage, x);
+        Canvas.SetTop(UnderlayImage, y);
+        UnderlayImage.Width = imageWidth;
+        UnderlayImage.Height = imageHeight;
+        UnderlayImage.Source = _chartViewModel.UnderlayImage;
+        UnderlayImage.IsVisible = _chartViewModel.UnderlayVisible && _chartViewModel.UnderlayImage is not null;
+        _underlayBounds = new Rect(x, y, imageWidth, imageHeight);
     }
 }

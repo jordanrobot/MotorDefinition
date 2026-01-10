@@ -41,6 +41,7 @@ public partial class MainWindowViewModel : ViewModelBase
     private readonly UnitPreferencesService _unitPreferencesService;
     private readonly IRecentFilesService _recentFilesService;
     private readonly IUserPreferencesService _userPreferencesService;
+    private readonly UnderlayMetadataService _underlayMetadataService = new();
 
     // Track previous units for conversion
     private string? _previousTorqueUnit;
@@ -113,6 +114,11 @@ public partial class MainWindowViewModel : ViewModelBase
     {
         Patterns = ["*.json"],
         MimeTypes = ["application/json"]
+    };
+    private static readonly FilePickerFileType ImageFileType = new("Images")
+    {
+        Patterns = ["*.png", "*.jpg", "*.jpeg", "*.bmp"],
+        MimeTypes = ["image/png", "image/jpeg", "image/bmp"]
     };
 
     /// <summary>
@@ -391,6 +397,13 @@ public partial class MainWindowViewModel : ViewModelBase
         ActiveLeftPanelId == PanelRegistry.PanelIds.CurveData;
 
     /// <summary>
+    /// Whether the chart format panel is expanded.
+    /// Derived from ActiveLeftPanelId since Chart Format is in the left zone.
+    /// </summary>
+    public bool IsChartFormatExpanded =>
+        ActiveLeftPanelId == PanelRegistry.PanelIds.ChartFormat;
+
+    /// <summary>
     /// Whether the directory browser panel is expanded.
     /// Derived from ActiveLeftPanelId since Browser is in the left zone.
     /// </summary>
@@ -426,6 +439,7 @@ public partial class MainWindowViewModel : ViewModelBase
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(IsBrowserPanelExpanded))]
     [NotifyPropertyChangedFor(nameof(IsCurveDataExpanded))]
+    [NotifyPropertyChangedFor(nameof(IsChartFormatExpanded))]
     private string? _activeLeftPanelId = PanelRegistry.PanelIds.DirectoryBrowser; // Default to Browser expanded
 
     /// <summary>
@@ -484,7 +498,7 @@ public partial class MainWindowViewModel : ViewModelBase
     /// This affects all open tabs and newly opened files.
     /// </summary>
     [RelayCommand]
-    private void ToggleShowPowerCurves()
+    private void ToggleShowPowerCurves(bool? desiredState = null)
     {
         var chartViewModel = ChartViewModel;
         if (chartViewModel == null)
@@ -492,8 +506,8 @@ public partial class MainWindowViewModel : ViewModelBase
             return;
         }
 
-        // Toggle the state
-        var newState = !chartViewModel.ShowPowerCurves;
+        // Toggle the state when no explicit value is provided, otherwise honor the requested state.
+        var newState = desiredState ?? !chartViewModel.ShowPowerCurves;
         
         // Apply to all open tabs
         foreach (var tab in Tabs)
@@ -509,7 +523,7 @@ public partial class MainWindowViewModel : ViewModelBase
     }
 
     [RelayCommand]
-    private void ToggleShowMotorRatedSpeedLine()
+    private void ToggleShowMotorRatedSpeedLine(bool? desiredState = null)
     {
         var chartViewModel = ChartViewModel;
         if (chartViewModel == null)
@@ -517,8 +531,8 @@ public partial class MainWindowViewModel : ViewModelBase
             return;
         }
 
-        // Toggle the state
-        var newState = !chartViewModel.ShowMotorRatedSpeedLine;
+        // Toggle the state when no explicit value is provided, otherwise honor the requested state.
+        var newState = desiredState ?? !chartViewModel.ShowMotorRatedSpeedLine;
         
         // Apply to all open tabs
         foreach (var tab in Tabs)
@@ -534,7 +548,7 @@ public partial class MainWindowViewModel : ViewModelBase
     }
 
     [RelayCommand]
-    private void ToggleShowVoltageMaxSpeedLine()
+    private void ToggleShowVoltageMaxSpeedLine(bool? desiredState = null)
     {
         var chartViewModel = ChartViewModel;
         if (chartViewModel == null)
@@ -542,8 +556,8 @@ public partial class MainWindowViewModel : ViewModelBase
             return;
         }
 
-        // Toggle the state
-        var newState = !chartViewModel.ShowVoltageMaxSpeedLine;
+        // Toggle the state when no explicit value is provided, otherwise honor the requested state.
+        var newState = desiredState ?? !chartViewModel.ShowVoltageMaxSpeedLine;
         
         // Apply to all open tabs
         foreach (var tab in Tabs)
@@ -556,6 +570,63 @@ public partial class MainWindowViewModel : ViewModelBase
         
         // Save preference for future tabs
         _settingsStore.SaveBool("ShowVoltageMaxSpeedLine", newState);
+    }
+
+    [RelayCommand]
+    private async Task LoadUnderlayImageAsync()
+    {
+        UpdateUnderlaySelection();
+
+        if (ChartViewModel is null || SelectedDrive is null || SelectedVoltage is null)
+        {
+            StatusMessage = "Select a drive and voltage before loading an image.";
+            return;
+        }
+
+        var storageProvider = GetStorageProvider();
+        if (storageProvider is null)
+        {
+            StatusMessage = "File dialogs are not supported on this platform.";
+            return;
+        }
+
+        var files = await storageProvider.OpenFilePickerAsync(new FilePickerOpenOptions
+        {
+            Title = "Load Image",
+            AllowMultiple = false,
+            FileTypeFilter = [ImageFileType]
+        });
+
+        var file = files?.FirstOrDefault();
+
+        if (file is null)
+        {
+            StatusMessage = "Image load cancelled.";
+            return;
+        }
+
+        var path = file.Path.LocalPath;
+        if (!ChartViewModel.TryLoadUnderlayFromPath(path, out var error))
+        {
+            StatusMessage = error ?? "Failed to load image.";
+            return;
+        }
+
+        StatusMessage = $"Loaded image: {Path.GetFileName(path)}";
+    }
+
+    [RelayCommand]
+    private void ClearUnderlayImage()
+    {
+        UpdateUnderlaySelection();
+
+        if (ChartViewModel is null || SelectedDrive is null || SelectedVoltage is null)
+        {
+            return;
+        }
+
+        ChartViewModel.ClearActiveUnderlay();
+        StatusMessage = "Underlay cleared.";
     }
 
     /// <summary>
@@ -856,6 +927,7 @@ public partial class MainWindowViewModel : ViewModelBase
         var chartViewModel = new ChartViewModel();
         var curveDataTableViewModel = new CurveDataTableViewModel();
         var editingCoordinator = new EditingCoordinator();
+        chartViewModel.UnderlayChanged += OnUnderlayChanged;
         _motorConfigurationWorkflow = new MotorConfigurationWorkflow(_driveVoltageSeriesService);
         _settingsStore = new PanelLayoutUserSettingsStore();
         _recentFilesService = new RecentFilesService(_settingsStore);
@@ -876,6 +948,7 @@ public partial class MainWindowViewModel : ViewModelBase
             CurveDataTableViewModel = curveDataTableViewModel,
             EditingCoordinator = editingCoordinator
         };
+        chartViewModel.UnderlayChanged += OnUnderlayChanged;
         WireTabIntegration(initialTab);
         _tabs.Add(initialTab);
         ActiveTab = initialTab;
@@ -909,6 +982,7 @@ public partial class MainWindowViewModel : ViewModelBase
         var chartViewModel = new ChartViewModel();
         var curveDataTableViewModel = new CurveDataTableViewModel();
         var editingCoordinator = new EditingCoordinator();
+        chartViewModel.UnderlayChanged += OnUnderlayChanged;
         _motorConfigurationWorkflow = new MotorConfigurationWorkflow(_driveVoltageSeriesService);
         _settingsStore = new PanelLayoutUserSettingsStore();
         _recentFilesService = new RecentFilesService(_settingsStore);
@@ -950,6 +1024,7 @@ public partial class MainWindowViewModel : ViewModelBase
         var chartViewModel = new ChartViewModel();
         var curveDataTableViewModel = new CurveDataTableViewModel();
         var editingCoordinator = new EditingCoordinator();
+        chartViewModel.UnderlayChanged += OnUnderlayChanged;
         _motorConfigurationWorkflow = new MotorConfigurationWorkflow(_driveVoltageSeriesService);
         _settingsStore = new PanelLayoutUserSettingsStore();
         _recentFilesService = new RecentFilesService(_settingsStore);
@@ -1085,6 +1160,7 @@ public partial class MainWindowViewModel : ViewModelBase
             CurveDataTableViewModel = new CurveDataTableViewModel(),
             EditingCoordinator = new EditingCoordinator()
         };
+        tab.ChartViewModel.UnderlayChanged += OnUnderlayChanged;
 
         // Wire up the view models
         tab.ChartViewModel.EditingCoordinator = tab.EditingCoordinator;
@@ -1181,6 +1257,8 @@ public partial class MainWindowViewModel : ViewModelBase
             return;
         }
 
+        ChartViewModel.ResetUnderlayStates();
+
         Log.Information(
             "[INIT] Motor loaded into tab: MotorName={MotorName} DriveCount={DriveCount}",
             ActiveTab.Motor.MotorName,
@@ -1263,6 +1341,7 @@ public partial class MainWindowViewModel : ViewModelBase
             OnPropertyChanged(nameof(SelectedDrive));
             OnPropertyChanged(nameof(SelectedVoltage));
             OnPropertyChanged(nameof(SelectedSeries));
+            UpdateUnderlaySelection();
 
             Log.Information(
                 "[TAB_CHANGE] Post-notify snapshot: AvailableDrives={AvailableDrives} AvailableVoltages={AvailableVoltages} AvailableSeries={AvailableSeries} SelectedDrive={SelectedDrive} SelectedVoltage={SelectedVoltage}",
@@ -2740,7 +2819,56 @@ public partial class MainWindowViewModel : ViewModelBase
         VoltageContinuousTorqueEditor = value?.RatedContinuousTorque.ToString(System.Globalization.CultureInfo.InvariantCulture) ?? string.Empty;
         VoltageContinuousAmpsEditor = value?.ContinuousAmperage.ToString(System.Globalization.CultureInfo.InvariantCulture) ?? string.Empty;
         VoltagePeakAmpsEditor = value?.PeakAmperage.ToString(System.Globalization.CultureInfo.InvariantCulture) ?? string.Empty;
+        UpdateUnderlaySelection();
         Log.Information("[SELECTION] OnSelectedVoltageChanged() - END");
+    }
+
+    private void OnUnderlayChanged(object? sender, UnderlayChangedEventArgs e)
+    {
+        if (!ReferenceEquals(ActiveTab?.ChartViewModel, sender))
+        {
+            return;
+        }
+
+        if (SelectedDrive is null || SelectedVoltage is null)
+        {
+            return;
+        }
+
+        var currentKey = BuildUnderlayKey(SelectedDrive, SelectedVoltage);
+        if (!string.Equals(currentKey, e.Key, StringComparison.Ordinal))
+        {
+            return;
+        }
+
+        if (string.IsNullOrWhiteSpace(CurrentFilePath))
+        {
+            return;
+        }
+
+        if (string.IsNullOrWhiteSpace(e.Metadata.ImagePath))
+        {
+            try
+            {
+                _underlayMetadataService.Delete(CurrentFilePath, SelectedDrive.Name, SelectedVoltage.Value);
+            }
+            catch (Exception ex)
+            {
+                Log.Warning(ex, "Failed to delete underlay metadata");
+                StatusMessage = "Unable to delete underlay metadata.";
+            }
+            return;
+        }
+
+        try
+        {
+            _underlayMetadataService.Save(CurrentFilePath, SelectedDrive.Name, SelectedVoltage.Value, e.Metadata);
+        }
+        catch (Exception ex)
+        {
+            Log.Warning(ex, "Failed to persist underlay metadata");
+            StatusMessage = "Unable to save underlay metadata.";
+        }
     }
 
     private void OnChartDataChanged(object? sender, EventArgs e)
@@ -2752,6 +2880,50 @@ public partial class MainWindowViewModel : ViewModelBase
     {
         MarkDirty();
         ChartViewModel.RefreshChart();
+    }
+
+    private void UpdateUnderlaySelection()
+    {
+        var chartViewModel = ChartViewModel;
+        if (chartViewModel is null)
+        {
+            return;
+        }
+
+        var key = BuildUnderlayKey(SelectedDrive, SelectedVoltage);
+        chartViewModel.SetActiveUnderlayKey(key);
+
+        if (string.IsNullOrWhiteSpace(key) || SelectedDrive is null || SelectedVoltage is null)
+        {
+            return;
+        }
+
+        if (chartViewModel.HasUnderlayImage)
+        {
+            return;
+        }
+
+        var metadata = _underlayMetadataService.Load(CurrentFilePath, SelectedDrive.Name, SelectedVoltage.Value);
+        if (metadata is null)
+        {
+            return;
+        }
+
+        if (!chartViewModel.TryApplyUnderlayMetadata(metadata, out var error))
+        {
+            StatusMessage = error ?? "Unable to load underlay image.";
+            _underlayMetadataService.Delete(CurrentFilePath, SelectedDrive.Name, SelectedVoltage.Value);
+        }
+    }
+
+    private static string? BuildUnderlayKey(Drive? drive, Voltage? voltage)
+    {
+        if (drive is null || voltage is null)
+        {
+            return null;
+        }
+
+        return $"{drive.Name}|{voltage.Value.ToString("0.###", System.Globalization.CultureInfo.InvariantCulture)}";
     }
 
     /// <summary>

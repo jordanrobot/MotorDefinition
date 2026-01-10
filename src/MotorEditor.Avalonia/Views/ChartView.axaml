@@ -23,47 +23,58 @@
             <RowDefinition Height="*"/>
             <RowDefinition Height="Auto"/>
         </Grid.RowDefinitions>
-        
-        <!-- Chart -->
-        <lvc:CartesianChart
-            x:Name="TorqueChart"
-            Grid.Row="0"
-            Series="{Binding Series}"
-            XAxes="{Binding XAxes}"
-            YAxes="{Binding YAxes}"
-            TooltipPosition="Top"
-            ZoomMode="None"
-            AnimationsSpeed="00:00:00.000">
-            <lvc:CartesianChart.TooltipBackgroundPaint>
-                <lvc:SolidColorPaint Color="#F5F5F5" />
-            </lvc:CartesianChart.TooltipBackgroundPaint>
-            <lvc:CartesianChart.TooltipTextPaint>
-                <lvc:SolidColorPaint Color="#333333" />
-            </lvc:CartesianChart.TooltipTextPaint>
+
+        <Grid Grid.Row="0">
+            <!-- Chart -->
+            <lvc:CartesianChart
+                x:Name="TorqueChart"
+                Grid.Row="0"
+                Series="{Binding Series}"
+                XAxes="{Binding XAxes}"
+                YAxes="{Binding YAxes}"
+                TooltipPosition="Top"
+                ZoomMode="None"
+                AnimationsSpeed="00:00:00.000">
+                <lvc:CartesianChart.TooltipBackgroundPaint>
+                    <lvc:SolidColorPaint Color="#F5F5F5" />
+                </lvc:CartesianChart.TooltipBackgroundPaint>
+                <lvc:CartesianChart.TooltipTextPaint>
+                    <lvc:SolidColorPaint Color="#333333" />
+                </lvc:CartesianChart.TooltipTextPaint>
+                
+                <!--
+                    Minimal point-highlighting: the ChartViewModel exposes
+                    IsPointHighlighted(seriesName, index). LiveCharts does not
+                    support per-point templates directly in XAML bindings, but
+                    raising PropertyChanged for Series when selection changes
+                    allows the chart to be redrawn with any style changes that
+                    may be applied in code. The visual differentiation itself is
+                    kept subtle and is implemented in ChartViewModel by adjusting
+                    GeometrySize/GeometryFill for highlighted points when the
+                    highlighted index map changes.
+                -->
+            </lvc:CartesianChart>
+
+            <Canvas x:Name="UnderlayCanvas"
+                    HorizontalAlignment="Stretch"
+                    VerticalAlignment="Stretch">
+                <Image x:Name="UnderlayImage"
+                       Stretch="Fill"
+                       Opacity="0.45"
+                       IsHitTestVisible="False"/>
+            </Canvas>
             
-            <!--
-                Minimal point-highlighting: the ChartViewModel exposes
-                IsPointHighlighted(seriesName, index). LiveCharts does not
-                support per-point templates directly in XAML bindings, but
-                raising PropertyChanged for Series when selection changes
-                allows the chart to be redrawn with any style changes that
-                may be applied in code. The visual differentiation itself is
-                kept subtle and is implemented in ChartViewModel by adjusting
-                GeometrySize/GeometryFill for highlighted points when the
-                highlighted index map changes.
-            -->
-        </lvc:CartesianChart>
-        
-        <!-- Title Overlay -->
-        <TextBlock Text="{Binding Title}"
-                   Grid.Row="0"
-                   FontSize="16"
-                   FontWeight="SemiBold"
-                   Foreground="Gray"
-                   HorizontalAlignment="Center"
-                   VerticalAlignment="Top"
-                   Margin="0,20,0,0"
-                   IsHitTestVisible="False"/>
+            <!-- Title Overlay -->
+            <TextBlock Text="{Binding Title}"
+                       Grid.Row="0"
+                       FontSize="16"
+                       FontWeight="SemiBold"
+                       Foreground="Gray"
+                       HorizontalAlignment="Center"
+                       VerticalAlignment="Top"
+                       Margin="0,20,0,0"
+                       IsHitTestVisible="False"/>
+        </Grid>
         
         <!-- Legend -->
         <ItemsControl ItemsSource="{Binding LegendItems}"

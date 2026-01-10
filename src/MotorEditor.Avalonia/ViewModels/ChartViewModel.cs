@@ -1,3 +1,4 @@
+using Avalonia.Media.Imaging;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CurveEditor.Services;
 using JordanRobot.MotorDefinition.Model;
@@ -10,6 +11,8 @@ using SkiaSharp;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using MotorEditor.Avalonia.Models;
+using System.IO;
 using System.Linq;
 
 namespace CurveEditor.ViewModels;
@@ -41,6 +44,28 @@ public class LegendItem
 }
 
 /// <summary>
+/// Event arguments raised when an underlay state changes.
+/// </summary>
+public sealed class UnderlayChangedEventArgs : EventArgs
+{
+    public UnderlayChangedEventArgs(string key, UnderlayMetadata metadata)
+    {
+        Key = key;
+        Metadata = metadata;
+    }
+
+    /// <summary>
+    /// State key for the underlay (drive/voltage).
+    /// </summary>
+    public string Key { get; }
+
+    /// <summary>
+    /// Updated metadata snapshot.
+    /// </summary>
+    public UnderlayMetadata Metadata { get; }
+}
+
+/// <summary>
 /// ViewModel for the torque curve chart visualization.
 /// Manages series data, axes configuration, and chart styling.
 /// </summary>
@@ -65,6 +90,11 @@ public partial class ChartViewModel : ViewModelBase
     private readonly Dictionary<string, ObservableCollection<ObservablePoint>> _seriesDataCache = [];
     private readonly Dictionary<string, bool> _seriesVisibility = [];
     private UndoStack? _undoStack;
+    private readonly Dictionary<string, UnderlayState> _underlayStates = [];
+    private string? _activeUnderlayKey;
+    private bool _suppressUnderlayNotifications;
+    private UnderlayState? _activeUnderlayState;
+    private string? _underlayImagePath;
 
     [ObservableProperty]
     private ObservableCollection<ISeries> _series = [];
@@ -123,6 +153,50 @@ public partial class ChartViewModel : ViewModelBase
 
     [ObservableProperty]
     private double _brakeTorque;
+
+    [ObservableProperty]
+    private Bitmap? _underlayImage;
+
+    [ObservableProperty]
+    private bool _underlayVisible;
+
+    [ObservableProperty]
+    private bool _underlayLockZero;
+
+    [ObservableProperty]
+    private double _underlayXScale = 1d;
+
+    [ObservableProperty]
+    private double _underlayYScale = 1d;
+
+    [ObservableProperty]
+    private double _underlayOffsetX;
+
+    [ObservableProperty]
+    private double _underlayOffsetY;
+
+    /// <summary>
+    /// Raised when persisted underlay metadata should be updated.
+    /// </summary>
+    public event EventHandler<UnderlayChangedEventArgs>? UnderlayChanged;
+
+    /// <summary>
+    /// Display name of the loaded underlay image (file name only).
+    /// </summary>
+    public string UnderlayFileName => string.IsNullOrWhiteSpace(_underlayImagePath)
+        ? string.Empty
+        : Path.GetFileName(_underlayImagePath);
+
+    /// <summary>
+    /// True when an underlay image is loaded for the active selection.
+    /// </summary>
+    public bool HasUnderlayImage => UnderlayImage is not null;
+
+    private sealed class UnderlayState
+    {
+        public UnderlayMetadata Metadata { get; set; } = new();
+        public Bitmap? Bitmap { get; set; }
+    }
 
     /// <summary>
     /// Optional undo stack associated with the active document. When set,
@@ -218,6 +292,78 @@ public partial class ChartViewModel : ViewModelBase
         }
     }
 
+    partial void OnUnderlayVisibleChanged(bool value)
+    {
+        if (_suppressUnderlayNotifications)
+        {
+            return;
+        }
+
+        UpdateUnderlayMetadata(state => state.Metadata.IsVisible = value && state.Bitmap is not null);
+    }
+
+    partial void OnUnderlayLockZeroChanged(bool value)
+    {
+        if (_suppressUnderlayNotifications)
+        {
+            return;
+        }
+
+        UpdateUnderlayMetadata(state => state.Metadata.LockZero = value);
+    }
+
+    partial void OnUnderlayXScaleChanged(double value)
+    {
+        if (_suppressUnderlayNotifications)
+        {
+            return;
+        }
+
+        UpdateUnderlayMetadata(state => state.Metadata.XScale = value);
+    }
+
+    partial void OnUnderlayYScaleChanged(double value)
+    {
+        if (_suppressUnderlayNotifications)
+        {
+            return;
+        }
+
+        UpdateUnderlayMetadata(state => state.Metadata.YScale = value);
+    }
+
+    partial void OnUnderlayOffsetXChanged(double value)
+    {
+        if (_suppressUnderlayNotifications)
+        {
+            return;
+        }
+
+        UpdateUnderlayMetadata(state => state.Metadata.OffsetX = value);
+    }
+
+    partial void OnUnderlayOffsetYChanged(double value)
+    {
+        if (_suppressUnderlayNotifications)
+        {
+            return;
+        }
+
+        UpdateUnderlayMetadata(state => state.Metadata.OffsetY = value);
+    }
+
+    partial void OnUnderlayImageChanged(Bitmap? value)
+    {
+        if (value is null && UnderlayVisible)
+        {
+            _suppressUnderlayNotifications = true;
+            UnderlayVisible = false;
+            _suppressUnderlayNotifications = false;
+        }
+
+        OnPropertyChanged(nameof(HasUnderlayImage));
+    }
+
     /// <summary>
     /// Called when ShowPowerCurves changes to update the chart.
     /// </summary>
@@ -270,12 +416,259 @@ public partial class ChartViewModel : ViewModelBase
     public event EventHandler? DataChanged;
 
     /// <summary>
+    /// Sets the active underlay key for the current drive/voltage selection.
+    /// </summary>
+    public void SetActiveUnderlayKey(string? key)
+    {
+        _activeUnderlayKey = key;
+        _activeUnderlayState = null;
+
+        if (string.IsNullOrWhiteSpace(key))
+        {
+            ApplyUnderlayState(null);
+            return;
+        }
+
+        var state = EnsureActiveUnderlayState();
+        ApplyUnderlayState(state);
+    }
+
+    /// <summary>
+    /// Clears all cached underlay state. Call when loading a different motor file.
+    /// </summary>
+    public void ResetUnderlayStates()
+    {
+        foreach (var state in _underlayStates.Values)
+        {
+            state.Bitmap?.Dispose();
+        }
+
+        _underlayStates.Clear();
+        _activeUnderlayKey = null;
+        _activeUnderlayState = null;
+        _underlayImagePath = null;
+
+        _suppressUnderlayNotifications = true;
+        UnderlayImage = null;
+        UnderlayVisible = false;
+        UnderlayLockZero = false;
+        UnderlayXScale = 1d;
+        UnderlayYScale = 1d;
+        UnderlayOffsetX = 0;
+        UnderlayOffsetY = 0;
+        _suppressUnderlayNotifications = false;
+
+        OnPropertyChanged(nameof(UnderlayFileName));
+    }
+
+    /// <summary>
+    /// Returns true when a cached underlay state exists for the given key.
+    /// </summary>
+    public bool HasUnderlayState(string key) => _underlayStates.ContainsKey(key);
+
+    /// <summary>
+    /// Attempts to load an underlay image from disk for the active key.
+    /// </summary>
+    public bool TryLoadUnderlayFromPath(string path, out string? error)
+    {
+        error = null;
+
+        if (!File.Exists(path))
+        {
+            error = $"Image not found: {path}";
+            return false;
+        }
+
+        var state = EnsureActiveUnderlayState();
+        if (state is null || string.IsNullOrWhiteSpace(_activeUnderlayKey))
+        {
+            error = "Select a drive and voltage before loading an underlay image.";
+            return false;
+        }
+
+        var bitmap = new Bitmap(path);
+        state.Bitmap?.Dispose();
+        state.Bitmap = bitmap;
+        state.Metadata = new UnderlayMetadata
+        {
+            ImagePath = path,
+            IsVisible = true,
+            LockZero = false,
+            XScale = 1d,
+            YScale = 1d,
+            OffsetX = 0,
+            OffsetY = 0
+        };
+
+        _underlayStates[_activeUnderlayKey] = state;
+        _underlayImagePath = path;
+        ApplyUnderlayState(state);
+        RaiseUnderlayChanged(state.Metadata);
+        return true;
+    }
+
+    /// <summary>
+    /// Attempts to apply metadata loaded from persistence to the active key.
+    /// </summary>
+    public bool TryApplyUnderlayMetadata(UnderlayMetadata metadata, out string? error)
+    {
+        error = null;
+
+        var state = EnsureActiveUnderlayState();
+        if (state is null || string.IsNullOrWhiteSpace(_activeUnderlayKey))
+        {
+            error = "Select a drive and voltage before applying underlay metadata.";
+            return false;
+        }
+
+        Bitmap? bitmap = null;
+        if (!string.IsNullOrWhiteSpace(metadata.ImagePath))
+        {
+            if (!File.Exists(metadata.ImagePath))
+            {
+                error = $"Image not found: {metadata.ImagePath}";
+                return false;
+            }
+
+            bitmap = new Bitmap(metadata.ImagePath);
+        }
+
+        state.Bitmap?.Dispose();
+        state.Bitmap = bitmap;
+        state.Metadata = CloneMetadata(metadata);
+        _underlayStates[_activeUnderlayKey] = state;
+
+        _underlayImagePath = metadata.ImagePath;
+        ApplyUnderlayState(state);
+        // Ensure visibility is applied when metadata indicates it should be shown.
+        if (metadata.IsVisible && state.Bitmap is not null)
+        {
+            UnderlayVisible = false;
+            UnderlayVisible = true;
+        }
+        RaiseUnderlayChanged(state.Metadata);
+        return true;
+    }
+
+    /// <summary>
+    /// Clears the active underlay and removes metadata for the current key.
+    /// </summary>
+    public void ClearActiveUnderlay()
+    {
+        var state = EnsureActiveUnderlayState();
+        if (state is null || string.IsNullOrWhiteSpace(_activeUnderlayKey))
+        {
+            return;
+        }
+
+        state.Bitmap?.Dispose();
+        state.Bitmap = null;
+        state.Metadata = new UnderlayMetadata();
+        _underlayStates[_activeUnderlayKey] = state;
+
+        _underlayImagePath = null;
+        ApplyUnderlayState(state);
+        RaiseUnderlayChanged(state.Metadata);
+    }
+
+    /// <summary>
+    /// Gets the current underlay metadata snapshot for the active key.
+    /// </summary>
+    public UnderlayMetadata? GetActiveUnderlayMetadata()
+    {
+        return _activeUnderlayState?.Metadata is null
+            ? null
+            : CloneMetadata(_activeUnderlayState.Metadata);
+    }
+
+    /// <summary>
     /// Creates a new ChartViewModel with default configuration.
     /// </summary>
     public ChartViewModel()
     {
         _xAxes = CreateXAxes();
         _yAxes = CreateYAxes();
+    }
+
+    private void ApplyUnderlayState(UnderlayState? state)
+    {
+        _suppressUnderlayNotifications = true;
+        try
+        {
+            var metadata = state?.Metadata ?? new UnderlayMetadata();
+            _underlayImagePath = metadata.ImagePath;
+            UnderlayImage = state?.Bitmap;
+            UnderlayVisible = metadata.IsVisible && state?.Bitmap is not null;
+            UnderlayLockZero = metadata.LockZero;
+            UnderlayXScale = metadata.XScale <= 0 ? 1d : metadata.XScale;
+            UnderlayYScale = metadata.YScale <= 0 ? 1d : metadata.YScale;
+            UnderlayOffsetX = metadata.OffsetX;
+            UnderlayOffsetY = metadata.OffsetY;
+            OnPropertyChanged(nameof(UnderlayFileName));
+        }
+        finally
+        {
+            _suppressUnderlayNotifications = false;
+        }
+    }
+
+    private UnderlayState? EnsureActiveUnderlayState()
+    {
+        if (string.IsNullOrWhiteSpace(_activeUnderlayKey))
+        {
+            return null;
+        }
+
+        if (!_underlayStates.TryGetValue(_activeUnderlayKey, out var state))
+        {
+            state = new UnderlayState();
+            _underlayStates[_activeUnderlayKey] = state;
+        }
+
+        _activeUnderlayState = state;
+        return state;
+    }
+
+    private void RaiseUnderlayChanged(UnderlayMetadata metadata)
+    {
+        if (_suppressUnderlayNotifications || string.IsNullOrWhiteSpace(_activeUnderlayKey))
+        {
+            return;
+        }
+
+        UnderlayChanged?.Invoke(this, new UnderlayChangedEventArgs(_activeUnderlayKey, CloneMetadata(metadata)));
+    }
+
+    private static UnderlayMetadata CloneMetadata(UnderlayMetadata metadata)
+    {
+        return new UnderlayMetadata
+        {
+            ImagePath = metadata.ImagePath,
+            IsVisible = metadata.IsVisible,
+            LockZero = metadata.LockZero,
+            XScale = metadata.XScale,
+            YScale = metadata.YScale,
+            OffsetX = metadata.OffsetX,
+            OffsetY = metadata.OffsetY
+        };
+    }
+
+    private void UpdateUnderlayMetadata(Action<UnderlayState> apply)
+    {
+        if (_suppressUnderlayNotifications)
+        {
+            return;
+        }
+
+        var state = EnsureActiveUnderlayState();
+        if (state is null || string.IsNullOrWhiteSpace(_activeUnderlayKey))
+        {
+            return;
+        }
+
+        apply(state);
+        _underlayStates[_activeUnderlayKey] = state;
+        RaiseUnderlayChanged(state.Metadata);
     }
 
     /// <summary>
