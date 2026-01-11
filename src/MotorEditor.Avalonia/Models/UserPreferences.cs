@@ -44,6 +44,11 @@ public sealed class UserPreferences
     public bool ShowVoltageMaxSpeedLine { get; set; } = true;
 
     /// <summary>
+    /// Threshold used to correct floating-point precision errors during conversions.
+    /// </summary>
+    public double PrecisionErrorThreshold { get; set; } = 1e-10;
+
+    /// <summary>
     /// Creates a copy of the current preferences.
     /// </summary>
     public UserPreferences Clone()
@@ -54,7 +59,8 @@ public sealed class UserPreferences
             Theme = Theme,
             CurveColors = new List<string>(CurveColors),
             ShowMotorRatedSpeedLine = ShowMotorRatedSpeedLine,
-            ShowVoltageMaxSpeedLine = ShowVoltageMaxSpeedLine
+            ShowVoltageMaxSpeedLine = ShowVoltageMaxSpeedLine,
+            PrecisionErrorThreshold = PrecisionErrorThreshold
         };
     }
 }

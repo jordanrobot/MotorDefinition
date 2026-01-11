@@ -26,6 +26,9 @@ public partial class PreferencesViewModel : ViewModelBase
     [ObservableProperty]
     private string? _selectedCurveColor;
 
+    [ObservableProperty]
+    private double _precisionErrorThreshold;
+
     /// <summary>
     /// Creates a new PreferencesViewModel.
     /// </summary>
@@ -38,6 +41,7 @@ public partial class PreferencesViewModel : ViewModelBase
         _decimalPrecision = _preferencesService.Preferences.DecimalPrecision;
         _theme = _preferencesService.Preferences.Theme;
         _curveColors = new ObservableCollection<string>(_preferencesService.Preferences.CurveColors);
+        _precisionErrorThreshold = _preferencesService.Preferences.PrecisionErrorThreshold;
     }
 
     /// <summary>
@@ -48,6 +52,7 @@ public partial class PreferencesViewModel : ViewModelBase
     {
         _preferencesService.Preferences.DecimalPrecision = DecimalPrecision;
         _preferencesService.Preferences.Theme = Theme;
+        _preferencesService.Preferences.PrecisionErrorThreshold = Math.Max(0, PrecisionErrorThreshold);
         _preferencesService.Preferences.CurveColors.Clear();
         foreach (var color in CurveColors)
         {

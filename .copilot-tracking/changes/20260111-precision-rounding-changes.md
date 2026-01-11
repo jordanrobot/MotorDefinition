@@ -21,6 +21,10 @@ Track precision rounding improvements for unit conversions, including a configur
 ### Modified
 
 - .copilot-tracking/plans/20260111-precision-rounding-plan.md - Marked precision rounding utility task as complete.
+- src/MotorEditor.Avalonia/Models/UserPreferences.cs - Added precision error threshold preference with default value and cloning support.
+- src/MotorEditor.Avalonia/ViewModels/PreferencesViewModel.cs - Surfaced precision threshold in the preferences workflow and enforced non-negative saving.
+- src/MotorEditor.Avalonia/Views/PreferencesWindow.axaml - Added UI controls for configuring the precision error threshold.
+- tests/CurveEditor.Tests/Services/UserPreferencesServiceTests.cs - Covered default, persistence, and clone behavior for the new threshold preference.
 
 ### Removed
 

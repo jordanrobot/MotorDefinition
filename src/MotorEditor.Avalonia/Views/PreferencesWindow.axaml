@@ -77,6 +77,26 @@
                                            MinWidth="100"/>
                         </Grid>
 
+                        <!-- Precision Error Threshold -->
+                        <Grid ColumnDefinitions="Auto,*" Margin="0,8,0,0">
+                            <TextBlock Grid.Column="0"
+                                       Classes="Label"
+                                       Text="Precision Error Threshold:"/>
+                            <StackPanel Grid.Column="1" Spacing="4">
+                                <NumericUpDown Value="{Binding PrecisionErrorThreshold}"
+                                               Minimum="0"
+                                               Maximum="1"
+                                               Increment="0.0000000001"
+                                               FormatString="0.###############"
+                                               HorizontalAlignment="Left"
+                                               MinWidth="150"/>
+                                <TextBlock Text="Values near round numbers within this threshold will be corrected."
+                                           Foreground="{DynamicResource SystemControlForegroundBaseMediumBrush}"
+                                           FontSize="11"
+                                           TextWrapping="Wrap"/>
+                            </StackPanel>
+                        </Grid>
+
                         <!-- Theme -->
                         <Grid ColumnDefinitions="Auto,*" Margin="0,8,0,0">
                             <TextBlock Grid.Column="0" 
