@@ -1032,6 +1032,57 @@ public partial class MainWindowViewModel : ViewModelBase
             _userPreferencesService.Preferences.PrecisionErrorThreshold);
     }
 
+    private void NormalizePrecisionArtifacts(ServoMotor motor)
+    {
+        if (motor is null)
+        {
+            return;
+        }
+
+        var threshold = PrecisionRounding.NormalizeThreshold(
+            _userPreferencesService.Preferences.PrecisionErrorThreshold);
+
+        static double Round(double value, double threshold) =>
+            PrecisionRounding.CorrectPrecisionError(value, threshold);
+
+        motor.RatedContinuousTorque = Round(motor.RatedContinuousTorque, threshold);
+        motor.RatedPeakTorque = Round(motor.RatedPeakTorque, threshold);
+        motor.BrakeTorque = Round(motor.BrakeTorque, threshold);
+        motor.MaxSpeed = Round(motor.MaxSpeed, threshold);
+        motor.RatedSpeed = Round(motor.RatedSpeed, threshold);
+        motor.Power = Round(motor.Power, threshold);
+        motor.Weight = Round(motor.Weight, threshold);
+        motor.RotorInertia = Round(motor.RotorInertia, threshold);
+        motor.BrakeAmperage = Round(motor.BrakeAmperage, threshold);
+        motor.BrakeReleaseTime = Round(motor.BrakeReleaseTime, threshold);
+        motor.BrakeEngageTimeDiode = Round(motor.BrakeEngageTimeDiode, threshold);
+        motor.BrakeEngageTimeMov = Round(motor.BrakeEngageTimeMov, threshold);
+        motor.BrakeBacklash = Round(motor.BrakeBacklash, threshold);
+
+        foreach (var drive in motor.Drives)
+        {
+            foreach (var voltage in drive.Voltages)
+            {
+                voltage.RatedContinuousTorque = Round(voltage.RatedContinuousTorque, threshold);
+                voltage.RatedPeakTorque = Round(voltage.RatedPeakTorque, threshold);
+                voltage.MaxSpeed = Round(voltage.MaxSpeed, threshold);
+                voltage.RatedSpeed = Round(voltage.RatedSpeed, threshold);
+                voltage.Power = Round(voltage.Power, threshold);
+                voltage.ContinuousAmperage = Round(voltage.ContinuousAmperage, threshold);
+                voltage.PeakAmperage = Round(voltage.PeakAmperage, threshold);
+
+                foreach (var curve in voltage.Curves)
+                {
+                    foreach (var point in curve.Data)
+                    {
+                        point.Torque = Round(point.Torque, threshold);
+                        point.Rpm = Round(point.Rpm, threshold);
+                    }
+                }
+            }
+        }
+    }
+
     private void OnUserPreferencesChanged(object? sender, EventArgs e)
     {
         ApplyPrecisionPreferences();
@@ -3337,6 +3388,8 @@ public partial class MainWindowViewModel : ViewModelBase
     {
         if (CurrentMotor is null) return;
 
+        NormalizePrecisionArtifacts(CurrentMotor);
+
         // Validate before saving
         ValidateMotor();
         if (HasValidationErrors)
@@ -3381,6 +3434,8 @@ public partial class MainWindowViewModel : ViewModelBase
     private async Task SaveAsAsync()
     {
         if (CurrentMotor is null) return;
+
+        NormalizePrecisionArtifacts(CurrentMotor);
 
         // Validate before saving
         ValidateMotor();
@@ -3492,6 +3547,8 @@ public partial class MainWindowViewModel : ViewModelBase
     private async Task SaveCopyAsAsync()
     {
         if (CurrentMotor is null) return;
+
+        NormalizePrecisionArtifacts(CurrentMotor);
 
         try
         {
