@@ -7,6 +7,7 @@ using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using CurveEditor.Services;
 using JordanRobot.MotorDefinition.Model;
+using JordanRobot.MotorDefinition.Services;
 using MotorEditor.Avalonia.Models;
 using Serilog;
 using System;
@@ -1021,7 +1022,8 @@ public partial class MainWindowViewModel : ViewModelBase
 
     private void ApplyPrecisionPreferences()
     {
-        _unitConversionService.PrecisionErrorThreshold = Math.Max(0, _userPreferencesService.Preferences.PrecisionErrorThreshold);
+        _unitConversionService.PrecisionErrorThreshold = PrecisionRounding.NormalizeThreshold(
+            _userPreferencesService.Preferences.PrecisionErrorThreshold);
     }
 
     private void OnUserPreferencesChanged(object? sender, EventArgs e)

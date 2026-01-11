@@ -1,6 +1,7 @@
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using CurveEditor.Services;
+using JordanRobot.MotorDefinition.Services;
 using System;
 using System.Collections.ObjectModel;
 using System.Windows.Input;
@@ -52,7 +53,7 @@ public partial class PreferencesViewModel : ViewModelBase
     {
         _preferencesService.Preferences.DecimalPrecision = DecimalPrecision;
         _preferencesService.Preferences.Theme = Theme;
-        _preferencesService.Preferences.PrecisionErrorThreshold = Math.Max(0, PrecisionErrorThreshold);
+        _preferencesService.Preferences.PrecisionErrorThreshold = PrecisionRounding.NormalizeThreshold(PrecisionErrorThreshold);
         _preferencesService.Preferences.CurveColors.Clear();
         foreach (var color in CurveColors)
         {

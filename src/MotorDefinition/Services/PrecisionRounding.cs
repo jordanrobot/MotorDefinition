@@ -33,4 +33,14 @@ public static class PrecisionRounding
 
         return value;
     }
+
+    /// <summary>
+    /// Ensures precision thresholds are non-negative before application.
+    /// </summary>
+    /// <param name="threshold">The threshold to normalize.</param>
+    /// <returns>The normalized threshold.</returns>
+    public static double NormalizeThreshold(double threshold)
+    {
+        return threshold < 0 ? 0 : threshold;
+    }
 }

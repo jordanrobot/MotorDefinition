@@ -86,8 +86,8 @@
                                 <NumericUpDown Value="{Binding PrecisionErrorThreshold}"
                                                Minimum="0"
                                                Maximum="1"
-                                               Increment="0.0000000001"
-                                               FormatString="0.###############"
+                                               Increment="0.000000001"
+                                               FormatString="0.##########"
                                                HorizontalAlignment="Left"
                                                MinWidth="150"/>
                                 <TextBlock Text="Values near round numbers within this threshold will be corrected."
