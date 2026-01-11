@@ -41,6 +41,7 @@ public partial class ChartView : UserControl
         TorqueChart.PointerCaptureLost += OnChartPointerCaptureLost;
         TorqueChart.SizeChanged += (_, _) => QueueUnderlayLayout();
         TorqueChart.LayoutUpdated += (_, _) => QueueUnderlayLayout();
+        TorqueChart.UpdateFinished += _ => QueueUnderlayLayout();
 
         // Handle mouse clicks on the chart to support basic point
         // selection. This wiring keeps the interaction logic in the
