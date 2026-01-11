@@ -14,6 +14,7 @@ using System.Collections.ObjectModel;
 using MotorEditor.Avalonia.Models;
 using System.IO;
 using System.Linq;
+using Avalonia.Threading;
 
 namespace CurveEditor.ViewModels;
 
@@ -497,7 +498,8 @@ public partial class ChartViewModel : ViewModelBase
     {
         foreach (var state in _underlayStates.Values)
         {
-            state.Bitmap?.Dispose();
+            DisposeBitmapSafely(state.Bitmap);
+            state.Bitmap = null;
         }
 
         _underlayStates.Clear();
@@ -554,7 +556,7 @@ public partial class ChartViewModel : ViewModelBase
         }
 
         var bitmap = new Bitmap(path);
-        state.Bitmap?.Dispose();
+        var oldBitmap = state.Bitmap;
         state.Bitmap = bitmap;
         state.Metadata = new UnderlayMetadata
         {
@@ -571,6 +573,7 @@ public partial class ChartViewModel : ViewModelBase
         _underlayImagePath = path;
         ApplyUnderlayState(state);
         RaiseUnderlayChanged(state.Metadata);
+        DisposeBitmapSafely(oldBitmap);
         return true;
     }
 
@@ -600,7 +603,7 @@ public partial class ChartViewModel : ViewModelBase
             bitmap = new Bitmap(metadata.ImagePath);
         }
 
-        state.Bitmap?.Dispose();
+        var oldBitmap = state.Bitmap;
         state.Bitmap = bitmap;
         state.Metadata = CloneMetadata(metadata);
         _underlayStates[_activeUnderlayKey] = state;
@@ -614,6 +617,7 @@ public partial class ChartViewModel : ViewModelBase
             UnderlayVisible = true;
         }
         RaiseUnderlayChanged(state.Metadata);
+        DisposeBitmapSafely(oldBitmap);
         return true;
     }
 
@@ -628,7 +632,7 @@ public partial class ChartViewModel : ViewModelBase
             return;
         }
 
-        state.Bitmap?.Dispose();
+        var bitmapToDispose = state.Bitmap;
         state.Bitmap = null;
         state.Metadata = new UnderlayMetadata();
         _underlayStates[_activeUnderlayKey] = state;
@@ -636,6 +640,7 @@ public partial class ChartViewModel : ViewModelBase
         _underlayImagePath = null;
         ApplyUnderlayState(state);
         RaiseUnderlayChanged(state.Metadata);
+        DisposeBitmapSafely(bitmapToDispose);
     }
 
     /// <summary>
@@ -722,6 +727,18 @@ public partial class ChartViewModel : ViewModelBase
             OffsetY = metadata.OffsetY,
             Opacity = metadata.Opacity
         };
+    }
+
+    private static void DisposeBitmapSafely(Bitmap? bitmap)
+    {
+        if (bitmap is null)
+        {
+            return;
+        }
+
+        Dispatcher.UIThread.Post(
+            () => bitmap.Dispose(),
+            DispatcherPriority.Background);
     }
 
     private void RecalculateUnderlayAnchors()

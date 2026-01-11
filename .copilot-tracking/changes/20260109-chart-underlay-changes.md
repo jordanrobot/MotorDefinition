@@ -25,17 +25,17 @@ Tracking work to add a Chart Format panel with image underlay controls and persi
  - .copilot-tracking/details/20260109-chart-underlay-details.md - Documented T5 requirements for anchor/scale origin synchronization with chart origin.
  - src/MotorEditor.Avalonia/Models/PanelRegistry.cs - Added Chart Format panel descriptor for the left zone and PanelBar.
  - src/MotorEditor.Avalonia/ViewModels/MainWindowViewModel.cs - Exposed Chart Format panel expanded state derived from the left panel selection.
- - src/MotorEditor.Avalonia/ViewModels/ChartViewModel.cs - Added underlay state, commands, and persistence hooks; fixed HasUnderlayImage property to use generated backing; lock toggle no longer resets offsets; anchor-aware scaling keeps chart origin aligned when changing scale or offsets; added persisted opacity with live binding.
- - src/MotorEditor.Avalonia/Views/ChartView.axaml - Inserted underlay canvas and LiveCharts chart layout; temporarily overlaid underlay canvas above chart for validation; bound underlay opacity.
- - src/MotorEditor.Avalonia/Views/ChartView.axaml.cs - Added underlay rendering, drag-to-pan, and layout logic; refreshes anchor when chart layout changes; re-layouts on chart layout changes.
- - src/MotorEditor.Avalonia/Views/MainWindow.axaml - Added Chart Format panel UI, underlay controls, numeric scale inputs, and corrected Load Underlay command binding.
- - src/MotorEditor.Avalonia/Models/UnderlayMetadata.cs - Added persisted opacity for underlay images.
- - tests/CurveEditor.Tests/ViewModels/UnderlayPersistenceTests.cs - Added coverage for scaling around positive and negative underlay anchors to keep chart origin synchronized and for persisted opacity.
- - tests/CurveEditor.Tests/ViewModels/UnderlayPersistenceTests.cs - Added coverage for scaling around positive and negative underlay anchors to keep chart origin synchronized.
+  - src/MotorEditor.Avalonia/ViewModels/ChartViewModel.cs - Added underlay state, commands, and persistence hooks; fixed HasUnderlayImage property to use generated backing; lock toggle no longer resets offsets; anchor-aware scaling keeps chart origin aligned when changing scale or offsets; added persisted opacity with live binding; clear operation now detaches the bitmap before disposal and defers disposal on UI thread to prevent crashes.
+  - src/MotorEditor.Avalonia/Views/ChartView.axaml - Inserted underlay canvas and LiveCharts chart layout; temporarily overlaid underlay canvas above chart for validation; bound underlay opacity.
+  - src/MotorEditor.Avalonia/Views/ChartView.axaml.cs - Added underlay rendering, drag-to-pan, and layout logic; refreshes anchor when chart layout changes; re-layouts on chart layout changes.
+  - src/MotorEditor.Avalonia/Views/MainWindow.axaml - Added Chart Format panel UI, underlay controls, numeric scale inputs, and corrected Load Underlay command binding.
+  - src/MotorEditor.Avalonia/Models/UnderlayMetadata.cs - Added persisted opacity for underlay images.
+  - tests/CurveEditor.Tests/ViewModels/UnderlayPersistenceTests.cs - Added coverage for scaling around positive and negative underlay anchors to keep chart origin synchronized and for persisted opacity; added regression coverage to ensure clearing underlays detaches the image and clears metadata without crashing.
+  - tests/CurveEditor.Tests/ViewModels/UnderlayPersistenceTests.cs - Added coverage for scaling around positive and negative underlay anchors to keep chart origin synchronized.
 
 ### Removed
 
-- None.
+- docs/api/* - Reverted accidentally added generated API reference files.
 
 ## Release Summary
 
