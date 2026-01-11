@@ -17,8 +17,8 @@
     </Design.DataContext>
 
     <Window.Resources>
-        <x:Double x:Key="PrecisionThresholdIncrement">0.000000001</x:Double>
-        <x:String x:Key="PrecisionThresholdFormat">0.##########</x:String>
+        <x:Double x:Key="PrecisionThresholdIncrement">0.0000001</x:Double>
+        <x:String x:Key="PrecisionThresholdFormat">0.########</x:String>
     </Window.Resources>
 
     <Window.Styles>

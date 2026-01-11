@@ -1024,6 +1024,7 @@ public partial class MainWindowViewModel : ViewModelBase
     {
         if (_userPreferencesService is null || _unitConversionService is null)
         {
+            Log.Warning("Precision preferences could not be applied because services are not initialized.");
             return;
         }
 
