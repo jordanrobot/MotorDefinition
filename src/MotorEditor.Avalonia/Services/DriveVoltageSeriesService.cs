@@ -23,35 +23,35 @@ public interface IDriveVoltageSeriesService
         string? name,
         string? partNumber,
         string? manufacturer,
-        double voltageValue,
-        double maxSpeed,
-        double power,
-        double peakTorque,
-        double continuousTorque,
-        double continuousCurrent,
-        double peakCurrent);
+        decimal voltageValue,
+        decimal maxSpeed,
+        decimal power,
+        decimal peakTorque,
+        decimal continuousTorque,
+        decimal continuousCurrent,
+        decimal peakCurrent);
 
     Voltage CreateVoltageWithCurve(
         Drive drive,
-        double voltageValue,
-        double maxSpeed,
-        double power,
-        double peakTorque,
-        double continuousTorque,
-        double continuousCurrent,
-        double peakCurrent);
+        decimal voltageValue,
+        decimal maxSpeed,
+        decimal power,
+        decimal peakTorque,
+        decimal continuousTorque,
+        decimal continuousCurrent,
+        decimal peakCurrent);
 
     Voltage CreateVoltageWithOptionalCurves(
         Drive drive,
-        double voltageValue,
-        double maxSpeed,
-        double power,
+        decimal voltageValue,
+        decimal maxSpeed,
+        decimal power,
         bool addPeakTorque,
-        double peakTorque,
-        double peakCurrent,
+        decimal peakTorque,
+        decimal peakCurrent,
         bool addContinuousTorque,
-        double continuousTorque,
-        double continuousCurrent,
+        decimal continuousTorque,
+        decimal continuousCurrent,
         string? customCurveName = null);
 
     string GenerateUniqueName(IEnumerable<string> existingNames, string baseName);
@@ -83,13 +83,13 @@ public sealed class DriveVoltageSeriesService : IDriveVoltageSeriesService
         string? name,
         string? partNumber,
         string? manufacturer,
-        double voltageValue,
-        double maxSpeed,
-        double power,
-        double peakTorque,
-        double continuousTorque,
-        double continuousCurrent,
-        double peakCurrent)
+        decimal voltageValue,
+        decimal maxSpeed,
+        decimal power,
+        decimal peakTorque,
+        decimal continuousTorque,
+        decimal continuousCurrent,
+        decimal peakCurrent)
     {
         if (motor is null) throw new ArgumentNullException(nameof(motor));
 
@@ -147,15 +147,15 @@ public sealed class DriveVoltageSeriesService : IDriveVoltageSeriesService
 
     public Voltage CreateVoltageWithOptionalCurves(
         Drive drive,
-        double voltageValue,
-        double maxSpeed,
-        double power,
+        decimal voltageValue,
+        decimal maxSpeed,
+        decimal power,
         bool addPeakTorque,
-        double peakTorque,
-        double peakCurrent,
+        decimal peakTorque,
+        decimal peakCurrent,
         bool addContinuousTorque,
-        double continuousTorque,
-        double continuousCurrent,
+        decimal continuousTorque,
+        decimal continuousCurrent,
         string? customCurveName = null)
     {
         if (drive is null) throw new ArgumentNullException(nameof(drive));

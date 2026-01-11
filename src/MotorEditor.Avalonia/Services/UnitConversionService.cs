@@ -44,7 +44,7 @@ public class UnitConversionService
     /// <param name="fromUnit">The source unit.</param>
     /// <param name="toUnit">The target unit.</param>
     /// <returns>The converted torque value.</returns>
-    public double ConvertTorque(double value, string fromUnit, string toUnit)
+    public decimal ConvertTorque(decimal value, string fromUnit, string toUnit)
     {
         return _unitService.Convert(value, fromUnit, toUnit);
     }
@@ -56,7 +56,7 @@ public class UnitConversionService
     /// <param name="fromUnit">The source unit.</param>
     /// <param name="toUnit">The target unit.</param>
     /// <returns>The converted speed value.</returns>
-    public double ConvertSpeed(double value, string fromUnit, string toUnit)
+    public decimal ConvertSpeed(decimal value, string fromUnit, string toUnit)
     {
         return _unitService.Convert(value, fromUnit, toUnit);
     }
@@ -68,7 +68,7 @@ public class UnitConversionService
     /// <param name="fromUnit">The source unit.</param>
     /// <param name="toUnit">The target unit.</param>
     /// <returns>The converted power value.</returns>
-    public double ConvertPower(double value, string fromUnit, string toUnit)
+    public decimal ConvertPower(decimal value, string fromUnit, string toUnit)
     {
         return _unitService.Convert(value, fromUnit, toUnit);
     }
@@ -80,7 +80,7 @@ public class UnitConversionService
     /// <param name="fromUnit">The source unit.</param>
     /// <param name="toUnit">The target unit.</param>
     /// <returns>The converted mass value.</returns>
-    public double ConvertMass(double value, string fromUnit, string toUnit)
+    public decimal ConvertMass(decimal value, string fromUnit, string toUnit)
     {
         return _unitService.Convert(value, fromUnit, toUnit);
     }
@@ -91,7 +91,7 @@ public class UnitConversionService
     /// <param name="value">The numeric value.</param>
     /// <param name="unit">The unit string.</param>
     /// <returns>Formatted string with value and unit.</returns>
-    public string FormatValue(double value, string unit)
+    public string FormatValue(decimal value, string unit)
     {
         return _unitService.Format(value, unit, DisplayDecimalPlaces);
     }

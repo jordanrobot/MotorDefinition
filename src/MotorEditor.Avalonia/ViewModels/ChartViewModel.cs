@@ -145,17 +145,17 @@ public partial class ChartViewModel : ViewModelBase
     [ObservableProperty]
     private bool _showPowerCurves;
 
-    [ObservableProperty]
-    private double _motorMaxSpeed;
+[ObservableProperty]
+private decimal _motorMaxSpeed;
 
-    [ObservableProperty]
-    private double _motorRatedSpeed;
+[ObservableProperty]
+private decimal _motorRatedSpeed;
 
     [ObservableProperty]
     private bool _hasBrake;
 
-    [ObservableProperty]
-    private double _brakeTorque;
+[ObservableProperty]
+private decimal _brakeTorque;
 
     [ObservableProperty]
     private Bitmap? _underlayImage;
@@ -971,7 +971,7 @@ public partial class ChartViewModel : ViewModelBase
 
         if (maxRpm <= 0)
         {
-            maxRpm = 6000;
+            maxRpm = 6000m;
         }
 
         for (var i = 0; i < _currentVoltage.Curves.Count; i++)
@@ -985,7 +985,7 @@ public partial class ChartViewModel : ViewModelBase
             ObservableCollection<ObservablePoint> points;
             if (curve.Data.Count == 0)
             {
-                var torque = 0d;
+                var torque = 0m;
                 if (curve.Name.Contains("peak", StringComparison.OrdinalIgnoreCase))
                 {
                     torque = _currentVoltage.RatedPeakTorque;
@@ -1001,14 +1001,14 @@ public partial class ChartViewModel : ViewModelBase
 
                 points = new ObservableCollection<ObservablePoint>
                 {
-                    new(0, torque),
-                    new(maxRpm, torque)
+                    new ObservablePoint(0d, (double)torque),
+                    new ObservablePoint((double)maxRpm, (double)torque)
                 };
             }
             else
             {
                 points = new ObservableCollection<ObservablePoint>(
-                    curve.Data.Select(dp => new ObservablePoint(dp.Rpm, dp.Torque))
+                    curve.Data.Select(dp => new ObservablePoint((double)dp.Rpm, (double)dp.Torque))
                 );
             }
             _seriesDataCache[curve.Name] = points;
