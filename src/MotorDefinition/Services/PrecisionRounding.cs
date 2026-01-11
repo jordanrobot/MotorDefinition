@@ -20,6 +20,8 @@ public static class PrecisionRounding
             return value;
         }
 
+        // Evaluate from coarse to fine precision to prefer simpler rounded values.
+        // The small fixed loop (0-15) is negligible relative to conversion work.
         for (var decimals = 0; decimals <= MaxDecimalPlaces; decimals++)
         {
             var rounded = Math.Round(value, decimals, MidpointRounding.ToEven);

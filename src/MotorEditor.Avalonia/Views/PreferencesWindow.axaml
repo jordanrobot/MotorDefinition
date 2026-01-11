@@ -16,6 +16,11 @@
         <vm:PreferencesViewModel/>
     </Design.DataContext>
 
+    <Window.Resources>
+        <x:Double x:Key="PrecisionThresholdIncrement">0.000000001</x:Double>
+        <x:String x:Key="PrecisionThresholdFormat">0.##########</x:String>
+    </Window.Resources>
+
     <Window.Styles>
         <Style Selector="TextBlock.SectionHeader">
             <Setter Property="FontWeight" Value="SemiBold"/>
@@ -86,8 +91,8 @@
                                 <NumericUpDown Value="{Binding PrecisionErrorThreshold}"
                                                Minimum="0"
                                                Maximum="1"
-                                               Increment="0.000000001"
-                                               FormatString="0.##########"
+                                               Increment="{StaticResource PrecisionThresholdIncrement}"
+                                               FormatString="{StaticResource PrecisionThresholdFormat}"
                                                HorizontalAlignment="Left"
                                                MinWidth="150"/>
                                 <TextBlock Text="Values near round numbers within this threshold will be corrected."
