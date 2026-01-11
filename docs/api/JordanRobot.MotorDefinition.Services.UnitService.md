@@ -1,4 +1,4 @@
-#### [MotorDefinition](index.md 'index')
+#### [JordanRobot\.MotorDefinition](index.md 'index')
 ### [JordanRobot\.MotorDefinition\.Services](JordanRobot.MotorDefinition.Services.md 'JordanRobot\.MotorDefinition\.Services')
 
 ## UnitService Class

@@ -1,4 +1,4 @@
-#### [MotorDefinition](index.md 'index')
+#### [JordanRobot\.MotorDefinition](index.md 'index')
 
 ## JordanRobot\.MotorDefinition\.Persistence\.Validation Namespace
 

@@ -1,4 +1,4 @@
-#### [MotorDefinition](index.md 'index')
+#### [JordanRobot\.MotorDefinition](index.md 'index')
 ### [JordanRobot\.MotorDefinition\.Persistence\.Probing](JordanRobot.MotorDefinition.Persistence.Probing.md 'JordanRobot\.MotorDefinition\.Persistence\.Probing')
 
 ## MotorFileProbe Class

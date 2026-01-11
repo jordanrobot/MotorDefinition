@@ -1,4 +1,4 @@
-#### [MotorDefinition](index.md 'index')
+#### [JordanRobot\.MotorDefinition](index.md 'index')
 ### [JordanRobot\.MotorDefinition\.Persistence\.Mapping](JordanRobot.MotorDefinition.Persistence.Mapping.md 'JordanRobot\.MotorDefinition\.Persistence\.Mapping')
 
 ## MotorFileMapper Class

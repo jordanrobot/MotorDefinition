@@ -1,6 +1,6 @@
-#### [MotorDefinition](index.md 'index')
+#### [JordanRobot\.MotorDefinition](index.md 'index')
 
-## MotorDefinition Assembly
+## JordanRobot\.MotorDefinition Assembly
 
 | Namespaces | |
 | :--- | :--- |
