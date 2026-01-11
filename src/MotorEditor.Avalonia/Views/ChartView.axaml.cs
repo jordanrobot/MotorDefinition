@@ -7,6 +7,7 @@ using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Input;
 using Avalonia.Media;
+using Avalonia.Threading;
 using CurveEditor.ViewModels;
 using LiveChartsCore;
 using LiveChartsCore.Defaults;
@@ -26,6 +27,7 @@ public partial class ChartView : UserControl
     private double _startOffsetX;
     private double _startOffsetY;
     private Rect _underlayBounds = new();
+    private bool _underlayLayoutQueued;
 
     /// <summary>
     /// Creates a new ChartView instance.
@@ -37,8 +39,8 @@ public partial class ChartView : UserControl
         TorqueChart.PointerMoved += OnChartPointerMoved;
         TorqueChart.PointerReleased += OnChartPointerReleased;
         TorqueChart.PointerCaptureLost += OnChartPointerCaptureLost;
-        TorqueChart.SizeChanged += (_, _) => UpdateUnderlayLayout();
-        TorqueChart.LayoutUpdated += (_, _) => UpdateUnderlayLayout();
+        TorqueChart.SizeChanged += (_, _) => QueueUnderlayLayout();
+        TorqueChart.LayoutUpdated += (_, _) => QueueUnderlayLayout();
 
         // Handle mouse clicks on the chart to support basic point
         // selection. This wiring keeps the interaction logic in the
@@ -61,7 +63,7 @@ public partial class ChartView : UserControl
         }
 
         base.OnDataContextChanged(e);
-        UpdateUnderlayLayout();
+        QueueUnderlayLayout();
     }
 
     private void OnChartPointerPressed(object? sender, PointerPressedEventArgs e)
@@ -165,7 +167,8 @@ public partial class ChartView : UserControl
         _chartViewModel.UnderlayOffsetX = newOffsetX;
         _chartViewModel.UnderlayOffsetY = newOffsetY;
 
-        UpdateUnderlayLayout();
+        // Drag feedback should be immediate, so refresh without queuing.
+        UpdateUnderlayLayoutCore();
         e.Handled = true;
     }
 
@@ -199,7 +202,7 @@ public partial class ChartView : UserControl
             or nameof(ChartViewModel.YAxes)
             or nameof(ChartViewModel.Series))
         {
-            UpdateUnderlayLayout();
+            QueueUnderlayLayout();
         }
     }
 
@@ -241,7 +244,24 @@ public partial class ChartView : UserControl
         return true;
     }
 
-    private void UpdateUnderlayLayout()
+    private void QueueUnderlayLayout()
+    {
+        if (_underlayLayoutQueued)
+        {
+            return;
+        }
+
+        _underlayLayoutQueued = true;
+        Dispatcher.UIThread.Post(ProcessQueuedUnderlayLayout, DispatcherPriority.Render);
+    }
+
+    private void ProcessQueuedUnderlayLayout()
+    {
+        _underlayLayoutQueued = false;
+        UpdateUnderlayLayoutCore();
+    }
+
+    private void UpdateUnderlayLayoutCore()
     {
         if (_chartViewModel is null)
         {
