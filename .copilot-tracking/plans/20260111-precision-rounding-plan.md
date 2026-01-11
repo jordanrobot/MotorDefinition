@@ -9,7 +9,7 @@
 
 ## Tasks
 
-- [ ] T1: Precision rounding utility
+ - [x] T1: Precision rounding utility
   - Add a data-layer helper that normalizes values within a configurable threshold of a rounded representation.
 - [ ] T2: User preference integration
   - Add a precision error threshold preference with a sensible default and surface it in the preferences UI.
