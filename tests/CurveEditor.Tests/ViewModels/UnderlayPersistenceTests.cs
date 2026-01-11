@@ -7,8 +7,8 @@ using Xunit;
 
 namespace MotorEditor.Tests.ViewModels;
 
-public sealed class UnderlayPersistenceTests : IDisposable
-{
+    public sealed class UnderlayPersistenceTests : IDisposable
+    {
     private readonly string tempRoot;
 
     public UnderlayPersistenceTests()
@@ -102,6 +102,41 @@ public sealed class UnderlayPersistenceTests : IDisposable
         var snapshot = vm.GetActiveUnderlayMetadata();
         Assert.NotNull(snapshot);
         Assert.Equal(0.9, snapshot!.Opacity);
+    }
+
+    [Fact]
+    public void ClearActiveUnderlay_DetachesImageAndClearsMetadata()
+    {
+        var vm = new ChartViewModel();
+        vm.SetActiveUnderlayKey("drive|480");
+
+        var metadata = new UnderlayMetadata
+        {
+            ImagePath = null,
+            IsVisible = true,
+            LockZero = true,
+            XScale = 1.2,
+            YScale = 0.8,
+            OffsetX = 0.15,
+            OffsetY = -0.05
+        };
+
+        Assert.True(vm.TryApplyUnderlayMetadata(metadata, out var error));
+        Assert.Null(error);
+
+        UnderlayChangedEventArgs? raisedArgs = null;
+        vm.UnderlayChanged += (_, e) => raisedArgs = e;
+
+        vm.ClearActiveUnderlay();
+
+        Assert.False(vm.HasUnderlayImage);
+        Assert.NotNull(raisedArgs);
+        Assert.Equal("drive|480", raisedArgs!.Key);
+        Assert.True(string.IsNullOrWhiteSpace(raisedArgs.Metadata.ImagePath));
+
+        var snapshot = vm.GetActiveUnderlayMetadata();
+        Assert.NotNull(snapshot);
+        Assert.True(string.IsNullOrWhiteSpace(snapshot!.ImagePath));
     }
 
     [Fact]

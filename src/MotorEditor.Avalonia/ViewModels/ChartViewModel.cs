@@ -628,7 +628,7 @@ public partial class ChartViewModel : ViewModelBase
             return;
         }
 
-        state.Bitmap?.Dispose();
+        var bitmapToDispose = state.Bitmap;
         state.Bitmap = null;
         state.Metadata = new UnderlayMetadata();
         _underlayStates[_activeUnderlayKey] = state;
@@ -636,6 +636,7 @@ public partial class ChartViewModel : ViewModelBase
         _underlayImagePath = null;
         ApplyUnderlayState(state);
         RaiseUnderlayChanged(state.Metadata);
+        bitmapToDispose?.Dispose();
     }
 
     /// <summary>
