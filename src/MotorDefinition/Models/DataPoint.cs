@@ -9,7 +9,7 @@ namespace JordanRobot.MotorDefinition.Model;
 public class DataPoint
 {
     private int _percent;
-    private double _rpm;
+    private decimal _rpm;
 
     /// <summary>
     /// Gets or sets the percent position along the motor's speed range.
@@ -36,7 +36,7 @@ public class DataPoint
     /// Gets or sets the rotational speed at this point (RPM).
     /// </summary>
     [JsonPropertyName("rpm")]
-    public double Rpm
+    public decimal Rpm
     {
         get => _rpm;
         set
@@ -56,7 +56,7 @@ public class DataPoint
     /// Torque may be negative for regenerative braking scenarios.
     /// </remarks>
     [JsonPropertyName("torque")]
-    public double Torque { get; set; }
+    public decimal Torque { get; set; }
 
     /// <summary>
     /// Gets the RPM value rounded to the nearest whole number for display.
@@ -77,7 +77,7 @@ public class DataPoint
     /// <param name="percent">Percentage along the speed range. Must be non-negative.</param>
     /// <param name="rpm">RPM value at this point.</param>
     /// <param name="torque">Torque value at this point.</param>
-    public DataPoint(int percent, double rpm, double torque)
+    public DataPoint(int percent, decimal rpm, decimal torque)
     {
         Percent = percent;
         Rpm = rpm;

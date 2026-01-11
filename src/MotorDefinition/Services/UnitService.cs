@@ -76,7 +76,7 @@ public class UnitService
     /// <param name="toUnit">The target unit string (e.g., "Nm", "lbf-in").</param>
     /// <returns>The converted value.</returns>
     /// <exception cref="ArgumentException">Thrown when unit conversion is not supported or units are incompatible.</exception>
-    public double Convert(double value, string fromUnit, string toUnit)
+    public decimal Convert(decimal value, string fromUnit, string toUnit)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(fromUnit);
         ArgumentException.ThrowIfNullOrWhiteSpace(toUnit);
@@ -104,15 +104,15 @@ public class UnitService
         var quantity = Quantity.Parse($"{value} {tareFromUnit}");
         var converted = quantity.As(tareToUnit);
 
-        return (double)converted.Value;
+        return (decimal)converted.Value;
     }
 
     /// <summary>
     /// Handles conversions involving horsepower.
     /// </summary>
-    private double ConvertWithHorsepower(double value, string fromUnit, string toUnit)
+    private decimal ConvertWithHorsepower(decimal value, string fromUnit, string toUnit)
     {
-        const double HpToWatts = 745.699872; // Mechanical horsepower (hp) to watts
+        const decimal HpToWatts = 745.699872m; // Mechanical horsepower (hp) to watts
 
         // Convert from hp to another unit
         if (fromUnit == "hp")
@@ -124,7 +124,7 @@ public class UnitService
             }
             else if (toUnit == "kW")
             {
-                return watts / 1000.0;
+                return watts / 1000.0m;
             }
             else if (toUnit == "hp")
             {
@@ -139,14 +139,14 @@ public class UnitService
         // Convert to hp from another unit
         if (toUnit == "hp")
         {
-            double watts;
+            decimal watts;
             if (fromUnit == "W")
             {
                 watts = value;
             }
             else if (fromUnit == "kW")
             {
-                watts = value * 1000.0;
+                watts = value * 1000.0m;
             }
             else
             {
@@ -162,9 +162,9 @@ public class UnitService
     /// Handles conversions involving electrical current units.
     /// Tare library doesn't support electrical current units, so we handle them manually.
     /// </summary>
-    private double ConvertWithCurrent(double value, string fromUnit, string toUnit)
+    private decimal ConvertWithCurrent(decimal value, string fromUnit, string toUnit)
     {
-        const double AToMA = 1000.0; // 1 ampere (A) = 1000 milliamperes (mA)
+        const decimal AToMA = 1000.0m; // 1 ampere (A) = 1000 milliamperes (mA)
 
         // Convert from A to another unit
         if (fromUnit == "A")
@@ -211,7 +211,7 @@ public class UnitService
     /// <param name="toUnit">The target unit string.</param>
     /// <param name="result">When this method returns, contains the converted value if successful; otherwise, the original value.</param>
     /// <returns>True if conversion was successful; otherwise, false.</returns>
-    public bool TryConvert(double value, string fromUnit, string toUnit, out double result)
+    public bool TryConvert(decimal value, string fromUnit, string toUnit, out decimal result)
     {
         result = value;
 
@@ -307,7 +307,7 @@ public class UnitService
     /// <param name="unit">The unit string.</param>
     /// <param name="decimalPlaces">The number of decimal places to display.</param>
     /// <returns>A formatted string with value and unit.</returns>
-    public string Format(double value, string unit, int decimalPlaces = 2)
+    public string Format(decimal value, string unit, int decimalPlaces = 2)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(unit);
 

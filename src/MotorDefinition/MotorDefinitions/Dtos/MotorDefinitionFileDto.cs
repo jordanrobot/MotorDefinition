@@ -22,25 +22,25 @@ internal sealed class MotorDefinitionFileDto
     public string PartNumber { get; set; } = string.Empty;
 
     [JsonPropertyName("power")]
-    public double Power { get; set; }
+    public decimal Power { get; set; }
 
     [JsonPropertyName("maxSpeed")]
-    public double MaxSpeed { get; set; }
+    public decimal MaxSpeed { get; set; }
 
     [JsonPropertyName("ratedSpeed")]
-    public double RatedSpeed { get; set; }
+    public decimal RatedSpeed { get; set; }
 
     [JsonPropertyName("ratedContinuousTorque")]
-    public double RatedContinuousTorque { get; set; }
+    public decimal RatedContinuousTorque { get; set; }
 
     [JsonPropertyName("ratedPeakTorque")]
-    public double RatedPeakTorque { get; set; }
+    public decimal RatedPeakTorque { get; set; }
 
     [JsonPropertyName("weight")]
-    public double Weight { get; set; }
+    public decimal Weight { get; set; }
 
     [JsonPropertyName("rotorInertia")]
-    public double RotorInertia { get; set; }
+    public decimal RotorInertia { get; set; }
 
     [JsonPropertyName("feedbackPpr")]
     public int FeedbackPpr { get; set; }
@@ -49,25 +49,25 @@ internal sealed class MotorDefinitionFileDto
     public bool HasBrake { get; set; }
 
     [JsonPropertyName("brakeTorque")]
-    public double BrakeTorque { get; set; }
+    public decimal BrakeTorque { get; set; }
 
     [JsonPropertyName("brakeAmperage")]
-    public double BrakeAmperage { get; set; }
+    public decimal BrakeAmperage { get; set; }
 
     [JsonPropertyName("brakeVoltage")]
-    public double BrakeVoltage { get; set; }
+    public decimal BrakeVoltage { get; set; }
 
     [JsonPropertyName("brakeReleaseTime")]
-    public double BrakeReleaseTime { get; set; }
+    public decimal BrakeReleaseTime { get; set; }
 
     [JsonPropertyName("brakeEngageTimeDiode")]
-    public double BrakeEngageTimeDiode { get; set; }
+    public decimal BrakeEngageTimeDiode { get; set; }
 
     [JsonPropertyName("brakeEngageTimeMOV")]
-    public double BrakeEngageTimeMov { get; set; }
+    public decimal BrakeEngageTimeMov { get; set; }
 
     [JsonPropertyName("brakeBacklash")]
-    public double BrakeBacklash { get; set; }
+    public decimal BrakeBacklash { get; set; }
 
     [JsonPropertyName("units")]
     public UnitSettingsDto Units { get; set; } = new();
