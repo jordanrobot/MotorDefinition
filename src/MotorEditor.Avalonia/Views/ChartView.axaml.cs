@@ -38,6 +38,7 @@ public partial class ChartView : UserControl
         TorqueChart.PointerReleased += OnChartPointerReleased;
         TorqueChart.PointerCaptureLost += OnChartPointerCaptureLost;
         TorqueChart.SizeChanged += (_, _) => UpdateUnderlayLayout();
+        TorqueChart.LayoutUpdated += (_, _) => UpdateUnderlayLayout();
 
         // Handle mouse clicks on the chart to support basic point
         // selection. This wiring keeps the interaction logic in the
@@ -246,6 +247,8 @@ public partial class ChartView : UserControl
         {
             return;
         }
+
+        _chartViewModel.RefreshUnderlayAnchors();
 
         if (_chartViewModel.UnderlayImage is null || !_chartViewModel.UnderlayVisible)
         {

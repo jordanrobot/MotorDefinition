@@ -95,6 +95,8 @@ public partial class ChartViewModel : ViewModelBase
     private bool _suppressUnderlayNotifications;
     private UnderlayState? _activeUnderlayState;
     private string? _underlayImagePath;
+    private double _underlayAnchorX;
+    private double _underlayAnchorY;
 
     [ObservableProperty]
     private ObservableCollection<ISeries> _series = [];
@@ -175,10 +177,15 @@ public partial class ChartViewModel : ViewModelBase
     [ObservableProperty]
     private double _underlayOffsetY;
 
+    [ObservableProperty]
+    private double _underlayOpacity = DefaultUnderlayOpacity;
+
     /// <summary>
     /// Raised when persisted underlay metadata should be updated.
     /// </summary>
     public event EventHandler<UnderlayChangedEventArgs>? UnderlayChanged;
+
+    private const double DefaultUnderlayOpacity = 0.45;
 
     /// <summary>
     /// Display name of the loaded underlay image (file name only).
@@ -302,6 +309,26 @@ public partial class ChartViewModel : ViewModelBase
         UpdateUnderlayMetadata(state => state.Metadata.IsVisible = value && state.Bitmap is not null);
     }
 
+    partial void OnUnderlayXScaleChanging(double value)
+    {
+        if (_suppressUnderlayNotifications)
+        {
+            return;
+        }
+
+        RecalculateUnderlayAnchors();
+    }
+
+    partial void OnUnderlayYScaleChanging(double value)
+    {
+        if (_suppressUnderlayNotifications)
+        {
+            return;
+        }
+
+        RecalculateUnderlayAnchors();
+    }
+
     partial void OnUnderlayLockZeroChanged(bool value)
     {
         if (_suppressUnderlayNotifications)
@@ -320,6 +347,11 @@ public partial class ChartViewModel : ViewModelBase
         }
 
         UpdateUnderlayMetadata(state => state.Metadata.XScale = value);
+
+        if (value > 0)
+        {
+            UnderlayOffsetX = -_underlayAnchorX * value;
+        }
     }
 
     partial void OnUnderlayYScaleChanged(double value)
@@ -330,6 +362,11 @@ public partial class ChartViewModel : ViewModelBase
         }
 
         UpdateUnderlayMetadata(state => state.Metadata.YScale = value);
+
+        if (value > 0)
+        {
+            UnderlayOffsetY = -_underlayAnchorY * value;
+        }
     }
 
     partial void OnUnderlayOffsetXChanged(double value)
@@ -340,6 +377,7 @@ public partial class ChartViewModel : ViewModelBase
         }
 
         UpdateUnderlayMetadata(state => state.Metadata.OffsetX = value);
+        RecalculateUnderlayAnchors();
     }
 
     partial void OnUnderlayOffsetYChanged(double value)
@@ -350,6 +388,25 @@ public partial class ChartViewModel : ViewModelBase
         }
 
         UpdateUnderlayMetadata(state => state.Metadata.OffsetY = value);
+        RecalculateUnderlayAnchors();
+    }
+
+    partial void OnUnderlayOpacityChanged(double value)
+    {
+        if (_suppressUnderlayNotifications)
+        {
+            return;
+        }
+
+        var clamped = Math.Clamp(value, 0d, 1d);
+        if (!clamped.Equals(value))
+        {
+            _suppressUnderlayNotifications = true;
+            UnderlayOpacity = clamped;
+            _suppressUnderlayNotifications = false;
+        }
+
+        UpdateUnderlayMetadata(state => state.Metadata.Opacity = clamped);
     }
 
     partial void OnUnderlayImageChanged(Bitmap? value)
@@ -456,15 +513,25 @@ public partial class ChartViewModel : ViewModelBase
         UnderlayYScale = 1d;
         UnderlayOffsetX = 0;
         UnderlayOffsetY = 0;
+        UnderlayOpacity = DefaultUnderlayOpacity;
         _suppressUnderlayNotifications = false;
 
         OnPropertyChanged(nameof(UnderlayFileName));
+        RecalculateUnderlayAnchors();
     }
 
     /// <summary>
     /// Returns true when a cached underlay state exists for the given key.
     /// </summary>
     public bool HasUnderlayState(string key) => _underlayStates.ContainsKey(key);
+
+    /// <summary>
+    /// Recomputes the underlay anchor relative to chart origin based on current scale and offsets.
+    /// </summary>
+    public void RefreshUnderlayAnchors()
+    {
+        RecalculateUnderlayAnchors();
+    }
 
     /// <summary>
     /// Attempts to load an underlay image from disk for the active key.
@@ -604,11 +671,14 @@ public partial class ChartViewModel : ViewModelBase
             UnderlayYScale = metadata.YScale <= 0 ? 1d : metadata.YScale;
             UnderlayOffsetX = metadata.OffsetX;
             UnderlayOffsetY = metadata.OffsetY;
+            var opacity = double.IsNaN(metadata.Opacity) ? DefaultUnderlayOpacity : metadata.Opacity;
+            UnderlayOpacity = Math.Clamp(opacity, 0d, 1d);
             OnPropertyChanged(nameof(UnderlayFileName));
         }
         finally
         {
             _suppressUnderlayNotifications = false;
+            RecalculateUnderlayAnchors();
         }
     }
 
@@ -649,8 +719,19 @@ public partial class ChartViewModel : ViewModelBase
             XScale = metadata.XScale,
             YScale = metadata.YScale,
             OffsetX = metadata.OffsetX,
-            OffsetY = metadata.OffsetY
+            OffsetY = metadata.OffsetY,
+            Opacity = metadata.Opacity
         };
+    }
+
+    private void RecalculateUnderlayAnchors()
+    {
+        _underlayAnchorX = UnderlayXScale is > 0
+            ? -UnderlayOffsetX / UnderlayXScale
+            : 0;
+        _underlayAnchorY = UnderlayYScale is > 0
+            ? -UnderlayOffsetY / UnderlayYScale
+            : 0;
     }
 
     private void UpdateUnderlayMetadata(Action<UnderlayState> apply)
