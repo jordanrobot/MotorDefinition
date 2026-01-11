@@ -1022,6 +1022,11 @@ public partial class MainWindowViewModel : ViewModelBase
 
     private void ApplyPrecisionPreferences()
     {
+        if (_userPreferencesService is null || _unitConversionService is null)
+        {
+            return;
+        }
+
         _unitConversionService.PrecisionErrorThreshold = PrecisionRounding.NormalizeThreshold(
             _userPreferencesService.Preferences.PrecisionErrorThreshold);
     }
