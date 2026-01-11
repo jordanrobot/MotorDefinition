@@ -25,6 +25,11 @@ Track precision rounding improvements for unit conversions, including a configur
 - src/MotorEditor.Avalonia/ViewModels/PreferencesViewModel.cs - Surfaced precision threshold in the preferences workflow and enforced non-negative saving.
 - src/MotorEditor.Avalonia/Views/PreferencesWindow.axaml - Added UI controls for configuring the precision error threshold.
 - tests/CurveEditor.Tests/Services/UserPreferencesServiceTests.cs - Covered default, persistence, and clone behavior for the new threshold preference.
+- src/MotorDefinition/Services/UnitService.cs - Applied precision correction after conversions with a configurable threshold.
+- src/MotorEditor.Avalonia/Services/UnitConversionService.cs - Exposed precision threshold configuration to the UI layer.
+- src/MotorEditor.Avalonia/ViewModels/MainWindowViewModel.cs - Propagated user-configured precision thresholds to conversion services and reacted to preference changes.
+- tests/CurveEditor.Tests/Services/UnitServiceTests.cs - Validated precision correction and disablement in unit conversions.
+- tests/CurveEditor.Tests/Services/UnitConversionServiceTests.cs - Ensured conversion service applies and respects precision correction thresholds.
 
 ### Removed
 

@@ -28,6 +28,15 @@ public class UnitConversionService
     public int DisplayDecimalPlaces { get; set; } = 2;
 
     /// <summary>
+    /// Gets or sets the precision error threshold applied after conversions.
+    /// </summary>
+    public double PrecisionErrorThreshold
+    {
+        get => _unitService.PrecisionErrorThreshold;
+        set => _unitService.PrecisionErrorThreshold = value;
+    }
+
+    /// <summary>
     /// Initializes a new instance of the UnitConversionService class.
     /// </summary>
     /// <param name="settingsStore">Optional user settings store for persisting preferences.</param>

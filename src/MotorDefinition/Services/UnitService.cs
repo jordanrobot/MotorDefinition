@@ -69,6 +69,11 @@ public class UnitService
     public static string[] SupportedTemperatureUnits => ["C", "F", "K"];
 
     /// <summary>
+    /// Gets or sets the threshold used to correct floating-point precision errors during conversion.
+    /// </summary>
+    public double PrecisionErrorThreshold { get; set; } = 1e-10;
+
+    /// <summary>
     /// Converts a value from one unit to another.
     /// </summary>
     /// <param name="value">The value to convert.</param>
@@ -83,19 +88,19 @@ public class UnitService
 
         if (fromUnit == toUnit)
         {
-            return value;
+            return ApplyPrecision(value);
         }
 
         // Handle hp specially as it's not natively supported by Tare
         if (fromUnit == "hp" || toUnit == "hp")
         {
-            return ConvertWithHorsepower(value, fromUnit, toUnit);
+            return ApplyPrecision(ConvertWithHorsepower(value, fromUnit, toUnit));
         }
 
         // Handle current units manually as they're not supported by Tare
         if (fromUnit == "A" || fromUnit == "mA" || toUnit == "A" || toUnit == "mA")
         {
-            return ConvertWithCurrent(value, fromUnit, toUnit);
+            return ApplyPrecision(ConvertWithCurrent(value, fromUnit, toUnit));
         }
 
         var tareFromUnit = MapToTareUnit(fromUnit);
@@ -104,7 +109,7 @@ public class UnitService
         var quantity = Quantity.Parse($"{value} {tareFromUnit}");
         var converted = quantity.As(tareToUnit);
 
-        return (double)converted.Value;
+        return ApplyPrecision((double)converted.Value);
     }
 
     /// <summary>
@@ -201,6 +206,11 @@ public class UnitService
         }
 
         throw new ArgumentException($"Invalid current conversion: {fromUnit} to {toUnit}");
+    }
+
+    private double ApplyPrecision(double value)
+    {
+        return PrecisionRounding.CorrectPrecisionError(value, PrecisionErrorThreshold);
     }
 
     /// <summary>

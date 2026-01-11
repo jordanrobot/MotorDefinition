@@ -57,6 +57,27 @@ public class UnitServiceTests
     }
 
     [Fact]
+    public void Convert_SameUnit_WithPrecisionArtifact_CorrectsValue()
+    {
+        var value = 50.1300000000034;
+
+        var result = _service.Convert(value, "Nm", "Nm");
+
+        Assert.Equal(50.13, result, 12);
+    }
+
+    [Fact]
+    public void Convert_PrecisionThresholdZero_DoesNotAlterValue()
+    {
+        var service = new UnitService { PrecisionErrorThreshold = 0 };
+        var value = 50.1300000000034;
+
+        var result = service.Convert(value, "Nm", "Nm");
+
+        Assert.Equal(value, result);
+    }
+
+    [Fact]
     public void Convert_PowerWToKw_ConvertsCorrectly()
     {
         // Arrange

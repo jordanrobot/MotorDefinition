@@ -940,6 +940,8 @@ public partial class MainWindowViewModel : ViewModelBase
         // Use Convert Stored Data mode (hard conversion) as per requirements
         _unitConversionService.ConvertStoredData = true;
         _unitConversionService.DisplayDecimalPlaces = _unitPreferencesService.GetDecimalPlaces();
+        ApplyPrecisionPreferences();
+        _userPreferencesService.PreferencesChanged += OnUserPreferencesChanged;
         
         // Initialize tabs (currently with single shared view models for backward compatibility)
         var initialTab = new DocumentTab
@@ -994,6 +996,8 @@ public partial class MainWindowViewModel : ViewModelBase
         // Use Convert Stored Data mode (hard conversion) as per requirements
         _unitConversionService.ConvertStoredData = true;
         _unitConversionService.DisplayDecimalPlaces = _unitPreferencesService.GetDecimalPlaces();
+        ApplyPrecisionPreferences();
+        _userPreferencesService.PreferencesChanged += OnUserPreferencesChanged;
         
         // Initialize tabs (currently with single shared view models for backward compatibility)
         var initialTab = new DocumentTab
@@ -1013,6 +1017,16 @@ public partial class MainWindowViewModel : ViewModelBase
 
         // Load saved power curves preference
         chartViewModel.ShowPowerCurves = _settingsStore.LoadBool("ShowPowerCurves", false);
+    }
+
+    private void ApplyPrecisionPreferences()
+    {
+        _unitConversionService.PrecisionErrorThreshold = Math.Max(0, _userPreferencesService.Preferences.PrecisionErrorThreshold);
+    }
+
+    private void OnUserPreferencesChanged(object? sender, EventArgs e)
+    {
+        ApplyPrecisionPreferences();
     }
 
     public MainWindowViewModel(IFileService fileService, ICurveGeneratorService curveGeneratorService)
@@ -1037,6 +1051,8 @@ public partial class MainWindowViewModel : ViewModelBase
         // Use Convert Stored Data mode (hard conversion) as per requirements
         _unitConversionService.ConvertStoredData = true;
         _unitConversionService.DisplayDecimalPlaces = _unitPreferencesService.GetDecimalPlaces();
+        ApplyPrecisionPreferences();
+        _userPreferencesService.PreferencesChanged += OnUserPreferencesChanged;
         
         // Initialize tabs (currently with single shared view models for backward compatibility)
         var initialTab = new DocumentTab

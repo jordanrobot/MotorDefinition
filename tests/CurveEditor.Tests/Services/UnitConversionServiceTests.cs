@@ -23,6 +23,28 @@ public class UnitConversionServiceTests
     }
 
     [Fact]
+    public void ConvertTorque_AppliesPrecisionCorrection()
+    {
+        var service = new UnitConversionService();
+        var value = 50.1300000000034;
+
+        var result = service.ConvertTorque(value, "Nm", "Nm");
+
+        Assert.Equal(50.13, result, 12);
+    }
+
+    [Fact]
+    public void PrecisionErrorThresholdZero_DisablesCorrection()
+    {
+        var service = new UnitConversionService { PrecisionErrorThreshold = 0 };
+        var value = 50.1300000000034;
+
+        var result = service.ConvertTorque(value, "Nm", "Nm");
+
+        Assert.Equal(value, result);
+    }
+
+    [Fact]
     public void ConvertStoredData_WhenFalse_DoesNotModifyCurveData()
     {
         // Arrange

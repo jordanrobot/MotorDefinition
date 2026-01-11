@@ -13,7 +13,7 @@
   - Add a data-layer helper that normalizes values within a configurable threshold of a rounded representation.
 - [x] T2: User preference integration
   - Add a precision error threshold preference with a sensible default and surface it in the preferences UI.
-- [ ] T3: Conversion hook & tests
+- [x] T3: Conversion hook & tests
   - Apply precision correction in unit conversion flows and add targeted tests validating corrections and threshold handling.
 
 ## References
