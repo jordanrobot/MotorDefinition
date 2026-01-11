@@ -95,7 +95,7 @@
                                                FormatString="{StaticResource PrecisionThresholdFormat}"
                                                HorizontalAlignment="Left"
                                                MinWidth="150"/>
-                                <TextBlock Text="Values near round numbers within this threshold will be corrected."
+                                <TextBlock Text="Corrects floating-point precision errors when values are within this threshold of rounded numbers."
                                            Foreground="{DynamicResource SystemControlForegroundBaseMediumBrush}"
                                            FontSize="11"
                                            TextWrapping="Wrap"/>
