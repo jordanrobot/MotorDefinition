@@ -116,13 +116,13 @@ public sealed class DriveVoltageSeriesService : IDriveVoltageSeriesService
 
     public Voltage CreateVoltageWithCurve(
         Drive drive,
-        double voltageValue,
-        double maxSpeed,
-        double power,
-        double peakTorque,
-        double continuousTorque,
-        double continuousCurrent,
-        double peakCurrent)
+        decimal voltageValue,
+        decimal maxSpeed,
+        decimal power,
+        decimal peakTorque,
+        decimal continuousTorque,
+        decimal continuousCurrent,
+        decimal peakCurrent)
     {
         if (drive is null) throw new ArgumentNullException(nameof(drive));
 

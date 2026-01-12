@@ -260,7 +260,7 @@ private decimal _brakeTorque;
     /// <summary>
     /// Called when MotorMaxSpeed changes to update the chart axes.
     /// </summary>
-    partial void OnMotorMaxSpeedChanged(double value)
+    partial void OnMotorMaxSpeedChanged(decimal value)
     {
         // Update chart axes when motor max speed changes
         if (_currentVoltage is not null)
@@ -272,7 +272,7 @@ private decimal _brakeTorque;
     /// <summary>
     /// Called when MotorRatedSpeed changes to update the chart axes.
     /// </summary>
-    partial void OnMotorRatedSpeedChanged(double value)
+    partial void OnMotorRatedSpeedChanged(decimal value)
     {
         // Update chart axes when motor rated speed changes
         if (_currentVoltage is not null)
@@ -292,7 +292,7 @@ private decimal _brakeTorque;
     /// <summary>
     /// Called when BrakeTorque changes to update the brake torque line.
     /// </summary>
-    partial void OnBrakeTorqueChanged(double value)
+    partial void OnBrakeTorqueChanged(decimal value)
     {
         if (HasBrake)
         {
