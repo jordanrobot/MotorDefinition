@@ -16,7 +16,7 @@ public interface ICurveGeneratorService
     /// <param name="maxTorque">The maximum torque of the motor.</param>
     /// <param name="maxPower">The maximum power of the motor.</param>
     /// <returns>A new curve series with interpolated data.</returns>
-    Curve GenerateCurve(string name, double maxRpm, double maxTorque, double maxPower);
+    Curve GenerateCurve(string name, decimal maxRpm, decimal maxTorque, decimal maxPower);
 
     /// <summary>
     /// Interpolates curve data at 1% increments from motor parameters.
@@ -26,7 +26,7 @@ public interface ICurveGeneratorService
     /// <param name="maxTorque">The maximum torque of the motor.</param>
     /// <param name="maxPower">The maximum power of the motor (Watts).</param>
     /// <returns>A list of 101 data points (0% to 100% in 1% increments).</returns>
-    List<DataPoint> InterpolateCurve(double maxRpm, double maxTorque, double maxPower);
+    List<DataPoint> InterpolateCurve(decimal maxRpm, decimal maxTorque, decimal maxPower);
 
     /// <summary>
     /// Calculates power from torque and speed.
@@ -35,7 +35,7 @@ public interface ICurveGeneratorService
     /// <param name="torqueNm">Torque in Newton-meters.</param>
     /// <param name="rpm">Rotational speed in RPM.</param>
     /// <returns>Power in Watts.</returns>
-    double CalculatePower(double torqueNm, double rpm);
+    decimal CalculatePower(decimal torqueNm, decimal rpm);
 
     /// <summary>
     /// Calculates the corner speed where the motor transitions from constant torque to constant power.
@@ -43,5 +43,5 @@ public interface ICurveGeneratorService
     /// <param name="maxTorque">Maximum torque in Nm.</param>
     /// <param name="maxPower">Maximum power in Watts.</param>
     /// <returns>Corner speed in RPM.</returns>
-    double CalculateCornerSpeed(double maxTorque, double maxPower);
+    decimal CalculateCornerSpeed(decimal maxTorque, decimal maxPower);
 }

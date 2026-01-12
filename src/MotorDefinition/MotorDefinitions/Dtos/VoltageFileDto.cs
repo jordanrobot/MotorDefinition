@@ -9,34 +9,34 @@ namespace JordanRobot.MotorDefinition.Persistence.Dtos;
 internal sealed class VoltageFileDto
 {
     [JsonPropertyName("voltage")]
-    public double Voltage { get; set; }
+    public decimal Voltage { get; set; }
 
     [JsonPropertyName("power")]
-    public double Power { get; set; }
+    public decimal Power { get; set; }
 
     [JsonPropertyName("maxSpeed")]
-    public double MaxSpeed { get; set; }
+    public decimal MaxSpeed { get; set; }
 
     [JsonPropertyName("ratedSpeed")]
-    public double RatedSpeed { get; set; }
+    public decimal RatedSpeed { get; set; }
 
     [JsonPropertyName("ratedContinuousTorque")]
-    public double RatedContinuousTorque { get; set; }
+    public decimal RatedContinuousTorque { get; set; }
 
     [JsonPropertyName("ratedPeakTorque")]
-    public double RatedPeakTorque { get; set; }
+    public decimal RatedPeakTorque { get; set; }
 
     [JsonPropertyName("continuousAmperage")]
-    public double ContinuousAmperage { get; set; }
+    public decimal ContinuousAmperage { get; set; }
 
     [JsonPropertyName("peakAmperage")]
-    public double PeakAmperage { get; set; }
+    public decimal PeakAmperage { get; set; }
 
     [JsonPropertyName("percent")]
     public int[] Percent { get; set; } = [];
 
     [JsonPropertyName("rpm")]
-    public double[] Rpm { get; set; } = [];
+    public decimal[] Rpm { get; set; } = [];
 
     [JsonPropertyName("series")]
     public IDictionary<string, SeriesEntryDto> Series { get; set; } = new SortedDictionary<string, SeriesEntryDto>();

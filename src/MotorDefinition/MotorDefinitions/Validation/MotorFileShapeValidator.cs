@@ -11,7 +11,7 @@ namespace JordanRobot.MotorDefinition.Persistence.Validation;
 /// </summary>
 internal static class MotorFileShapeValidator
 {
-    private const double AxisTolerance = 1e-9;
+    private const decimal AxisTolerance = 1e-9m;
     private const int MaxSupportedPointCount = 101;
 
     /// <summary>

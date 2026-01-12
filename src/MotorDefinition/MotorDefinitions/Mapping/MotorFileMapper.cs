@@ -75,7 +75,7 @@ internal static class MotorFileMapper
                         throw new InvalidOperationException($"Duplicate series name '{series.Name}' found for {voltage.Value}V in drive '{drive.Name}'.");
                     }
 
-                    var torque = new double[pointCount];
+                    var torque = new decimal[pointCount];
                     for (var i = 0; i < pointCount; i++)
                     {
                         torque[i] = series.Data[i].Torque;

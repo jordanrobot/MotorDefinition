@@ -78,7 +78,7 @@ public class Drive : INotifyPropertyChanged
     /// Useful for populating UI lists and combo-boxes.
     /// </remarks>
     [JsonIgnore]
-    public IEnumerable<double> VoltageValues => Voltages.Select(v => v.Value);
+    public IEnumerable<decimal> VoltageValues => Voltages.Select(v => v.Value);
 
     /// <summary>
     /// Gets or sets the validation signature for this drive configuration.
@@ -110,7 +110,7 @@ public class Drive : INotifyPropertyChanged
     /// <summary>
     /// Default tolerance for matching voltage values (in volts).
     /// </summary>
-    public const double DefaultVoltageTolerance = 0.1;
+    public const decimal DefaultVoltageTolerance = 0.1m;
 
     /// <summary>
     /// Gets a voltage configuration by voltage value.
@@ -118,7 +118,7 @@ public class Drive : INotifyPropertyChanged
     /// <param name="voltage">The voltage to find.</param>
     /// <param name="tolerance">The tolerance for matching voltage values (default 0.1V).</param>
     /// <returns>The matching voltage configuration, or null if not found.</returns>
-    public Voltage? GetVoltage(double voltage, double tolerance = DefaultVoltageTolerance)
+    public Voltage? GetVoltage(decimal voltage, decimal tolerance = DefaultVoltageTolerance)
     {
         return Voltages.Find(v => Math.Abs(v.Value - voltage) < tolerance);
     }
@@ -129,7 +129,7 @@ public class Drive : INotifyPropertyChanged
     /// <param name="voltage">The voltage value.</param>
     /// <returns>The newly created voltage configuration.</returns>
     /// <exception cref="InvalidOperationException">Thrown if a configuration with the same voltage already exists.</exception>
-    public Voltage AddVoltage(double voltage)
+    public Voltage AddVoltage(decimal voltage)
     {
         if (GetVoltage(voltage) is not null)
         {

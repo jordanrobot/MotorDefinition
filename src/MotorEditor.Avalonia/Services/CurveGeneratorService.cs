@@ -11,7 +11,7 @@ namespace CurveEditor.Services;
 public class CurveGeneratorService : ICurveGeneratorService
 {
     /// <inheritdoc />
-    public Curve GenerateCurve(string name, double maxRpm, double maxTorque, double maxPower)
+    public Curve GenerateCurve(string name, decimal maxRpm, decimal maxTorque, decimal maxPower)
     {
         Log.Debug("Generating curve '{Name}' with maxRpm={MaxRpm}, maxTorque={MaxTorque}, maxPower={MaxPower}",
             name, maxRpm, maxTorque, maxPower);
@@ -25,7 +25,7 @@ public class CurveGeneratorService : ICurveGeneratorService
     }
 
     /// <inheritdoc />
-    public List<DataPoint> InterpolateCurve(double maxRpm, double maxTorque, double maxPower)
+    public List<DataPoint> InterpolateCurve(decimal maxRpm, decimal maxTorque, decimal maxPower)
     {
         ArgumentOutOfRangeException.ThrowIfNegative(maxRpm);
         ArgumentOutOfRangeException.ThrowIfNegative(maxTorque);
@@ -39,7 +39,7 @@ public class CurveGeneratorService : ICurveGeneratorService
             // Return flat curve at zero torque
             for (var percent = 0; percent <= 100; percent++)
             {
-                points.Add(new DataPoint(percent, maxRpm * percent / 100.0, 0));
+                points.Add(new DataPoint(percent, maxRpm * percent / 100m, 0m));
             }
             return points;
         }
@@ -53,8 +53,8 @@ public class CurveGeneratorService : ICurveGeneratorService
 
         for (var percent = 0; percent <= 100; percent++)
         {
-            var rpm = maxRpm * percent / 100.0;
-            double torque;
+            var rpm = maxRpm * percent / 100m;
+            decimal torque;
 
             if (rpm <= 0)
             {
@@ -70,11 +70,12 @@ public class CurveGeneratorService : ICurveGeneratorService
             {
                 // Constant power region (torque falls off with speed)
                 // Power = Torque × ω, so Torque = Power / ω
-                var omega = rpm * 2 * Math.PI / 60;
-                torque = maxPower / omega;
+                const decimal TwoPi = 6.283185307179586476925286766559m;
+                var omega = rpm * TwoPi / 60m;
+                torque = omega == 0 ? 0 : maxPower / omega;
 
                 // Ensure torque doesn't go below zero
-                torque = Math.Max(0, torque);
+                torque = Math.Max(0m, torque);
             }
 
             points.Add(new DataPoint
@@ -89,15 +90,16 @@ public class CurveGeneratorService : ICurveGeneratorService
     }
 
     /// <inheritdoc />
-    public double CalculatePower(double torqueNm, double rpm)
+    public decimal CalculatePower(decimal torqueNm, decimal rpm)
     {
         // Power (W) = Torque (Nm) × Angular velocity (rad/s)
         // Angular velocity = RPM × 2π / 60
-        return torqueNm * rpm * 2 * Math.PI / 60;
+        const decimal TwoPi = 6.283185307179586476925286766559m;
+        return torqueNm * rpm * TwoPi / 60m;
     }
 
     /// <inheritdoc />
-    public double CalculateCornerSpeed(double maxTorque, double maxPower)
+    public decimal CalculateCornerSpeed(decimal maxTorque, decimal maxPower)
     {
         if (maxTorque <= 0)
         {
@@ -105,6 +107,7 @@ public class CurveGeneratorService : ICurveGeneratorService
         }
 
         // cornerRpm = (maxPower × 60) / (maxTorque × 2π)
-        return (maxPower * 60) / (maxTorque * 2 * Math.PI);
+        const decimal TwoPi = 6.283185307179586476925286766559m;
+        return (maxPower * 60m) / (maxTorque * TwoPi);
     }
 }

@@ -25,7 +25,7 @@ public static class MotorFile
         {
             // Keep files human-readable while avoiding huge vertical expansion of numeric arrays.
             new Persistence.Json.CompactInt32ArrayJsonConverter(valuesPerLine: 12),
-            new Persistence.Json.CompactDoubleArrayJsonConverter(valuesPerLine: 12)
+            new Persistence.Json.CompactDecimalArrayJsonConverter(valuesPerLine: 12)
         }
     };
 

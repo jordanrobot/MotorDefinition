@@ -14,7 +14,7 @@ internal sealed class SeriesEntryDto
     public string? Notes { get; set; }
 
     [JsonPropertyName("torque")]
-    public double[] Torque { get; set; } = [];
+    public decimal[] Torque { get; set; } = [];
 
     [JsonPropertyName("curveSignature")]
     public ValidationSignatureDto? CurveSignature { get; set; }

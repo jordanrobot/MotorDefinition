@@ -51,31 +51,31 @@ public class ServoMotor
     /// Expressed in the unit specified by <see cref="Units"/>.<see cref="UnitSettings.Power"/>.
     /// </remarks>
     [JsonPropertyName("power")]
-    public double Power { get; set; }
+    public decimal Power { get; set; }
 
     /// <summary>
     /// Gets or sets the theoretical maximum rotational speed of the motor (RPM).
     /// </summary>
     [JsonPropertyName("maxSpeed")]
-    public double MaxSpeed { get; set; }
+    public decimal MaxSpeed { get; set; }
 
     /// <summary>
     /// Gets or sets the rated continuous operating speed of the motor (RPM).
     /// </summary>
     [JsonPropertyName("ratedSpeed")]
-    public double RatedSpeed { get; set; }
+    public decimal RatedSpeed { get; set; }
 
     /// <summary>
     /// Gets or sets the theoretical maximum continuous torque for the motor.
     /// </summary>
     [JsonPropertyName("ratedContinuousTorque")]
-    public double RatedContinuousTorque { get; set; }
+    public decimal RatedContinuousTorque { get; set; }
 
     /// <summary>
     /// Gets or sets the theoretical maximum peak torque for the motor.
     /// </summary>
     [JsonPropertyName("ratedPeakTorque")]
-    public double RatedPeakTorque { get; set; }
+    public decimal RatedPeakTorque { get; set; }
 
     // Mechanical Properties
     /// <summary>
@@ -85,7 +85,7 @@ public class ServoMotor
     /// Expressed in the unit specified by <see cref="Units"/>.<see cref="UnitSettings.Weight"/>.
     /// </remarks>
     [JsonPropertyName("weight")]
-    public double Weight { get; set; }
+    public decimal Weight { get; set; }
 
     /// <summary>
     /// Gets or sets the moment of inertia of the motor's rotor.
@@ -94,7 +94,7 @@ public class ServoMotor
     /// This affects acceleration response.
     /// </remarks>
     [JsonPropertyName("rotorInertia")]
-    public double RotorInertia { get; set; }
+    public decimal RotorInertia { get; set; }
 
     /// <summary>
     /// Gets or sets the feedback device pulses per revolution (PPR).
@@ -119,7 +119,7 @@ public class ServoMotor
     /// Only applicable when <see cref="HasBrake"/> is <see langword="true"/>.
     /// </remarks>
     [JsonPropertyName("brakeTorque")]
-    public double BrakeTorque { get; set; }
+    public decimal BrakeTorque { get; set; }
 
     /// <summary>
     /// Gets or sets the current draw of the brake (A).
@@ -128,7 +128,7 @@ public class ServoMotor
     /// Only applicable when <see cref="HasBrake"/> is <see langword="true"/>.
     /// </remarks>
     [JsonPropertyName("brakeAmperage")]
-    public double BrakeAmperage { get; set; }
+    public decimal BrakeAmperage { get; set; }
 
     /// <summary>
     /// Gets or sets the voltage requirement of the brake (V).
@@ -137,31 +137,31 @@ public class ServoMotor
     /// Only applicable when <see cref="HasBrake"/> is <see langword="true"/>.
     /// </remarks>
     [JsonPropertyName("brakeVoltage")]
-    public double BrakeVoltage { get; set; }
+    public decimal BrakeVoltage { get; set; }
 
     /// <summary>
     /// Gets or sets the release time of the brake.
     /// </summary>
     [JsonPropertyName("brakeReleaseTime")]
-    public double BrakeReleaseTime { get; set; }
+    public decimal BrakeReleaseTime { get; set; }
 
     /// <summary>
     /// Gets or sets the brake engage time when using a diode.
     /// </summary>
     [JsonPropertyName("brakeEngageTimeDiode")]
-    public double BrakeEngageTimeDiode { get; set; }
+    public decimal BrakeEngageTimeDiode { get; set; }
 
     /// <summary>
     /// Gets or sets the brake engage time when using an MOV.
     /// </summary>
     [JsonPropertyName("brakeEngageTimeMOV")]
-    public double BrakeEngageTimeMov { get; set; }
+    public decimal BrakeEngageTimeMov { get; set; }
 
     /// <summary>
     /// Gets or sets the backlash of the brake mechanism.
     /// </summary>
     [JsonPropertyName("brakeBacklash")]
-    public double BrakeBacklash { get; set; }
+    public decimal BrakeBacklash { get; set; }
 
     // Units Configuration
     /// <summary>

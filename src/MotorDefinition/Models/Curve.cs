@@ -157,13 +157,13 @@ public class Curve : INotifyPropertyChanged
     /// Gets the RPM values for this curve.
     /// </summary>
     [JsonIgnore]
-    public IEnumerable<double> Rpms => Data.Select(p => p.Rpm);
+    public IEnumerable<decimal> Rpms => Data.Select(p => p.Rpm);
 
     /// <summary>
     /// Gets the torque values for this curve.
     /// </summary>
     [JsonIgnore]
-    public IEnumerable<double> Torques => Data.Select(p => p.Torque);
+    public IEnumerable<decimal> Torques => Data.Select(p => p.Torque);
 
     /// <summary>
     /// Gets or sets the validation signature for this curve's data.
@@ -200,7 +200,7 @@ public class Curve : INotifyPropertyChanged
     /// </remarks>
     /// <param name="maxRpm">The maximum RPM of the motor.</param>
     /// <param name="defaultTorque">The default torque value for all points.</param>
-    public void InitializeData(double maxRpm, double defaultTorque)
+    public void InitializeData(decimal maxRpm, decimal defaultTorque)
     {
         ArgumentOutOfRangeException.ThrowIfNegative(maxRpm);
 
@@ -210,7 +210,7 @@ public class Curve : INotifyPropertyChanged
             Data.Add(new DataPoint
             {
                 Percent = percent,
-                Rpm = percent / 100.0 * maxRpm,
+                Rpm = percent / 100m * maxRpm,
                 Torque = defaultTorque
             });
         }

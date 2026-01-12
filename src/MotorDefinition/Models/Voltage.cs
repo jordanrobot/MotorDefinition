@@ -16,13 +16,13 @@ namespace JordanRobot.MotorDefinition.Model;
 /// </remarks>
 public class Voltage : INotifyPropertyChanged
 {
-    private double _voltage;
+    private decimal _voltage;
 
     /// <summary>
     /// Gets or sets the operating voltage (V).
     /// </summary>
     [JsonPropertyName("voltage")]
-    public double Value
+    public decimal Value
     {
         get => _voltage;
         set
@@ -31,7 +31,7 @@ public class Voltage : INotifyPropertyChanged
             {
                 throw new ArgumentOutOfRangeException(nameof(value), value, "Voltage must be positive.");
             }
-            if (Math.Abs(_voltage - value) < double.Epsilon)
+            if (Math.Abs(_voltage - value) <= 0m)
             {
                 return;
             }
@@ -57,43 +57,43 @@ public class Voltage : INotifyPropertyChanged
     /// Expressed in the unit specified by the parent motor's <see cref="UnitSettings"/>.
     /// </remarks>
     [JsonPropertyName("power")]
-    public double Power { get; set; }
+    public decimal Power { get; set; }
 
     /// <summary>
     /// Gets or sets the maximum rotational speed at this voltage (RPM).
     /// </summary>
     [JsonPropertyName("maxSpeed")]
-    public double MaxSpeed { get; set; }
+    public decimal MaxSpeed { get; set; }
 
     /// <summary>
     /// Gets or sets the rated continuous operating speed at this voltage (RPM).
     /// </summary>
     [JsonPropertyName("ratedSpeed")]
-    public double RatedSpeed { get; set; }
+    public decimal RatedSpeed { get; set; }
 
     /// <summary>
     /// Gets or sets the rated continuous torque at this voltage.
     /// </summary>
     [JsonPropertyName("ratedContinuousTorque")]
-    public double RatedContinuousTorque { get; set; }
+    public decimal RatedContinuousTorque { get; set; }
 
     /// <summary>
     /// Gets or sets the rated peak torque at this voltage.
     /// </summary>
     [JsonPropertyName("ratedPeakTorque")]
-    public double RatedPeakTorque { get; set; }
+    public decimal RatedPeakTorque { get; set; }
 
     /// <summary>
     /// Gets or sets the current draw during continuous operation at rated torque (A).
     /// </summary>
     [JsonPropertyName("continuousAmperage")]
-    public double ContinuousAmperage { get; set; }
+    public decimal ContinuousAmperage { get; set; }
 
     /// <summary>
     /// Gets or sets the maximum current draw during peak torque operation (A).
     /// </summary>
     [JsonPropertyName("peakAmperage")]
-    public double PeakAmperage { get; set; }
+    public decimal PeakAmperage { get; set; }
 
     /// <summary>
     /// Gets or sets the curves for this voltage configuration (for example, "Peak" and "Continuous").
@@ -112,7 +112,7 @@ public class Voltage : INotifyPropertyChanged
     /// Creates a new Voltage with the specified voltage.
     /// </summary>
     /// <param name="voltage">The operating voltage.</param>
-    public Voltage(double voltage)
+    public Voltage(decimal voltage)
     {
         Value = voltage;
     }
@@ -134,7 +134,7 @@ public class Voltage : INotifyPropertyChanged
     /// <param name="initializeTorque">The default torque value for all points.</param>
     /// <returns>The newly created curve.</returns>
     /// <exception cref="InvalidOperationException">Thrown if a curve with the same name already exists.</exception>
-    public Curve AddSeries(string name, double initializeTorque = 0)
+    public Curve AddSeries(string name, decimal initializeTorque = 0)
     {
         if (GetSeriesByName(name) is not null)
         {
