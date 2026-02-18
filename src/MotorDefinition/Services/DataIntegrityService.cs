@@ -1,8 +1,10 @@
 using JordanRobot.MotorDefinition.Model;
 using System;
+using System.Globalization;
 using System.Security.Cryptography;
 using System.Text;
 using System.Text.Json;
+using System.Text.Json.Serialization;
 
 namespace JordanRobot.MotorDefinition.Services;
 
@@ -36,7 +38,8 @@ public class DataIntegrityService : IDataIntegrityService
     private static readonly JsonSerializerOptions JsonOptions = new()
     {
         WriteIndented = false, // Compact for consistent hashing
-        PropertyNamingPolicy = JsonNamingPolicy.CamelCase
+        PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
+        Converters = { new NormalizedDecimalJsonConverter() }
     };
 
     /// <inheritdoc/>
@@ -205,5 +208,23 @@ public class DataIntegrityService : IDataIntegrityService
         // Lowercase hex format for consistency and easier comparison
         // This format is part of the stable API and should not be changed
         return Convert.ToHexString(hash).ToLowerInvariant();
+    }
+
+    /// <summary>
+    /// Normalizes decimal serialization by stripping trailing zeros.
+    /// Ensures that <c>2304.00m</c> and <c>2304m</c> produce the same JSON token (<c>2304</c>),
+    /// which is required for stable SHA-256 hashing after save/load round-trips.
+    /// </summary>
+    private sealed class NormalizedDecimalJsonConverter : JsonConverter<decimal>
+    {
+        public override decimal Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
+            => reader.GetDecimal();
+
+        public override void Write(Utf8JsonWriter writer, decimal value, JsonSerializerOptions options)
+        {
+            // G29 strips trailing zeros: 2304.00m → "2304", 8.50m → "8.5"
+            var normalized = value.ToString("G29", CultureInfo.InvariantCulture);
+            writer.WriteRawValue(normalized);
+        }
     }
 }

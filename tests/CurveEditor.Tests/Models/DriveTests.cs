@@ -53,10 +53,10 @@ public class DriveTests
         drive.AddVoltage(220);
 
         // Within default tolerance of 0.1V
-        var result = drive.GetVoltage(220.05);
+        var result = drive.GetVoltage(220.05m);
 
         Assert.NotNull(result);
-        Assert.Equal(220, result.Value);
+        Assert.Equal(220m, result.Value);
     }
 
     [Fact]
@@ -65,10 +65,10 @@ public class DriveTests
         var drive = new Drive("Test Drive");
         drive.AddVoltage(220);
 
-        var result = drive.GetVoltage(220.05, tolerance: 0.1);
+        var result = drive.GetVoltage(220.05m, tolerance: 0.1m);
 
         Assert.NotNull(result);
-        Assert.Equal(220, result.Value);
+        Assert.Equal(220m, result.Value);
     }
 
     [Fact]
@@ -90,7 +90,7 @@ public class DriveTests
         var voltage = drive.AddVoltage(220);
 
         Assert.Single(drive.Voltages);
-        Assert.Equal(220, voltage.Value);
+        Assert.Equal(220m, voltage.Value);
     }
 
     [Fact]

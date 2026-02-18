@@ -1,6 +1,6 @@
-using System;
 using JordanRobot.MotorDefinition.Model;
 using JordanRobot.MotorDefinition.Services;
+using System;
 
 namespace CurveEditor.Services;
 
@@ -263,7 +263,7 @@ public class UnitConversionService
     /// <param name="storedUnit">The unit as stored in the model.</param>
     /// <param name="displayUnit">The unit to display.</param>
     /// <returns>The value in the display unit.</returns>
-    public double GetDisplayTorque(double storedValue, string storedUnit, string displayUnit)
+    public decimal GetDisplayTorque(decimal storedValue, string storedUnit, string displayUnit)
     {
         if (ConvertStoredData || storedUnit == displayUnit)
         {
@@ -280,7 +280,7 @@ public class UnitConversionService
     /// <param name="displayUnit">The display unit.</param>
     /// <param name="storedUnit">The storage unit.</param>
     /// <returns>The value in the storage unit.</returns>
-    public double GetStoredTorque(double displayValue, string displayUnit, string storedUnit)
+    public decimal GetStoredTorque(decimal displayValue, string displayUnit, string storedUnit)
     {
         if (ConvertStoredData || displayUnit == storedUnit)
         {

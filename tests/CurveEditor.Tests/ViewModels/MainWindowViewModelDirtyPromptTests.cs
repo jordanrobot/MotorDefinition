@@ -16,7 +16,7 @@ public class MainWindowViewModelDirtyPromptTests
 
         var motor = new ServoMotor { MotorName = "New Motor" };
         fileServiceMock
-            .Setup(f => f.CreateNew(It.IsAny<string>(), It.IsAny<int>(), It.IsAny<double>(), It.IsAny<double>()))
+            .Setup(f => f.CreateNew(It.IsAny<string>(), It.IsAny<decimal>(), It.IsAny<decimal>(), It.IsAny<decimal>()))
             .Returns(motor);
         fileServiceMock
             .SetupGet(f => f.IsDirty)

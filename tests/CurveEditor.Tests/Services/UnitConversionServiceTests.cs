@@ -13,13 +13,13 @@ public class UnitConversionServiceTests
     {
         // Arrange
         var service = new UnitConversionService();
-        var value = 10.0;
+        var value = 10.0m;
 
         // Act
         var result = service.ConvertTorque(value, "Nm", "lbf-in");
 
         // Assert
-        Assert.Equal(88.5075, result, 2);
+        Assert.Equal(88.5075m, result, 2);
     }
 
     [Fact]
@@ -28,8 +28,8 @@ public class UnitConversionServiceTests
         // Arrange
         var service = new UnitConversionService { ConvertStoredData = false };
         var curve = new Curve("Test");
-        curve.Data.Add(new DataPoint(0, 0, 10.0));
-        curve.Data.Add(new DataPoint(50, 1500, 10.0));
+        curve.Data.Add(new DataPoint(0, 0m, 10.0m));
+        curve.Data.Add(new DataPoint(50, 1500m, 10.0m));
         var originalTorque = curve.Data[0].Torque;
 
         // Act
@@ -45,15 +45,15 @@ public class UnitConversionServiceTests
         // Arrange
         var service = new UnitConversionService { ConvertStoredData = true };
         var curve = new Curve("Test");
-        curve.Data.Add(new DataPoint(0, 0, 10.0));
-        curve.Data.Add(new DataPoint(50, 1500, 10.0));
+        curve.Data.Add(new DataPoint(0, 0m, 10.0m));
+        curve.Data.Add(new DataPoint(50, 1500m, 10.0m));
 
         // Act
         service.ConvertCurveTorque(curve, "Nm", "lbf-in");
 
         // Assert - data should be converted
-        Assert.Equal(88.5075, curve.Data[0].Torque, 2);
-        Assert.Equal(88.5075, curve.Data[1].Torque, 2);
+        Assert.Equal(88.5075m, curve.Data[0].Torque, 2);
+        Assert.Equal(88.5075m, curve.Data[1].Torque, 2);
     }
 
     [Fact]
@@ -62,9 +62,9 @@ public class UnitConversionServiceTests
         // Arrange
         var service = new UnitConversionService { ConvertStoredData = true };
         var curve = new Curve("Test");
-        curve.Data.Add(new DataPoint(0, 0, 10.0));
-        curve.Data.Add(new DataPoint(50, 1500, 10.0));
-        curve.Data.Add(new DataPoint(100, 3000, 10.0));
+        curve.Data.Add(new DataPoint(0, 0m, 10.0m));
+        curve.Data.Add(new DataPoint(50, 1500m, 10.0m));
+        curve.Data.Add(new DataPoint(100, 3000m, 10.0m));
 
         // Act
         service.ConvertCurveSpeed(curve, "rpm", "rpm"); // Same unit - no change
@@ -80,7 +80,7 @@ public class UnitConversionServiceTests
     {
         // Arrange
         var service = new UnitConversionService { DisplayDecimalPlaces = 3 };
-        var value = 10.12345;
+        var value = 10.12345m;
 
         // Act
         var result = service.FormatValue(value, "Nm");
@@ -94,7 +94,7 @@ public class UnitConversionServiceTests
     {
         // Arrange
         var service = new UnitConversionService();
-        var value = 10.12345;
+        var value = 10.12345m;
 
         // Act
         var result = service.FormatValue(value, "Nm");
@@ -108,7 +108,7 @@ public class UnitConversionServiceTests
     {
         // Arrange
         var service = new UnitConversionService { ConvertStoredData = true };
-        var storedValue = 10.0;
+        var storedValue = 10.0m;
 
         // Act
         var result = service.GetDisplayTorque(storedValue, "Nm", "lbf-in");
@@ -122,13 +122,13 @@ public class UnitConversionServiceTests
     {
         // Arrange
         var service = new UnitConversionService { ConvertStoredData = false };
-        var storedValue = 10.0;
+        var storedValue = 10.0m;
 
         // Act
         var result = service.GetDisplayTorque(storedValue, "Nm", "lbf-in");
 
         // Assert - returns converted value for display
-        Assert.Equal(88.5075, result, 2);
+        Assert.Equal(88.5075m, result, 2);
     }
 
     [Fact]
@@ -136,13 +136,13 @@ public class UnitConversionServiceTests
     {
         // Arrange
         var service = new UnitConversionService { ConvertStoredData = false };
-        var displayValue = 88.5075;
+        var displayValue = 88.5075m;
 
         // Act
         var result = service.GetStoredTorque(displayValue, "lbf-in", "Nm");
 
         // Assert - returns converted value for storage
-        Assert.Equal(10.0, result, 2);
+        Assert.Equal(10.0m, result, 2);
     }
 
     [Fact]
@@ -152,12 +152,12 @@ public class UnitConversionServiceTests
         var service = new UnitConversionService { ConvertStoredData = false };
         var motor = new ServoMotor
         {
-            RatedContinuousTorque = 10.0,
-            RatedPeakTorque = 15.0,
+            RatedContinuousTorque = 10.0m,
+            RatedPeakTorque = 15.0m,
             MaxSpeed = 3000,
             RatedSpeed = 2500,
             Power = 1000,
-            Weight = 5.0
+            Weight = 5.0m
         };
         var oldUnits = new UnitSettings();
         var newUnits = new UnitSettings { Torque = "lbf-in" };
@@ -166,8 +166,8 @@ public class UnitConversionServiceTests
         service.ConvertMotorUnits(motor, oldUnits, newUnits);
 
         // Assert - motor values should remain unchanged
-        Assert.Equal(10.0, motor.RatedContinuousTorque);
-        Assert.Equal(15.0, motor.RatedPeakTorque);
+        Assert.Equal(10.0m, motor.RatedContinuousTorque);
+        Assert.Equal(15.0m, motor.RatedPeakTorque);
     }
 
     [Fact]
@@ -177,12 +177,12 @@ public class UnitConversionServiceTests
         var service = new UnitConversionService { ConvertStoredData = true };
         var motor = new ServoMotor
         {
-            RatedContinuousTorque = 10.0,
-            RatedPeakTorque = 15.0,
+            RatedContinuousTorque = 10.0m,
+            RatedPeakTorque = 15.0m,
             MaxSpeed = 3000,
             RatedSpeed = 2500,
             Power = 1000,
-            Weight = 5.0
+            Weight = 5.0m
         };
         var oldUnits = new UnitSettings { Torque = "Nm", Weight = "kg" };
         var newUnits = new UnitSettings { Torque = "lbf-in", Weight = "lbs" };
@@ -191,9 +191,9 @@ public class UnitConversionServiceTests
         service.ConvertMotorUnits(motor, oldUnits, newUnits);
 
         // Assert - motor values should be converted
-        Assert.Equal(88.5075, motor.RatedContinuousTorque, 2);
-        Assert.Equal(132.7612, motor.RatedPeakTorque, 2);
-        Assert.Equal(11.0231, motor.Weight, 2);
+        Assert.Equal(88.5075m, motor.RatedContinuousTorque, 2);
+        Assert.Equal(132.7612m, motor.RatedPeakTorque, 2);
+        Assert.Equal(11.0231m, motor.Weight, 2);
     }
 
     [Fact]

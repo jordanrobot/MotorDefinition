@@ -26,8 +26,8 @@ public class UnitConversionConfirmationTests
 
         var motor = new ServoMotor
         {
-            RatedContinuousTorque = 10.0,
-            RatedPeakTorque = 15.0
+            RatedContinuousTorque = 10.0m,
+            RatedPeakTorque = 15.0m
         };
 
         var originalContinuous = motor.RatedContinuousTorque;
@@ -60,8 +60,8 @@ public class UnitConversionConfirmationTests
 
         var motor = new ServoMotor
         {
-            RatedContinuousTorque = 10.0,
-            RatedPeakTorque = 15.0
+            RatedContinuousTorque = 10.0m,
+            RatedPeakTorque = 15.0m
         };
 
         var oldUnits = new UnitSettings { Torque = "Nm" };
@@ -76,8 +76,8 @@ public class UnitConversionConfirmationTests
         }
 
         // Assert - Data converted when user confirms
-        Assert.Equal(88.5075, motor.RatedContinuousTorque, 2);
-        Assert.Equal(132.7612, motor.RatedPeakTorque, 2);
+        Assert.Equal(88.5075m, motor.RatedContinuousTorque, 2);
+        Assert.Equal(132.7612m, motor.RatedPeakTorque, 2);
     }
 
     [Fact]
@@ -104,8 +104,8 @@ public class UnitConversionConfirmationTests
         // - Number of affected values
         // - Warning that this action cannot be undone
 
-        var oldValue = 10.0;
-        var newValue = 88.5075;
+        var oldValue = 10.0m;
+        var newValue = 88.5075m;
         var oldUnit = "Nm";
         var newUnit = "lbf-in";
 
@@ -124,17 +124,17 @@ public class UnitConversionConfirmationTests
 
         var motor = new ServoMotor
         {
-            RatedContinuousTorque = 10.0,
-            RatedPeakTorque = 15.0,
+            RatedContinuousTorque = 10.0m,
+            RatedPeakTorque = 15.0m,
             MaxSpeed = 3000,
             RatedSpeed = 2500
         };
 
         var drive = new Drive { Name = "TestDrive" };
-        var voltage = new Voltage { Value = 48, RatedContinuousTorque = 5.0, RatedPeakTorque = 8.0 };
+        var voltage = new Voltage { Value = 48, RatedContinuousTorque = 5.0m, RatedPeakTorque = 8.0m };
         var curve = new Curve("Test");
-        curve.Data.Add(new DataPoint(0, 0, 10.0));
-        curve.Data.Add(new DataPoint(100, 3000, 10.0));
+        curve.Data.Add(new DataPoint(0, 0m, 10.0m));
+        curve.Data.Add(new DataPoint(100, 3000m, 10.0m));
 
         voltage.Curves.Add(curve);
         drive.Voltages.Add(voltage);
@@ -158,12 +158,12 @@ public class UnitConversionConfirmationTests
         var mockSettings = new Mock<IUserSettingsStore>();
         var conversionService = new UnitConversionService(mockSettings.Object);
 
-        double[] testValues = [5.0, 10.0, 15.0, 20.0];
+        decimal[] testValues = [5.0m, 10.0m, 15.0m, 20.0m];
         string fromUnit = "Nm";
         string toUnit = "lbf-in";
 
         // Act - Generate preview for multiple values
-        var previews = new List<(double Before, double After)>();
+        var previews = new List<(decimal Before, decimal After)>();
         foreach (var value in testValues)
         {
             var converted = unitService.Convert(value, fromUnit, toUnit);
@@ -172,8 +172,8 @@ public class UnitConversionConfirmationTests
 
         // Assert - Preview data structure is correct
         Assert.Equal(4, previews.Count);
-        Assert.Equal(5.0, previews[0].Before);
-        Assert.Equal(44.2537, previews[0].After, 2);
+        Assert.Equal(5.0m, previews[0].Before);
+        Assert.Equal(44.2537m, previews[0].After, 2);
     }
 
     [Fact]

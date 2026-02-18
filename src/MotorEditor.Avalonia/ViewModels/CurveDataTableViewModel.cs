@@ -80,7 +80,7 @@ public class CurveDataRow : INotifyPropertyChanged
     /// <summary>
     /// Indexer to get/set torque values by series name (for data binding).
     /// </summary>
-    public double this[string seriesName]
+    public decimal this[string seriesName]
     {
         get => GetTorque(seriesName);
         set => SetTorque(seriesName, value);
@@ -89,7 +89,7 @@ public class CurveDataRow : INotifyPropertyChanged
     /// <summary>
     /// Gets the torque value for a specific series at this row.
     /// </summary>
-    public double GetTorque(string seriesName)
+    public decimal GetTorque(string seriesName)
     {
         var series = _voltage.Curves.FirstOrDefault(s => s.Name == seriesName);
         if (series is not null && _rowIndex < series.Data.Count)
@@ -102,7 +102,7 @@ public class CurveDataRow : INotifyPropertyChanged
     /// <summary>
     /// Sets the torque value for a specific series at this row.
     /// </summary>
-    public void SetTorque(string seriesName, double value)
+    public void SetTorque(string seriesName, decimal value)
     {
         var series = _voltage.Curves.FirstOrDefault(s => s.Name == seriesName);
         if (series is not null && _rowIndex < series.Data.Count)
@@ -232,7 +232,7 @@ public partial class CurveDataTableViewModel : ViewModelBase
     /// Applies a scalar torque value to all currently selected cells.
     /// </summary>
     /// <param name="value">The torque value to apply.</param>
-    public void ApplyTorqueToSelectedCells(double value)
+    public void ApplyTorqueToSelectedCells(decimal value)
     {
         if (SelectedCells.Count == 0)
         {
@@ -274,7 +274,7 @@ public partial class CurveDataTableViewModel : ViewModelBase
     /// <summary>
     /// Updates a torque value in the data table.
     /// </summary>
-    public void UpdateTorque(int rowIndex, string seriesName, double value)
+    public void UpdateTorque(int rowIndex, string seriesName, decimal value)
     {
         if (rowIndex < 0 || rowIndex >= Rows.Count)
         {
@@ -357,7 +357,7 @@ public partial class CurveDataTableViewModel : ViewModelBase
     /// Updates an RPM value in the data table for all series.
     /// RPM is shared across all series in a voltage configuration.
     /// </summary>
-    public void UpdateRpm(int rowIndex, double value)
+    public void UpdateRpm(int rowIndex, decimal value)
     {
         if (rowIndex < 0 || rowIndex >= Rows.Count)
         {
@@ -404,7 +404,7 @@ public partial class CurveDataTableViewModel : ViewModelBase
     /// <summary>
     /// Gets the torque value for a specific row and series.
     /// </summary>
-    public double GetTorque(int rowIndex, string seriesName)
+    public decimal GetTorque(int rowIndex, string seriesName)
     {
         if (rowIndex >= 0 && rowIndex < Rows.Count)
         {
@@ -654,7 +654,7 @@ public partial class CurveDataTableViewModel : ViewModelBase
         var newRow = Math.Clamp(referenceCell.RowIndex + rowDelta, 0, Math.Max(0, Rows.Count - 1));
         var newCol = Math.Clamp(referenceCell.ColumnIndex + columnDelta, 0, Math.Max(0, ColumnCount - 1));
 
-        Log.Debug("[VM-NAV] MoveSelection: From ({OldRow},{OldCol}) by delta ({RowDelta},{ColDelta}) to ({NewRow},{NewCol})", 
+        Log.Debug("[VM-NAV] MoveSelection: From ({OldRow},{OldCol}) by delta ({RowDelta},{ColDelta}) to ({NewRow},{NewCol})",
             oldRow, oldCol, rowDelta, columnDelta, newRow, newCol);
 
         SelectCell(newRow, newCol);
@@ -837,7 +837,7 @@ public partial class CurveDataTableViewModel : ViewModelBase
     /// Respects fixed columns (% and RPM) and locked series, and raises DataChanged
     /// if at least one torque value is updated.
     /// </summary>
-    public void ApplyTorqueToCells(IEnumerable<CellPosition> cells, double value)
+    public void ApplyTorqueToCells(IEnumerable<CellPosition> cells, decimal value)
     {
         ArgumentNullException.ThrowIfNull(cells);
 
@@ -867,7 +867,7 @@ public partial class CurveDataTableViewModel : ViewModelBase
     /// raises <see cref="DataChanged"/> if any value changes.
     /// </summary>
     /// <param name="value">The torque value to apply.</param>
-    public void ApplyOverrideValue(double value)
+    public void ApplyOverrideValue(decimal value)
     {
         ApplyTorqueToSelectedCells(value);
     }
@@ -883,7 +883,7 @@ public partial class CurveDataTableViewModel : ViewModelBase
     /// </param>
     /// <param name="newValue">The final override torque value.</param>
     /// <returns>True if any cell was changed and an operation was committed; otherwise false.</returns>
-    public bool TryCommitOverrideWithUndo(IReadOnlyDictionary<CellPosition, double> originalValues, double newValue)
+    public bool TryCommitOverrideWithUndo(IReadOnlyDictionary<CellPosition, decimal> originalValues, decimal newValue)
     {
         ArgumentNullException.ThrowIfNull(originalValues);
 
@@ -951,7 +951,7 @@ public partial class CurveDataTableViewModel : ViewModelBase
 
             // Skip no-op entries where the override value matches the
             // original torque.
-            if (Math.Abs(oldTorque - newValue) <= double.Epsilon)
+            if (Math.Abs(oldTorque - newValue) == 0)
             {
                 continue;
             }
@@ -1051,7 +1051,7 @@ public partial class CurveDataTableViewModel : ViewModelBase
             if (lines.Length == 1)
             {
                 var parts = lines[0].Split('\t', StringSplitOptions.RemoveEmptyEntries);
-                if (parts.Length == 1 && double.TryParse(parts[0], out var scalar))
+                if (parts.Length == 1 && decimal.TryParse(parts[0], out var scalar))
                 {
                     ApplyTorqueToCells(selectedCellsSnapshot, scalar);
                     return true;
@@ -1079,7 +1079,7 @@ public partial class CurveDataTableViewModel : ViewModelBase
                     var colIndex = minColLegacy + valueIndex;
                     var raw = values[valueIndex];
 
-                    if (!double.TryParse(raw, out var value))
+                    if (!decimal.TryParse(raw, out var value))
                     {
                         continue;
                     }
@@ -1109,7 +1109,7 @@ public partial class CurveDataTableViewModel : ViewModelBase
         if (lines.Length == 1)
         {
             var parts = lines[0].Split('\t', StringSplitOptions.RemoveEmptyEntries);
-            if (parts.Length == 1 && double.TryParse(parts[0], out var scalar))
+            if (parts.Length == 1 && decimal.TryParse(parts[0], out var scalar))
             {
                 var anyScalarChanged = false;
 
@@ -1152,7 +1152,7 @@ public partial class CurveDataTableViewModel : ViewModelBase
                 var colIndex = minCol + valueIndex;
                 var raw = values[valueIndex];
 
-                if (!double.TryParse(raw, out var value))
+                if (!decimal.TryParse(raw, out var value))
                 {
                     continue;
                 }
@@ -1192,13 +1192,13 @@ public partial class CurveDataTableViewModel : ViewModelBase
     /// Callers that need to update multiple cells (for example, override mode, clipboard
     /// paste, or delete/backspace clearing) should either:
     /// <list type="number">
-    /// <item><description>Use <see cref="ApplyTorqueToCells(System.Collections.Generic.IEnumerable{CurveEditor.ViewModels.CellPosition}, double)"/> to apply a single value to many cells and raise <see cref="DataChanged"/> once, or</description></item>
-    /// <item><description>Invoke <see cref="TrySetTorqueAtCell(CurveEditor.ViewModels.CellPosition, double)"/> in a loop and handle any additional UI updates (such as text rendering) on success.</description></item>
+    /// <item><description>Use <see cref="ApplyTorqueToCells(System.Collections.Generic.IEnumerable{CurveEditor.ViewModels.CellPosition}, decimal)"/> to apply a single value to many cells and raise <see cref="DataChanged"/> once, or</description></item>
+    /// <item><description>Invoke <see cref="TrySetTorqueAtCell(CurveEditor.ViewModels.CellPosition, decimal)"/> in a loop and handle any additional UI updates (such as text rendering) on success.</description></item>
     /// </list>
     /// The method returns <see langword="true"/> only when a torque value was actually changed;
     /// otherwise it returns <see langword="false"/> and leaves the model untouched.
     /// </remarks>
-    public bool TrySetTorqueAtCell(CellPosition cell, double value)
+    public bool TrySetTorqueAtCell(CellPosition cell, decimal value)
     {
         if (_currentVoltage is null || Rows.Count == 0 || SeriesColumns.Count == 0)
         {
@@ -1231,7 +1231,7 @@ public partial class CurveDataTableViewModel : ViewModelBase
 
         var row = Rows[cell.RowIndex];
         var current = row.GetTorque(seriesName);
-        if (Math.Abs(current - value) <= double.Epsilon)
+        if (current == value)
         {
             return false;
         }
@@ -1250,7 +1250,7 @@ public partial class CurveDataTableViewModel : ViewModelBase
     /// <param name="cell">The logical cell being edited.</param>
     /// <param name="value">The new torque value.</param>
     /// <returns>True if the value changed; otherwise false.</returns>
-    public bool TryApplyTorqueWithUndoForView(CellPosition cell, double value)
+    public bool TryApplyTorqueWithUndoForView(CellPosition cell, decimal value)
     {
         return TryApplyTorqueWithUndo(cell, value);
     }
@@ -1266,7 +1266,7 @@ public partial class CurveDataTableViewModel : ViewModelBase
     /// <returns>
     /// True if the value changed; otherwise false.
     /// </returns>
-    private bool TryApplyTorqueWithUndo(CellPosition cell, double value)
+    private bool TryApplyTorqueWithUndo(CellPosition cell, decimal value)
     {
         if (_currentVoltage is null || Rows.Count == 0 || SeriesColumns.Count == 0)
         {
@@ -1310,7 +1310,7 @@ public partial class CurveDataTableViewModel : ViewModelBase
         }
 
         var current = series.Data[dataIndex].Torque;
-        if (Math.Abs(current - value) <= double.Epsilon)
+        if (current == value)
         {
             return false;
         }
@@ -1524,14 +1524,14 @@ public partial class CurveDataTableViewModel : ViewModelBase
                     continue;
                 }
 
-                if (!double.TryParse(values[c], out var torque))
+                if (!decimal.TryParse(values[c], out var torque))
                 {
                     continue;
                 }
 
                 var row = Rows[targetRow];
                 var current = row.GetTorque(seriesName);
-                if (Math.Abs(current - torque) > double.Epsilon)
+                if (current != torque)
                 {
                     row.SetTorque(seriesName, torque);
                     anyChanged = true;

@@ -69,9 +69,9 @@ public partial class AddDriveVoltageDialog : Window
     /// <summary>
     /// Attempts to parse a string as a positive double.
     /// </summary>
-    private static bool TryParsePositive(string? text, out double value, string errorMessage)
+    private static bool TryParsePositive(string? text, out decimal value, string errorMessage)
     {
-        if (!double.TryParse(text, out value) || value <= 0)
+        if (!decimal.TryParse(text, out value) || value <= 0)
         {
             // In a production app, we would show errorMessage to the user
             value = 0;
@@ -83,9 +83,9 @@ public partial class AddDriveVoltageDialog : Window
     /// <summary>
     /// Attempts to parse a string as a non-negative double.
     /// </summary>
-    private static bool TryParseNonNegative(string? text, out double value, string errorMessage)
+    private static bool TryParseNonNegative(string? text, out decimal value, string errorMessage)
     {
-        if (!double.TryParse(text, out value) || value < 0)
+        if (!decimal.TryParse(text, out value) || value < 0)
         {
             // In a production app, we would show errorMessage to the user
             value = 0;
@@ -103,11 +103,11 @@ public class DriveVoltageDialogResult
     public string Name { get; set; } = string.Empty;
     public string Manufacturer { get; set; } = string.Empty;
     public string PartNumber { get; set; } = string.Empty;
-    public double Voltage { get; set; }
-    public double Power { get; set; }
-    public double MaxSpeed { get; set; }
-    public double PeakTorque { get; set; }
-    public double ContinuousTorque { get; set; }
-    public double ContinuousCurrent { get; set; }
-    public double PeakCurrent { get; set; }
+    public decimal Voltage { get; set; }
+    public decimal Power { get; set; }
+    public decimal MaxSpeed { get; set; }
+    public decimal PeakTorque { get; set; }
+    public decimal ContinuousTorque { get; set; }
+    public decimal ContinuousCurrent { get; set; }
+    public decimal PeakCurrent { get; set; }
 }

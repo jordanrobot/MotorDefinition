@@ -1,4 +1,5 @@
 using Avalonia.Media.Imaging;
+using Avalonia.Threading;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CurveEditor.Services;
 using JordanRobot.MotorDefinition.Model;
@@ -7,14 +8,13 @@ using LiveChartsCore.Defaults;
 using LiveChartsCore.SkiaSharpView;
 using LiveChartsCore.SkiaSharpView.Painting;
 using LiveChartsCore.SkiaSharpView.Painting.Effects;
+using MotorEditor.Avalonia.Models;
 using SkiaSharp;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
-using MotorEditor.Avalonia.Models;
 using System.IO;
 using System.Linq;
-using Avalonia.Threading;
 
 namespace CurveEditor.ViewModels;
 
@@ -145,17 +145,17 @@ public partial class ChartViewModel : ViewModelBase
     [ObservableProperty]
     private bool _showPowerCurves;
 
-[ObservableProperty]
-private decimal _motorMaxSpeed;
+    [ObservableProperty]
+    private decimal _motorMaxSpeed;
 
-[ObservableProperty]
-private decimal _motorRatedSpeed;
+    [ObservableProperty]
+    private decimal _motorRatedSpeed;
 
     [ObservableProperty]
     private bool _hasBrake;
 
-[ObservableProperty]
-private decimal _brakeTorque;
+    [ObservableProperty]
+    private decimal _brakeTorque;
 
     [ObservableProperty]
     private Bitmap? _underlayImage;
@@ -848,7 +848,7 @@ private decimal _brakeTorque;
             return;
         }
 
-        var command = new EditPointCommand(series, index, rpm, torque);
+        var command = new EditPointCommand(series, index, (decimal)rpm, (decimal)torque);
         _undoStack.PushAndExecute(command);
         DataChanged?.Invoke(this, EventArgs.Empty);
     }
@@ -1046,7 +1046,7 @@ private decimal _brakeTorque;
         }
 
         // Add vertical lines for Motor Rated Speed and Voltage Max Speed
-        AddVerticalReferenceLines(maxRpm);
+        AddVerticalReferenceLines((double)maxRpm);
 
         // Update axes based on data
         UpdateAxes();
@@ -1067,13 +1067,13 @@ private decimal _brakeTorque;
         // Calculate power from torque and speed: P = T × ω
         // Where ω = RPM × 2π / 60 (convert RPM to rad/s)
         var powerPoints = new ObservableCollection<ObservablePoint>();
-        
+
         foreach (var point in torquePoints)
         {
             var rpm = point.X ?? 0;
             var torque = point.Y ?? 0;
-            var power = CalculatePower(torque, rpm);
-            powerPoints.Add(new ObservablePoint(rpm, power));
+            var power = CalculatePower((decimal)torque, (decimal)rpm);
+            powerPoints.Add(new ObservablePoint(rpm, (double)power));
         }
 
         var powerSeries = new LineSeries<ObservablePoint>
@@ -1082,15 +1082,15 @@ private decimal _brakeTorque;
             Values = powerPoints,
             Fill = null, // No fill for power curves
             GeometrySize = 0, // No points on power curves
-                GeometryStroke = new SolidColorPaint(color) { StrokeThickness = 0 },
-                GeometryFill = new SolidColorPaint(SKColors.Red),
+            GeometryStroke = new SolidColorPaint(color) { StrokeThickness = 0 },
+            GeometryFill = new SolidColorPaint(SKColors.Red),
 
             Stroke = new SolidColorPaint(color)
             {
                 StrokeThickness = 1,
                 PathEffect = new DashEffect([3, 3]) // Dotted line
             },
-            
+
             LineSmoothness = 0.3,
             IsVisible = isVisible,
             ScalesYAt = 1, // Use secondary Y-axis
@@ -1106,40 +1106,40 @@ private decimal _brakeTorque;
     /// <param name="torque">Torque in the current torque unit (TorqueUnit property).</param>
     /// <param name="rpm">Speed in RPM.</param>
     /// <returns>Power in the current power unit (PowerUnit property).</returns>
-    private double CalculatePower(double torque, double rpm)
+    private decimal CalculatePower(decimal torque, decimal rpm)
     {
         // Convert torque to Nm first if needed
-        double torqueNm = torque;
+        decimal torqueNm = torque;
         if (TorqueUnit == "lbf-in")
         {
             // 1 lbf-in = 0.112984829 Nm
-            torqueNm = torque * 0.112984829;
+            torqueNm = torque * 0.112984829m;
         }
         else if (TorqueUnit == "lbf-ft")
         {
             // 1 lbf-ft = 1.355817948 Nm
-            torqueNm = torque * 1.355817948;
+            torqueNm = torque * 1.355817948m;
         }
         else if (TorqueUnit == "oz-in")
         {
             // 1 oz-in = 0.00706155181 Nm
-            torqueNm = torque * 0.00706155181;
+            torqueNm = torque * 0.00706155181m;
         }
         // else assume already in Nm
 
         // P = T × ω, where ω = RPM × 2π / 60
         // P (Watts) = Torque (Nm) × RPM × 2π / 60
-        var powerWatts = torqueNm * rpm * Math.PI * 2.0 / 60.0;
+        var powerWatts = torqueNm * rpm * (decimal)Math.PI * 2.0m / 60.0m;
 
         // Convert to kW or HP based on current power unit
         if (PowerUnit == "hp")
         {
             // 1 HP = 745.7 W
-            return powerWatts / 745.7;
+            return powerWatts / 745.7m;
         }
         else if (PowerUnit == "kW")
         {
-            return powerWatts / 1000.0;
+            return powerWatts / 1000.0m;
         }
         else
         {
@@ -1194,7 +1194,7 @@ private decimal _brakeTorque;
                 }
 
                 var dp = series.Data[index];
-                overlayPoints.Add(new ObservablePoint(dp.Rpm, dp.Torque));
+                overlayPoints.Add(new ObservablePoint((double)dp.Rpm, (double)dp.Torque));
             }
 
             if (overlayPoints.Count == 0)
@@ -1238,8 +1238,8 @@ private decimal _brakeTorque;
         // Create two points for a horizontal line from 0 to maxRpm at BrakeTorque
         var brakePoints = new ObservableCollection<ObservablePoint>
         {
-            new(0, BrakeTorque),
-            new(maxRpm, BrakeTorque)
+            new(0, (double)BrakeTorque),
+            new((double)maxRpm, (double)BrakeTorque)
         };
 
         var brakeLine = new LineSeries<ObservablePoint>
@@ -1284,19 +1284,19 @@ private decimal _brakeTorque;
             {
                 _currentVoltage.RatedPeakTorque,
                 _currentVoltage.RatedContinuousTorque,
-                HasBrake ? BrakeTorque : 0d
+                HasBrake ? BrakeTorque : 0m
             }.Max();
         }
 
-        var lineTorqueHeight = maxTorque * 1.1; // Extend slightly above max torque
+        var lineTorqueHeight = (double)maxTorque * 1.1; // Extend slightly above max torque
 
         // Add Motor Rated Speed line if enabled
         if (ShowMotorRatedSpeedLine && MotorRatedSpeed > 0)
         {
             var motorRatedSpeedPoints = new ObservableCollection<ObservablePoint>
             {
-                new(MotorRatedSpeed, 0),
-                new(MotorRatedSpeed, lineTorqueHeight)
+                new((double)MotorRatedSpeed, 0),
+                new((double)MotorRatedSpeed, lineTorqueHeight)
             };
 
             var motorRatedSpeedLine = new LineSeries<ObservablePoint>
@@ -1323,8 +1323,8 @@ private decimal _brakeTorque;
         {
             var voltageMaxSpeedPoints = new ObservableCollection<ObservablePoint>
             {
-                new(_currentVoltage.MaxSpeed, 0),
-                new(_currentVoltage.MaxSpeed, lineTorqueHeight)
+                new((double)_currentVoltage.MaxSpeed, 0),
+                new((double)_currentVoltage.MaxSpeed, lineTorqueHeight)
             };
 
             var voltageMaxSpeedLine = new LineSeries<ObservablePoint>
@@ -1474,18 +1474,18 @@ private decimal _brakeTorque;
             {
                 _currentVoltage.RatedPeakTorque,
                 _currentVoltage.RatedContinuousTorque,
-                HasBrake ? BrakeTorque : 0d
+                HasBrake ? BrakeTorque : 0m
             }.Max();
         }
 
         // Use exact max RPM (no rounding), but round torque for nice Y-axis
-        var yMax = RoundToNiceValue(maxTorque * 1.1, true); // Add 10% margin
+        var yMax = RoundToNiceValue((double)(maxTorque * 1.1m), true); // Add 10% margin
 
         // Calculate max power if showing power curves
         double? maxPower = null;
         if (ShowPowerCurves)
         {
-            maxPower = _currentVoltage.Curves
+            maxPower = (double)_currentVoltage.Curves
                 .SelectMany(s => s.Data)
                 .Select(dp => CalculatePower(dp.Torque, dp.Rpm))
                 .DefaultIfEmpty(0)
@@ -1495,15 +1495,15 @@ private decimal _brakeTorque;
             {
                 // Calculate from rated values
                 maxPower = Math.Max(
-                    CalculatePower(_currentVoltage.RatedPeakTorque, maxRpm),
-                    CalculatePower(_currentVoltage.RatedContinuousTorque, maxRpm)
+                    (double)CalculatePower(_currentVoltage.RatedPeakTorque, maxRpm),
+                    (double)CalculatePower(_currentVoltage.RatedContinuousTorque, maxRpm)
                 );
             }
 
             maxPower = RoundToNiceValue(maxPower.Value * 1.1, true, isPowerValue: true); // Add 10% margin
         }
 
-        XAxes = CreateXAxes(maxRpm);
+        XAxes = CreateXAxes((double)maxRpm);
         YAxes = CreateYAxes(yMax, maxPower);
     }
 
@@ -1549,10 +1549,10 @@ private decimal _brakeTorque;
         if (ShowPowerCurves && powerMaxValue.HasValue)
         {
             // Use whole numbers for W (large values), decimals for kW/HP (small values)
-            var labeler = PowerUnit == "W" 
+            var labeler = PowerUnit == "W"
                 ? (Func<double, string>)(value => value.ToString("N0"))
                 : (value => value.ToString("N1"));
-            
+
             axes.Add(new Axis
             {
                 Name = $"Power ({PowerUnit})",
@@ -1599,7 +1599,7 @@ private decimal _brakeTorque;
             if (maxValue <= 10000) return 1000;
             return 2000;
         }
-        
+
         // For smaller units (kW, HP, Nm, lbf-ft), use finer increments
         if (maxValue <= 1) return 0.1;
         if (maxValue <= 2.5) return 0.25;

@@ -14,11 +14,11 @@ public class EditMotorPropertyCommandTests
             MaxSpeed = 3000
         };
 
-        var command = new EditMotorPropertyCommand(motor, nameof(ServoMotor.MaxSpeed), 3000d, 3500d);
+        var command = new EditMotorPropertyCommand(motor, nameof(ServoMotor.MaxSpeed), 3000m, 3500m);
 
         command.Execute();
 
-        Assert.Equal(3500, motor.MaxSpeed);
+        Assert.Equal(3500m, motor.MaxSpeed);
     }
 
     [Fact]
@@ -29,11 +29,11 @@ public class EditMotorPropertyCommandTests
             MaxSpeed = 3000
         };
 
-        var command = new EditMotorPropertyCommand(motor, nameof(ServoMotor.MaxSpeed), 3000d, 3500d);
+        var command = new EditMotorPropertyCommand(motor, nameof(ServoMotor.MaxSpeed), 3000m, 3500m);
 
         command.Execute();
         command.Undo();
 
-        Assert.Equal(3000, motor.MaxSpeed);
+        Assert.Equal(3000m, motor.MaxSpeed);
     }
 }

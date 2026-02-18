@@ -26,8 +26,8 @@ public class MotorFileMapperTests
         motor.Units.Percentage = "%";
         motor.Units.Temperature = "C";
         motor.Units.Backlash = "arcmin";
-        motor.BrakeBacklash = 0.5;
-        motor.BrakeReleaseTime = 12.5;
+        motor.BrakeBacklash = 0.5m;
+        motor.BrakeReleaseTime = 12.5m;
 
         var tempPath = Path.GetTempFileName();
 
@@ -146,15 +146,15 @@ public class MotorFileMapperTests
             RatedContinuousTorque = 45,
             RatedPeakTorque = 55,
             Weight = 10,
-            RotorInertia = 0.002,
+            RotorInertia = 0.002m,
             FeedbackPpr = 4096,
             HasBrake = true,
             BrakeTorque = 10,
-            BrakeAmperage = 0.5,
+            BrakeAmperage = 0.5m,
             BrakeVoltage = 24,
             BrakeEngageTimeDiode = 5,
             BrakeEngageTimeMov = 7,
-            BrakeBacklash = 0.25
+            BrakeBacklash = 0.25m
         };
 
         var drive = motor.AddDrive("Drive A");
@@ -183,7 +183,7 @@ public class MotorFileMapperTests
             voltage2.RatedContinuousTorque = 42;
             voltage2.RatedPeakTorque = 52;
             voltage2.Power = 1400;
-            voltage2.ContinuousAmperage = 9.5;
+            voltage2.ContinuousAmperage = 9.5m;
             voltage2.PeakAmperage = 22;
 
             var peak2 = new Curve("Peak") { Locked = false };

@@ -15,7 +15,7 @@ public class UnitServiceTests
     public void Convert_SameUnit_ReturnsOriginalValue()
     {
         // Arrange
-        var value = 10.5;
+        var value = 10.5m;
         var unit = "Nm";
 
         // Act
@@ -29,7 +29,7 @@ public class UnitServiceTests
     public void Convert_TorqueNmToLbfIn_ConvertsCorrectly()
     {
         // Arrange
-        var value = 10.0; // 10 Nm
+        var value = 10.0m; // 10 Nm
         var fromUnit = "Nm";
         var toUnit = "lbf-in";
 
@@ -38,14 +38,14 @@ public class UnitServiceTests
 
         // Assert
         // 1 Nm = 8.85075 lbf-in approximately
-        Assert.Equal(88.5075, result, 2);
+        Assert.Equal(88.5075m, result, 2);
     }
 
     [Fact]
     public void Convert_TorqueLbfInToNm_ConvertsCorrectly()
     {
         // Arrange
-        var value = 88.5075; // approximately 10 Nm
+        var value = 88.5075m; // approximately 10 Nm
         var fromUnit = "lbf-in";
         var toUnit = "Nm";
 
@@ -53,14 +53,14 @@ public class UnitServiceTests
         var result = _service.Convert(value, fromUnit, toUnit);
 
         // Assert
-        Assert.Equal(10.0, result, 2);
+        Assert.Equal(10.0m, result, 2);
     }
 
     [Fact]
     public void Convert_PowerWToKw_ConvertsCorrectly()
     {
         // Arrange
-        var value = 1000.0; // 1000 W
+        var value = 1000.0m; // 1000 W
         var fromUnit = "W";
         var toUnit = "kW";
 
@@ -68,14 +68,14 @@ public class UnitServiceTests
         var result = _service.Convert(value, fromUnit, toUnit);
 
         // Assert
-        Assert.Equal(1.0, result, 2);
+        Assert.Equal(1.0m, result, 2);
     }
 
     [Fact]
     public void Convert_PowerHpToW_ConvertsCorrectly()
     {
         // Arrange
-        var value = 1.0; // 1 hp
+        var value = 1.0m; // 1 hp
         var fromUnit = "hp";
         var toUnit = "W";
 
@@ -84,14 +84,14 @@ public class UnitServiceTests
 
         // Assert
         // 1 hp = 745.7 W approximately
-        Assert.Equal(745.7, result, 0);
+        Assert.Equal(745.7m, result, 0);
     }
 
     [Fact]
     public void Convert_MassKgToLbs_ConvertsCorrectly()
     {
         // Arrange
-        var value = 1.0; // 1 kg
+        var value = 1.0m; // 1 kg
         var fromUnit = "kg";
         var toUnit = "lbs";
 
@@ -100,14 +100,14 @@ public class UnitServiceTests
 
         // Assert
         // 1 kg = 2.20462 lbs approximately
-        Assert.Equal(2.20462, result, 2);
+        Assert.Equal(2.20462m, result, 2);
     }
 
     [Fact]
     public void Convert_TimeSecToMs_ConvertsCorrectly()
     {
         // Arrange
-        var value = 1.0; // 1 second
+        var value = 1.0m; // 1 second
         var fromUnit = "s";
         var toUnit = "ms";
 
@@ -115,14 +115,14 @@ public class UnitServiceTests
         var result = _service.Convert(value, fromUnit, toUnit);
 
         // Assert
-        Assert.Equal(1000.0, result, 2);
+        Assert.Equal(1000.0m, result, 2);
     }
 
     [Fact]
     public void Convert_NullFromUnit_ThrowsArgumentException()
     {
         // Arrange
-        var value = 10.0;
+        var value = 10.0m;
         string? fromUnit = null;
         var toUnit = "Nm";
 
@@ -135,7 +135,7 @@ public class UnitServiceTests
     public void Convert_NullToUnit_ThrowsArgumentException()
     {
         // Arrange
-        var value = 10.0;
+        var value = 10.0m;
         var fromUnit = "Nm";
         string? toUnit = null;
 
@@ -148,7 +148,7 @@ public class UnitServiceTests
     public void Convert_UnsupportedFromUnit_ThrowsArgumentException()
     {
         // Arrange
-        var value = 10.0;
+        var value = 10.0m;
         var fromUnit = "invalid";
         var toUnit = "Nm";
 
@@ -160,7 +160,7 @@ public class UnitServiceTests
     public void Convert_UnsupportedToUnit_ThrowsArgumentException()
     {
         // Arrange
-        var value = 10.0;
+        var value = 10.0m;
         var fromUnit = "Nm";
         var toUnit = "invalid";
 
@@ -176,7 +176,7 @@ public class UnitServiceTests
     public void TryConvert_ValidConversion_ReturnsTrue()
     {
         // Arrange
-        var value = 10.0;
+        var value = 10.0m;
         var fromUnit = "Nm";
         var toUnit = "lbf-in";
 
@@ -185,14 +185,14 @@ public class UnitServiceTests
 
         // Assert
         Assert.True(success);
-        Assert.Equal(88.5075, result, 2);
+        Assert.Equal(88.5075m, result, 2);
     }
 
     [Fact]
     public void TryConvert_SameUnit_ReturnsTrueWithOriginalValue()
     {
         // Arrange
-        var value = 10.0;
+        var value = 10.0m;
         var unit = "Nm";
 
         // Act
@@ -207,7 +207,7 @@ public class UnitServiceTests
     public void TryConvert_NullFromUnit_ReturnsFalse()
     {
         // Arrange
-        var value = 10.0;
+        var value = 10.0m;
         string? fromUnit = null;
         var toUnit = "Nm";
 
@@ -223,7 +223,7 @@ public class UnitServiceTests
     public void TryConvert_InvalidUnit_ReturnsFalse()
     {
         // Arrange
-        var value = 10.0;
+        var value = 10.0m;
         var fromUnit = "invalid";
         var toUnit = "Nm";
 
@@ -243,7 +243,7 @@ public class UnitServiceTests
     public void Format_WithDefaultDecimalPlaces_FormatsCorrectly()
     {
         // Arrange
-        var value = 10.5678;
+        var value = 10.5678m;
         var unit = "Nm";
 
         // Act
@@ -257,7 +257,7 @@ public class UnitServiceTests
     public void Format_WithCustomDecimalPlaces_FormatsCorrectly()
     {
         // Arrange
-        var value = 10.5678;
+        var value = 10.5678m;
         var unit = "Nm";
         var decimalPlaces = 3;
 
@@ -272,7 +272,7 @@ public class UnitServiceTests
     public void Format_WithZeroDecimalPlaces_FormatsCorrectly()
     {
         // Arrange
-        var value = 10.5678;
+        var value = 10.5678m;
         var unit = "Nm";
         var decimalPlaces = 0;
 
@@ -287,7 +287,7 @@ public class UnitServiceTests
     public void Format_NullUnit_ThrowsArgumentException()
     {
         // Arrange
-        var value = 10.0;
+        var value = 10.0m;
         string? unit = null;
 
         // Act & Assert
@@ -299,7 +299,7 @@ public class UnitServiceTests
     public void Format_NegativeDecimalPlaces_ThrowsArgumentOutOfRangeException()
     {
         // Arrange
-        var value = 10.0;
+        var value = 10.0m;
         var unit = "Nm";
         var decimalPlaces = -1;
 

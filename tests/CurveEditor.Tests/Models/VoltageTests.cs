@@ -19,7 +19,7 @@ public class VoltageTests
     {
         var voltage = new Voltage(220);
 
-        Assert.Equal(220, voltage.Value);
+        Assert.Equal(220m, voltage.Value);
         Assert.Empty(voltage.Curves);
     }
 
@@ -31,7 +31,7 @@ public class VoltageTests
     {
         var voltage = new Voltage();
 
-        Assert.Throws<ArgumentOutOfRangeException>(() => voltage.Value = invalidVoltage);
+        Assert.Throws<ArgumentOutOfRangeException>(() => voltage.Value = (decimal)invalidVoltage);
     }
 
     [Theory]
@@ -41,9 +41,9 @@ public class VoltageTests
     [InlineData(480)]
     public void Voltage_ValidValues_SetsVoltage(double validVoltage)
     {
-        var voltage = new Voltage { Value = validVoltage };
+        var voltage = new Voltage { Value = (decimal)validVoltage };
 
-        Assert.Equal(validVoltage, voltage.Value);
+        Assert.Equal((decimal)validVoltage, voltage.Value);
     }
 
     [Fact]
@@ -120,19 +120,19 @@ public class VoltageTests
             Power = 1500,
             MaxSpeed = 5000,
             RatedSpeed = 3000,
-            RatedContinuousTorque = 45.0,
-            RatedPeakTorque = 55.0,
-            ContinuousAmperage = 10.5,
-            PeakAmperage = 25.0
+            RatedContinuousTorque = 45.0m,
+            RatedPeakTorque = 55.0m,
+            ContinuousAmperage = 10.5m,
+            PeakAmperage = 25.0m
         };
 
-        Assert.Equal(1500, voltage.Power);
-        Assert.Equal(5000, voltage.MaxSpeed);
-        Assert.Equal(3000, voltage.RatedSpeed);
-        Assert.Equal(45.0, voltage.RatedContinuousTorque);
-        Assert.Equal(55.0, voltage.RatedPeakTorque);
-        Assert.Equal(10.5, voltage.ContinuousAmperage);
-        Assert.Equal(25.0, voltage.PeakAmperage);
+        Assert.Equal(1500m, voltage.Power);
+        Assert.Equal(5000m, voltage.MaxSpeed);
+        Assert.Equal(3000m, voltage.RatedSpeed);
+        Assert.Equal(45.0m, voltage.RatedContinuousTorque);
+        Assert.Equal(55.0m, voltage.RatedPeakTorque);
+        Assert.Equal(10.5m, voltage.ContinuousAmperage);
+        Assert.Equal(25.0m, voltage.PeakAmperage);
     }
 
     [Fact]
@@ -143,6 +143,6 @@ public class VoltageTests
         var series = voltage.AddSeries("Peak", 50);
 
         // Last point should have RPM = MaxSpeed
-        Assert.Equal(4000, series.Data[100].Rpm);
+        Assert.Equal(4000m, series.Data[100].Rpm);
     }
 }

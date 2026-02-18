@@ -63,7 +63,7 @@ public interface IFileService
     /// <param name="maxTorque">The maximum torque.</param>
     /// <param name="maxPower">The maximum power.</param>
     /// <returns>The new motor definition.</returns>
-    ServoMotor CreateNew(string motorName, double maxRpm, double maxTorque, double maxPower);
+    ServoMotor CreateNew(string motorName, decimal maxRpm, decimal maxTorque, decimal maxPower);
 
     /// <summary>
     /// Resets the service state (clears current file path and dirty flag).

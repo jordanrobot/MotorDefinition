@@ -395,12 +395,12 @@ public class DataIntegrityServiceTests
             RatedSpeed = 3000,
             RatedContinuousTorque = 45,
             RatedPeakTorque = 55,
-            Weight = 8.5,
-            RotorInertia = 0.0025,
+            Weight = 8.5m,
+            RotorInertia = 0.0025m,
             FeedbackPpr = 131072,
             HasBrake = true,
             BrakeTorque = 44,
-            BrakeAmperage = 0.5,
+            BrakeAmperage = 0.5m,
             BrakeVoltage = 24
         };
     }
@@ -420,7 +420,7 @@ public class DataIntegrityServiceTests
             RatedSpeed = 2900,
             RatedContinuousTorque = 42,
             RatedPeakTorque = 52,
-            ContinuousAmperage = 9.5,
+            ContinuousAmperage = 9.5m,
             PeakAmperage = 22
         };
 
@@ -438,7 +438,7 @@ public class DataIntegrityServiceTests
 
         for (var i = 0; i <= 100; i++)
         {
-            curve.Data.Add(new DataPoint(i, i * 50.0, 50.0 - i * 0.3));
+            curve.Data.Add(new DataPoint(i, i * 50.0m, 50.0m - i * 0.3m));
         }
 
         return curve;

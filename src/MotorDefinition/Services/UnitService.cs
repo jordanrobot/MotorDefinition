@@ -104,7 +104,7 @@ public class UnitService
         var quantity = Quantity.Parse($"{value} {tareFromUnit}");
         var converted = quantity.As(tareToUnit);
 
-        return (decimal)converted.Value;
+        return converted.Value;
     }
 
     /// <summary>
@@ -272,14 +272,14 @@ public class UnitService
 
             // Current units - not supported by Tare, handled manually in ConvertWithCurrent
             // "A" and "mA" are handled manually in Convert() method
-            
+
             // Inertia units (moment of inertia)
             "kg-m^2" => "kg*m^2",
             "g-cm^2" => "g*cm^2",
 
             // Torque constant units - not currently convertible due to current unit limitation
             // "Nm/A" would need manual handling if conversions are needed
-            
+
             // Backlash units
             "arcmin" => "arcminute",
             "arcsec" => "arcsecond",
@@ -289,7 +289,7 @@ public class UnitService
             "s" => "s",
 
             // Dimensionless/percentage
-            "%" => "",
+            "%" => string.Empty,
 
             // Temperature units
             "C" => "°C",

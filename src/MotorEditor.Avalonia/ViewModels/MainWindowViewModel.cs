@@ -508,7 +508,7 @@ public partial class MainWindowViewModel : ViewModelBase
 
         // Toggle the state when no explicit value is provided, otherwise honor the requested state.
         var newState = desiredState ?? !chartViewModel.ShowPowerCurves;
-        
+
         // Apply to all open tabs
         foreach (var tab in Tabs)
         {
@@ -517,7 +517,7 @@ public partial class MainWindowViewModel : ViewModelBase
                 tab.ChartViewModel.ShowPowerCurves = newState;
             }
         }
-        
+
         // Save preference for future tabs
         _settingsStore.SaveBool("ShowPowerCurves", newState);
     }
@@ -533,7 +533,7 @@ public partial class MainWindowViewModel : ViewModelBase
 
         // Toggle the state when no explicit value is provided, otherwise honor the requested state.
         var newState = desiredState ?? !chartViewModel.ShowMotorRatedSpeedLine;
-        
+
         // Apply to all open tabs
         foreach (var tab in Tabs)
         {
@@ -542,7 +542,7 @@ public partial class MainWindowViewModel : ViewModelBase
                 tab.ChartViewModel.ShowMotorRatedSpeedLine = newState;
             }
         }
-        
+
         // Save preference for future tabs
         _settingsStore.SaveBool("ShowMotorRatedSpeedLine", newState);
     }
@@ -558,7 +558,7 @@ public partial class MainWindowViewModel : ViewModelBase
 
         // Toggle the state when no explicit value is provided, otherwise honor the requested state.
         var newState = desiredState ?? !chartViewModel.ShowVoltageMaxSpeedLine;
-        
+
         // Apply to all open tabs
         foreach (var tab in Tabs)
         {
@@ -567,7 +567,7 @@ public partial class MainWindowViewModel : ViewModelBase
                 tab.ChartViewModel.ShowVoltageMaxSpeedLine = newState;
             }
         }
-        
+
         // Save preference for future tabs
         _settingsStore.SaveBool("ShowVoltageMaxSpeedLine", newState);
     }
@@ -933,14 +933,14 @@ public partial class MainWindowViewModel : ViewModelBase
         _recentFilesService = new RecentFilesService(_settingsStore);
         _userPreferencesService = new UserPreferencesService();
         UnsavedChangesPromptAsync = ShowUnsavedChangesPromptAsync;
-        
+
         // Initialize unit services
         _unitPreferencesService = new UnitPreferencesService(_settingsStore);
         _unitConversionService = new UnitConversionService(_settingsStore);
         // Use Convert Stored Data mode (hard conversion) as per requirements
         _unitConversionService.ConvertStoredData = true;
         _unitConversionService.DisplayDecimalPlaces = _unitPreferencesService.GetDecimalPlaces();
-        
+
         // Initialize tabs (currently with single shared view models for backward compatibility)
         var initialTab = new DocumentTab
         {
@@ -953,7 +953,7 @@ public partial class MainWindowViewModel : ViewModelBase
         _tabs.Add(initialTab);
         ActiveTab = initialTab;
         Tabs = _tabs;
-        
+
         WireEditingCoordinator();
         WireUndoInfrastructure();
         WireDirectoryBrowserIntegration();
@@ -987,14 +987,14 @@ public partial class MainWindowViewModel : ViewModelBase
         _settingsStore = new PanelLayoutUserSettingsStore();
         _recentFilesService = new RecentFilesService(_settingsStore);
         UnsavedChangesPromptAsync = ShowUnsavedChangesPromptAsync;
-        
+
         // Initialize unit services
         _unitPreferencesService = new UnitPreferencesService(_settingsStore);
         _unitConversionService = new UnitConversionService(_settingsStore);
         // Use Convert Stored Data mode (hard conversion) as per requirements
         _unitConversionService.ConvertStoredData = true;
         _unitConversionService.DisplayDecimalPlaces = _unitPreferencesService.GetDecimalPlaces();
-        
+
         // Initialize tabs (currently with single shared view models for backward compatibility)
         var initialTab = new DocumentTab
         {
@@ -1006,7 +1006,7 @@ public partial class MainWindowViewModel : ViewModelBase
         _tabs.Add(initialTab);
         ActiveTab = initialTab;
         Tabs = _tabs;
-        
+
         WireEditingCoordinator();
         WireUndoInfrastructure();
         WireDirectoryBrowserIntegration();
@@ -1030,14 +1030,14 @@ public partial class MainWindowViewModel : ViewModelBase
         _recentFilesService = new RecentFilesService(_settingsStore);
         _userPreferencesService = new UserPreferencesService();
         UnsavedChangesPromptAsync = ShowUnsavedChangesPromptAsync;
-        
+
         // Initialize unit services
         _unitPreferencesService = new UnitPreferencesService(_settingsStore);
         _unitConversionService = new UnitConversionService(_settingsStore);
         // Use Convert Stored Data mode (hard conversion) as per requirements
         _unitConversionService.ConvertStoredData = true;
         _unitConversionService.DisplayDecimalPlaces = _unitPreferencesService.GetDecimalPlaces();
-        
+
         // Initialize tabs (currently with single shared view models for backward compatibility)
         var initialTab = new DocumentTab
         {
@@ -1049,7 +1049,7 @@ public partial class MainWindowViewModel : ViewModelBase
         _tabs.Add(initialTab);
         ActiveTab = initialTab;
         Tabs = _tabs;
-        
+
         WireEditingCoordinator();
         WireUndoInfrastructure();
         WireDirectoryBrowserIntegration();
@@ -1263,7 +1263,7 @@ public partial class MainWindowViewModel : ViewModelBase
             "[INIT] Motor loaded into tab: MotorName={MotorName} DriveCount={DriveCount}",
             ActiveTab.Motor.MotorName,
             ActiveTab.Motor.Drives.Count);
-        
+
         // Populate AvailableDrives from the motor (this works through the delegating property)
         Log.Debug("[INIT] Clearing AvailableDrives (before={Count})", AvailableDrives.Count);
         AvailableDrives.Clear();
@@ -1275,7 +1275,7 @@ public partial class MainWindowViewModel : ViewModelBase
 
         Log.Information("[INIT] AvailableDrives populated: Count={Count}", AvailableDrives.Count);
         Log.Information("[INIT] Tab.SelectedDrive BEFORE auto-select: {SelectedDrive}", ActiveTab?.SelectedDrive?.Name);
-        
+
         // Select the first drive - this will trigger OnSelectedDriveChanged which will:
         // - Refresh AvailableVoltages
         // - Auto-select preferred voltage
@@ -1490,9 +1490,9 @@ public partial class MainWindowViewModel : ViewModelBase
         try
         {
             // Check if file is already open in a tab
-            var existingTab = _tabs.FirstOrDefault(t => 
+            var existingTab = _tabs.FirstOrDefault(t =>
                 string.Equals(t.FilePath, filePath, StringComparison.OrdinalIgnoreCase));
-            
+
             if (existingTab != null)
             {
                 // Switch to existing tab
@@ -1500,24 +1500,24 @@ public partial class MainWindowViewModel : ViewModelBase
                 StatusMessage = $"Switched to already open file: {Path.GetFileName(filePath)}";
                 return;
             }
-            
+
             // Create new tab for the file
             var newTab = CreateNewTab();
             newTab.Motor = await _fileService.LoadAsync(filePath);
             newTab.FilePath = filePath;
             newTab.UndoStack.Clear();
             newTab.MarkClean();
-            
+
             _tabs.Add(newTab);
-            
+
             // Set as active tab first, then initialize
             // This ensures all property setters and handlers are triggered correctly
             ActiveTab = newTab;
             InitializeActiveTabWithMotor();
-            
+
             // Add to recent files
             _recentFilesService.AddRecentFile(filePath);
-            
+
             StatusMessage = $"Opened: {Path.GetFileName(filePath)}";
         }
         catch (Exception ex)
@@ -1599,7 +1599,7 @@ public partial class MainWindowViewModel : ViewModelBase
             OnPropertyChanged(nameof(WindowTitle));
 
             _settingsStore.SaveString(DirectoryBrowserViewModel.LastOpenedMotorFileKey, filePath);
-            
+
             // Add to recent files
             _recentFilesService.AddRecentFile(filePath);
 
@@ -1664,7 +1664,7 @@ public partial class MainWindowViewModel : ViewModelBase
     private void RefreshMotorEditorsFromCurrentMotor()
     {
         Log.Information("[REFRESH] RefreshMotorEditorsFromCurrentMotor() called");
-        
+
         if (CurrentMotor is null)
         {
             MotorNameEditor = string.Empty;
@@ -1728,7 +1728,7 @@ public partial class MainWindowViewModel : ViewModelBase
         VoltageContinuousTorqueEditor = SelectedVoltage?.RatedContinuousTorque.ToString(System.Globalization.CultureInfo.InvariantCulture) ?? string.Empty;
         VoltageContinuousAmpsEditor = SelectedVoltage?.ContinuousAmperage.ToString(System.Globalization.CultureInfo.InvariantCulture) ?? string.Empty;
         VoltagePeakAmpsEditor = SelectedVoltage?.PeakAmperage.ToString(System.Globalization.CultureInfo.InvariantCulture) ?? string.Empty;
-        
+
         Log.Information(
             "[REFRESH] Editor values updated: RatedPeakTorque={PeakTorque} RatedContinuousTorque={ContTorque} MaxSpeed={MaxSpeed} Power={Power}",
             RatedPeakTorqueEditor,
@@ -1799,13 +1799,13 @@ public partial class MainWindowViewModel : ViewModelBase
         }
 
         var oldValue = CurrentMotor.MaxSpeed;
-        if (!TryParseDouble(MaxSpeedEditor, oldValue, out var newValue))
+        if (!TryParseDecimal(MaxSpeedEditor, oldValue, out var newValue))
         {
             MaxSpeedEditor = oldValue.ToString(System.Globalization.CultureInfo.InvariantCulture);
             return;
         }
 
-        if (Math.Abs(oldValue - newValue) < 0.000001)
+        if (Math.Abs(oldValue - newValue) < 0.000001m)
         {
             return;
         }
@@ -1841,7 +1841,7 @@ public partial class MainWindowViewModel : ViewModelBase
         PartNumberEditor = CurrentMotor.PartNumber ?? string.Empty;
     }
 
-    private static bool TryParseDouble(string text, double currentValue, out double parsed)
+    private static bool TryParseDecimal(string text, decimal currentValue, out decimal parsed)
     {
         if (string.IsNullOrWhiteSpace(text))
         {
@@ -1849,7 +1849,7 @@ public partial class MainWindowViewModel : ViewModelBase
             return true;
         }
 
-        if (double.TryParse(text, System.Globalization.NumberStyles.Float, System.Globalization.CultureInfo.InvariantCulture, out var value))
+        if (decimal.TryParse(text, System.Globalization.NumberStyles.Float, System.Globalization.CultureInfo.InvariantCulture, out var value))
         {
             parsed = value;
             return true;
@@ -1984,13 +1984,13 @@ public partial class MainWindowViewModel : ViewModelBase
         }
 
         var oldValue = SelectedVoltage.Value;
-        if (!TryParseDouble(VoltageValueEditor, oldValue, out var newValue))
+        if (!TryParseDecimal(VoltageValueEditor, oldValue, out var newValue))
         {
             VoltageValueEditor = oldValue.ToString(System.Globalization.CultureInfo.InvariantCulture);
             return;
         }
 
-        if (Math.Abs(oldValue - newValue) < 0.000001)
+        if (Math.Abs(oldValue - newValue) < 0.000001m)
         {
             return;
         }
@@ -2012,13 +2012,13 @@ public partial class MainWindowViewModel : ViewModelBase
         }
 
         var oldValue = SelectedVoltage.Power;
-        if (!TryParseDouble(VoltagePowerEditor, oldValue, out var newValue))
+        if (!TryParseDecimal(VoltagePowerEditor, oldValue, out var newValue))
         {
             VoltagePowerEditor = oldValue.ToString(System.Globalization.CultureInfo.InvariantCulture);
             return;
         }
 
-        if (Math.Abs(oldValue - newValue) < 0.000001)
+        if (Math.Abs(oldValue - newValue) < 0.000001m)
         {
             return;
         }
@@ -2040,13 +2040,13 @@ public partial class MainWindowViewModel : ViewModelBase
         }
 
         var oldValue = SelectedVoltage.MaxSpeed;
-        if (!TryParseDouble(VoltageMaxSpeedEditor, oldValue, out var newValue))
+        if (!TryParseDecimal(VoltageMaxSpeedEditor, oldValue, out var newValue))
         {
             VoltageMaxSpeedEditor = oldValue.ToString(System.Globalization.CultureInfo.InvariantCulture);
             return;
         }
 
-        if (Math.Abs(oldValue - newValue) < 0.000001)
+        if (Math.Abs(oldValue - newValue) < 0.000001m)
         {
             return;
         }
@@ -2068,13 +2068,13 @@ public partial class MainWindowViewModel : ViewModelBase
         }
 
         var oldValue = SelectedVoltage.RatedPeakTorque;
-        if (!TryParseDouble(VoltagePeakTorqueEditor, oldValue, out var newValue))
+        if (!TryParseDecimal(VoltagePeakTorqueEditor, oldValue, out var newValue))
         {
             VoltagePeakTorqueEditor = oldValue.ToString(System.Globalization.CultureInfo.InvariantCulture);
             return;
         }
 
-        if (Math.Abs(oldValue - newValue) < 0.000001)
+        if (Math.Abs(oldValue - newValue) < 0.000001m)
         {
             return;
         }
@@ -2096,13 +2096,13 @@ public partial class MainWindowViewModel : ViewModelBase
         }
 
         var oldValue = SelectedVoltage.RatedContinuousTorque;
-        if (!TryParseDouble(VoltageContinuousTorqueEditor, oldValue, out var newValue))
+        if (!TryParseDecimal(VoltageContinuousTorqueEditor, oldValue, out var newValue))
         {
             VoltageContinuousTorqueEditor = oldValue.ToString(System.Globalization.CultureInfo.InvariantCulture);
             return;
         }
 
-        if (Math.Abs(oldValue - newValue) < 0.000001)
+        if (Math.Abs(oldValue - newValue) < 0.000001m)
         {
             return;
         }
@@ -2124,13 +2124,13 @@ public partial class MainWindowViewModel : ViewModelBase
         }
 
         var oldValue = SelectedVoltage.ContinuousAmperage;
-        if (!TryParseDouble(VoltageContinuousAmpsEditor, oldValue, out var newValue))
+        if (!TryParseDecimal(VoltageContinuousAmpsEditor, oldValue, out var newValue))
         {
             VoltageContinuousAmpsEditor = oldValue.ToString(System.Globalization.CultureInfo.InvariantCulture);
             return;
         }
 
-        if (Math.Abs(oldValue - newValue) < 0.000001)
+        if (Math.Abs(oldValue - newValue) < 0.000001m)
         {
             return;
         }
@@ -2152,13 +2152,13 @@ public partial class MainWindowViewModel : ViewModelBase
         }
 
         var oldValue = SelectedVoltage.PeakAmperage;
-        if (!TryParseDouble(VoltagePeakAmpsEditor, oldValue, out var newValue))
+        if (!TryParseDecimal(VoltagePeakAmpsEditor, oldValue, out var newValue))
         {
             VoltagePeakAmpsEditor = oldValue.ToString(System.Globalization.CultureInfo.InvariantCulture);
             return;
         }
 
-        if (Math.Abs(oldValue - newValue) < 0.000001)
+        if (Math.Abs(oldValue - newValue) < 0.000001m)
         {
             return;
         }
@@ -2180,13 +2180,13 @@ public partial class MainWindowViewModel : ViewModelBase
         }
 
         var oldValue = CurrentMotor.RatedSpeed;
-        if (!TryParseDouble(RatedSpeedEditor, oldValue, out var newValue))
+        if (!TryParseDecimal(RatedSpeedEditor, oldValue, out var newValue))
         {
             RatedSpeedEditor = oldValue.ToString(System.Globalization.CultureInfo.InvariantCulture);
             return;
         }
 
-        if (Math.Abs(oldValue - newValue) < 0.000001)
+        if (Math.Abs(oldValue - newValue) < 0.000001m)
         {
             return;
         }
@@ -2206,13 +2206,13 @@ public partial class MainWindowViewModel : ViewModelBase
         }
 
         var oldValue = CurrentMotor.RatedPeakTorque;
-        if (!TryParseDouble(RatedPeakTorqueEditor, oldValue, out var newValue))
+        if (!TryParseDecimal(RatedPeakTorqueEditor, oldValue, out var newValue))
         {
             RatedPeakTorqueEditor = oldValue.ToString(System.Globalization.CultureInfo.InvariantCulture);
             return;
         }
 
-        if (Math.Abs(oldValue - newValue) < 0.000001)
+        if (Math.Abs(oldValue - newValue) < 0.000001m)
         {
             return;
         }
@@ -2231,13 +2231,13 @@ public partial class MainWindowViewModel : ViewModelBase
         }
 
         var oldValue = CurrentMotor.RatedContinuousTorque;
-        if (!TryParseDouble(RatedContinuousTorqueEditor, oldValue, out var newValue))
+        if (!TryParseDecimal(RatedContinuousTorqueEditor, oldValue, out var newValue))
         {
             RatedContinuousTorqueEditor = oldValue.ToString(System.Globalization.CultureInfo.InvariantCulture);
             return;
         }
 
-        if (Math.Abs(oldValue - newValue) < 0.000001)
+        if (Math.Abs(oldValue - newValue) < 0.000001m)
         {
             return;
         }
@@ -2256,13 +2256,13 @@ public partial class MainWindowViewModel : ViewModelBase
         }
 
         var oldValue = CurrentMotor.Power;
-        if (!TryParseDouble(PowerEditor, oldValue, out var newValue))
+        if (!TryParseDecimal(PowerEditor, oldValue, out var newValue))
         {
             PowerEditor = oldValue.ToString(System.Globalization.CultureInfo.InvariantCulture);
             return;
         }
 
-        if (Math.Abs(oldValue - newValue) < 0.000001)
+        if (Math.Abs(oldValue - newValue) < 0.000001m)
         {
             return;
         }
@@ -2281,13 +2281,13 @@ public partial class MainWindowViewModel : ViewModelBase
         }
 
         var oldValue = CurrentMotor.Weight;
-        if (!TryParseDouble(WeightEditor, oldValue, out var newValue))
+        if (!TryParseDecimal(WeightEditor, oldValue, out var newValue))
         {
             WeightEditor = oldValue.ToString(System.Globalization.CultureInfo.InvariantCulture);
             return;
         }
 
-        if (Math.Abs(oldValue - newValue) < 0.000001)
+        if (Math.Abs(oldValue - newValue) < 0.000001m)
         {
             return;
         }
@@ -2306,13 +2306,13 @@ public partial class MainWindowViewModel : ViewModelBase
         }
 
         var oldValue = CurrentMotor.RotorInertia;
-        if (!TryParseDouble(RotorInertiaEditor, oldValue, out var newValue))
+        if (!TryParseDecimal(RotorInertiaEditor, oldValue, out var newValue))
         {
             RotorInertiaEditor = oldValue.ToString(System.Globalization.CultureInfo.InvariantCulture);
             return;
         }
 
-        if (Math.Abs(oldValue - newValue) < 0.000001)
+        if (Math.Abs(oldValue - newValue) < 0.000001m)
         {
             return;
         }
@@ -2378,13 +2378,13 @@ public partial class MainWindowViewModel : ViewModelBase
         }
 
         var oldValue = CurrentMotor.BrakeTorque;
-        if (!TryParseDouble(BrakeTorqueEditor, oldValue, out var newValue))
+        if (!TryParseDecimal(BrakeTorqueEditor, oldValue, out var newValue))
         {
             BrakeTorqueEditor = oldValue.ToString(System.Globalization.CultureInfo.InvariantCulture);
             return;
         }
 
-        if (Math.Abs(oldValue - newValue) < 0.000001)
+        if (Math.Abs(oldValue - newValue) < 0.000001m)
         {
             return;
         }
@@ -2404,13 +2404,13 @@ public partial class MainWindowViewModel : ViewModelBase
         }
 
         var oldValue = CurrentMotor.BrakeAmperage;
-        if (!TryParseDouble(BrakeAmperageEditor, oldValue, out var newValue))
+        if (!TryParseDecimal(BrakeAmperageEditor, oldValue, out var newValue))
         {
             BrakeAmperageEditor = oldValue.ToString(System.Globalization.CultureInfo.InvariantCulture);
             return;
         }
 
-        if (Math.Abs(oldValue - newValue) < 0.000001)
+        if (Math.Abs(oldValue - newValue) < 0.000001m)
         {
             return;
         }
@@ -2429,13 +2429,13 @@ public partial class MainWindowViewModel : ViewModelBase
         }
 
         var oldValue = CurrentMotor.BrakeVoltage;
-        if (!TryParseDouble(BrakeVoltageEditor, oldValue, out var newValue))
+        if (!TryParseDecimal(BrakeVoltageEditor, oldValue, out var newValue))
         {
             BrakeVoltageEditor = oldValue.ToString(System.Globalization.CultureInfo.InvariantCulture);
             return;
         }
 
-        if (Math.Abs(oldValue - newValue) < 0.000001)
+        if (Math.Abs(oldValue - newValue) < 0.000001m)
         {
             return;
         }
@@ -2454,13 +2454,13 @@ public partial class MainWindowViewModel : ViewModelBase
         }
 
         var oldValue = CurrentMotor.BrakeReleaseTime;
-        if (!TryParseDouble(BrakeReleaseTimeEditor, oldValue, out var newValue))
+        if (!TryParseDecimal(BrakeReleaseTimeEditor, oldValue, out var newValue))
         {
             BrakeReleaseTimeEditor = oldValue.ToString(System.Globalization.CultureInfo.InvariantCulture);
             return;
         }
 
-        if (Math.Abs(oldValue - newValue) < 0.000001)
+        if (Math.Abs(oldValue - newValue) < 0.000001m)
         {
             return;
         }
@@ -2479,13 +2479,13 @@ public partial class MainWindowViewModel : ViewModelBase
         }
 
         var oldValue = CurrentMotor.BrakeEngageTimeMov;
-        if (!TryParseDouble(BrakeEngageTimeMovEditor, oldValue, out var newValue))
+        if (!TryParseDecimal(BrakeEngageTimeMovEditor, oldValue, out var newValue))
         {
             BrakeEngageTimeMovEditor = oldValue.ToString(System.Globalization.CultureInfo.InvariantCulture);
             return;
         }
 
-        if (Math.Abs(oldValue - newValue) < 0.000001)
+        if (Math.Abs(oldValue - newValue) < 0.000001m)
         {
             return;
         }
@@ -2504,13 +2504,13 @@ public partial class MainWindowViewModel : ViewModelBase
         }
 
         var oldValue = CurrentMotor.BrakeEngageTimeDiode;
-        if (!TryParseDouble(BrakeEngageTimeDiodeEditor, oldValue, out var newValue))
+        if (!TryParseDecimal(BrakeEngageTimeDiodeEditor, oldValue, out var newValue))
         {
             BrakeEngageTimeDiodeEditor = oldValue.ToString(System.Globalization.CultureInfo.InvariantCulture);
             return;
         }
 
-        if (Math.Abs(oldValue - newValue) < 0.000001)
+        if (Math.Abs(oldValue - newValue) < 0.000001m)
         {
             return;
         }
@@ -2529,13 +2529,13 @@ public partial class MainWindowViewModel : ViewModelBase
         }
 
         var oldValue = CurrentMotor.BrakeBacklash;
-        if (!TryParseDouble(BrakeBacklashEditor, oldValue, out var newValue))
+        if (!TryParseDecimal(BrakeBacklashEditor, oldValue, out var newValue))
         {
             BrakeBacklashEditor = oldValue.ToString(System.Globalization.CultureInfo.InvariantCulture);
             return;
         }
 
-        if (Math.Abs(oldValue - newValue) < 0.000001)
+        if (Math.Abs(oldValue - newValue) < 0.000001m)
         {
             return;
         }
@@ -2552,7 +2552,7 @@ public partial class MainWindowViewModel : ViewModelBase
     private void RefreshAvailableSeries()
     {
         if (ActiveTab == null) return;
-        
+
         ActiveTab.AvailableSeries.Clear();
         if (ActiveTab.SelectedVoltage is not null)
         {
@@ -2759,7 +2759,7 @@ public partial class MainWindowViewModel : ViewModelBase
             ActiveTab?.DisplayName,
             ActiveTab?.FilePath,
             value?.Name);
-        
+
         // Refresh the available voltages collection
         RefreshAvailableVoltages();
 
@@ -2771,7 +2771,7 @@ public partial class MainWindowViewModel : ViewModelBase
         }
 
         // Prefer 208V if available, otherwise use the first voltage
-        var preferred = value.Voltages.FirstOrDefault(v => Math.Abs(v.Value - 208) < 0.1);
+        var preferred = value.Voltages.FirstOrDefault(v => Math.Abs(v.Value - 208m) < 0.1m);
         SelectedVoltage = preferred ?? value.Voltages.FirstOrDefault();
         Log.Information("[SELECTION] OnSelectedDriveChanged() Auto-selected voltage: {SelectedVoltage}", SelectedVoltage?.Value);
 
@@ -2793,7 +2793,7 @@ public partial class MainWindowViewModel : ViewModelBase
             ActiveTab?.FilePath,
             ActiveTab?.SelectedDrive?.Name,
             value?.Value);
-        
+
         // Refresh the available series collection
         RefreshAvailableSeries();
 
@@ -3034,7 +3034,7 @@ public partial class MainWindowViewModel : ViewModelBase
             // Refresh UI to show converted values
             RefreshMotorEditorsFromCurrentMotor();
             RefreshVoltageEditorsFromSelectedVoltage();
-            
+
             // Log editor values after refresh to verify UI update
             Log.Information(
                 "[REFRESH] After RefreshMotorEditors: BrakeAmperageEditor={BrakeAmpEditor} BrakeBacklashEditor={BrakeBackEditor} VoltageContinuousAmpsEditor={ContAmpsEditor} VoltagePeakAmpsEditor={PeakAmpsEditor}",
@@ -3042,7 +3042,7 @@ public partial class MainWindowViewModel : ViewModelBase
                 BrakeBacklashEditor,
                 VoltageContinuousAmpsEditor,
                 VoltagePeakAmpsEditor);
-            
+
             // Update chart unit labels when torque or power units change
             if (ChartViewModel != null)
             {
@@ -3055,7 +3055,7 @@ public partial class MainWindowViewModel : ViewModelBase
                     ChartViewModel.PowerUnit = CurrentMotor.Units.Power;
                 }
             }
-            
+
             // Refresh chart and curve data table if available
             ChartViewModel?.RefreshChart();
             ActiveTab?.CurveDataTableViewModel?.RefreshData();
@@ -3064,7 +3064,7 @@ public partial class MainWindowViewModel : ViewModelBase
             MarkDirty();
 
             StatusMessage = $"Converted {e.PropertyName} from {oldValue} to {newValue}";
-            
+
             Log.Information("[UNITS] Conversion complete, UI refreshed");
         }
         catch (Exception ex)
@@ -3105,25 +3105,25 @@ public partial class MainWindowViewModel : ViewModelBase
 
         // Create a new tab with a new motor
         var newTab = CreateNewTab();
-        
+
         // Create motor using existing file service
         newTab.Motor = _fileService.CreateNew(
             motorName: "New Motor",
             maxRpm: 5000,
             maxTorque: 50,
             maxPower: 1500);
-        
+
         newTab.FilePath = null;
         newTab.UndoStack.Clear();
         newTab.MarkClean();
-        
+
         _tabs.Add(newTab);
-        
+
         // Set as active tab first, then initialize
         // This ensures all property setters and handlers are triggered correctly
         ActiveTab = newTab;
         InitializeActiveTabWithMotor();
-        
+
         StatusMessage = "Created new motor definition in new tab";
     }
 
@@ -3159,9 +3159,9 @@ public partial class MainWindowViewModel : ViewModelBase
             Log.Information($"[FILE_OP] Selected file: {filePath}");
 
             // Check if file is already open in a tab
-            var existingTab = _tabs.FirstOrDefault(t => 
+            var existingTab = _tabs.FirstOrDefault(t =>
                 string.Equals(t.FilePath, filePath, StringComparison.OrdinalIgnoreCase));
-            
+
             if (existingTab != null)
             {
                 Log.Information($"[FILE_OP] File already open in tab: {existingTab.DisplayName}, switching to it");
@@ -3172,7 +3172,7 @@ public partial class MainWindowViewModel : ViewModelBase
                 _recentFilesService.AddRecentFile(filePath);
                 return;
             }
-            
+
             // Create new tab for the file
             Log.Information("[FILE_OP] Creating new tab for file");
             var newTab = CreateNewTab();
@@ -3181,22 +3181,22 @@ public partial class MainWindowViewModel : ViewModelBase
             newTab.UndoStack.Clear();
             newTab.MarkClean();
             Log.Information($"[FILE_OP] Loaded motor with {newTab.Motor.Drives.Count} drives");
-            
+
             _tabs.Add(newTab);
             Log.Information($"[FILE_OP] Added tab to collection, total tabs: {_tabs.Count}");
-            
+
             // Set as active tab first, then initialize
             // This ensures all property setters and handlers are triggered correctly
             Log.Information("[FILE_OP] Setting ActiveTab");
             ActiveTab = newTab;
             Log.Information("[FILE_OP] Calling InitializeActiveTabWithMotor()");
             InitializeActiveTabWithMotor();
-            
+
             await DirectoryBrowser.SyncSelectionToFilePathAsync(filePath).ConfigureAwait(true);
-            
+
             // Add to recent files
             _recentFilesService.AddRecentFile(filePath);
-            
+
             StatusMessage = $"Opened: {Path.GetFileName(filePath)}";
             Log.Information("[FILE_OP] OpenFileAsync() - END");
         }
@@ -3225,9 +3225,9 @@ public partial class MainWindowViewModel : ViewModelBase
             }
 
             // Check if file is already open in a tab
-            var existingTab = _tabs.FirstOrDefault(t => 
+            var existingTab = _tabs.FirstOrDefault(t =>
                 string.Equals(t.FilePath, filePath, StringComparison.OrdinalIgnoreCase));
-            
+
             if (existingTab != null)
             {
                 // Switch to existing tab
@@ -3237,23 +3237,23 @@ public partial class MainWindowViewModel : ViewModelBase
                 _recentFilesService.AddRecentFile(filePath);
                 return;
             }
-            
+
             // Create new tab for the file
             var newTab = CreateNewTab();
             newTab.Motor = await _fileService.LoadAsync(filePath);
             newTab.FilePath = filePath;
             newTab.UndoStack.Clear();
             newTab.MarkClean();
-            
+
             _tabs.Add(newTab);
             ActiveTab = newTab;
             InitializeActiveTabWithMotor();
-            
+
             await DirectoryBrowser.SyncSelectionToFilePathAsync(filePath).ConfigureAwait(true);
-            
+
             // Add to recent files (moves to top)
             _recentFilesService.AddRecentFile(filePath);
-            
+
             StatusMessage = $"Opened: {Path.GetFileName(filePath)}";
         }
         catch (Exception ex)
@@ -3335,13 +3335,13 @@ public partial class MainWindowViewModel : ViewModelBase
             MarkCleanCheckpoint();
             StatusMessage = "File saved successfully";
             CurrentFilePath = _fileService.CurrentFilePath;
-            
+
             // Add to recent files to update position
             if (!string.IsNullOrWhiteSpace(CurrentFilePath))
             {
                 _recentFilesService.AddRecentFile(CurrentFilePath);
             }
-            
+
             OnPropertyChanged(nameof(WindowTitle));
         }
         catch (Exception ex)
@@ -3402,10 +3402,10 @@ public partial class MainWindowViewModel : ViewModelBase
 
             _settingsStore.SaveString(DirectoryBrowserViewModel.LastOpenedMotorFileKey, filePath);
             CurrentFilePath = _fileService.CurrentFilePath;
-            
+
             // Add to recent files
             _recentFilesService.AddRecentFile(filePath);
-            
+
             await DirectoryBrowser.SyncSelectionToFilePathAsync(filePath).ConfigureAwait(true);
         }
         catch (Exception ex)
@@ -3686,10 +3686,10 @@ public partial class MainWindowViewModel : ViewModelBase
             dialog.Initialize(
                 CurrentMotor.Drives,
                 SelectedDrive,
-                CurrentMotor?.MaxSpeed ?? 5000,
-                CurrentMotor?.RatedPeakTorque ?? 50,
-                CurrentMotor?.RatedContinuousTorque ?? 40,
-                CurrentMotor?.Power ?? 1500);
+                CurrentMotor?.MaxSpeed ?? 5000m,
+                CurrentMotor?.RatedPeakTorque ?? 50m,
+                CurrentMotor?.RatedContinuousTorque ?? 40m,
+                CurrentMotor?.Power ?? 1500m);
 
             if (Application.Current?.ApplicationLifetime is not IClassicDesktopStyleApplicationLifetime desktop ||
                 desktop.MainWindow is null)
@@ -4007,7 +4007,7 @@ public partial class MainWindowViewModel : ViewModelBase
         ValidationErrors = errors.Count > 0
             ? string.Join("\n", errors)
             : string.Empty;
-        
+
         // Update the list for the validation panel
         ValidationErrorsList.Clear();
         foreach (var error in errors)

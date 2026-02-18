@@ -16,7 +16,7 @@ public class ValidationServiceTests
     public void ValidateDataPoint_ValidPoint_ReturnsNoErrors()
     {
         // Arrange
-        var point = new DataPoint(50, 2500, 45.0);
+        var point = new DataPoint(50, 2500m, 45.0m);
 
         // Act
         var errors = _service.ValidateDataPoint(point);
@@ -29,7 +29,7 @@ public class ValidationServiceTests
     public void ValidateDataPoint_ZeroRpm_ReturnsNoErrors()
     {
         // Arrange
-        var point = new DataPoint(0, 0, 50.0);
+        var point = new DataPoint(0, 0m, 50.0m);
 
         // Act
         var errors = _service.ValidateDataPoint(point);
@@ -41,7 +41,7 @@ public class ValidationServiceTests
     [Fact]
     public void ValidateDataPoint_PercentAbove100_IsAllowedForViewing_ReturnsNoErrors()
     {
-        var point = new DataPoint(110, 6000, 45.0);
+        var point = new DataPoint(110, 6000m, 45.0m);
 
         var errors = _service.ValidateDataPoint(point);
 

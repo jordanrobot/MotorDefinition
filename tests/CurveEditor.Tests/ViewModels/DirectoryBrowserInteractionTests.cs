@@ -17,7 +17,7 @@ public sealed class DirectoryBrowserInteractionTests
     private static string TestMotorJson(string motorName)
     {
         var percent = Enumerable.Range(0, 101).ToArray();
-        var rpm = percent.Select(p => (double)p).ToArray();
+        var rpm = percent.Select(p => (decimal)p).ToArray();
 
         var dto = new MotorDefinitionFileDto
         {

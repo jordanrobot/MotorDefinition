@@ -12,8 +12,8 @@ namespace CurveEditor.Views;
 /// </summary>
 public partial class AddVoltageDialog : Window
 {
-    private static readonly double[] PreferredVoltages = [208, 230, 240, 110, 120, 104, 430, 460];
-    
+    private static readonly decimal[] PreferredVoltages = [208, 230, 240, 110, 120, 104, 430, 460];
+
     /// <summary>
     /// Gets or sets the result of the dialog.
     /// </summary>
@@ -38,23 +38,23 @@ public partial class AddVoltageDialog : Window
     public void Initialize(
         IEnumerable<Drive> availableDrives,
         Drive? selectedDrive,
-        double maxSpeed,
-        double peakTorque,
-        double continuousTorque,
-        double power)
+        decimal maxSpeed,
+        decimal peakTorque,
+        decimal continuousTorque,
+        decimal power)
     {
         _availableDrives = availableDrives.ToList();
         DriveComboBox.ItemsSource = _availableDrives;
         DriveComboBox.SelectedItem = selectedDrive ?? _availableDrives.FirstOrDefault();
-        
+
         MaxSpeedInput.Text = maxSpeed.ToString("F0");
         PeakTorqueInput.Text = peakTorque.ToString("F2");
         ContinuousTorqueInput.Text = continuousTorque.ToString("F2");
         PowerInput.Text = power.ToString("F0");
-        
+
         // Set smart default voltage based on what already exists in the selected drive
         SetSmartDefaultVoltage();
-        
+
         UpdateContinuousTorqueFieldsEnabled();
         UpdatePeakTorqueFieldsEnabled();
         ValidateVoltage();
@@ -69,7 +69,7 @@ public partial class AddVoltageDialog : Window
         }
 
         var existingVoltages = selectedDrive.Voltages.Select(v => v.Value).ToHashSet();
-        
+
         // Find the first preferred voltage that doesn't exist in the drive
         foreach (var voltage in PreferredVoltages)
         {
@@ -79,7 +79,7 @@ public partial class AddVoltageDialog : Window
                 return;
             }
         }
-        
+
         // If all preferred voltages exist, default to 208
         VoltageInput.Text = "208";
     }
@@ -102,7 +102,7 @@ public partial class AddVoltageDialog : Window
             return;
         }
 
-        if (!double.TryParse(VoltageInput.Text, out var voltage) || voltage <= 0)
+        if (!decimal.TryParse(VoltageInput.Text, out var voltage) || voltage <= 0)
         {
             // Invalid voltage value - don't show duplicate error
             ValidationErrorText.IsVisible = false;
@@ -112,7 +112,7 @@ public partial class AddVoltageDialog : Window
 
         // Check if this voltage already exists in the selected drive
         var isDuplicate = selectedDrive.Voltages.Any(v => Math.Abs(v.Value - voltage) < Drive.DefaultVoltageTolerance);
-        
+
         if (isDuplicate)
         {
             ValidationErrorText.Text = $"A voltage of {voltage}V already exists for drive '{selectedDrive.Name}'. Please enter a different voltage or select a different drive.";
@@ -147,7 +147,7 @@ public partial class AddVoltageDialog : Window
     {
         // When calculate curve is checked, disable the manual torque/amperage checkboxes
         var isCalculateEnabled = CalculateCurveCheckBox.IsChecked == true;
-        
+
         if (isCalculateEnabled)
         {
             // Disable manual curve entry
@@ -155,7 +155,7 @@ public partial class AddVoltageDialog : Window
             AddPeakTorqueCheckBox.IsEnabled = false;
             ContinuousTorquePanel.IsEnabled = false;
             PeakTorquePanel.IsEnabled = false;
-            
+
             // Show and populate the curve name field
             CalculatedCurveNamePanel.IsVisible = true;
             SetSmartDefaultCurveName();
@@ -167,7 +167,7 @@ public partial class AddVoltageDialog : Window
             AddPeakTorqueCheckBox.IsEnabled = true;
             UpdateContinuousTorqueFieldsEnabled();
             UpdatePeakTorqueFieldsEnabled();
-            
+
             // Hide the curve name field
             CalculatedCurveNamePanel.IsVisible = false;
         }
@@ -245,15 +245,15 @@ public partial class AddVoltageDialog : Window
         }
 
         var calculateCurve = CalculateCurveCheckBox.IsChecked == true;
-        
+
         // Validate curve-specific fields if curves are enabled
         var addContinuousTorque = AddContinuousTorqueCheckBox.IsChecked == true;
         var addPeakTorque = AddPeakTorqueCheckBox.IsChecked == true;
 
-        double continuousTorque = 0;
-        double continuousCurrent = 0;
-        double peakTorque = 0;
-        double peakCurrent = 0;
+        decimal continuousTorque = 0;
+        decimal continuousCurrent = 0;
+        decimal peakTorque = 0;
+        decimal peakCurrent = 0;
 
         if (calculateCurve)
         {
@@ -261,20 +261,20 @@ public partial class AddVoltageDialog : Window
             // Power (W) = Torque (Nm) * Speed (rad/s)
             // Speed (rad/s) = RPM * 2π / 60
             // Therefore: Torque (Nm) = Power (W) * 60 / (RPM * 2π)
-            
+
             if (maxSpeed > 0)
             {
-                var speedRadPerSec = maxSpeed * 2.0 * Math.PI / 60.0;
+                var speedRadPerSec = maxSpeed * 2.0m * (decimal)Math.PI / 60.0m;
                 var calculatedTorque = power / speedRadPerSec;
-                
+
                 // Round to 2 decimal places
                 calculatedTorque = Math.Round(calculatedTorque, 2);
-                
+
                 // For calculated curves, we create only a single continuous curve
                 continuousTorque = calculatedTorque;
                 addContinuousTorque = true;
                 addPeakTorque = false;
-                
+
                 // Amperage values are left at 0 since we don't have enough info to calculate them
                 continuousCurrent = 0;
                 peakCurrent = 0;
@@ -322,11 +322,11 @@ public partial class AddVoltageDialog : Window
     }
 
     /// <summary>
-    /// Attempts to parse a string as a positive double.
+    /// Attempts to parse a string as a positive decimal.
     /// </summary>
-    private static bool TryParsePositive(string? text, out double value, string errorMessage)
+    private static bool TryParsePositive(string? text, out decimal value, string errorMessage)
     {
-        if (!double.TryParse(text, out value) || value <= 0)
+        if (!decimal.TryParse(text, out value) || value <= 0)
         {
             // In a production app, we would show errorMessage to the user
             value = 0;
@@ -336,11 +336,11 @@ public partial class AddVoltageDialog : Window
     }
 
     /// <summary>
-    /// Attempts to parse a string as a non-negative double.
+    /// Attempts to parse a string as a non-negative decimal.
     /// </summary>
-    private static bool TryParseNonNegative(string? text, out double value, string errorMessage)
+    private static bool TryParseNonNegative(string? text, out decimal value, string errorMessage)
     {
-        if (!double.TryParse(text, out value) || value < 0)
+        if (!decimal.TryParse(text, out value) || value < 0)
         {
             // In a production app, we would show errorMessage to the user
             value = 0;
@@ -356,15 +356,15 @@ public partial class AddVoltageDialog : Window
 public class AddVoltageDialogResult
 {
     public Drive TargetDrive { get; set; } = null!;
-    public double Voltage { get; set; }
-    public double Power { get; set; }
-    public double MaxSpeed { get; set; }
+    public decimal Voltage { get; set; }
+    public decimal Power { get; set; }
+    public decimal MaxSpeed { get; set; }
     public bool AddContinuousTorque { get; set; }
-    public double ContinuousTorque { get; set; }
-    public double ContinuousCurrent { get; set; }
+    public decimal ContinuousTorque { get; set; }
+    public decimal ContinuousCurrent { get; set; }
     public bool AddPeakTorque { get; set; }
-    public double PeakTorque { get; set; }
-    public double PeakCurrent { get; set; }
+    public decimal PeakTorque { get; set; }
+    public decimal PeakCurrent { get; set; }
     public bool CalculateCurveFromPowerAndSpeed { get; set; }
     public string? CalculatedCurveName { get; set; }
 }

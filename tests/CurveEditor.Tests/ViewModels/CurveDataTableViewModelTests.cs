@@ -516,11 +516,11 @@ public class CurveDataTableViewModelTests
         var original = viewModel.GetTorque(0, "Peak");
 
         // Act
-        var changed = viewModel.TrySetTorqueAtCell(cell, original + 5.0);
+        var changed = viewModel.TrySetTorqueAtCell(cell, original + 5.0m);
 
         // Assert
         Assert.True(changed);
-        Assert.Equal(original + 5.0, viewModel.GetTorque(0, "Peak"));
+        Assert.Equal(original + 5.0m, viewModel.GetTorque(0, "Peak"));
     }
 
     [Fact]
@@ -534,7 +534,7 @@ public class CurveDataTableViewModelTests
         var original = viewModel.GetTorque(0, "Peak");
 
         // Act
-        var changed = viewModel.TrySetTorqueAtCell(cell, original + 5.0);
+        var changed = viewModel.TrySetTorqueAtCell(cell, original + 5.0m);
 
         // Assert
         Assert.False(changed);
@@ -552,8 +552,8 @@ public class CurveDataTableViewModelTests
         var originalRpm = viewModel.Rows[0].DisplayRpm;
 
         // Act
-        var percentChanged = viewModel.TrySetTorqueAtCell(percentCell, 123.45);
-        var rpmChanged = viewModel.TrySetTorqueAtCell(rpmCell, 123.45);
+        var percentChanged = viewModel.TrySetTorqueAtCell(percentCell, 123.45m);
+        var rpmChanged = viewModel.TrySetTorqueAtCell(rpmCell, 123.45m);
 
         // Assert
         Assert.False(percentChanged);
@@ -574,11 +574,11 @@ public class CurveDataTableViewModelTests
         };
 
         // Act
-        viewModel.ApplyTorqueToCells(cells, 12.34);
+        viewModel.ApplyTorqueToCells(cells, 12.34m);
 
         // Assert
-        Assert.Equal(12.34, viewModel.GetTorque(0, "Peak"));
-        Assert.Equal(12.34, viewModel.GetTorque(1, "Continuous"));
+        Assert.Equal(12.34m, viewModel.GetTorque(0, "Peak"));
+        Assert.Equal(12.34m, viewModel.GetTorque(1, "Continuous"));
     }
 
     [Fact]
@@ -595,7 +595,7 @@ public class CurveDataTableViewModelTests
         };
 
         // Act
-        viewModel.ApplyTorqueToCells(cells, 99.99);
+        viewModel.ApplyTorqueToCells(cells, 99.99m);
 
         // Assert - fixed columns unchanged
         Assert.Equal(originalPercent, viewModel.Rows[0].Percent);
@@ -689,10 +689,10 @@ public class CurveDataTableViewModelTests
 
         // Assert
         Assert.True(result);
-        Assert.Equal(1.11, viewModel.GetTorque(0, "Peak"));
-        Assert.Equal(2.22, viewModel.GetTorque(0, "Continuous"));
-        Assert.Equal(3.33, viewModel.GetTorque(1, "Peak"));
-        Assert.Equal(4.44, viewModel.GetTorque(1, "Continuous"));
+        Assert.Equal(1.11m, viewModel.GetTorque(0, "Peak"));
+        Assert.Equal(2.22m, viewModel.GetTorque(0, "Continuous"));
+        Assert.Equal(3.33m, viewModel.GetTorque(1, "Peak"));
+        Assert.Equal(4.44m, viewModel.GetTorque(1, "Continuous"));
     }
 
     [Fact]
@@ -744,12 +744,12 @@ public class CurveDataTableViewModelTests
         };
 
         // Act - simulate override mode committing value 7.5 to selected cells
-        viewModel.ApplyTorqueToCells(selected, 7.5);
+        viewModel.ApplyTorqueToCells(selected, 7.5m);
 
         // Assert
-        Assert.Equal(7.5, viewModel.GetTorque(0, "Peak"));
-        Assert.Equal(7.5, viewModel.GetTorque(0, "Continuous"));
-        Assert.Equal(7.5, viewModel.GetTorque(1, "Peak"));
+        Assert.Equal(7.5m, viewModel.GetTorque(0, "Peak"));
+        Assert.Equal(7.5m, viewModel.GetTorque(0, "Continuous"));
+        Assert.Equal(7.5m, viewModel.GetTorque(1, "Peak"));
     }
 
     [Fact]
@@ -768,7 +768,7 @@ public class CurveDataTableViewModelTests
         };
 
         // Act
-        viewModel.ApplyTorqueToCells(selected, 9.9);
+        viewModel.ApplyTorqueToCells(selected, 9.9m);
 
         // Assert - locked series should remain unchanged
         Assert.Equal(originalPeak0, viewModel.GetTorque(0, "Peak"));
@@ -793,15 +793,15 @@ public class CurveDataTableViewModelTests
         var originalPeak1 = viewModel.GetTorque(1, "Peak");
 
         // Act - logical equivalent of delete/backspace behavior
-        viewModel.ApplyTorqueToCells(selected, 0.0);
+        viewModel.ApplyTorqueToCells(selected, 0.0m);
 
         // Assert - selected torque cells are cleared to zero
         Assert.NotEqual(originalPeak0, viewModel.GetTorque(0, "Peak"));
         Assert.NotEqual(originalCont0, viewModel.GetTorque(0, "Continuous"));
         Assert.NotEqual(originalPeak1, viewModel.GetTorque(1, "Peak"));
-        Assert.Equal(0.0, viewModel.GetTorque(0, "Peak"));
-        Assert.Equal(0.0, viewModel.GetTorque(0, "Continuous"));
-        Assert.Equal(0.0, viewModel.GetTorque(1, "Peak"));
+        Assert.Equal(0.0m, viewModel.GetTorque(0, "Peak"));
+        Assert.Equal(0.0m, viewModel.GetTorque(0, "Continuous"));
+        Assert.Equal(0.0m, viewModel.GetTorque(1, "Peak"));
     }
 
     [Fact]
@@ -899,7 +899,7 @@ public class CurveDataTableViewModelTests
         // Arrange
         var viewModel = CreateViewModelWithData();
         var rowIndex = 50; // Middle row
-        var newRpm = 3000.5;
+        var newRpm = 3000.5m;
 
         // Act
         viewModel.UpdateRpm(rowIndex, newRpm);
@@ -919,7 +919,7 @@ public class CurveDataTableViewModelTests
         // Arrange
         var viewModel = CreateViewModelWithData();
         var rowIndex = 50;
-        var newRpm = 3000.5;
+        var newRpm = 3000.5m;
         
         // Lock the RPM for the Continuous series
         var continuousSeries = viewModel.SeriesColumns.First(s => s.Name == "Continuous");

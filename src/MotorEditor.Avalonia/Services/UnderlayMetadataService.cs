@@ -1,9 +1,9 @@
+using MotorEditor.Avalonia.Models;
 using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Text;
 using System.Text.Json;
-using MotorEditor.Avalonia.Models;
 
 namespace CurveEditor.Services;
 
@@ -17,7 +17,7 @@ public sealed class UnderlayMetadataService
     /// <summary>
     /// Loads metadata for a drive/voltage combination if a metadata file exists.
     /// </summary>
-    public UnderlayMetadata? Load(string? motorFilePath, string driveName, double voltageValue)
+    public UnderlayMetadata? Load(string? motorFilePath, string driveName, decimal voltageValue)
     {
         var metadataPath = GetMetadataPath(motorFilePath, driveName, voltageValue, ensureFolder: false);
         if (metadataPath is null || !File.Exists(metadataPath))
@@ -32,7 +32,7 @@ public sealed class UnderlayMetadataService
     /// <summary>
     /// Saves metadata for a drive/voltage combination. No-op if the motor file path is not known.
     /// </summary>
-    public void Save(string? motorFilePath, string driveName, double voltageValue, UnderlayMetadata metadata)
+    public void Save(string? motorFilePath, string driveName, decimal voltageValue, UnderlayMetadata metadata)
     {
         var metadataPath = GetMetadataPath(motorFilePath, driveName, voltageValue, ensureFolder: true);
         if (metadataPath is null)
@@ -47,7 +47,7 @@ public sealed class UnderlayMetadataService
     /// <summary>
     /// Removes persisted metadata for the specified drive/voltage.
     /// </summary>
-    public void Delete(string? motorFilePath, string driveName, double voltageValue)
+    public void Delete(string? motorFilePath, string driveName, decimal voltageValue)
     {
         var metadataPath = GetMetadataPath(motorFilePath, driveName, voltageValue, ensureFolder: false);
         if (metadataPath is null)
@@ -61,7 +61,7 @@ public sealed class UnderlayMetadataService
         }
     }
 
-    private static string? GetMetadataPath(string? motorFilePath, string driveName, double voltageValue, bool ensureFolder)
+    private static string? GetMetadataPath(string? motorFilePath, string driveName, decimal voltageValue, bool ensureFolder)
     {
         if (string.IsNullOrWhiteSpace(motorFilePath))
         {
