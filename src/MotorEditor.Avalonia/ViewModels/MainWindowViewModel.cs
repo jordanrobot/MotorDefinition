@@ -1487,6 +1487,18 @@ public partial class MainWindowViewModel : ViewModelBase
             return;
         }
 
+        var currentFilePath = CurrentFilePath;
+        var isSameFileAsActive = !string.IsNullOrWhiteSpace(currentFilePath) &&
+            string.Equals(currentFilePath, filePath, StringComparison.OrdinalIgnoreCase);
+
+        if (!isSameFileAsActive)
+        {
+            if (!await ConfirmLoseUnsavedChangesOrCancelAsync("open another file", "Open cancelled.").ConfigureAwait(true))
+            {
+                return;
+            }
+        }
+
         try
         {
             // Check if file is already open in a tab
@@ -1592,8 +1604,8 @@ public partial class MainWindowViewModel : ViewModelBase
             CurrentMotor = await _fileService.LoadAsync(filePath).ConfigureAwait(true);
             ActiveTab?.UndoStack.Clear();
             MarkCleanCheckpoint();
-            IsDirty = _fileService.IsDirty;
-            CurrentFilePath = _fileService.CurrentFilePath;
+            IsDirty = false;
+            CurrentFilePath = filePath;
 
             StatusMessage = $"Loaded: {Path.GetFileName(filePath)}";
             OnPropertyChanged(nameof(WindowTitle));
@@ -3311,7 +3323,14 @@ public partial class MainWindowViewModel : ViewModelBase
     [RelayCommand(CanExecute = nameof(CanSave))]
     private async Task SaveAsync()
     {
-        if (CurrentMotor is null) return;
+        if (ActiveTab?.Motor is null)
+        {
+            return;
+        }
+
+        var saveTab = ActiveTab;
+        var motorToSave = saveTab.Motor;
+        var tabFilePath = saveTab.FilePath;
 
         // Validate before saving
         ValidateMotor();
@@ -3323,26 +3342,39 @@ public partial class MainWindowViewModel : ViewModelBase
 
         try
         {
-            if (_fileService.CurrentFilePath is null)
+            if (tabFilePath is null)
             {
                 // No file path yet, use SaveAs
                 await SaveAsAsync();
                 return;
             }
 
-            await _fileService.SaveAsync(CurrentMotor);
-            IsDirty = false;
-            MarkCleanCheckpoint();
-            StatusMessage = "File saved successfully";
-            CurrentFilePath = _fileService.CurrentFilePath;
-
-            // Add to recent files to update position
-            if (!string.IsNullOrWhiteSpace(CurrentFilePath))
+            if (_fileService.CurrentFilePath is null ||
+                !string.Equals(_fileService.CurrentFilePath, tabFilePath, StringComparison.OrdinalIgnoreCase))
             {
-                _recentFilesService.AddRecentFile(CurrentFilePath);
+                await _fileService.SaveAsAsync(motorToSave, tabFilePath);
+            }
+            else
+            {
+                await _fileService.SaveAsync(motorToSave);
             }
 
-            OnPropertyChanged(nameof(WindowTitle));
+            saveTab.MarkClean();
+
+            if (ReferenceEquals(ActiveTab, saveTab))
+            {
+                OnPropertyChanged(nameof(IsDirty));
+                OnPropertyChanged(nameof(CurrentFilePath));
+                OnPropertyChanged(nameof(WindowTitle));
+            }
+
+            StatusMessage = "File saved successfully";
+
+            // Add to recent files to update position
+            if (!string.IsNullOrWhiteSpace(saveTab.FilePath))
+            {
+                _recentFilesService.AddRecentFile(saveTab.FilePath);
+            }
         }
         catch (Exception ex)
         {
@@ -3356,7 +3388,13 @@ public partial class MainWindowViewModel : ViewModelBase
     [RelayCommand(CanExecute = nameof(CanSave))]
     private async Task SaveAsAsync()
     {
-        if (CurrentMotor is null) return;
+        if (ActiveTab?.Motor is null)
+        {
+            return;
+        }
+
+        var saveTab = ActiveTab;
+        var motorToSave = saveTab.Motor;
 
         // Validate before saving
         ValidateMotor();
@@ -3375,8 +3413,8 @@ public partial class MainWindowViewModel : ViewModelBase
                 return;
             }
 
-            var suggestedFileName = !string.IsNullOrWhiteSpace(CurrentMotor.MotorName)
-                ? $"{CurrentMotor.MotorName}.json"
+            var suggestedFileName = !string.IsNullOrWhiteSpace(motorToSave.MotorName)
+                ? $"{motorToSave.MotorName}.json"
                 : "motor.json";
 
             var file = await storageProvider.SaveFilePickerAsync(new FilePickerSaveOptions
@@ -3394,14 +3432,20 @@ public partial class MainWindowViewModel : ViewModelBase
             }
 
             var filePath = file.Path.LocalPath;
-            await _fileService.SaveAsAsync(CurrentMotor, filePath);
-            IsDirty = false;
-            MarkCleanCheckpoint();
+            await _fileService.SaveAsAsync(motorToSave, filePath);
+            saveTab.FilePath = filePath;
+            saveTab.MarkClean();
+
+            if (ReferenceEquals(ActiveTab, saveTab))
+            {
+                OnPropertyChanged(nameof(IsDirty));
+                OnPropertyChanged(nameof(CurrentFilePath));
+                OnPropertyChanged(nameof(WindowTitle));
+            }
+
             StatusMessage = $"Saved to: {Path.GetFileName(filePath)}";
-            OnPropertyChanged(nameof(WindowTitle));
 
             _settingsStore.SaveString(DirectoryBrowserViewModel.LastOpenedMotorFileKey, filePath);
-            CurrentFilePath = _fileService.CurrentFilePath;
 
             // Add to recent files
             _recentFilesService.AddRecentFile(filePath);
