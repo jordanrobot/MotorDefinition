@@ -1292,87 +1292,84 @@ public class ChartViewModelTests
     // --- Sketch zoom tests ---
 
     [Fact]
-    public void SketchZoomLevel_DefaultsToOne()
+    public void ZoomLevel_DefaultsToOne()
     {
         var viewModel = new ChartViewModel();
 
-        Assert.Equal(1.0, viewModel.SketchZoomLevel);
+        Assert.Equal(1.0, viewModel.ZoomLevel);
     }
 
     [Fact]
-    public void ApplySketchZoom_WhenNotActive_DoesNothing()
-    {
-        var viewModel = new ChartViewModel();
-        viewModel.CurrentVoltage = CreateTestVoltage();
-
-        viewModel.ApplySketchZoom(100, 50, 1.0);
-
-        Assert.Equal(1.0, viewModel.SketchZoomLevel);
-    }
-
-    [Fact]
-    public void ApplySketchZoom_WhenActive_IncreasesZoomLevel()
+    public void ApplyZoom_WithoutSketchMode_StillZooms()
     {
         var viewModel = new ChartViewModel();
         viewModel.CurrentVoltage = CreateTestVoltage();
-        viewModel.SetSketchEditSeries("Peak");
 
-        viewModel.ApplySketchZoom(2500, 27, 1.0);
+        viewModel.ApplyZoom(100, 50, 1.0);
 
-        Assert.True(viewModel.SketchZoomLevel > 1.0);
+        Assert.True(viewModel.ZoomLevel > 1.0);
     }
 
     [Fact]
-    public void ApplySketchZoom_ZoomOutDoesNotGoBelowOne()
+    public void ApplyZoom_WhenActive_IncreasesZoomLevel()
     {
         var viewModel = new ChartViewModel();
         viewModel.CurrentVoltage = CreateTestVoltage();
         viewModel.SetSketchEditSeries("Peak");
 
-        viewModel.ApplySketchZoom(2500, 27, -1.0);
+        viewModel.ApplyZoom(2500, 27, 1.0);
 
-        Assert.Equal(1.0, viewModel.SketchZoomLevel);
+        Assert.True(viewModel.ZoomLevel > 1.0);
     }
 
     [Fact]
-    public void ResetSketchZoom_RestoresZoomLevelToOne()
+    public void ApplyZoom_ZoomOutDoesNotGoBelowOne()
+    {
+        var viewModel = new ChartViewModel();
+        viewModel.CurrentVoltage = CreateTestVoltage();
+
+        viewModel.ApplyZoom(2500, 27, -1.0);
+
+        Assert.Equal(1.0, viewModel.ZoomLevel);
+    }
+
+    [Fact]
+    public void ResetZoom_RestoresZoomLevelToOne()
+    {
+        var viewModel = new ChartViewModel();
+        viewModel.CurrentVoltage = CreateTestVoltage();
+        viewModel.ApplyZoom(2500, 27, 1.0);
+        Assert.True(viewModel.ZoomLevel > 1.0);
+
+        viewModel.ResetZoom();
+
+        Assert.Equal(1.0, viewModel.ZoomLevel);
+    }
+
+    [Fact]
+    public void ClearSketchEditSeries_PreservesZoom()
     {
         var viewModel = new ChartViewModel();
         viewModel.CurrentVoltage = CreateTestVoltage();
         viewModel.SetSketchEditSeries("Peak");
-        viewModel.ApplySketchZoom(2500, 27, 1.0);
-        Assert.True(viewModel.SketchZoomLevel > 1.0);
-
-        viewModel.ResetSketchZoom();
-
-        Assert.Equal(1.0, viewModel.SketchZoomLevel);
-    }
-
-    [Fact]
-    public void ClearSketchEditSeries_ResetsZoom()
-    {
-        var viewModel = new ChartViewModel();
-        viewModel.CurrentVoltage = CreateTestVoltage();
-        viewModel.SetSketchEditSeries("Peak");
-        viewModel.ApplySketchZoom(2500, 27, 1.0);
-        Assert.True(viewModel.SketchZoomLevel > 1.0);
+        viewModel.ApplyZoom(2500, 27, 1.0);
+        Assert.True(viewModel.ZoomLevel > 1.0);
 
         viewModel.ClearSketchEditSeries();
 
-        Assert.Equal(1.0, viewModel.SketchZoomLevel);
+        Assert.True(viewModel.ZoomLevel > 1.0);
     }
 
     [Fact]
-    public void ApplySketchZoom_NarrowsAxisLimits()
+    public void ApplyZoom_NarrowsAxisLimits()
     {
         var viewModel = new ChartViewModel();
         viewModel.CurrentVoltage = CreateTestVoltage();
-        viewModel.SetSketchEditSeries("Peak");
 
         var originalXMax = viewModel.XAxes[0].MaxLimit;
         var originalYMax = viewModel.YAxes[0].MaxLimit;
 
-        viewModel.ApplySketchZoom(2500, 27, 1.0);
+        viewModel.ApplyZoom(2500, 27, 1.0);
 
         // After zooming in, the visible range should be narrower.
         var newXRange = (viewModel.XAxes[0].MaxLimit ?? 0) - (viewModel.XAxes[0].MinLimit ?? 0);

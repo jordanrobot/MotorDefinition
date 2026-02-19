@@ -102,7 +102,7 @@ public partial class ChartViewModel : ViewModelBase
     private decimal _torqueSnapIncrement = 0.2m;
     private bool _showTooltips = true;
     private bool _tooltipStateBeforeSketch = true;
-    private double _sketchZoomLevel = 1.0;
+    private double _zoomLevel = 1.0;
     private double _baseXMin;
     private double _baseXMax;
     private double _baseYMin;
@@ -1831,15 +1831,14 @@ public partial class ChartViewModel : ViewModelBase
 
     /// <summary>
     /// Deactivates sketch-edit mode. Restores the tooltip visibility
-    /// to the state it had before sketch mode was activated, and resets
-    /// any zoom applied during the sketch session.
+    /// to the state it had before sketch mode was activated.
+    /// Zoom state is preserved across sketch-mode toggling.
     /// </summary>
     public void ClearSketchEditSeries()
     {
         if (IsSketchEditActive)
         {
             ShowTooltips = _tooltipStateBeforeSketch;
-            ResetSketchZoom();
         }
 
         SketchEditSeriesName = null;
@@ -1952,7 +1951,7 @@ public partial class ChartViewModel : ViewModelBase
     /// Current zoom magnification level for sketch-mode zoom.
     /// 1.0 means no zoom; values greater than 1.0 mean we are zoomed in.
     /// </summary>
-    public double SketchZoomLevel => _sketchZoomLevel;
+    public double ZoomLevel => _zoomLevel;
 
     /// <summary>
     /// The base (unzoomed) X-axis minimum limit, captured before the
@@ -1979,25 +1978,20 @@ public partial class ChartViewModel : ViewModelBase
     /// <summary>
     /// Applies a zoom step relative to the given data-space focus point.
     /// A positive <paramref name="delta"/> zooms in; negative zooms out.
-    /// Only effective when sketch-edit mode is active.
+    /// Works at any time when axes are present.
     /// </summary>
     /// <param name="focusX">Focus X in data space (RPM).</param>
     /// <param name="focusY">Focus Y in data space (Torque).</param>
     /// <param name="delta">Zoom delta; positive zooms in, negative zooms out.</param>
-    public void ApplySketchZoom(double focusX, double focusY, double delta)
+    public void ApplyZoom(double focusX, double focusY, double delta)
     {
-        if (!IsSketchEditActive)
-        {
-            return;
-        }
-
         if (XAxes.Length == 0 || YAxes.Length == 0)
         {
             return;
         }
 
         // Capture the base (unzoomed) axis limits on the first zoom action.
-        if (Math.Abs(_sketchZoomLevel - 1.0) < 0.001)
+        if (Math.Abs(_zoomLevel - 1.0) < 0.001)
         {
             CaptureBaseAxisLimits();
         }
@@ -2005,24 +1999,24 @@ public partial class ChartViewModel : ViewModelBase
         // Compute the new zoom level with a clamped range [1, 20].
         const double zoomFactor = 0.15;
         var multiplier = delta > 0 ? (1.0 - zoomFactor) : (1.0 + zoomFactor);
-        _sketchZoomLevel = Math.Clamp(_sketchZoomLevel / multiplier, 1.0, 20.0);
+        _zoomLevel = Math.Clamp(_zoomLevel / multiplier, 1.0, 20.0);
 
         ApplyZoomAroundPoint(focusX, focusY);
-        OnPropertyChanged(nameof(SketchZoomLevel));
+        OnPropertyChanged(nameof(ZoomLevel));
     }
 
     /// <summary>
-    /// Resets sketch-mode zoom to the full (unzoomed) view.
-    /// Called automatically when sketch-edit mode is deactivated.
+    /// Resets the chart zoom to the full (unzoomed) view.
+    /// Can be triggered by the user via <c>=</c> key or middle-double-click.
     /// </summary>
-    public void ResetSketchZoom()
+    public void ResetZoom()
     {
-        if (Math.Abs(_sketchZoomLevel - 1.0) < 0.001)
+        if (Math.Abs(_zoomLevel - 1.0) < 0.001)
         {
             return;
         }
 
-        _sketchZoomLevel = 1.0;
+        _zoomLevel = 1.0;
 
         if (XAxes.Length > 0)
         {
@@ -2036,7 +2030,7 @@ public partial class ChartViewModel : ViewModelBase
             YAxes[0].MaxLimit = _baseYMax;
         }
 
-        OnPropertyChanged(nameof(SketchZoomLevel));
+        OnPropertyChanged(nameof(ZoomLevel));
         OnPropertyChanged(nameof(XAxes));
         OnPropertyChanged(nameof(YAxes));
     }
@@ -2068,8 +2062,8 @@ public partial class ChartViewModel : ViewModelBase
         var fullWidth = _baseXMax - _baseXMin;
         var fullHeight = _baseYMax - _baseYMin;
 
-        var newWidth = fullWidth / _sketchZoomLevel;
-        var newHeight = fullHeight / _sketchZoomLevel;
+        var newWidth = fullWidth / _zoomLevel;
+        var newHeight = fullHeight / _zoomLevel;
 
         // Fraction of the full range where the focus point sits.
         var fx = fullWidth > 0 ? (focusX - _baseXMin) / fullWidth : 0.5;

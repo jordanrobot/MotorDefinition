@@ -95,10 +95,7 @@ public partial class ChartView : UserControl
     /// </summary>
     private void OnChartPointerEntered(object? sender, PointerEventArgs e)
     {
-        if (_chartViewModel?.IsSketchEditActive == true)
-        {
-            TorqueChart.Focus();
-        }
+        TorqueChart.Focus();
     }
 
     private void OnChartPointerPressed(object? sender, PointerPressedEventArgs e)
@@ -115,6 +112,16 @@ public partial class ChartView : UserControl
         }
 
         var pointerPoint = e.GetCurrentPoint(TorqueChart);
+
+        // Middle-button double-click resets zoom to unzoomed view.
+        if (pointerPoint.Properties.IsMiddleButtonPressed && e.ClickCount == 2)
+        {
+            vm.ResetZoom();
+            QueueUnderlayLayout();
+            e.Handled = true;
+            return;
+        }
+
         if (!pointerPoint.Properties.IsLeftButtonPressed)
         {
             return;
@@ -430,9 +437,20 @@ public partial class ChartView : UserControl
     /// <summary>
     /// Handles mouse wheel scrolling to zoom the chart during sketch-edit mode.
     /// </summary>
+    /// <summary>
+    /// Handles Ctrl+mouse wheel / Ctrl+touchpad scroll to zoom the chart.
+    /// Also handles Ctrl+touchpad pinch-to-zoom (reported as wheel events
+    /// with Ctrl modifier on most platforms).
+    /// </summary>
     private void OnChartPointerWheelChanged(object? sender, PointerWheelEventArgs e)
     {
-        if (_chartViewModel is null || !_chartViewModel.IsSketchEditActive)
+        if (_chartViewModel is null)
+        {
+            return;
+        }
+
+        // Only zoom when the Ctrl key is held.
+        if (!e.KeyModifiers.HasFlag(KeyModifiers.Control))
         {
             return;
         }
@@ -444,41 +462,54 @@ public partial class ChartView : UserControl
         }
 
         // Delta.Y is positive for scroll-up (zoom in) and negative for scroll-down (zoom out).
-        _chartViewModel.ApplySketchZoom(focusX, focusY, e.Delta.Y);
+        _chartViewModel.ApplyZoom(focusX, focusY, e.Delta.Y);
         QueueUnderlayLayout();
         e.Handled = true;
     }
 
     /// <summary>
-    /// Handles keyboard +/- keys to zoom the chart during sketch-edit mode.
+    /// Handles keyboard zoom: <c>+</c> to zoom in, <c>-</c> to zoom out,
+    /// <c>=</c> to reset zoom to the unzoomed view.
     /// </summary>
     private void OnChartKeyDown(object? sender, KeyEventArgs e)
     {
-        if (_chartViewModel is null || !_chartViewModel.IsSketchEditActive)
+        if (_chartViewModel is null)
         {
             return;
         }
 
-        double delta;
-        if (e.Key is Key.OemPlus or Key.Add)
+        // + key (Shift+= on most keyboards) or numpad + — zoom in.
+        if ((e.Key is Key.OemPlus && e.KeyModifiers.HasFlag(KeyModifiers.Shift))
+            || e.Key is Key.Add)
         {
-            delta = 1.0;
-        }
-        else if (e.Key is Key.OemMinus or Key.Subtract)
-        {
-            delta = -1.0;
-        }
-        else
-        {
+            _chartViewModel.ApplyZoom(
+                _lastPointerDataPosition.X,
+                _lastPointerDataPosition.Y,
+                1.0);
+            QueueUnderlayLayout();
+            e.Handled = true;
             return;
         }
 
-        _chartViewModel.ApplySketchZoom(
-            _lastPointerDataPosition.X,
-            _lastPointerDataPosition.Y,
-            delta);
-        QueueUnderlayLayout();
-        e.Handled = true;
+        // - key or numpad - — zoom out.
+        if (e.Key is Key.OemMinus or Key.Subtract)
+        {
+            _chartViewModel.ApplyZoom(
+                _lastPointerDataPosition.X,
+                _lastPointerDataPosition.Y,
+                -1.0);
+            QueueUnderlayLayout();
+            e.Handled = true;
+            return;
+        }
+
+        // = key (OemPlus without Shift) — reset zoom.
+        if (e.Key is Key.OemPlus && !e.KeyModifiers.HasFlag(KeyModifiers.Shift))
+        {
+            _chartViewModel.ResetZoom();
+            QueueUnderlayLayout();
+            e.Handled = true;
+        }
     }
 
     private void QueueUnderlayLayout()
@@ -544,7 +575,7 @@ public partial class ChartView : UserControl
         // aligned with the chart data. The draw-margin pixel area stays the
         // same but represents a narrower data range, so the image must grow
         // proportionally and shift so that the visible slice matches.
-        if (_chartViewModel.SketchZoomLevel > 1.001)
+        if (_chartViewModel.ZoomLevel > 1.001)
         {
             var xAxes = _chartViewModel.XAxes;
             var yAxes = _chartViewModel.YAxes;
