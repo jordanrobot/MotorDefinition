@@ -77,6 +77,22 @@
                                            MinWidth="100"/>
                         </Grid>
 
+                        <!-- Torque Snap Increment -->
+                        <Grid ColumnDefinitions="Auto,*" Margin="0,4">
+                            <TextBlock Grid.Column="0" 
+                                       Classes="Label"
+                                       Text="Sketch Torque Snap:"
+                                       ToolTip.Tip="The torque rounding increment used during sketch editing"/>
+                            <NumericUpDown Grid.Column="1"
+                                           Value="{Binding TorqueSnapIncrement}"
+                                           Minimum="0.01"
+                                           Maximum="10"
+                                           Increment="0.1"
+                                           FormatString="0.##"
+                                           HorizontalAlignment="Left"
+                                           MinWidth="100"/>
+                        </Grid>
+
                         <!-- Theme -->
                         <Grid ColumnDefinitions="Auto,*" Margin="0,8,0,0">
                             <TextBlock Grid.Column="0" 

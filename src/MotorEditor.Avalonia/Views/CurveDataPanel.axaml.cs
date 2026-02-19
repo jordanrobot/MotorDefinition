@@ -1074,6 +1074,13 @@ public partial class CurveDataPanel : UserControl
             return;
         }
 
+        // Locked curves cannot be sketch-edited.
+        if (series.Locked)
+        {
+            toggleButton.IsChecked = false;
+            return;
+        }
+
         var chart = viewModel.ChartViewModel;
 
         if (string.Equals(chart.SketchEditSeriesName, series.Name, StringComparison.Ordinal))

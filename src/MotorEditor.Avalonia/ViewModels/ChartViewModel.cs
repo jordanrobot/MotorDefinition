@@ -1811,6 +1811,12 @@ public partial class ChartViewModel : ViewModelBase
             return;
         }
 
+        // Locked curves cannot be sketch-edited.
+        if (curve.Locked)
+        {
+            return;
+        }
+
         // Save the current tooltip state so we can restore it later,
         // then hide tooltips while sketching.
         if (!IsSketchEditActive)

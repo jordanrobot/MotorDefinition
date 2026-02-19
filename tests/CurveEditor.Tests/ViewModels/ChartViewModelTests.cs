@@ -1379,4 +1379,32 @@ public class ChartViewModelTests
         var originalXRange = (originalXMax ?? 0) - 0;
         Assert.True(newXRange < originalXRange);
     }
+
+    [Fact]
+    public void SetSketchEditSeries_WithLockedCurve_DoesNotActivate()
+    {
+        var viewModel = new ChartViewModel();
+        var voltage = CreateTestVoltage();
+        var peak = voltage.Curves.First(c => c.Name == "Peak");
+        peak.Locked = true;
+        viewModel.CurrentVoltage = voltage;
+
+        viewModel.SetSketchEditSeries("Peak");
+
+        Assert.False(viewModel.IsSketchEditActive);
+        Assert.Null(viewModel.SketchEditSeriesName);
+    }
+
+    [Fact]
+    public void SetSketchEditSeries_WithUnlockedCurve_Activates()
+    {
+        var viewModel = new ChartViewModel();
+        var voltage = CreateTestVoltage();
+        viewModel.CurrentVoltage = voltage;
+
+        viewModel.SetSketchEditSeries("Peak");
+
+        Assert.True(viewModel.IsSketchEditActive);
+        Assert.Equal("Peak", viewModel.SketchEditSeriesName);
+    }
 }
