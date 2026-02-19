@@ -98,6 +98,8 @@ public partial class ChartViewModel : ViewModelBase
     private string? _underlayImagePath;
     private double _underlayAnchorX;
     private double _underlayAnchorY;
+    private string? _sketchEditSeriesName;
+    private decimal _torqueSnapIncrement = 0.2m;
 
     [ObservableProperty]
     private ObservableCollection<ISeries> _series = [];
@@ -1692,5 +1694,195 @@ public partial class ChartViewModel : ViewModelBase
         }
 
         return result;
+    }
+
+    /// <summary>
+    /// Gets the name of the curve series currently in sketch-edit mode,
+    /// or <c>null</c> if no series is being sketch-edited.
+    /// Only one series can be in sketch-edit mode at a time.
+    /// </summary>
+    public string? SketchEditSeriesName
+    {
+        get => _sketchEditSeriesName;
+        private set
+        {
+            if (string.Equals(_sketchEditSeriesName, value, StringComparison.Ordinal))
+            {
+                return;
+            }
+
+            _sketchEditSeriesName = value;
+            OnPropertyChanged();
+            OnPropertyChanged(nameof(IsSketchEditActive));
+        }
+    }
+
+    /// <summary>
+    /// Gets a value indicating whether sketch-edit mode is currently active
+    /// for any curve series.
+    /// </summary>
+    public bool IsSketchEditActive => !string.IsNullOrEmpty(_sketchEditSeriesName);
+
+    /// <summary>
+    /// Gets or sets the torque snap increment used during sketch editing.
+    /// The torque value is rounded to the nearest multiple of this value.
+    /// Must be greater than zero. Defaults to 0.2.
+    /// </summary>
+    public decimal TorqueSnapIncrement
+    {
+        get => _torqueSnapIncrement;
+        set
+        {
+            if (value <= 0)
+            {
+                return;
+            }
+
+            if (_torqueSnapIncrement == value)
+            {
+                return;
+            }
+
+            _torqueSnapIncrement = value;
+            OnPropertyChanged();
+        }
+    }
+
+    /// <summary>
+    /// Activates sketch-edit mode for the specified curve series.
+    /// Any previously active sketch-edit series is deactivated first.
+    /// </summary>
+    /// <param name="seriesName">The name of the curve series to edit.
+    /// Must match a series in the current voltage configuration.</param>
+    public void SetSketchEditSeries(string seriesName)
+    {
+        if (string.IsNullOrWhiteSpace(seriesName))
+        {
+            return;
+        }
+
+        if (_currentVoltage is null)
+        {
+            return;
+        }
+
+        var curve = _currentVoltage.Curves.FirstOrDefault(c => c.Name == seriesName);
+        if (curve is null)
+        {
+            return;
+        }
+
+        SketchEditSeriesName = seriesName;
+    }
+
+    /// <summary>
+    /// Deactivates sketch-edit mode.
+    /// </summary>
+    public void ClearSketchEditSeries()
+    {
+        SketchEditSeriesName = null;
+    }
+
+    /// <summary>
+    /// Applies a sketch point to the active sketch-edit curve series.
+    /// The <paramref name="chartX"/> value is snapped to the nearest
+    /// speed (RPM) data point in the series, and <paramref name="chartY"/>
+    /// is rounded to the nearest <see cref="TorqueSnapIncrement"/>.
+    /// </summary>
+    /// <param name="chartX">The X coordinate in chart data space (RPM).</param>
+    /// <param name="chartY">The Y coordinate in chart data space (torque).</param>
+    /// <returns><c>true</c> if a data point was modified; otherwise <c>false</c>.</returns>
+    public bool ApplySketchPoint(double chartX, double chartY)
+    {
+        if (!IsSketchEditActive || _currentVoltage is null)
+        {
+            return false;
+        }
+
+        var curve = _currentVoltage.Curves.FirstOrDefault(c => c.Name == _sketchEditSeriesName);
+        if (curve is null || curve.Data.Count == 0)
+        {
+            return false;
+        }
+
+        // Snap X to the nearest speed data point.
+        var nearestIndex = FindNearestSpeedIndex(curve, chartX);
+        if (nearestIndex < 0)
+        {
+            return false;
+        }
+
+        // Snap Y to the nearest torque increment.
+        var snappedTorque = SnapTorque((decimal)chartY, _torqueSnapIncrement);
+
+        var point = curve.Data[nearestIndex];
+
+        // No change needed if the torque is already at the snapped value.
+        if (point.Torque == snappedTorque)
+        {
+            return false;
+        }
+
+        if (_undoStack is not null)
+        {
+            var command = new EditPointCommand(curve, nearestIndex, point.Rpm, snappedTorque);
+            _undoStack.PushAndExecute(command);
+        }
+        else
+        {
+            point.Torque = snappedTorque;
+        }
+
+        // Update the cached observable point so the chart line updates
+        // without a full rebuild.
+        if (_seriesDataCache.TryGetValue(curve.Name, out var cachedPoints)
+            && nearestIndex < cachedPoints.Count)
+        {
+            cachedPoints[nearestIndex].Y = (double)snappedTorque;
+        }
+
+        DataChanged?.Invoke(this, EventArgs.Empty);
+        return true;
+    }
+
+    /// <summary>
+    /// Finds the index of the data point in <paramref name="curve"/>
+    /// whose RPM is closest to <paramref name="rpm"/>.
+    /// </summary>
+    internal static int FindNearestSpeedIndex(Curve curve, double rpm)
+    {
+        if (curve.Data.Count == 0)
+        {
+            return -1;
+        }
+
+        var bestIndex = 0;
+        var bestDist = Math.Abs((double)curve.Data[0].Rpm - rpm);
+
+        for (var i = 1; i < curve.Data.Count; i++)
+        {
+            var dist = Math.Abs((double)curve.Data[i].Rpm - rpm);
+            if (dist < bestDist)
+            {
+                bestDist = dist;
+                bestIndex = i;
+            }
+        }
+
+        return bestIndex;
+    }
+
+    /// <summary>
+    /// Rounds <paramref name="torque"/> to the nearest multiple of
+    /// <paramref name="increment"/>.
+    /// </summary>
+    internal static decimal SnapTorque(decimal torque, decimal increment)
+    {
+        if (increment <= 0)
+        {
+            return torque;
+        }
+
+        return Math.Round(torque / increment, MidpointRounding.AwayFromZero) * increment;
     }
 }

@@ -23,6 +23,7 @@ public partial class ChartView : UserControl
 {
     private ChartViewModel? _chartViewModel;
     private bool _isUnderlayDragging;
+    private bool _isSketchDragging;
     private Point _dragStart;
     private double _startOffsetX;
     private double _startOffsetY;
@@ -86,6 +87,20 @@ public partial class ChartView : UserControl
             return;
         }
 
+        // When sketch-edit mode is active, apply the sketch point
+        // and begin tracking the drag.
+        if (vm.IsSketchEditActive)
+        {
+            if (TryApplySketchAtPixel(vm, e.GetPosition(TorqueChart)))
+            {
+                _isSketchDragging = true;
+                e.Pointer.Capture(TorqueChart);
+                e.Handled = true;
+            }
+
+            return;
+        }
+
         // Use the underlying chart to find the nearest point under the
         // cursor within a reasonable radius.
         var chart = TorqueChart.CoreChart;
@@ -143,7 +158,20 @@ public partial class ChartView : UserControl
 
     private void OnChartPointerMoved(object? sender, PointerEventArgs e)
     {
-        if (!_isUnderlayDragging || _chartViewModel is null)
+        if (_chartViewModel is null)
+        {
+            return;
+        }
+
+        // Continue sketch-edit drag: apply sketch point as the mouse moves.
+        if (_isSketchDragging && _chartViewModel.IsSketchEditActive)
+        {
+            TryApplySketchAtPixel(_chartViewModel, e.GetPosition(TorqueChart));
+            e.Handled = true;
+            return;
+        }
+
+        if (!_isUnderlayDragging)
         {
             return;
         }
@@ -175,6 +203,14 @@ public partial class ChartView : UserControl
 
     private void OnChartPointerReleased(object? sender, PointerEventArgs e)
     {
+        if (_isSketchDragging)
+        {
+            _isSketchDragging = false;
+            e.Pointer.Capture(null);
+            e.Handled = true;
+            return;
+        }
+
         if (!_isUnderlayDragging)
         {
             return;
@@ -188,6 +224,7 @@ public partial class ChartView : UserControl
     private void OnChartPointerCaptureLost(object? sender, PointerCaptureLostEventArgs e)
     {
         _isUnderlayDragging = false;
+        _isSketchDragging = false;
     }
 
     private void OnChartViewModelPropertyChanged(object? sender, PropertyChangedEventArgs e)
@@ -243,6 +280,62 @@ public partial class ChartView : UserControl
         _startOffsetY = _chartViewModel.UnderlayOffsetY;
         e.Pointer.Capture(TorqueChart);
         return true;
+    }
+
+    /// <summary>
+    /// Converts a pixel position on the chart to data-space coordinates
+    /// and forwards it to the view model's sketch-edit logic.
+    /// </summary>
+    private bool TryApplySketchAtPixel(ChartViewModel vm, Point pixelPosition)
+    {
+        var chart = TorqueChart.CoreChart;
+        if (chart is null)
+        {
+            return false;
+        }
+
+        var drawLocation = chart.DrawMarginLocation;
+        var drawSize = chart.DrawMarginSize;
+        if (drawSize.Width <= 0 || drawSize.Height <= 0)
+        {
+            return false;
+        }
+
+        // Only apply when the pointer is within the draw margin area.
+        if (pixelPosition.X < drawLocation.X ||
+            pixelPosition.X > drawLocation.X + drawSize.Width ||
+            pixelPosition.Y < drawLocation.Y ||
+            pixelPosition.Y > drawLocation.Y + drawSize.Height)
+        {
+            return false;
+        }
+
+        // Use the primary X and Y axes to convert pixel to data coordinates.
+        var xAxes = vm.XAxes;
+        var yAxes = vm.YAxes;
+        if (xAxes.Length == 0 || yAxes.Length == 0)
+        {
+            return false;
+        }
+
+        var xAxis = xAxes[0];
+        var yAxis = yAxes[0];
+
+        var xMin = xAxis.MinLimit ?? 0;
+        var xMax = xAxis.MaxLimit ?? 1;
+        var yMin = yAxis.MinLimit ?? 0;
+        var yMax = yAxis.MaxLimit ?? 1;
+
+        if (xMax - xMin <= 0 || yMax - yMin <= 0)
+        {
+            return false;
+        }
+
+        // Linear interpolation from pixel space to data space.
+        var chartX = xMin + (pixelPosition.X - drawLocation.X) / drawSize.Width * (xMax - xMin);
+        var chartY = yMax - (pixelPosition.Y - drawLocation.Y) / drawSize.Height * (yMax - yMin);
+
+        return vm.ApplySketchPoint(chartX, chartY);
     }
 
     private void QueueUnderlayLayout()
