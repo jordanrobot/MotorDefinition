@@ -47,10 +47,17 @@ public partial class ChartView : UserControl
         TorqueChart.PointerMoved += OnChartPointerMoved;
         TorqueChart.PointerReleased += OnChartPointerReleased;
         TorqueChart.PointerCaptureLost += OnChartPointerCaptureLost;
-        TorqueChart.PointerWheelChanged += OnChartPointerWheelChanged;
         TorqueChart.SizeChanged += (_, _) => QueueUnderlayLayout();
         TorqueChart.LayoutUpdated += (_, _) => QueueUnderlayLayout();
         TorqueChart.UpdateFinished += _ => QueueUnderlayLayout();
+
+        // Use tunneling (handledEventsToo: true) for wheel events so we
+        // intercept them before LiveCharts processes them internally.
+        TorqueChart.AddHandler(
+            PointerWheelChangedEvent,
+            OnChartPointerWheelChanged,
+            Avalonia.Interactivity.RoutingStrategies.Tunnel,
+            handledEventsToo: true);
 
         // Handle mouse clicks on the chart to support basic point
         // selection. This wiring keeps the interaction logic in the
@@ -58,9 +65,11 @@ public partial class ChartView : UserControl
         // via the ChartViewModel.
         TorqueChart.PointerPressed += OnChartPointerPressed;
 
-        // Enable keyboard focus so +/- zoom keys can be received.
-        Focusable = true;
-        KeyDown += OnChartKeyDown;
+        // Wire keyboard zoom to the chart control itself and ensure
+        // it can receive focus when the pointer enters the chart area.
+        TorqueChart.Focusable = true;
+        TorqueChart.KeyDown += OnChartKeyDown;
+        TorqueChart.PointerEntered += OnChartPointerEntered;
     }
 
     protected override void OnDataContextChanged(EventArgs e)
@@ -78,6 +87,18 @@ public partial class ChartView : UserControl
 
         base.OnDataContextChanged(e);
         QueueUnderlayLayout();
+    }
+
+    /// <summary>
+    /// Gives the chart control keyboard focus when the pointer enters,
+    /// so that +/- zoom keys work without requiring a click first.
+    /// </summary>
+    private void OnChartPointerEntered(object? sender, PointerEventArgs e)
+    {
+        if (_chartViewModel?.IsSketchEditActive == true)
+        {
+            TorqueChart.Focus();
+        }
     }
 
     private void OnChartPointerPressed(object? sender, PointerPressedEventArgs e)
@@ -506,11 +527,78 @@ public partial class ChartView : UserControl
             return;
         }
 
-        var imageWidth = drawSize.Width * _chartViewModel.UnderlayXScale;
-        var imageHeight = drawSize.Height * _chartViewModel.UnderlayYScale;
+        // Base image size and position in the unzoomed coordinate system.
+        var baseImageWidth = drawSize.Width * _chartViewModel.UnderlayXScale;
+        var baseImageHeight = drawSize.Height * _chartViewModel.UnderlayYScale;
 
-        var x = drawLocation.X + (_chartViewModel.UnderlayOffsetX * drawSize.Width);
-        var y = drawLocation.Y + drawSize.Height - imageHeight - (_chartViewModel.UnderlayOffsetY * drawSize.Height);
+        var baseX = drawLocation.X + (_chartViewModel.UnderlayOffsetX * drawSize.Width);
+        var baseY = drawLocation.Y + drawSize.Height - baseImageHeight
+                    - (_chartViewModel.UnderlayOffsetY * drawSize.Height);
+
+        double imageWidth;
+        double imageHeight;
+        double x;
+        double y;
+
+        // When sketch-zoom is active, scale the underlay image to keep it
+        // aligned with the chart data. The draw-margin pixel area stays the
+        // same but represents a narrower data range, so the image must grow
+        // proportionally and shift so that the visible slice matches.
+        if (_chartViewModel.SketchZoomLevel > 1.001)
+        {
+            var xAxes = _chartViewModel.XAxes;
+            var yAxes = _chartViewModel.YAxes;
+            if (xAxes.Length > 0 && yAxes.Length > 0)
+            {
+                var baseXRange = _chartViewModel.BaseXMax - _chartViewModel.BaseXMin;
+                var baseYRange = _chartViewModel.BaseYMax - _chartViewModel.BaseYMin;
+                var curXMin = xAxes[0].MinLimit ?? _chartViewModel.BaseXMin;
+                var curXMax = xAxes[0].MaxLimit ?? _chartViewModel.BaseXMax;
+                var curYMin = yAxes[0].MinLimit ?? _chartViewModel.BaseYMin;
+                var curYMax = yAxes[0].MaxLimit ?? _chartViewModel.BaseYMax;
+                var curXRange = curXMax - curXMin;
+                var curYRange = curYMax - curYMin;
+
+                if (curXRange > 0 && curYRange > 0 && baseXRange > 0 && baseYRange > 0)
+                {
+                    var xZoom = baseXRange / curXRange;
+                    var yZoom = baseYRange / curYRange;
+
+                    imageWidth = baseImageWidth * xZoom;
+                    imageHeight = baseImageHeight * yZoom;
+
+                    // Shift so the image data alignment is preserved.
+                    // The base image left edge corresponds to a data-space X
+                    // offset. We need to map that into the zoomed pixel space.
+                    x = drawLocation.X + (baseX - drawLocation.X) * xZoom
+                        - (curXMin - _chartViewModel.BaseXMin) / baseXRange * drawSize.Width * xZoom;
+                    // Y axis is inverted (top of draw area = max data value).
+                    y = drawLocation.Y + (baseY - drawLocation.Y) * yZoom
+                        - (_chartViewModel.BaseYMax - curYMax) / baseYRange * drawSize.Height * yZoom;
+                }
+                else
+                {
+                    imageWidth = baseImageWidth;
+                    imageHeight = baseImageHeight;
+                    x = baseX;
+                    y = baseY;
+                }
+            }
+            else
+            {
+                imageWidth = baseImageWidth;
+                imageHeight = baseImageHeight;
+                x = baseX;
+                y = baseY;
+            }
+        }
+        else
+        {
+            imageWidth = baseImageWidth;
+            imageHeight = baseImageHeight;
+            x = baseX;
+            y = baseY;
+        }
 
         Canvas.SetLeft(UnderlayImage, x);
         Canvas.SetTop(UnderlayImage, y);

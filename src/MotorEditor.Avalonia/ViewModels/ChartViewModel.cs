@@ -1817,6 +1817,7 @@ public partial class ChartViewModel : ViewModelBase
         {
             _tooltipStateBeforeSketch = _showTooltips;
             ShowTooltips = false;
+            CaptureBaseAxisLimits();
         }
 
         SketchEditSeriesName = seriesName;
@@ -1946,6 +1947,28 @@ public partial class ChartViewModel : ViewModelBase
     /// 1.0 means no zoom; values greater than 1.0 mean we are zoomed in.
     /// </summary>
     public double SketchZoomLevel => _sketchZoomLevel;
+
+    /// <summary>
+    /// The base (unzoomed) X-axis minimum limit, captured before the
+    /// first zoom action. Used by the view to position the underlay
+    /// image correctly during zoom.
+    /// </summary>
+    public double BaseXMin => _baseXMin;
+
+    /// <summary>
+    /// The base (unzoomed) X-axis maximum limit.
+    /// </summary>
+    public double BaseXMax => _baseXMax;
+
+    /// <summary>
+    /// The base (unzoomed) Y-axis minimum limit.
+    /// </summary>
+    public double BaseYMin => _baseYMin;
+
+    /// <summary>
+    /// The base (unzoomed) Y-axis maximum limit.
+    /// </summary>
+    public double BaseYMax => _baseYMax;
 
     /// <summary>
     /// Applies a zoom step relative to the given data-space focus point.
