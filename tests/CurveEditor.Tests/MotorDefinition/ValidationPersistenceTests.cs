@@ -167,8 +167,8 @@ public class ValidationPersistenceTests : IDisposable
             RatedSpeed = 3000,
             RatedContinuousTorque = 45,
             RatedPeakTorque = 55,
-            Weight = 8.5,
-            RotorInertia = 0.0025,
+            Weight = 8.5m,
+            RotorInertia = 0.0025m,
             FeedbackPpr = 131072
         };
 
@@ -185,7 +185,7 @@ public class ValidationPersistenceTests : IDisposable
             RatedSpeed = 2900,
             RatedContinuousTorque = 42,
             RatedPeakTorque = 52,
-            ContinuousAmperage = 9.5,
+            ContinuousAmperage = 9.5m,
             PeakAmperage = 22
         };
 

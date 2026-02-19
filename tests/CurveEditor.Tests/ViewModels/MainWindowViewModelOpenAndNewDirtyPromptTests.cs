@@ -78,6 +78,6 @@ public sealed class MainWindowViewModelOpenAndNewDirtyPromptTests
         Assert.Same(existing, vm.CurrentMotor);
         Assert.True(vm.IsDirty);
         Assert.Equal("New file cancelled.", vm.StatusMessage);
-        fileServiceMock.Verify(f => f.CreateNew(It.IsAny<string>(), It.IsAny<int>(), It.IsAny<double>(), It.IsAny<double>()), Times.Never);
+        fileServiceMock.Verify(f => f.CreateNew(It.IsAny<string>(), It.IsAny<decimal>(), It.IsAny<decimal>(), It.IsAny<decimal>()), Times.Never);
     }
 }

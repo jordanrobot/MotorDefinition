@@ -10,6 +10,7 @@ using CurveEditor.ViewModels;
 using JordanRobot.MotorDefinition.Model;
 using Serilog;
 using System;
+using System.Collections.Specialized;
 using System.Collections.Generic;
 using System.Linq;
 
@@ -21,6 +22,8 @@ namespace CurveEditor.Views;
 public partial class CurveDataPanel : UserControl
 {
     private MainWindowViewModel? _subscribedViewModel;
+    private CurveDataTableViewModel? _subscribedCurveDataTableViewModel;
+    private INotifyCollectionChanged? _subscribedAvailableSeries;
     private bool _isRebuildingColumns;
     private bool _isDragging;
     private CellPosition? _dragStartCell;
@@ -31,9 +34,9 @@ public partial class CurveDataPanel : UserControl
     // the typed value replaces the existing values of all selected cells
     private bool _isInOverrideMode;
     private string _overrideText = string.Empty;
-    private readonly Dictionary<CellPosition, double> _originalValues = [];
+    private readonly Dictionary<CellPosition, decimal> _originalValues = [];
     private CellPosition? _editCell;
-    private double? _editOriginalTorque;
+    private decimal? _editOriginalTorque;
 
     /// <summary>
     /// Captures the original torque values for the provided cells so they can be restored later.
@@ -53,7 +56,7 @@ public partial class CurveDataPanel : UserControl
             {
                 if (cellPos.RowIndex >= 0 && cellPos.RowIndex < vm.CurveDataTableViewModel.Rows.Count)
                 {
-                    var originalValue = (double)vm.CurveDataTableViewModel.Rows[cellPos.RowIndex].Percent;
+                    var originalValue = (decimal)vm.CurveDataTableViewModel.Rows[cellPos.RowIndex].Percent;
                     _originalValues[cellPos] = originalValue;
                 }
                 continue;
@@ -64,7 +67,7 @@ public partial class CurveDataPanel : UserControl
             {
                 if (cellPos.RowIndex >= 0 && cellPos.RowIndex < vm.CurveDataTableViewModel.Rows.Count)
                 {
-                    var originalValue = (double)vm.CurveDataTableViewModel.Rows[cellPos.RowIndex].DisplayRpm;
+                    var originalValue = (decimal)vm.CurveDataTableViewModel.Rows[cellPos.RowIndex].DisplayRpm;
                     _originalValues[cellPos] = originalValue;
                 }
                 continue;
@@ -114,11 +117,10 @@ public partial class CurveDataPanel : UserControl
     private void OnUnloaded(object? sender, RoutedEventArgs e)
     {
         // Unsubscribe from events to prevent memory leaks
+        UnsubscribeFromViewModelSubscriptions();
         if (_subscribedViewModel is not null)
         {
-            _subscribedViewModel.CurveDataTableViewModel.PropertyChanged -= OnCurveDataTablePropertyChanged;
-            _subscribedViewModel.CurveDataTableViewModel.SelectionChanged -= OnSelectionChanged;
-            _subscribedViewModel.AvailableSeries.CollectionChanged -= OnAvailableSeriesCollectionChanged;
+            _subscribedViewModel.PropertyChanged -= OnMainWindowViewModelPropertyChanged;
             _subscribedViewModel = null;
         }
 
@@ -137,28 +139,72 @@ public partial class CurveDataPanel : UserControl
 
     private void OnDataContextChanged(object? sender, EventArgs e)
     {
-        // Unsubscribe from old view model
         if (_subscribedViewModel is not null)
         {
-            _subscribedViewModel.CurveDataTableViewModel.PropertyChanged -= OnCurveDataTablePropertyChanged;
-            _subscribedViewModel.CurveDataTableViewModel.SelectionChanged -= OnSelectionChanged;
-            _subscribedViewModel.AvailableSeries.CollectionChanged -= OnAvailableSeriesCollectionChanged;
+            _subscribedViewModel.PropertyChanged -= OnMainWindowViewModelPropertyChanged;
+            UnsubscribeFromViewModelSubscriptions();
         }
 
         if (DataContext is MainWindowViewModel vm)
         {
-            // Subscribe to series changes to rebuild columns
-            vm.CurveDataTableViewModel.PropertyChanged += OnCurveDataTablePropertyChanged;
-            vm.CurveDataTableViewModel.SelectionChanged += OnSelectionChanged;
-            // Subscribe to the AvailableSeries collection changes
-            vm.AvailableSeries.CollectionChanged += OnAvailableSeriesCollectionChanged;
             _subscribedViewModel = vm;
+            vm.PropertyChanged += OnMainWindowViewModelPropertyChanged;
+            SubscribeToViewModelSubscriptions(vm);
             RebuildDataGridColumns();
         }
         else
         {
             _subscribedViewModel = null;
         }
+    }
+
+    private void OnMainWindowViewModelPropertyChanged(object? sender, System.ComponentModel.PropertyChangedEventArgs e)
+    {
+        if (_subscribedViewModel is null)
+        {
+            return;
+        }
+
+        if (e.PropertyName is nameof(MainWindowViewModel.ActiveTab)
+            or nameof(MainWindowViewModel.CurveDataTableViewModel)
+            or nameof(MainWindowViewModel.SelectedVoltage))
+        {
+            SubscribeToViewModelSubscriptions(_subscribedViewModel);
+            RebuildDataGridColumns();
+            UpdateCellSelectionVisuals();
+        }
+    }
+
+    private void UnsubscribeFromViewModelSubscriptions()
+    {
+        if (_subscribedCurveDataTableViewModel is not null)
+        {
+            _subscribedCurveDataTableViewModel.PropertyChanged -= OnCurveDataTablePropertyChanged;
+            _subscribedCurveDataTableViewModel.SelectionChanged -= OnSelectionChanged;
+            _subscribedCurveDataTableViewModel = null;
+        }
+
+        if (_subscribedAvailableSeries is not null)
+        {
+            _subscribedAvailableSeries.CollectionChanged -= OnAvailableSeriesCollectionChanged;
+            _subscribedAvailableSeries = null;
+        }
+    }
+
+    private void SubscribeToViewModelSubscriptions(MainWindowViewModel vm)
+    {
+        UnsubscribeFromViewModelSubscriptions();
+
+        var curveDataTableViewModel = vm.CurveDataTableViewModel;
+        if (curveDataTableViewModel is not null)
+        {
+            curveDataTableViewModel.PropertyChanged += OnCurveDataTablePropertyChanged;
+            curveDataTableViewModel.SelectionChanged += OnSelectionChanged;
+            _subscribedCurveDataTableViewModel = curveDataTableViewModel;
+        }
+
+        _subscribedAvailableSeries = vm.AvailableSeries;
+        _subscribedAvailableSeries.CollectionChanged += OnAvailableSeriesCollectionChanged;
     }
 
     private void OnSelectionChanged(object? sender, EventArgs e)
@@ -202,7 +248,7 @@ public partial class CurveDataPanel : UserControl
         if (DataContext is not MainWindowViewModel vm) return;
 
         var selectedCells = vm.CurveDataTableViewModel.SelectedCells;
-        Log.Debug("[BORDER] UpdateCellSelectionVisuals: {Count} cells selected, {BorderCount} borders tracked", 
+        Log.Debug("[BORDER] UpdateCellSelectionVisuals: {Count} cells selected, {BorderCount} borders tracked",
             selectedCells.Count, _cellBorders.Count);
 
         var bordersToRemove = new List<CellPosition>();
@@ -240,7 +286,7 @@ public partial class CurveDataPanel : UserControl
             }
             else
             {
-                Log.Debug("[BORDER] WARNING: No border found for selected cell at Row={Row}, Col={Col}", 
+                Log.Debug("[BORDER] WARNING: No border found for selected cell at Row={Row}, Col={Col}",
                     cellPos.RowIndex, cellPos.ColumnIndex);
             }
         }
@@ -493,7 +539,7 @@ public partial class CurveDataPanel : UserControl
                             return;
                         }
 
-                        if (!double.TryParse(tb.Text, out var newValue) || newValue < 0)
+                        if (!decimal.TryParse(tb.Text, out var newValue) || newValue < 0)
                         {
                             return;
                         }
@@ -607,7 +653,7 @@ public partial class CurveDataPanel : UserControl
                                 return;
                             }
 
-                            if (!double.TryParse(tb.Text, out var newValue))
+                            if (!decimal.TryParse(tb.Text, out var newValue))
                             {
                                 return;
                             }
@@ -636,8 +682,18 @@ public partial class CurveDataPanel : UserControl
                 columnIndex++;
             }
 
-            // Restore ItemsSource after columns are rebuilt
-            DataTable.ItemsSource = savedItemsSource;
+            // Restore source after columns are rebuilt.
+            // - If a concrete source exists, restore it directly.
+            // - If source is null (common when binding has not materialized yet), clear the local
+            //   value so the XAML binding can re-evaluate and repopulate rows.
+            if (savedItemsSource is not null)
+            {
+                DataTable.ItemsSource = savedItemsSource;
+            }
+            else
+            {
+                DataTable.ClearValue(ItemsControl.ItemsSourceProperty);
+            }
         }
         finally
         {
@@ -1492,13 +1548,13 @@ public partial class CurveDataPanel : UserControl
 
         var firstSelected = selectedCells.First();
         Log.Debug("[NAV] ScrollToSelection: Row={Row}, Col={Col}", firstSelected.RowIndex, firstSelected.ColumnIndex);
-        
+
         if (firstSelected.RowIndex >= 0 && firstSelected.RowIndex < vm.CurveDataTableViewModel.Rows.Count)
         {
             var row = vm.CurveDataTableViewModel.Rows[firstSelected.RowIndex];
             // Ensure the DataGrid has a current row before updating CurrentColumn to avoid InvalidOperationException.
             dataGrid.SelectedItem = row;
-            
+
             // Update DataGrid's CurrentColumn to keep navigation in sync
             // but don't pass it to ScrollIntoView to avoid DataGrid's native selection
             if (firstSelected.ColumnIndex >= 0 &&
@@ -1515,7 +1571,7 @@ public partial class CurveDataPanel : UserControl
                     Log.Warning(ex, "[NAV] Failed to update CurrentColumn for Row={Row} Col={Col}", firstSelected.RowIndex, firstSelected.ColumnIndex);
                 }
             }
-            
+
             // Pass null for column to avoid DataGrid showing its own selection border
             dataGrid.ScrollIntoView(row, null);
         }
@@ -1830,17 +1886,17 @@ public partial class CurveDataPanel : UserControl
         if (DataContext is not MainWindowViewModel vm) return;
 
         // Try to parse the accumulated text as a number
-        if (double.TryParse(_overrideText, out var value))
+        if (decimal.TryParse(_overrideText, out var value))
         {
             // Separate % and RPM cells from torque cells
             var percentCells = new List<CellPosition>();
             var rpmCells = new List<CellPosition>();
-            var torqueCells = new Dictionary<CellPosition, double>();
+            var torqueCells = new Dictionary<CellPosition, decimal>();
 
             foreach (var kvp in _originalValues)
             {
                 var cell = kvp.Key;
-                
+
                 if (cell.ColumnIndex == 0)
                 {
                     percentCells.Add(cell);
@@ -1948,7 +2004,7 @@ public partial class CurveDataPanel : UserControl
         // the formatted numeric value. Otherwise, leave the model unchanged
         // but show the raw typed text so the user sees exactly what they
         // entered; validation and revert happen when Override Mode exits.
-        if (double.TryParse(_overrideText, out var value))
+        if (decimal.TryParse(_overrideText, out var value))
         {
             foreach (var cellPos in selectedCells)
             {
@@ -2056,7 +2112,7 @@ public partial class CurveDataPanel : UserControl
             {
                 if (cellPos.RowIndex >= 0 && cellPos.RowIndex < vm.CurveDataTableViewModel.Rows.Count)
                 {
-                    vm.CurveDataTableViewModel.UpdateRpm(cellPos.RowIndex, originalValue);
+                    vm.CurveDataTableViewModel.UpdateRpm(cellPos.RowIndex, (decimal)originalValue);
                 }
 
                 if (_cellBorders.TryGetValue(cellPos, out var border) && border.Child is TextBlock textBlock)
@@ -2086,7 +2142,7 @@ public partial class CurveDataPanel : UserControl
     /// <summary>
     /// Applies a value to all selected cells.
     /// </summary>
-    private void ApplyValueToSelectedCells(double value)
+    private void ApplyValueToSelectedCells(decimal value)
     {
         if (DataContext is not MainWindowViewModel vm) return;
 
@@ -2174,10 +2230,10 @@ public partial class CurveDataPanel : UserControl
 
         // Update the DataGrid columns to reflect the new lock state
         RebuildDataGridColumns();
-        
+
         viewModel.MarkDirty();
-        viewModel.StatusMessage = newLockedState 
-            ? "Locked % column for all series" 
+        viewModel.StatusMessage = newLockedState
+            ? "Locked % column for all series"
             : "Unlocked % column for all series";
     }
 
@@ -2204,10 +2260,10 @@ public partial class CurveDataPanel : UserControl
 
         // Update the DataGrid columns to reflect the new lock state
         RebuildDataGridColumns();
-        
+
         viewModel.MarkDirty();
-        viewModel.StatusMessage = newLockedState 
-            ? "Locked RPM column for all series" 
+        viewModel.StatusMessage = newLockedState
+            ? "Locked RPM column for all series"
             : "Unlocked RPM column for all series";
     }
 }

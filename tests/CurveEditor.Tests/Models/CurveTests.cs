@@ -193,9 +193,9 @@ public class CurveTests
 
         series.InitializeData(5000, 50);
 
-        Assert.Equal(0, series.Data[0].Rpm);
-        Assert.Equal(2500, series.Data[50].Rpm);
-        Assert.Equal(5000, series.Data[100].Rpm);
+        Assert.Equal(0m, series.Data[0].Rpm);
+        Assert.Equal(2500m, series.Data[50].Rpm);
+        Assert.Equal(5000m, series.Data[100].Rpm);
     }
 
     [Fact]
@@ -203,11 +203,11 @@ public class CurveTests
     {
         var series = new Curve("Continuous");
 
-        series.InitializeData(3000, 45.5);
+        series.InitializeData(3000, 45.5m);
 
         foreach (var point in series.Data)
         {
-            Assert.Equal(45.5, point.Torque);
+            Assert.Equal(45.5m, point.Torque);
         }
     }
 
@@ -219,7 +219,7 @@ public class CurveTests
         series.InitializeData(0, 50);
 
         Assert.Equal(101, series.Data.Count);
-        Assert.All(series.Data, p => Assert.Equal(0, p.Rpm));
+        Assert.All(series.Data, p => Assert.Equal(0m, p.Rpm));
     }
 
     [Fact]
@@ -234,13 +234,13 @@ public class CurveTests
     public void InitializeData_ClearsExistingData()
     {
         var series = new Curve("Peak");
-        series.Data.Add(new DataPoint(0, 0, 100));
-        series.Data.Add(new DataPoint(1, 50, 100));
+        series.Data.Add(new DataPoint(0, 0, 100m));
+        series.Data.Add(new DataPoint(1, 50m, 100m));
 
         series.InitializeData(5000, 50);
 
         Assert.Equal(101, series.Data.Count);
-        Assert.Equal(50, series.Data[0].Torque);
+        Assert.Equal(50m, series.Data[0].Torque);
     }
 
     [Fact]
@@ -256,7 +256,7 @@ public class CurveTests
     public void ValidateDataIntegrity_WrongPointCount_ReturnsFalse()
     {
         var series = new Curve("Peak");
-        series.Data.Add(new DataPoint(0, 0, 50));
+        series.Data.Add(new DataPoint(0, 0m, 50m));
 
         Assert.True(series.ValidateDataIntegrity());
     }
@@ -279,7 +279,7 @@ public class CurveTests
 
         for (var i = 0; i < 102; i++)
         {
-            series.Data.Add(new DataPoint(i, i, 1));
+            series.Data.Add(new DataPoint(i, (decimal)i, 1m));
         }
 
         Assert.False(series.ValidateDataIntegrity());
@@ -301,7 +301,7 @@ public class CurveTests
         var series = new Curve("Peak");
         series.InitializeData(5000, 50);
 
-        Assert.Equal(0, series.Data[0].Rpm);
+        Assert.Equal(0m, series.Data[0].Rpm);
     }
 
     [Fact]
@@ -310,7 +310,7 @@ public class CurveTests
         var series = new Curve("Peak");
         series.InitializeData(5000, 50);
 
-        Assert.Equal(5000, series.Data[100].Rpm);
+        Assert.Equal(5000m, series.Data[100].Rpm);
     }
 
     [Fact]

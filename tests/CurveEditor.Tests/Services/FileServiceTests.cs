@@ -41,13 +41,13 @@ public class FileServiceTests : IDisposable
             Manufacturer = "Test Mfg",
             PartNumber = "TM-1234",
             MaxSpeed = 5000,
-            RatedPeakTorque = 55.0,
-            RatedContinuousTorque = 45.0,
+            RatedPeakTorque = 55.0m,
+            RatedContinuousTorque = 45.0m,
             HasBrake = true,
             BrakeReleaseTime = 12,
             BrakeEngageTimeDiode = 5,
             BrakeEngageTimeMov = 7,
-            BrakeBacklash = 0.5,
+            BrakeBacklash = 0.5m,
             Power = 1500
         };
 
@@ -59,11 +59,11 @@ public class FileServiceTests : IDisposable
         var voltage = drive.AddVoltage(220);
         voltage.MaxSpeed = 5000;
         voltage.Power = 1500;
-        voltage.RatedPeakTorque = 55.0;
-        voltage.RatedContinuousTorque = 45.0;
+        voltage.RatedPeakTorque = 55.0m;
+        voltage.RatedContinuousTorque = 45.0m;
 
         var series = new Curve("Peak");
-        series.InitializeData(5000, 55.0);
+        series.InitializeData(5000, 55.0m);
         voltage.Curves.Add(series);
 
         return motor;
@@ -328,7 +328,7 @@ public class FileServiceTests : IDisposable
     [Fact]
     public void CreateNew_CreatesMotorWithDefaultDriveAndCurve()
     {
-        var motor = _service.CreateNew("New Motor", 5000, 50, 1500);
+        var motor = _service.CreateNew("New Motor", 5000m, 50m, 1500m);
 
         Assert.Equal("New Motor", motor.MotorName);
         Assert.Single(motor.Drives);
@@ -341,7 +341,7 @@ public class FileServiceTests : IDisposable
     [Fact]
     public void CreateNew_SetsDirtyFlag()
     {
-        _service.CreateNew("New Motor", 5000, 50, 1500);
+        _service.CreateNew("New Motor", 5000m, 50m, 1500m);
 
         Assert.True(_service.IsDirty);
     }
@@ -349,7 +349,7 @@ public class FileServiceTests : IDisposable
     [Fact]
     public void CreateNew_ClearsCurrentFilePath()
     {
-        _service.CreateNew("New Motor", 5000, 50, 1500);
+        _service.CreateNew("New Motor", 5000m, 50m, 1500m);
 
         Assert.Null(_service.CurrentFilePath);
     }
@@ -357,7 +357,7 @@ public class FileServiceTests : IDisposable
     [Fact]
     public void CreateNew_SeriesHave101Points()
     {
-        var motor = _service.CreateNew("New Motor", 5000, 50, 1500);
+        var motor = _service.CreateNew("New Motor", 5000m, 50m, 1500m);
 
         var allSeries = GetAllSeries(motor);
         Assert.All(allSeries, s => Assert.Equal(101, s.Data.Count));

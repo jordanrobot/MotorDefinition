@@ -80,8 +80,8 @@ public class MainWindowViewModelUndoRedoIntegrationTests
                                     Name = "Peak",
                                     Data = new List<DataPoint>
                                     {
-                                        new() { Rpm = 1000, Torque = 1.0 },
-                                        new() { Rpm = 2000, Torque = 2.0 }
+                                        new() { Rpm = 1000, Torque = 1.0m },
+                                        new() { Rpm = 2000, Torque = 2.0m }
                                     }
                                 }
                             }
@@ -95,26 +95,26 @@ public class MainWindowViewModelUndoRedoIntegrationTests
         vm.SelectedDrive = motor.Drives[0];
         vm.SelectedVoltage = motor.Drives[0].Voltages[0];
 
-        vm.CurveDataTableViewModel.UpdateTorque(1, "Peak", 2.5);
+        vm.CurveDataTableViewModel.UpdateTorque(1, "Peak", 2.5m);
 
         Assert.True(vm.IsDirty);
-        Assert.Equal(2.5, motor.Drives[0].Voltages[0].Curves[0].Data[1].Torque);
+        Assert.Equal(2.5m, motor.Drives[0].Voltages[0].Curves[0].Data[1].Torque);
 
         vm.UndoCommand.Execute(null);
 
-        Assert.Equal(2.0, motor.Drives[0].Voltages[0].Curves[0].Data[1].Torque);
+        Assert.Equal(2.0m, motor.Drives[0].Voltages[0].Curves[0].Data[1].Torque);
 
         vm.MarkCleanCheckpoint();
 
         Assert.False(vm.IsDirty);
 
-        vm.CurveDataTableViewModel.UpdateTorque(1, "Peak", 3.0);
+        vm.CurveDataTableViewModel.UpdateTorque(1, "Peak", 3.0m);
 
         Assert.True(vm.IsDirty);
 
         vm.UndoCommand.Execute(null);
 
-        Assert.Equal(2.0, motor.Drives[0].Voltages[0].Curves[0].Data[1].Torque);
+        Assert.Equal(2.0m, motor.Drives[0].Voltages[0].Curves[0].Data[1].Torque);
     }
 
     [Fact]
@@ -147,8 +147,8 @@ public class MainWindowViewModelUndoRedoIntegrationTests
                                     Name = "Peak",
                                     Data = new List<DataPoint>
                                     {
-                                        new() { Rpm = 1000, Torque = 1.0 },
-                                        new() { Rpm = 2000, Torque = 2.0 }
+                                        new() { Rpm = 1000, Torque = 1.0m },
+                                        new() { Rpm = 2000, Torque = 2.0m }
                                     }
                                 }
                             }
@@ -166,12 +166,12 @@ public class MainWindowViewModelUndoRedoIntegrationTests
         vm.CurveDataTableViewModel.SelectCell(1, 2);
         vm.CurveDataTableViewModel.ClearSelectedTorqueCells();
 
-        Assert.Equal(0.0, motor.Drives[0].Voltages[0].Curves[0].Data[1].Torque);
+        Assert.Equal(0.0m, motor.Drives[0].Voltages[0].Curves[0].Data[1].Torque);
         Assert.True(vm.CanUndo);
 
         vm.UndoCommand.Execute(null);
 
-        Assert.Equal(2.0, motor.Drives[0].Voltages[0].Curves[0].Data[1].Torque);
+        Assert.Equal(2.0m, motor.Drives[0].Voltages[0].Curves[0].Data[1].Torque);
     }
 
     [Fact]

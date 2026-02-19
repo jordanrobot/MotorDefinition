@@ -13,19 +13,19 @@ public partial class AddCurveDialog : Window
     /// <summary>
     /// Conversion factor from horsepower to watts.
     /// </summary>
-    private const double HorsepowerToWatts = 745.7;
+    private const decimal HorsepowerToWatts = 745.7m;
 
     /// <summary>
     /// Conversion factor from kilowatts to watts.
     /// </summary>
-    private const double KilowattsToWatts = 1000.0;
+    private const decimal KilowattsToWatts = 1000.0m;
 
     /// <summary>
     /// Gets the result of the dialog.
     /// </summary>
     public AddCurveResult? Result { get; private set; }
 
-    private double _maxSpeed;
+    private decimal _maxSpeed;
 
     public AddCurveDialog()
     {
@@ -36,7 +36,7 @@ public partial class AddCurveDialog : Window
     /// <summary>
     /// Initializes the dialog with default values.
     /// </summary>
-    public void Initialize(double maxSpeed, double defaultTorque = 40, double defaultPower = 1500)
+    public void Initialize(decimal maxSpeed, decimal defaultTorque = 40, decimal defaultPower = 1500)
     {
         _maxSpeed = maxSpeed;
         TorqueInput.Text = defaultTorque.ToString("F2");
@@ -85,16 +85,16 @@ public partial class AddCurveDialog : Window
             }
 
             // Determine torque calculation mode
-            double baseTorque;
+            decimal baseTorque;
             bool usePowerCalculation = PowerBasedRadio?.IsChecked == true;
-            double power = 0;
+            decimal power = 0;
             string powerUnit = "W";
 
             if (usePowerCalculation)
             {
-                if (!double.TryParse(PowerInput?.Text, out power) || power < 0)
+                if (!decimal.TryParse(PowerInput?.Text, out power) || power < 0)
                 {
-                    power = 1500;
+                    power = 1500m;
                 }
 
                 var selectedItem = PowerUnitCombo?.SelectedItem as ComboBoxItem;
@@ -111,10 +111,10 @@ public partial class AddCurveDialog : Window
                 // Calculate torque from power at rated speed (assume 50% speed for average)
                 // P = T * ω, where ω = 2π * RPM / 60
                 // T = P / ω = P * 60 / (2π * RPM)
-                var avgSpeed = _maxSpeed * 0.5;
+                var avgSpeed = _maxSpeed * 0.5m;
                 if (avgSpeed > 0)
                 {
-                    baseTorque = powerWatts * 60 / (2 * Math.PI * avgSpeed);
+                    baseTorque = powerWatts * 60m / (2m * (decimal)Math.PI * avgSpeed);
                 }
                 else
                 {
@@ -123,7 +123,7 @@ public partial class AddCurveDialog : Window
             }
             else
             {
-                if (!double.TryParse(TorqueInput?.Text, out baseTorque) || baseTorque < 0)
+                if (!decimal.TryParse(TorqueInput?.Text, out baseTorque) || baseTorque < 0)
                 {
                     baseTorque = 40;
                 }
@@ -169,9 +169,9 @@ public class AddCurveResult
 {
     public string Name { get; set; } = string.Empty;
     public string Color { get; set; } = "#FF5050";
-    public double BaseTorque { get; set; }
+    public decimal BaseTorque { get; set; }
     public bool UsePowerCalculation { get; set; }
-    public double Power { get; set; }
+    public decimal Power { get; set; }
     public string PowerUnit { get; set; } = "W";
     public bool IsVisible { get; set; } = true;
     public bool IsLocked { get; set; }

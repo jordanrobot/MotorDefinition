@@ -8,8 +8,8 @@ namespace CurveEditor.Views;
 
 public partial class MotorPropertiesPanel : UserControl
 {
-    private const double MaxSpeedChangeTolerance = 0.1;
-    private double _previousMaxSpeed;
+    private const decimal MaxSpeedChangeTolerance = 0.1m;
+    private decimal _previousMaxSpeed;
 
     private static readonly ILogger LogPanel = Log.ForContext<MotorPropertiesPanel>();
 

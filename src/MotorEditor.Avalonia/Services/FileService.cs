@@ -135,7 +135,7 @@ public class FileService : IFileService
     }
 
     /// <inheritdoc />
-    public ServoMotor CreateNew(string motorName, double maxSpeed, double maxTorque, double maxPower)
+    public ServoMotor CreateNew(string motorName, decimal maxSpeed, decimal maxTorque, decimal maxPower)
     {
         Log.Information("Creating new motor definition: {MotorName}", motorName);
 
@@ -156,14 +156,14 @@ public class FileService : IFileService
         var voltageConfig = drive.AddVoltage(220);
         voltageConfig.MaxSpeed = maxSpeed;
         voltageConfig.RatedPeakTorque = maxTorque;
-        voltageConfig.RatedContinuousTorque = maxTorque * 0.8;
+        voltageConfig.RatedContinuousTorque = maxTorque * 0.8m;
         voltageConfig.Power = maxPower;
 
         var peakSeries = new Curve("Peak");
         var continuousSeries = new Curve("Continuous");
 
         peakSeries.Data = _curveGenerator.InterpolateCurve(maxSpeed, maxTorque, maxPower);
-        continuousSeries.Data = _curveGenerator.InterpolateCurve(maxSpeed, maxTorque * 0.8, maxPower * 0.8);
+        continuousSeries.Data = _curveGenerator.InterpolateCurve(maxSpeed, maxTorque * 0.8m, maxPower * 0.8m);
 
         voltageConfig.Curves.Add(peakSeries);
         voltageConfig.Curves.Add(continuousSeries);

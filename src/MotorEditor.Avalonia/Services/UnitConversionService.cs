@@ -1,6 +1,6 @@
-using System;
 using JordanRobot.MotorDefinition.Model;
 using JordanRobot.MotorDefinition.Services;
+using System;
 
 namespace CurveEditor.Services;
 
@@ -44,7 +44,7 @@ public class UnitConversionService
     /// <param name="fromUnit">The source unit.</param>
     /// <param name="toUnit">The target unit.</param>
     /// <returns>The converted torque value.</returns>
-    public double ConvertTorque(double value, string fromUnit, string toUnit)
+    public decimal ConvertTorque(decimal value, string fromUnit, string toUnit)
     {
         return _unitService.Convert(value, fromUnit, toUnit);
     }
@@ -56,7 +56,7 @@ public class UnitConversionService
     /// <param name="fromUnit">The source unit.</param>
     /// <param name="toUnit">The target unit.</param>
     /// <returns>The converted speed value.</returns>
-    public double ConvertSpeed(double value, string fromUnit, string toUnit)
+    public decimal ConvertSpeed(decimal value, string fromUnit, string toUnit)
     {
         return _unitService.Convert(value, fromUnit, toUnit);
     }
@@ -68,7 +68,7 @@ public class UnitConversionService
     /// <param name="fromUnit">The source unit.</param>
     /// <param name="toUnit">The target unit.</param>
     /// <returns>The converted power value.</returns>
-    public double ConvertPower(double value, string fromUnit, string toUnit)
+    public decimal ConvertPower(decimal value, string fromUnit, string toUnit)
     {
         return _unitService.Convert(value, fromUnit, toUnit);
     }
@@ -80,7 +80,7 @@ public class UnitConversionService
     /// <param name="fromUnit">The source unit.</param>
     /// <param name="toUnit">The target unit.</param>
     /// <returns>The converted mass value.</returns>
-    public double ConvertMass(double value, string fromUnit, string toUnit)
+    public decimal ConvertMass(decimal value, string fromUnit, string toUnit)
     {
         return _unitService.Convert(value, fromUnit, toUnit);
     }
@@ -91,7 +91,7 @@ public class UnitConversionService
     /// <param name="value">The numeric value.</param>
     /// <param name="unit">The unit string.</param>
     /// <returns>Formatted string with value and unit.</returns>
-    public string FormatValue(double value, string unit)
+    public string FormatValue(decimal value, string unit)
     {
         return _unitService.Format(value, unit, DisplayDecimalPlaces);
     }
@@ -263,7 +263,7 @@ public class UnitConversionService
     /// <param name="storedUnit">The unit as stored in the model.</param>
     /// <param name="displayUnit">The unit to display.</param>
     /// <returns>The value in the display unit.</returns>
-    public double GetDisplayTorque(double storedValue, string storedUnit, string displayUnit)
+    public decimal GetDisplayTorque(decimal storedValue, string storedUnit, string displayUnit)
     {
         if (ConvertStoredData || storedUnit == displayUnit)
         {
@@ -280,7 +280,7 @@ public class UnitConversionService
     /// <param name="displayUnit">The display unit.</param>
     /// <param name="storedUnit">The storage unit.</param>
     /// <returns>The value in the storage unit.</returns>
-    public double GetStoredTorque(double displayValue, string displayUnit, string storedUnit)
+    public decimal GetStoredTorque(decimal displayValue, string displayUnit, string storedUnit)
     {
         if (ConvertStoredData || displayUnit == storedUnit)
         {

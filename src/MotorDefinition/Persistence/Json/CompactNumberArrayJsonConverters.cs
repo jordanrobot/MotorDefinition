@@ -113,11 +113,11 @@ internal sealed class CompactInt32ArrayJsonConverter : JsonConverter<int[]>
     }
 }
 
-internal sealed class CompactDoubleArrayJsonConverter : JsonConverter<double[]>
+internal sealed class CompactDecimalArrayJsonConverter : JsonConverter<decimal[]>
 {
     private readonly int _valuesPerLine;
 
-    public CompactDoubleArrayJsonConverter(int valuesPerLine = 12)
+    public CompactDecimalArrayJsonConverter(int valuesPerLine = 12)
     {
         if (valuesPerLine <= 0)
         {
@@ -127,14 +127,14 @@ internal sealed class CompactDoubleArrayJsonConverter : JsonConverter<double[]>
         _valuesPerLine = valuesPerLine;
     }
 
-    public override double[] Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
+    public override decimal[] Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
     {
         if (reader.TokenType != JsonTokenType.StartArray)
         {
             throw new JsonException($"Expected {JsonTokenType.StartArray} but got {reader.TokenType}.");
         }
 
-        var values = new List<double>();
+        var values = new List<decimal>();
         while (reader.Read())
         {
             if (reader.TokenType == JsonTokenType.EndArray)
@@ -147,13 +147,13 @@ internal sealed class CompactDoubleArrayJsonConverter : JsonConverter<double[]>
                 throw new JsonException($"Expected {JsonTokenType.Number} but got {reader.TokenType}.");
             }
 
-            values.Add(reader.GetDouble());
+            values.Add(reader.GetDecimal());
         }
 
-        throw new JsonException("Unexpected end of JSON while reading a double array.");
+        throw new JsonException("Unexpected end of JSON while reading a decimal array.");
     }
 
-    public override void Write(Utf8JsonWriter writer, double[] value, JsonSerializerOptions options)
+    public override void Write(Utf8JsonWriter writer, decimal[] value, JsonSerializerOptions options)
     {
         ArgumentNullException.ThrowIfNull(writer);
         ArgumentNullException.ThrowIfNull(value);
@@ -169,11 +169,11 @@ internal sealed class CompactDoubleArrayJsonConverter : JsonConverter<double[]>
             return;
         }
 
-        var formatted = FormatDoubleArray(value, writer.CurrentDepth, _valuesPerLine);
+        var formatted = FormatDecimalArray(value, writer.CurrentDepth, _valuesPerLine);
         writer.WriteRawValue(formatted, skipInputValidation: true);
     }
 
-    private static string FormatDoubleArray(double[] value, int currentDepth, int valuesPerLine)
+    private static string FormatDecimalArray(decimal[] value, int currentDepth, int valuesPerLine)
     {
         if (value.Length == 0)
         {
@@ -189,7 +189,7 @@ internal sealed class CompactDoubleArrayJsonConverter : JsonConverter<double[]>
         var countOnLine = 0;
         for (var i = 0; i < value.Length; i++)
         {
-            var text = value[i].ToString("G17", CultureInfo.InvariantCulture);
+            var text = value[i].ToString("G29", CultureInfo.InvariantCulture);
 
             if (i == 0)
             {

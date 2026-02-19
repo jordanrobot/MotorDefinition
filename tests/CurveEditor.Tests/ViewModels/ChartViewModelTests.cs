@@ -844,12 +844,12 @@ public class ChartViewModelTests
         var voltage = new Voltage(220)
         {
             MaxSpeed = 5000,
-            RatedPeakTorque = approximateMaxTorque * 0.8,
-            RatedContinuousTorque = approximateMaxTorque * 0.6
+            RatedPeakTorque = (decimal)(approximateMaxTorque * 0.8),
+            RatedContinuousTorque = (decimal)(approximateMaxTorque * 0.6)
         };
         
         var peakSeries = new Curve("Peak");
-        peakSeries.Data.Add(new DataPoint { Rpm = 3000, Torque = approximateMaxTorque * 0.8 });
+        peakSeries.Data.Add(new DataPoint { Rpm = 3000, Torque = (decimal)(approximateMaxTorque * 0.8) });
         voltage.Curves.Add(peakSeries);
         
         viewModel.CurrentVoltage = voltage;
@@ -901,12 +901,12 @@ public class ChartViewModelTests
         var voltage = new Voltage(220)
         {
             MaxSpeed = 5000,
-            RatedPeakTorque = maxTorque * 0.85,
-            RatedContinuousTorque = maxTorque * 0.7
+            RatedPeakTorque = (decimal)(maxTorque * 0.85),
+            RatedContinuousTorque = (decimal)(maxTorque * 0.7)
         };
         
         var peakSeries = new Curve("Peak");
-        peakSeries.Data.Add(new DataPoint { Rpm = 3000, Torque = maxTorque * 0.85 });
+        peakSeries.Data.Add(new DataPoint { Rpm = 3000, Torque = (decimal)(maxTorque * 0.85) });
         voltage.Curves.Add(peakSeries);
         
         viewModel.CurrentVoltage = voltage;
@@ -951,12 +951,12 @@ public class ChartViewModelTests
         var voltage = new Voltage(220)
         {
             MaxSpeed = 5000,
-            RatedPeakTorque = maxValue * 0.85,
-            RatedContinuousTorque = maxValue * 0.7
+            RatedPeakTorque = (decimal)(maxValue * 0.85),
+            RatedContinuousTorque = (decimal)(maxValue * 0.7)
         };
         
         var peakSeries = new Curve("Peak");
-        peakSeries.Data.Add(new DataPoint { Rpm = 3000, Torque = maxValue * 0.85 });
+        peakSeries.Data.Add(new DataPoint { Rpm = 3000, Torque = (decimal)(maxValue * 0.85) });
         voltage.Curves.Add(peakSeries);
         
         viewModel.CurrentVoltage = voltage;

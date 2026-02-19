@@ -11,16 +11,16 @@ public sealed class EditPointCommand : IUndoableCommand
     private readonly Curve _series;
     private readonly int _index;
     private readonly int? _newPercent;
-    private readonly double? _newRpm;
-    private readonly double? _newTorque;
+    private readonly decimal? _newRpm;
+    private readonly decimal? _newTorque;
     private int _oldPercent;
-    private double _oldRpm;
-    private double _oldTorque;
+    private decimal _oldRpm;
+    private decimal _oldTorque;
 
     /// <summary>
     /// Creates a new <see cref="EditPointCommand"/> for editing RPM and Torque.
     /// </summary>
-    public EditPointCommand(Curve series, int index, double newRpm, double newTorque)
+    public EditPointCommand(Curve series, int index, decimal newRpm, decimal newTorque)
         : this(series, index, null, newRpm, newTorque)
     {
     }
@@ -33,7 +33,7 @@ public sealed class EditPointCommand : IUndoableCommand
     /// <param name="newPercent">The new percent value, or null to leave unchanged.</param>
     /// <param name="newRpm">The new RPM value, or null to leave unchanged.</param>
     /// <param name="newTorque">The new torque value, or null to leave unchanged.</param>
-    public EditPointCommand(Curve series, int index, int? newPercent, double? newRpm, double? newTorque)
+    public EditPointCommand(Curve series, int index, int? newPercent, decimal? newRpm, decimal? newTorque)
     {
         _series = series ?? throw new ArgumentNullException(nameof(series));
         _index = index;

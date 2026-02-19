@@ -51,17 +51,17 @@ public class CurveGeneratorServiceTests
     {
         var points = _service.InterpolateCurve(maxRpm: 5000, maxTorque: 50, maxPower: 1500);
 
-        Assert.Equal(0, points[0].Rpm);
-        Assert.Equal(2500, points[50].Rpm);
-        Assert.Equal(5000, points[100].Rpm);
+        Assert.Equal(0m, points[0].Rpm);
+        Assert.Equal(2500m, points[50].Rpm);
+        Assert.Equal(5000m, points[100].Rpm);
     }
 
     [Fact]
     public void InterpolateCurve_ConstantTorqueRegion_MaintainsTorque()
     {
-        var maxTorque = 50.0;
-        var maxPower = 1500.0;
-        var maxRpm = 5000.0;
+        var maxTorque = 50.0m;
+        var maxPower = 1500.0m;
+        var maxRpm = 5000.0m;
 
         var points = _service.InterpolateCurve(maxRpm, maxTorque, maxPower);
 
@@ -69,7 +69,7 @@ public class CurveGeneratorServiceTests
         var cornerRpm = _service.CalculateCornerSpeed(maxTorque, maxPower);
 
         // Find points in constant torque region (before corner speed)
-        var lowSpeedPoints = points.Where(p => p.Rpm > 0 && p.Rpm < cornerRpm * 0.9).ToList();
+        var lowSpeedPoints = points.Where(p => p.Rpm > 0 && p.Rpm < cornerRpm * 0.9m).ToList();
 
         foreach (var point in lowSpeedPoints)
         {
@@ -80,16 +80,16 @@ public class CurveGeneratorServiceTests
     [Fact]
     public void InterpolateCurve_ConstantPowerRegion_TorqueDecreases()
     {
-        var maxTorque = 50.0;
-        var maxPower = 1500.0;
-        var maxRpm = 5000.0;
+        var maxTorque = 50.0m;
+        var maxPower = 1500.0m;
+        var maxRpm = 5000.0m;
 
         var points = _service.InterpolateCurve(maxRpm, maxTorque, maxPower);
 
         var cornerRpm = _service.CalculateCornerSpeed(maxTorque, maxPower);
 
         // Find points in constant power region (after corner speed)
-        var highSpeedPoints = points.Where(p => p.Rpm > cornerRpm * 1.2).ToList();
+        var highSpeedPoints = points.Where(p => p.Rpm > cornerRpm * 1.2m).ToList();
 
         // Torque should decrease as speed increases in constant power region
         for (var i = 0; i < highSpeedPoints.Count - 1; i++)
@@ -104,7 +104,7 @@ public class CurveGeneratorServiceTests
     [InlineData(45.0, 3000, 14137.17)]
     [InlineData(0, 1000, 0)]
     [InlineData(50, 0, 0)]
-    public void CalculatePower_FormulaCorrect(double torque, double rpm, double expectedWatts)
+    public void CalculatePower_FormulaCorrect(decimal torque, decimal rpm, decimal expectedWatts)
     {
         var result = _service.CalculatePower(torque, rpm);
 
@@ -114,13 +114,13 @@ public class CurveGeneratorServiceTests
     [Fact]
     public void CalculateCornerSpeed_FormulaCorrect()
     {
-        var maxTorque = 50.0;
-        var maxPower = 1500.0;
+        var maxTorque = 50.0m;
+        var maxPower = 1500.0m;
 
         var cornerRpm = _service.CalculateCornerSpeed(maxTorque, maxPower);
 
         // cornerRpm = (maxPower × 60) / (maxTorque × 2π)
-        var expected = (maxPower * 60) / (maxTorque * 2 * Math.PI);
+        var expected = (maxPower * 60m) / (maxTorque * 2m * (decimal)Math.PI);
         Assert.Equal(expected, cornerRpm, precision: 2);
     }
 

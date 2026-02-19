@@ -15,7 +15,7 @@ public sealed class OverrideTorqueCellsCommand : IUndoableCommand
     /// </summary>
     public readonly struct Target
     {
-        public Target(Curve series, int index, double oldTorque, double newTorque)
+        public Target(Curve series, int index, decimal oldTorque, decimal newTorque)
         {
             Series = series ?? throw new ArgumentNullException(nameof(series));
             Index = index;
@@ -27,9 +27,9 @@ public sealed class OverrideTorqueCellsCommand : IUndoableCommand
 
         public int Index { get; }
 
-        public double OldTorque { get; }
+        public decimal OldTorque { get; }
 
-        public double NewTorque { get; }
+        public decimal NewTorque { get; }
     }
 
     private readonly IReadOnlyList<Target> _targets;

@@ -1239,7 +1239,7 @@ public partial class DirectoryBrowserViewModel : ObservableObject
         {
             await duplicateCommand.ExecuteAsync(SelectedNode.FullPath, SelectedNode.IsDirectory).ConfigureAwait(false);
             await RefreshInternalAsync().ConfigureAwait(false);
-            
+
             // TODO: Find the newly created item and start rename mode
         }
     }

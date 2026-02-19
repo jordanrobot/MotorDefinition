@@ -111,11 +111,11 @@ public class MotorFileSizeBenchmarkTests
             RatedContinuousTorque = 45,
             RatedPeakTorque = 55,
             Weight = 10,
-            RotorInertia = 0.002,
+            RotorInertia = 0.002m,
             FeedbackPpr = 4096,
             HasBrake = true,
             BrakeTorque = 10,
-            BrakeAmperage = 0.5,
+            BrakeAmperage = 0.5m,
             BrakeVoltage = 24
         };
 

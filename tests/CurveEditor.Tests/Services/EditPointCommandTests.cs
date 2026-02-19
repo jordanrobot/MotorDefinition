@@ -15,17 +15,17 @@ public class EditPointCommandTests
             Name = "Test",
             Data = new List<DataPoint>
             {
-                new() { Rpm = 1000, Torque = 1.0 },
-                new() { Rpm = 2000, Torque = 2.0 }
+                new() { Rpm = 1000, Torque = 1.0m },
+                new() { Rpm = 2000, Torque = 2.0m }
             }
         };
 
-        var command = new EditPointCommand(series, 1, 2500, 2.5);
+        var command = new EditPointCommand(series, 1, 2500m, 2.5m);
 
         command.Execute();
 
-        Assert.Equal(2500, series.Data[1].Rpm);
-        Assert.Equal(2.5, series.Data[1].Torque);
+        Assert.Equal(2500m, series.Data[1].Rpm);
+        Assert.Equal(2.5m, series.Data[1].Torque);
     }
 
     [Fact]
@@ -36,17 +36,17 @@ public class EditPointCommandTests
             Name = "Test",
             Data = new List<DataPoint>
             {
-                new() { Rpm = 1000, Torque = 1.0 },
-                new() { Rpm = 2000, Torque = 2.0 }
+                new() { Rpm = 1000, Torque = 1.0m },
+                new() { Rpm = 2000, Torque = 2.0m }
             }
         };
 
-        var command = new EditPointCommand(series, 1, 2500, 2.5);
+        var command = new EditPointCommand(series, 1, 2500m, 2.5m);
 
         command.Execute();
         command.Undo();
 
-        Assert.Equal(2000, series.Data[1].Rpm);
-        Assert.Equal(2.0, series.Data[1].Torque);
+        Assert.Equal(2000m, series.Data[1].Rpm);
+        Assert.Equal(2.0m, series.Data[1].Torque);
     }
 }

@@ -9,21 +9,21 @@ public class DataPointTests
     [Fact]
     public void Constructor_ValidValues_CreatesDataPoint()
     {
-        var point = new DataPoint { Percent = 50, Rpm = 2500, Torque = 45.5 };
+        var point = new DataPoint { Percent = 50, Rpm = 2500, Torque = 45.5m };
 
         Assert.Equal(50, point.Percent);
-        Assert.Equal(2500, point.Rpm);
-        Assert.Equal(45.5, point.Torque);
+        Assert.Equal(2500m, point.Rpm);
+        Assert.Equal(45.5m, point.Torque);
     }
 
     [Fact]
     public void Constructor_WithParameters_CreatesDataPoint()
     {
-        var point = new DataPoint(50, 2500, 45.5);
+        var point = new DataPoint(50, 2500m, 45.5m);
 
         Assert.Equal(50, point.Percent);
-        Assert.Equal(2500, point.Rpm);
-        Assert.Equal(45.5, point.Torque);
+        Assert.Equal(2500m, point.Rpm);
+        Assert.Equal(45.5m, point.Torque);
     }
 
     [Theory]
@@ -69,18 +69,18 @@ public class DataPointTests
     [InlineData(5000.5)]
     public void Rpm_ValidValues_SetsRpm(double validRpm)
     {
-        var point = new DataPoint { Rpm = validRpm };
+        var point = new DataPoint { Rpm = (decimal)validRpm };
 
-        Assert.Equal(validRpm, point.Rpm);
+        Assert.Equal((decimal)validRpm, point.Rpm);
     }
 
     [Fact]
     public void Torque_NegativeValue_Allowed()
     {
         // Negative torque is allowed for regenerative braking
-        var point = new DataPoint { Torque = -10.5 };
+        var point = new DataPoint { Torque = -10.5m };
 
-        Assert.Equal(-10.5, point.Torque);
+        Assert.Equal(-10.5m, point.Torque);
     }
 
     [Theory]
@@ -91,7 +91,7 @@ public class DataPointTests
     [InlineData(2500.51, 2501)]
     public void DisplayRpm_RoundsToNearestWholeNumber(double rpm, int expected)
     {
-        var point = new DataPoint { Percent = 50, Rpm = rpm, Torque = 45.0 };
+        var point = new DataPoint { Percent = 50, Rpm = (decimal)rpm, Torque = 45.0m };
 
         Assert.Equal(expected, point.DisplayRpm);
     }
@@ -99,7 +99,7 @@ public class DataPointTests
     [Fact]
     public void DisplayRpm_ZeroRpm_ReturnsZero()
     {
-        var point = new DataPoint { Percent = 0, Rpm = 0, Torque = 55.0 };
+        var point = new DataPoint { Percent = 0, Rpm = 0, Torque = 55.0m };
 
         Assert.Equal(0, point.DisplayRpm);
     }

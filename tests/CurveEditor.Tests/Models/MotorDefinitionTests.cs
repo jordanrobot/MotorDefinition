@@ -257,14 +257,14 @@ public class MotorDefinitionTests
         var motor = new ServoMotor
         {
             HasBrake = true,
-            BrakeTorque = 12.0,
-            BrakeAmperage = 0.5,
+            BrakeTorque = 12.0m,
+            BrakeAmperage = 0.5m,
             BrakeVoltage = 24
         };
 
         Assert.True(motor.HasBrake);
-        Assert.Equal(12.0, motor.BrakeTorque);
-        Assert.Equal(0.5, motor.BrakeAmperage);
+        Assert.Equal(12.0m, motor.BrakeTorque);
+        Assert.Equal(0.5m, motor.BrakeAmperage);
         Assert.Equal(24, motor.BrakeVoltage);
     }
 }
