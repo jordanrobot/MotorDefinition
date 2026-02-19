@@ -1404,4 +1404,123 @@ public class ChartViewModelTests
         Assert.True(viewModel.IsSketchEditActive);
         Assert.Equal("Peak", viewModel.SketchEditSeriesName);
     }
+
+    [Fact]
+    public void ZoomPercentage_DefaultsTo100()
+    {
+        var viewModel = new ChartViewModel();
+
+        Assert.Equal(100, viewModel.ZoomPercentage);
+    }
+
+    [Fact]
+    public void ZoomPercentage_IncreasesAfterZoomIn()
+    {
+        var viewModel = new ChartViewModel();
+        viewModel.CurrentVoltage = CreateTestVoltage();
+
+        viewModel.ApplyZoom(2500, 27, 1.0);
+
+        Assert.True(viewModel.ZoomPercentage > 100);
+    }
+
+    [Fact]
+    public void ZoomSliderValue_ControlsZoomLevel()
+    {
+        var viewModel = new ChartViewModel();
+        viewModel.CurrentVoltage = CreateTestVoltage();
+
+        viewModel.ZoomSliderValue = 5.0;
+
+        Assert.Equal(5.0, viewModel.ZoomLevel, 2);
+        Assert.Equal(500, viewModel.ZoomPercentage);
+    }
+
+    [Fact]
+    public void ZoomSliderValue_ClampedToRange()
+    {
+        var viewModel = new ChartViewModel();
+        viewModel.CurrentVoltage = CreateTestVoltage();
+
+        viewModel.ZoomSliderValue = 25.0;
+
+        Assert.Equal(20.0, viewModel.ZoomLevel, 2);
+    }
+
+    [Fact]
+    public void PanBy_WhenNotZoomed_DoesNothing()
+    {
+        var viewModel = new ChartViewModel();
+        viewModel.CurrentVoltage = CreateTestVoltage();
+        var originalXMin = viewModel.XAxes[0].MinLimit;
+
+        viewModel.PanBy(100, 100);
+
+        Assert.Equal(originalXMin, viewModel.XAxes[0].MinLimit);
+    }
+
+    [Fact]
+    public void PanBy_WhenZoomed_ShiftsAxisLimits()
+    {
+        var viewModel = new ChartViewModel();
+        viewModel.CurrentVoltage = CreateTestVoltage();
+        viewModel.ApplyZoom(2500, 27, 1.0);
+        var xMinBefore = viewModel.XAxes[0].MinLimit ?? 0;
+
+        viewModel.PanBy(100, 0);
+
+        var xMinAfter = viewModel.XAxes[0].MinLimit ?? 0;
+        Assert.True(xMinAfter < xMinBefore);
+    }
+
+    [Fact]
+    public void SetSketchEditSeries_WhileZoomed_DoesNotOverwriteBaseLimits()
+    {
+        var viewModel = new ChartViewModel();
+        viewModel.CurrentVoltage = CreateTestVoltage();
+        var originalXMax = viewModel.XAxes[0].MaxLimit;
+
+        // Zoom in first.
+        viewModel.ApplyZoom(2500, 27, 1.0);
+        Assert.True(viewModel.ZoomLevel > 1.0);
+
+        // Activate sketch mode while zoomed — should not corrupt base limits.
+        viewModel.SetSketchEditSeries("Peak");
+
+        // Should still be able to reset zoom to the original full view.
+        viewModel.ResetZoom();
+        Assert.Equal(1.0, viewModel.ZoomLevel);
+        Assert.Equal(originalXMax, viewModel.XAxes[0].MaxLimit);
+    }
+
+    [Fact]
+    public void BaseLimitsCaptured_FalseByDefault()
+    {
+        var viewModel = new ChartViewModel();
+
+        Assert.False(viewModel.BaseLimitsCaptured);
+    }
+
+    [Fact]
+    public void BaseLimitsCaptured_TrueAfterZoom()
+    {
+        var viewModel = new ChartViewModel();
+        viewModel.CurrentVoltage = CreateTestVoltage();
+
+        viewModel.ApplyZoom(2500, 27, 1.0);
+
+        Assert.True(viewModel.BaseLimitsCaptured);
+    }
+
+    [Fact]
+    public void BaseLimitsCaptured_FalseAfterReset()
+    {
+        var viewModel = new ChartViewModel();
+        viewModel.CurrentVoltage = CreateTestVoltage();
+        viewModel.ApplyZoom(2500, 27, 1.0);
+
+        viewModel.ResetZoom();
+
+        Assert.False(viewModel.BaseLimitsCaptured);
+    }
 }

@@ -24,6 +24,8 @@ public partial class ChartView : UserControl
     private ChartViewModel? _chartViewModel;
     private bool _isUnderlayDragging;
     private bool _isSketchDragging;
+    private bool _isPanning;
+    private Point _panStart;
     private Point _dragStart;
     private double _startOffsetX;
     private double _startOffsetY;
@@ -122,6 +124,16 @@ public partial class ChartView : UserControl
             return;
         }
 
+        // Middle-button single press begins a pan drag.
+        if (pointerPoint.Properties.IsMiddleButtonPressed && e.ClickCount <= 1)
+        {
+            _isPanning = true;
+            _panStart = e.GetPosition(TorqueChart);
+            e.Pointer.Capture(TorqueChart);
+            e.Handled = true;
+            return;
+        }
+
         if (!pointerPoint.Properties.IsLeftButtonPressed)
         {
             return;
@@ -210,6 +222,23 @@ public partial class ChartView : UserControl
             _lastPointerDataPosition = new Point(dataX, dataY);
         }
 
+        // Middle-mouse pan: convert pixel delta to data-space delta.
+        if (_isPanning)
+        {
+            var currentPos = e.GetPosition(TorqueChart);
+            var pixelDelta = currentPos - _panStart;
+            _panStart = currentPos;
+
+            if (TryPixelDeltaToDataDelta(pixelDelta, out var dataDeltaX, out var dataDeltaY))
+            {
+                _chartViewModel.PanBy(dataDeltaX, dataDeltaY);
+                QueueUnderlayLayout();
+            }
+
+            e.Handled = true;
+            return;
+        }
+
         // Continue sketch-edit drag: apply sketch point as the mouse moves.
         if (_isSketchDragging && _chartViewModel.IsSketchEditActive)
         {
@@ -250,6 +279,14 @@ public partial class ChartView : UserControl
 
     private void OnChartPointerReleased(object? sender, PointerEventArgs e)
     {
+        if (_isPanning)
+        {
+            _isPanning = false;
+            e.Pointer.Capture(null);
+            e.Handled = true;
+            return;
+        }
+
         if (_isSketchDragging)
         {
             _isSketchDragging = false;
@@ -272,6 +309,7 @@ public partial class ChartView : UserControl
     {
         _isUnderlayDragging = false;
         _isSketchDragging = false;
+        _isPanning = false;
     }
 
     private void OnChartViewModelPropertyChanged(object? sender, PropertyChangedEventArgs e)
@@ -435,6 +473,52 @@ public partial class ChartView : UserControl
     }
 
     /// <summary>
+    /// Converts a pixel delta (movement) to data-space delta for panning.
+    /// </summary>
+    private bool TryPixelDeltaToDataDelta(Point pixelDelta, out double deltaX, out double deltaY)
+    {
+        deltaX = 0;
+        deltaY = 0;
+
+        if (_chartViewModel is null)
+        {
+            return false;
+        }
+
+        var chart = TorqueChart.CoreChart;
+        if (chart is null)
+        {
+            return false;
+        }
+
+        var drawSize = chart.DrawMarginSize;
+        if (drawSize.Width <= 0 || drawSize.Height <= 0)
+        {
+            return false;
+        }
+
+        var xAxes = _chartViewModel.XAxes;
+        var yAxes = _chartViewModel.YAxes;
+        if (xAxes.Length == 0 || yAxes.Length == 0)
+        {
+            return false;
+        }
+
+        var xRange = (xAxes[0].MaxLimit ?? 1) - (xAxes[0].MinLimit ?? 0);
+        var yRange = (yAxes[0].MaxLimit ?? 1) - (yAxes[0].MinLimit ?? 0);
+
+        if (xRange <= 0 || yRange <= 0)
+        {
+            return false;
+        }
+
+        deltaX = pixelDelta.X / drawSize.Width * xRange;
+        // Y axis is inverted: positive pixel delta = downward = negative data Y.
+        deltaY = -(pixelDelta.Y / drawSize.Height * yRange);
+        return true;
+    }
+
+    /// <summary>
     /// Handles Ctrl+mouse wheel / Ctrl+touchpad scroll to zoom the chart.
     /// Also handles Ctrl+touchpad pinch-to-zoom (reported as wheel events
     /// with Ctrl modifier on most platforms).
@@ -568,11 +652,12 @@ public partial class ChartView : UserControl
         double x;
         double y;
 
-        // When sketch-zoom is active, scale the underlay image to keep it
-        // aligned with the chart data. The draw-margin pixel area stays the
-        // same but represents a narrower data range, so the image must grow
-        // proportionally and shift so that the visible slice matches.
-        if (_chartViewModel.ZoomLevel > 1.001)
+        // When zoom is active and base limits have been captured, scale
+        // the underlay image to keep it aligned with the chart data.
+        // The draw-margin pixel area stays the same but represents a
+        // narrower data range, so the image must grow proportionally
+        // and shift so that the visible slice matches.
+        if (_chartViewModel.BaseLimitsCaptured && _chartViewModel.ZoomLevel > 1.001)
         {
             var xAxes = _chartViewModel.XAxes;
             var yAxes = _chartViewModel.YAxes;

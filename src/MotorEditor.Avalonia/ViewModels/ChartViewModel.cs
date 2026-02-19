@@ -103,6 +103,7 @@ public partial class ChartViewModel : ViewModelBase
     private bool _showTooltips = true;
     private bool _tooltipStateBeforeSketch = true;
     private double _zoomLevel = 1.0;
+    private bool _baseLimitsCaptured;
     private double _baseXMin;
     private double _baseXMax;
     private double _baseYMin;
@@ -1823,7 +1824,14 @@ public partial class ChartViewModel : ViewModelBase
         {
             _tooltipStateBeforeSketch = _showTooltips;
             ShowTooltips = false;
-            CaptureBaseAxisLimits();
+
+            // Only capture base limits if not already zoomed in; otherwise
+            // we would overwrite the real base with the zoomed-in limits,
+            // preventing the user from zooming back out.
+            if (Math.Abs(_zoomLevel - 1.0) < 0.001)
+            {
+                CaptureBaseAxisLimits();
+            }
         }
 
         SketchEditSeriesName = seriesName;
@@ -1976,6 +1984,60 @@ public partial class ChartViewModel : ViewModelBase
     public double BaseYMax => _baseYMax;
 
     /// <summary>
+    /// Whether the base axis limits have been captured for zoom calculations.
+    /// Used by the view to decide whether to apply zoom-based underlay scaling.
+    /// </summary>
+    public bool BaseLimitsCaptured => _baseLimitsCaptured;
+
+    /// <summary>
+    /// Zoom level expressed as a percentage for display (e.g. 100 = no zoom,
+    /// 200 = 2× magnification). Rounded to the nearest integer.
+    /// </summary>
+    public int ZoomPercentage => (int)Math.Round(_zoomLevel * 100.0);
+
+    /// <summary>
+    /// Zoom level as a slider-friendly value. Setting this adjusts the
+    /// zoom around the current viewport centre.
+    /// </summary>
+    public double ZoomSliderValue
+    {
+        get => _zoomLevel;
+        set
+        {
+            var clamped = Math.Clamp(value, 1.0, 20.0);
+            if (Math.Abs(_zoomLevel - clamped) < 0.001)
+            {
+                return;
+            }
+
+            if (XAxes.Length == 0 || YAxes.Length == 0)
+            {
+                return;
+            }
+
+            if (!_baseLimitsCaptured)
+            {
+                CaptureBaseAxisLimits();
+            }
+
+            _zoomLevel = clamped;
+
+            // Zoom around the centre of the current viewport.
+            var centreX = XAxes.Length > 0
+                ? ((XAxes[0].MinLimit ?? _baseXMin) + (XAxes[0].MaxLimit ?? _baseXMax)) / 2.0
+                : (_baseXMin + _baseXMax) / 2.0;
+            var centreY = YAxes.Length > 0
+                ? ((YAxes[0].MinLimit ?? _baseYMin) + (YAxes[0].MaxLimit ?? _baseYMax)) / 2.0
+                : (_baseYMin + _baseYMax) / 2.0;
+
+            ApplyZoomAroundPoint(centreX, centreY);
+            OnPropertyChanged(nameof(ZoomLevel));
+            OnPropertyChanged(nameof(ZoomPercentage));
+            OnPropertyChanged(nameof(ZoomSliderValue));
+        }
+    }
+
+    /// <summary>
     /// Applies a zoom step relative to the given data-space focus point.
     /// A positive <paramref name="delta"/> zooms in; negative zooms out.
     /// Works at any time when axes are present.
@@ -1991,7 +2053,7 @@ public partial class ChartViewModel : ViewModelBase
         }
 
         // Capture the base (unzoomed) axis limits on the first zoom action.
-        if (Math.Abs(_zoomLevel - 1.0) < 0.001)
+        if (!_baseLimitsCaptured)
         {
             CaptureBaseAxisLimits();
         }
@@ -2003,6 +2065,8 @@ public partial class ChartViewModel : ViewModelBase
 
         ApplyZoomAroundPoint(focusX, focusY);
         OnPropertyChanged(nameof(ZoomLevel));
+        OnPropertyChanged(nameof(ZoomPercentage));
+        OnPropertyChanged(nameof(ZoomSliderValue));
     }
 
     /// <summary>
@@ -2017,6 +2081,7 @@ public partial class ChartViewModel : ViewModelBase
         }
 
         _zoomLevel = 1.0;
+        _baseLimitsCaptured = false;
 
         if (XAxes.Length > 0)
         {
@@ -2031,6 +2096,75 @@ public partial class ChartViewModel : ViewModelBase
         }
 
         OnPropertyChanged(nameof(ZoomLevel));
+        OnPropertyChanged(nameof(ZoomPercentage));
+        OnPropertyChanged(nameof(ZoomSliderValue));
+        OnPropertyChanged(nameof(XAxes));
+        OnPropertyChanged(nameof(YAxes));
+    }
+
+    /// <summary>
+    /// Pans the zoomed viewport by the given data-space deltas.
+    /// Only effective when zoomed in (ZoomLevel &gt; 1). The viewport
+    /// is clamped to the base axis limits.
+    /// </summary>
+    /// <param name="deltaX">Pan amount in data-space X units (positive = pan right).</param>
+    /// <param name="deltaY">Pan amount in data-space Y units (positive = pan up).</param>
+    public void PanBy(double deltaX, double deltaY)
+    {
+        if (Math.Abs(_zoomLevel - 1.0) < 0.001)
+        {
+            return;
+        }
+
+        if (XAxes.Length == 0 || YAxes.Length == 0)
+        {
+            return;
+        }
+
+        var curXMin = XAxes[0].MinLimit ?? _baseXMin;
+        var curXMax = XAxes[0].MaxLimit ?? _baseXMax;
+        var curYMin = YAxes[0].MinLimit ?? _baseYMin;
+        var curYMax = YAxes[0].MaxLimit ?? _baseYMax;
+
+        var newXMin = curXMin - deltaX;
+        var newXMax = curXMax - deltaX;
+        var newYMin = curYMin - deltaY;
+        var newYMax = curYMax - deltaY;
+
+        // Clamp to base limits.
+        if (newXMin < _baseXMin)
+        {
+            var shift = _baseXMin - newXMin;
+            newXMin += shift;
+            newXMax += shift;
+        }
+
+        if (newXMax > _baseXMax)
+        {
+            var shift = newXMax - _baseXMax;
+            newXMin -= shift;
+            newXMax -= shift;
+        }
+
+        if (newYMin < _baseYMin)
+        {
+            var shift = _baseYMin - newYMin;
+            newYMin += shift;
+            newYMax += shift;
+        }
+
+        if (newYMax > _baseYMax)
+        {
+            var shift = newYMax - _baseYMax;
+            newYMin -= shift;
+            newYMax -= shift;
+        }
+
+        XAxes[0].MinLimit = newXMin;
+        XAxes[0].MaxLimit = newXMax;
+        YAxes[0].MinLimit = newYMin;
+        YAxes[0].MaxLimit = newYMax;
+
         OnPropertyChanged(nameof(XAxes));
         OnPropertyChanged(nameof(YAxes));
     }
@@ -2051,6 +2185,8 @@ public partial class ChartViewModel : ViewModelBase
             _baseYMin = YAxes[0].MinLimit ?? 0;
             _baseYMax = YAxes[0].MaxLimit ?? 100;
         }
+
+        _baseLimitsCaptured = true;
     }
 
     /// <summary>
