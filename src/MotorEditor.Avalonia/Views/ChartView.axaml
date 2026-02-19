@@ -32,7 +32,7 @@
                 Series="{Binding Series}"
                 XAxes="{Binding XAxes}"
                 YAxes="{Binding YAxes}"
-                TooltipPosition="Top"
+                TooltipPosition="{Binding ChartTooltipPosition}"
                 ZoomMode="None"
                 AnimationsSpeed="00:00:00.000">
                 <lvc:CartesianChart.TooltipBackgroundPaint>

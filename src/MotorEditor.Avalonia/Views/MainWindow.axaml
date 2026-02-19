@@ -308,6 +308,9 @@
                                               IsChecked="{Binding ChartViewModel.ShowVoltageMaxSpeedLine, Mode=TwoWay}"
                                               Command="{Binding ToggleShowVoltageMaxSpeedLineCommand}"
                                               CommandParameter="{Binding IsChecked, RelativeSource={RelativeSource Self}}"/>
+                                    <CheckBox Content="Show Data Tooltips"
+                                              IsChecked="{Binding ChartViewModel.ShowTooltips, Mode=TwoWay}"
+                                              ToolTip.Tip="Show or hide the data popup that follows the mouse on the chart"/>
                                 </StackPanel>
 
                                 <Separator/>

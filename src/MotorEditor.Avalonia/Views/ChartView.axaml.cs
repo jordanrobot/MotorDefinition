@@ -31,6 +31,13 @@ public partial class ChartView : UserControl
     private bool _underlayLayoutQueued;
 
     /// <summary>
+    /// Tracks the last known pointer position over the chart in
+    /// data-space coordinates, used as the focus point for keyboard
+    /// zoom (+/- keys).
+    /// </summary>
+    private Point _lastPointerDataPosition;
+
+    /// <summary>
     /// Creates a new ChartView instance.
     /// </summary>
     public ChartView()
@@ -40,6 +47,7 @@ public partial class ChartView : UserControl
         TorqueChart.PointerMoved += OnChartPointerMoved;
         TorqueChart.PointerReleased += OnChartPointerReleased;
         TorqueChart.PointerCaptureLost += OnChartPointerCaptureLost;
+        TorqueChart.PointerWheelChanged += OnChartPointerWheelChanged;
         TorqueChart.SizeChanged += (_, _) => QueueUnderlayLayout();
         TorqueChart.LayoutUpdated += (_, _) => QueueUnderlayLayout();
         TorqueChart.UpdateFinished += _ => QueueUnderlayLayout();
@@ -49,6 +57,10 @@ public partial class ChartView : UserControl
         // view while delegating selection state to the EditingCoordinator
         // via the ChartViewModel.
         TorqueChart.PointerPressed += OnChartPointerPressed;
+
+        // Enable keyboard focus so +/- zoom keys can be received.
+        Focusable = true;
+        KeyDown += OnChartKeyDown;
     }
 
     protected override void OnDataContextChanged(EventArgs e)
@@ -163,10 +175,17 @@ public partial class ChartView : UserControl
             return;
         }
 
+        // Track the data-space position for keyboard zoom focus.
+        var pixelPos = e.GetPosition(TorqueChart);
+        if (TryPixelToDataSpace(pixelPos, out var dataX, out var dataY))
+        {
+            _lastPointerDataPosition = new Point(dataX, dataY);
+        }
+
         // Continue sketch-edit drag: apply sketch point as the mouse moves.
         if (_isSketchDragging && _chartViewModel.IsSketchEditActive)
         {
-            TryApplySketchAtPixel(_chartViewModel, e.GetPosition(TorqueChart));
+            TryApplySketchAtPixel(_chartViewModel, pixelPos);
             e.Handled = true;
             return;
         }
@@ -336,6 +355,109 @@ public partial class ChartView : UserControl
         var chartY = yMax - (pixelPosition.Y - drawLocation.Y) / drawSize.Height * (yMax - yMin);
 
         return vm.ApplySketchPoint(chartX, chartY);
+    }
+
+    /// <summary>
+    /// Converts a pixel position on the chart to data-space coordinates
+    /// using the current axis limits.
+    /// </summary>
+    private bool TryPixelToDataSpace(Point pixelPosition, out double dataX, out double dataY)
+    {
+        dataX = 0;
+        dataY = 0;
+
+        if (_chartViewModel is null)
+        {
+            return false;
+        }
+
+        var chart = TorqueChart.CoreChart;
+        if (chart is null)
+        {
+            return false;
+        }
+
+        var drawLocation = chart.DrawMarginLocation;
+        var drawSize = chart.DrawMarginSize;
+        if (drawSize.Width <= 0 || drawSize.Height <= 0)
+        {
+            return false;
+        }
+
+        var xAxes = _chartViewModel.XAxes;
+        var yAxes = _chartViewModel.YAxes;
+        if (xAxes.Length == 0 || yAxes.Length == 0)
+        {
+            return false;
+        }
+
+        var xMin = xAxes[0].MinLimit ?? 0;
+        var xMax = xAxes[0].MaxLimit ?? 1;
+        var yMin = yAxes[0].MinLimit ?? 0;
+        var yMax = yAxes[0].MaxLimit ?? 1;
+
+        if (xMax - xMin <= 0 || yMax - yMin <= 0)
+        {
+            return false;
+        }
+
+        dataX = xMin + (pixelPosition.X - drawLocation.X) / drawSize.Width * (xMax - xMin);
+        dataY = yMax - (pixelPosition.Y - drawLocation.Y) / drawSize.Height * (yMax - yMin);
+        return true;
+    }
+
+    /// <summary>
+    /// Handles mouse wheel scrolling to zoom the chart during sketch-edit mode.
+    /// </summary>
+    private void OnChartPointerWheelChanged(object? sender, PointerWheelEventArgs e)
+    {
+        if (_chartViewModel is null || !_chartViewModel.IsSketchEditActive)
+        {
+            return;
+        }
+
+        var pixelPos = e.GetPosition(TorqueChart);
+        if (!TryPixelToDataSpace(pixelPos, out var focusX, out var focusY))
+        {
+            return;
+        }
+
+        // Delta.Y is positive for scroll-up (zoom in) and negative for scroll-down (zoom out).
+        _chartViewModel.ApplySketchZoom(focusX, focusY, e.Delta.Y);
+        QueueUnderlayLayout();
+        e.Handled = true;
+    }
+
+    /// <summary>
+    /// Handles keyboard +/- keys to zoom the chart during sketch-edit mode.
+    /// </summary>
+    private void OnChartKeyDown(object? sender, KeyEventArgs e)
+    {
+        if (_chartViewModel is null || !_chartViewModel.IsSketchEditActive)
+        {
+            return;
+        }
+
+        double delta;
+        if (e.Key is Key.OemPlus or Key.Add)
+        {
+            delta = 1.0;
+        }
+        else if (e.Key is Key.OemMinus or Key.Subtract)
+        {
+            delta = -1.0;
+        }
+        else
+        {
+            return;
+        }
+
+        _chartViewModel.ApplySketchZoom(
+            _lastPointerDataPosition.X,
+            _lastPointerDataPosition.Y,
+            delta);
+        QueueUnderlayLayout();
+        e.Handled = true;
     }
 
     private void QueueUnderlayLayout()

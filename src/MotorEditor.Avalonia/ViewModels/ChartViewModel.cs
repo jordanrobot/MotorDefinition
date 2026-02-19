@@ -100,6 +100,13 @@ public partial class ChartViewModel : ViewModelBase
     private double _underlayAnchorY;
     private string? _sketchEditSeriesName;
     private decimal _torqueSnapIncrement = 0.2m;
+    private bool _showTooltips = true;
+    private bool _tooltipStateBeforeSketch = true;
+    private double _sketchZoomLevel = 1.0;
+    private double _baseXMin;
+    private double _baseXMax;
+    private double _baseYMin;
+    private double _baseYMax;
 
     [ObservableProperty]
     private ObservableCollection<ISeries> _series = [];
@@ -469,6 +476,38 @@ public partial class ChartViewModel : ViewModelBase
     /// When false, the graph is static and shows the full range of data.
     /// </summary>
     public static bool EnableZoomPan => false;
+
+    /// <summary>
+    /// Gets or sets whether the data tooltip popup is shown when hovering
+    /// over data points on the chart. When disabled the tooltip is hidden.
+    /// This is automatically turned off when sketch-edit mode activates
+    /// and restored when sketch-edit mode deactivates.
+    /// </summary>
+    public bool ShowTooltips
+    {
+        get => _showTooltips;
+        set
+        {
+            if (_showTooltips == value)
+            {
+                return;
+            }
+
+            _showTooltips = value;
+            OnPropertyChanged();
+            OnPropertyChanged(nameof(ChartTooltipPosition));
+        }
+    }
+
+    /// <summary>
+    /// Gets the effective <see cref="LiveChartsCore.Measure.TooltipPosition"/>
+    /// to bind to the chart control. Returns <c>Hidden</c> when tooltips are
+    /// disabled; otherwise returns <c>Top</c>.
+    /// </summary>
+    public LiveChartsCore.Measure.TooltipPosition ChartTooltipPosition =>
+        _showTooltips
+            ? LiveChartsCore.Measure.TooltipPosition.Top
+            : LiveChartsCore.Measure.TooltipPosition.Hidden;
 
     /// <summary>
     /// Event raised when any series data point changes.
@@ -1772,14 +1811,30 @@ public partial class ChartViewModel : ViewModelBase
             return;
         }
 
+        // Save the current tooltip state so we can restore it later,
+        // then hide tooltips while sketching.
+        if (!IsSketchEditActive)
+        {
+            _tooltipStateBeforeSketch = _showTooltips;
+            ShowTooltips = false;
+        }
+
         SketchEditSeriesName = seriesName;
     }
 
     /// <summary>
-    /// Deactivates sketch-edit mode.
+    /// Deactivates sketch-edit mode. Restores the tooltip visibility
+    /// to the state it had before sketch mode was activated, and resets
+    /// any zoom applied during the sketch session.
     /// </summary>
     public void ClearSketchEditSeries()
     {
+        if (IsSketchEditActive)
+        {
+            ShowTooltips = _tooltipStateBeforeSketch;
+            ResetSketchZoom();
+        }
+
         SketchEditSeriesName = null;
     }
 
@@ -1884,5 +1939,161 @@ public partial class ChartViewModel : ViewModelBase
         }
 
         return Math.Round(torque / increment, MidpointRounding.AwayFromZero) * increment;
+    }
+
+    /// <summary>
+    /// Current zoom magnification level for sketch-mode zoom.
+    /// 1.0 means no zoom; values greater than 1.0 mean we are zoomed in.
+    /// </summary>
+    public double SketchZoomLevel => _sketchZoomLevel;
+
+    /// <summary>
+    /// Applies a zoom step relative to the given data-space focus point.
+    /// A positive <paramref name="delta"/> zooms in; negative zooms out.
+    /// Only effective when sketch-edit mode is active.
+    /// </summary>
+    /// <param name="focusX">Focus X in data space (RPM).</param>
+    /// <param name="focusY">Focus Y in data space (Torque).</param>
+    /// <param name="delta">Zoom delta; positive zooms in, negative zooms out.</param>
+    public void ApplySketchZoom(double focusX, double focusY, double delta)
+    {
+        if (!IsSketchEditActive)
+        {
+            return;
+        }
+
+        if (XAxes.Length == 0 || YAxes.Length == 0)
+        {
+            return;
+        }
+
+        // Capture the base (unzoomed) axis limits on the first zoom action.
+        if (Math.Abs(_sketchZoomLevel - 1.0) < 0.001)
+        {
+            CaptureBaseAxisLimits();
+        }
+
+        // Compute the new zoom level with a clamped range [1, 20].
+        const double zoomFactor = 0.15;
+        var multiplier = delta > 0 ? (1.0 - zoomFactor) : (1.0 + zoomFactor);
+        _sketchZoomLevel = Math.Clamp(_sketchZoomLevel / multiplier, 1.0, 20.0);
+
+        ApplyZoomAroundPoint(focusX, focusY);
+        OnPropertyChanged(nameof(SketchZoomLevel));
+    }
+
+    /// <summary>
+    /// Resets sketch-mode zoom to the full (unzoomed) view.
+    /// Called automatically when sketch-edit mode is deactivated.
+    /// </summary>
+    public void ResetSketchZoom()
+    {
+        if (Math.Abs(_sketchZoomLevel - 1.0) < 0.001)
+        {
+            return;
+        }
+
+        _sketchZoomLevel = 1.0;
+
+        if (XAxes.Length > 0)
+        {
+            XAxes[0].MinLimit = _baseXMin;
+            XAxes[0].MaxLimit = _baseXMax;
+        }
+
+        if (YAxes.Length > 0)
+        {
+            YAxes[0].MinLimit = _baseYMin;
+            YAxes[0].MaxLimit = _baseYMax;
+        }
+
+        OnPropertyChanged(nameof(SketchZoomLevel));
+        OnPropertyChanged(nameof(XAxes));
+        OnPropertyChanged(nameof(YAxes));
+    }
+
+    /// <summary>
+    /// Captures the current axis limits as the baseline for zoom calculations.
+    /// </summary>
+    private void CaptureBaseAxisLimits()
+    {
+        if (XAxes.Length > 0)
+        {
+            _baseXMin = XAxes[0].MinLimit ?? 0;
+            _baseXMax = XAxes[0].MaxLimit ?? 6000;
+        }
+
+        if (YAxes.Length > 0)
+        {
+            _baseYMin = YAxes[0].MinLimit ?? 0;
+            _baseYMax = YAxes[0].MaxLimit ?? 100;
+        }
+    }
+
+    /// <summary>
+    /// Recomputes the X and Y axis limits for the current zoom level
+    /// centred on the given data-space focus point.
+    /// </summary>
+    private void ApplyZoomAroundPoint(double focusX, double focusY)
+    {
+        var fullWidth = _baseXMax - _baseXMin;
+        var fullHeight = _baseYMax - _baseYMin;
+
+        var newWidth = fullWidth / _sketchZoomLevel;
+        var newHeight = fullHeight / _sketchZoomLevel;
+
+        // Fraction of the full range where the focus point sits.
+        var fx = fullWidth > 0 ? (focusX - _baseXMin) / fullWidth : 0.5;
+        var fy = fullHeight > 0 ? (focusY - _baseYMin) / fullHeight : 0.5;
+
+        fx = Math.Clamp(fx, 0, 1);
+        fy = Math.Clamp(fy, 0, 1);
+
+        var newXMin = focusX - fx * newWidth;
+        var newXMax = focusX + (1 - fx) * newWidth;
+        var newYMin = focusY - fy * newHeight;
+        var newYMax = focusY + (1 - fy) * newHeight;
+
+        // Clamp to base limits so the viewport never extends beyond
+        // the original data range.
+        if (newXMin < _baseXMin)
+        {
+            newXMin = _baseXMin;
+            newXMax = _baseXMin + newWidth;
+        }
+
+        if (newXMax > _baseXMax)
+        {
+            newXMax = _baseXMax;
+            newXMin = _baseXMax - newWidth;
+        }
+
+        if (newYMin < _baseYMin)
+        {
+            newYMin = _baseYMin;
+            newYMax = _baseYMin + newHeight;
+        }
+
+        if (newYMax > _baseYMax)
+        {
+            newYMax = _baseYMax;
+            newYMin = _baseYMax - newHeight;
+        }
+
+        if (XAxes.Length > 0)
+        {
+            XAxes[0].MinLimit = newXMin;
+            XAxes[0].MaxLimit = newXMax;
+        }
+
+        if (YAxes.Length > 0)
+        {
+            YAxes[0].MinLimit = newYMin;
+            YAxes[0].MaxLimit = newYMax;
+        }
+
+        // Notify so the chart and underlay update in sync.
+        OnPropertyChanged(nameof(XAxes));
+        OnPropertyChanged(nameof(YAxes));
     }
 }
