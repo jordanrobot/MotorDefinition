@@ -10,6 +10,7 @@ using CurveEditor.ViewModels;
 using JordanRobot.MotorDefinition.Model;
 using Serilog;
 using System;
+using System.Collections.Specialized;
 using System.Collections.Generic;
 using System.Linq;
 
@@ -21,6 +22,8 @@ namespace CurveEditor.Views;
 public partial class CurveDataPanel : UserControl
 {
     private MainWindowViewModel? _subscribedViewModel;
+    private CurveDataTableViewModel? _subscribedCurveDataTableViewModel;
+    private INotifyCollectionChanged? _subscribedAvailableSeries;
     private bool _isRebuildingColumns;
     private bool _isDragging;
     private CellPosition? _dragStartCell;
@@ -114,11 +117,10 @@ public partial class CurveDataPanel : UserControl
     private void OnUnloaded(object? sender, RoutedEventArgs e)
     {
         // Unsubscribe from events to prevent memory leaks
+        UnsubscribeFromViewModelSubscriptions();
         if (_subscribedViewModel is not null)
         {
-            _subscribedViewModel.CurveDataTableViewModel.PropertyChanged -= OnCurveDataTablePropertyChanged;
-            _subscribedViewModel.CurveDataTableViewModel.SelectionChanged -= OnSelectionChanged;
-            _subscribedViewModel.AvailableSeries.CollectionChanged -= OnAvailableSeriesCollectionChanged;
+            _subscribedViewModel.PropertyChanged -= OnMainWindowViewModelPropertyChanged;
             _subscribedViewModel = null;
         }
 
@@ -137,28 +139,72 @@ public partial class CurveDataPanel : UserControl
 
     private void OnDataContextChanged(object? sender, EventArgs e)
     {
-        // Unsubscribe from old view model
         if (_subscribedViewModel is not null)
         {
-            _subscribedViewModel.CurveDataTableViewModel.PropertyChanged -= OnCurveDataTablePropertyChanged;
-            _subscribedViewModel.CurveDataTableViewModel.SelectionChanged -= OnSelectionChanged;
-            _subscribedViewModel.AvailableSeries.CollectionChanged -= OnAvailableSeriesCollectionChanged;
+            _subscribedViewModel.PropertyChanged -= OnMainWindowViewModelPropertyChanged;
+            UnsubscribeFromViewModelSubscriptions();
         }
 
         if (DataContext is MainWindowViewModel vm)
         {
-            // Subscribe to series changes to rebuild columns
-            vm.CurveDataTableViewModel.PropertyChanged += OnCurveDataTablePropertyChanged;
-            vm.CurveDataTableViewModel.SelectionChanged += OnSelectionChanged;
-            // Subscribe to the AvailableSeries collection changes
-            vm.AvailableSeries.CollectionChanged += OnAvailableSeriesCollectionChanged;
             _subscribedViewModel = vm;
+            vm.PropertyChanged += OnMainWindowViewModelPropertyChanged;
+            SubscribeToViewModelSubscriptions(vm);
             RebuildDataGridColumns();
         }
         else
         {
             _subscribedViewModel = null;
         }
+    }
+
+    private void OnMainWindowViewModelPropertyChanged(object? sender, System.ComponentModel.PropertyChangedEventArgs e)
+    {
+        if (_subscribedViewModel is null)
+        {
+            return;
+        }
+
+        if (e.PropertyName is nameof(MainWindowViewModel.ActiveTab)
+            or nameof(MainWindowViewModel.CurveDataTableViewModel)
+            or nameof(MainWindowViewModel.SelectedVoltage))
+        {
+            SubscribeToViewModelSubscriptions(_subscribedViewModel);
+            RebuildDataGridColumns();
+            UpdateCellSelectionVisuals();
+        }
+    }
+
+    private void UnsubscribeFromViewModelSubscriptions()
+    {
+        if (_subscribedCurveDataTableViewModel is not null)
+        {
+            _subscribedCurveDataTableViewModel.PropertyChanged -= OnCurveDataTablePropertyChanged;
+            _subscribedCurveDataTableViewModel.SelectionChanged -= OnSelectionChanged;
+            _subscribedCurveDataTableViewModel = null;
+        }
+
+        if (_subscribedAvailableSeries is not null)
+        {
+            _subscribedAvailableSeries.CollectionChanged -= OnAvailableSeriesCollectionChanged;
+            _subscribedAvailableSeries = null;
+        }
+    }
+
+    private void SubscribeToViewModelSubscriptions(MainWindowViewModel vm)
+    {
+        UnsubscribeFromViewModelSubscriptions();
+
+        var curveDataTableViewModel = vm.CurveDataTableViewModel;
+        if (curveDataTableViewModel is not null)
+        {
+            curveDataTableViewModel.PropertyChanged += OnCurveDataTablePropertyChanged;
+            curveDataTableViewModel.SelectionChanged += OnSelectionChanged;
+            _subscribedCurveDataTableViewModel = curveDataTableViewModel;
+        }
+
+        _subscribedAvailableSeries = vm.AvailableSeries;
+        _subscribedAvailableSeries.CollectionChanged += OnAvailableSeriesCollectionChanged;
     }
 
     private void OnSelectionChanged(object? sender, EventArgs e)
@@ -636,8 +682,18 @@ public partial class CurveDataPanel : UserControl
                 columnIndex++;
             }
 
-            // Restore ItemsSource after columns are rebuilt
-            DataTable.ItemsSource = savedItemsSource;
+            // Restore source after columns are rebuilt.
+            // - If a concrete source exists, restore it directly.
+            // - If source is null (common when binding has not materialized yet), clear the local
+            //   value so the XAML binding can re-evaluate and repopulate rows.
+            if (savedItemsSource is not null)
+            {
+                DataTable.ItemsSource = savedItemsSource;
+            }
+            else
+            {
+                DataTable.ClearValue(ItemsControl.ItemsSourceProperty);
+            }
         }
         finally
         {
