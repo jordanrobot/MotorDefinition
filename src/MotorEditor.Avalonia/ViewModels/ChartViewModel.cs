@@ -98,6 +98,16 @@ public partial class ChartViewModel : ViewModelBase
     private string? _underlayImagePath;
     private double _underlayAnchorX;
     private double _underlayAnchorY;
+    private string? _sketchEditSeriesName;
+    private decimal _torqueSnapIncrement = 0.2m;
+    private bool _showTooltips = true;
+    private bool _tooltipStateBeforeSketch = true;
+    private double _zoomLevel = 1.0;
+    private bool _baseLimitsCaptured;
+    private double _baseXMin;
+    private double _baseXMax;
+    private double _baseYMin;
+    private double _baseYMax;
 
     [ObservableProperty]
     private ObservableCollection<ISeries> _series = [];
@@ -467,6 +477,38 @@ public partial class ChartViewModel : ViewModelBase
     /// When false, the graph is static and shows the full range of data.
     /// </summary>
     public static bool EnableZoomPan => false;
+
+    /// <summary>
+    /// Gets or sets whether the data tooltip popup is shown when hovering
+    /// over data points on the chart. When disabled the tooltip is hidden.
+    /// This is automatically turned off when sketch-edit mode activates
+    /// and restored when sketch-edit mode deactivates.
+    /// </summary>
+    public bool ShowTooltips
+    {
+        get => _showTooltips;
+        set
+        {
+            if (_showTooltips == value)
+            {
+                return;
+            }
+
+            _showTooltips = value;
+            OnPropertyChanged();
+            OnPropertyChanged(nameof(ChartTooltipPosition));
+        }
+    }
+
+    /// <summary>
+    /// Gets the effective <see cref="LiveChartsCore.Measure.TooltipPosition"/>
+    /// to bind to the chart control. Returns <c>Hidden</c> when tooltips are
+    /// disabled; otherwise returns <c>Top</c>.
+    /// </summary>
+    public LiveChartsCore.Measure.TooltipPosition ChartTooltipPosition =>
+        _showTooltips
+            ? LiveChartsCore.Measure.TooltipPosition.Top
+            : LiveChartsCore.Measure.TooltipPosition.Hidden;
 
     /// <summary>
     /// Event raised when any series data point changes.
@@ -1692,5 +1734,525 @@ public partial class ChartViewModel : ViewModelBase
         }
 
         return result;
+    }
+
+    /// <summary>
+    /// Gets the name of the curve series currently in sketch-edit mode,
+    /// or <c>null</c> if no series is being sketch-edited.
+    /// Only one series can be in sketch-edit mode at a time.
+    /// </summary>
+    public string? SketchEditSeriesName
+    {
+        get => _sketchEditSeriesName;
+        private set
+        {
+            if (string.Equals(_sketchEditSeriesName, value, StringComparison.Ordinal))
+            {
+                return;
+            }
+
+            _sketchEditSeriesName = value;
+            OnPropertyChanged();
+            OnPropertyChanged(nameof(IsSketchEditActive));
+        }
+    }
+
+    /// <summary>
+    /// Gets a value indicating whether sketch-edit mode is currently active
+    /// for any curve series.
+    /// </summary>
+    public bool IsSketchEditActive => !string.IsNullOrEmpty(_sketchEditSeriesName);
+
+    /// <summary>
+    /// Gets or sets the torque snap increment used during sketch editing.
+    /// The torque value is rounded to the nearest multiple of this value.
+    /// Must be greater than zero. Defaults to 0.2.
+    /// </summary>
+    public decimal TorqueSnapIncrement
+    {
+        get => _torqueSnapIncrement;
+        set
+        {
+            if (value <= 0)
+            {
+                return;
+            }
+
+            if (_torqueSnapIncrement == value)
+            {
+                return;
+            }
+
+            _torqueSnapIncrement = value;
+            OnPropertyChanged();
+        }
+    }
+
+    /// <summary>
+    /// Activates sketch-edit mode for the specified curve series.
+    /// Any previously active sketch-edit series is deactivated first.
+    /// </summary>
+    /// <param name="seriesName">The name of the curve series to edit.
+    /// Must match a series in the current voltage configuration.</param>
+    public void SetSketchEditSeries(string seriesName)
+    {
+        if (string.IsNullOrWhiteSpace(seriesName))
+        {
+            return;
+        }
+
+        if (_currentVoltage is null)
+        {
+            return;
+        }
+
+        var curve = _currentVoltage.Curves.FirstOrDefault(c => c.Name == seriesName);
+        if (curve is null)
+        {
+            return;
+        }
+
+        // Locked curves cannot be sketch-edited.
+        if (curve.Locked)
+        {
+            return;
+        }
+
+        // Save the current tooltip state so we can restore it later,
+        // then hide tooltips while sketching.
+        if (!IsSketchEditActive)
+        {
+            _tooltipStateBeforeSketch = _showTooltips;
+            ShowTooltips = false;
+
+            // Only capture base limits if not already zoomed in; otherwise
+            // we would overwrite the real base with the zoomed-in limits,
+            // preventing the user from zooming back out.
+            if (Math.Abs(_zoomLevel - 1.0) < 0.001)
+            {
+                CaptureBaseAxisLimits();
+            }
+        }
+
+        SketchEditSeriesName = seriesName;
+    }
+
+    /// <summary>
+    /// Deactivates sketch-edit mode. Restores the tooltip visibility
+    /// to the state it had before sketch mode was activated.
+    /// Zoom state is preserved across sketch-mode toggling.
+    /// </summary>
+    public void ClearSketchEditSeries()
+    {
+        if (IsSketchEditActive)
+        {
+            ShowTooltips = _tooltipStateBeforeSketch;
+        }
+
+        SketchEditSeriesName = null;
+    }
+
+    /// <summary>
+    /// Applies a sketch point to the active sketch-edit curve series.
+    /// The <paramref name="chartX"/> value is snapped to the nearest
+    /// speed (RPM) data point in the series, and <paramref name="chartY"/>
+    /// is rounded to the nearest <see cref="TorqueSnapIncrement"/>.
+    /// </summary>
+    /// <param name="chartX">The X coordinate in chart data space (RPM).</param>
+    /// <param name="chartY">The Y coordinate in chart data space (torque).</param>
+    /// <returns><c>true</c> if a data point was modified; otherwise <c>false</c>.</returns>
+    public bool ApplySketchPoint(double chartX, double chartY)
+    {
+        if (!IsSketchEditActive || _currentVoltage is null)
+        {
+            return false;
+        }
+
+        var curve = _currentVoltage.Curves.FirstOrDefault(c => c.Name == _sketchEditSeriesName);
+        if (curve is null || curve.Data.Count == 0)
+        {
+            return false;
+        }
+
+        // Snap X to the nearest speed data point.
+        var nearestIndex = FindNearestSpeedIndex(curve, chartX);
+        if (nearestIndex < 0)
+        {
+            return false;
+        }
+
+        // Snap Y to the nearest torque increment.
+        var snappedTorque = SnapTorque((decimal)chartY, _torqueSnapIncrement);
+
+        var point = curve.Data[nearestIndex];
+
+        // No change needed if the torque is already at the snapped value.
+        if (point.Torque == snappedTorque)
+        {
+            return false;
+        }
+
+        if (_undoStack is not null)
+        {
+            var command = new EditPointCommand(curve, nearestIndex, point.Rpm, snappedTorque);
+            _undoStack.PushAndExecute(command);
+        }
+        else
+        {
+            point.Torque = snappedTorque;
+        }
+
+        // Update the cached observable point so the chart line updates
+        // without a full rebuild.
+        if (_seriesDataCache.TryGetValue(curve.Name, out var cachedPoints)
+            && nearestIndex < cachedPoints.Count)
+        {
+            cachedPoints[nearestIndex].Y = (double)snappedTorque;
+        }
+
+        DataChanged?.Invoke(this, EventArgs.Empty);
+        return true;
+    }
+
+    /// <summary>
+    /// Finds the index of the data point in <paramref name="curve"/>
+    /// whose RPM is closest to <paramref name="rpm"/>.
+    /// </summary>
+    internal static int FindNearestSpeedIndex(Curve curve, double rpm)
+    {
+        if (curve.Data.Count == 0)
+        {
+            return -1;
+        }
+
+        var bestIndex = 0;
+        var bestDist = Math.Abs((double)curve.Data[0].Rpm - rpm);
+
+        for (var i = 1; i < curve.Data.Count; i++)
+        {
+            var dist = Math.Abs((double)curve.Data[i].Rpm - rpm);
+            if (dist < bestDist)
+            {
+                bestDist = dist;
+                bestIndex = i;
+            }
+        }
+
+        return bestIndex;
+    }
+
+    /// <summary>
+    /// Rounds <paramref name="torque"/> to the nearest multiple of
+    /// <paramref name="increment"/>.
+    /// </summary>
+    internal static decimal SnapTorque(decimal torque, decimal increment)
+    {
+        if (increment <= 0)
+        {
+            return torque;
+        }
+
+        return Math.Round(torque / increment, MidpointRounding.AwayFromZero) * increment;
+    }
+
+    /// <summary>
+    /// Current chart zoom magnification level.
+    /// 1.0 means no zoom; values greater than 1.0 mean we are zoomed in.
+    /// </summary>
+    public double ZoomLevel => _zoomLevel;
+
+    /// <summary>
+    /// The base (unzoomed) X-axis minimum limit, captured before the
+    /// first zoom action. Used by the view to position the underlay
+    /// image correctly during zoom.
+    /// </summary>
+    public double BaseXMin => _baseXMin;
+
+    /// <summary>
+    /// The base (unzoomed) X-axis maximum limit.
+    /// </summary>
+    public double BaseXMax => _baseXMax;
+
+    /// <summary>
+    /// The base (unzoomed) Y-axis minimum limit.
+    /// </summary>
+    public double BaseYMin => _baseYMin;
+
+    /// <summary>
+    /// The base (unzoomed) Y-axis maximum limit.
+    /// </summary>
+    public double BaseYMax => _baseYMax;
+
+    /// <summary>
+    /// Whether the base axis limits have been captured for zoom calculations.
+    /// Used by the view to decide whether to apply zoom-based underlay scaling.
+    /// </summary>
+    public bool BaseLimitsCaptured => _baseLimitsCaptured;
+
+    /// <summary>
+    /// Zoom level expressed as a percentage for display (e.g. 100 = no zoom,
+    /// 200 = 2× magnification). Rounded to the nearest integer.
+    /// </summary>
+    public int ZoomPercentage => (int)Math.Round(_zoomLevel * 100.0);
+
+    /// <summary>
+    /// Zoom level as a slider-friendly value. Setting this adjusts the
+    /// zoom around the current viewport centre.
+    /// </summary>
+    public double ZoomSliderValue
+    {
+        get => _zoomLevel;
+        set
+        {
+            var clamped = Math.Clamp(value, 1.0, 20.0);
+            if (Math.Abs(_zoomLevel - clamped) < 0.001)
+            {
+                return;
+            }
+
+            if (XAxes.Length == 0 || YAxes.Length == 0)
+            {
+                return;
+            }
+
+            if (!_baseLimitsCaptured)
+            {
+                CaptureBaseAxisLimits();
+            }
+
+            _zoomLevel = clamped;
+
+            // Zoom around the centre of the current viewport.
+            var centreX = XAxes.Length > 0
+                ? ((XAxes[0].MinLimit ?? _baseXMin) + (XAxes[0].MaxLimit ?? _baseXMax)) / 2.0
+                : (_baseXMin + _baseXMax) / 2.0;
+            var centreY = YAxes.Length > 0
+                ? ((YAxes[0].MinLimit ?? _baseYMin) + (YAxes[0].MaxLimit ?? _baseYMax)) / 2.0
+                : (_baseYMin + _baseYMax) / 2.0;
+
+            ApplyZoomAroundPoint(centreX, centreY);
+            OnPropertyChanged(nameof(ZoomLevel));
+            OnPropertyChanged(nameof(ZoomPercentage));
+            OnPropertyChanged(nameof(ZoomSliderValue));
+        }
+    }
+
+    /// <summary>
+    /// Applies a zoom step relative to the given data-space focus point.
+    /// A positive <paramref name="delta"/> zooms in; negative zooms out.
+    /// Works at any time when axes are present.
+    /// </summary>
+    /// <param name="focusX">Focus X in data space (RPM).</param>
+    /// <param name="focusY">Focus Y in data space (Torque).</param>
+    /// <param name="delta">Zoom delta; positive zooms in, negative zooms out.</param>
+    public void ApplyZoom(double focusX, double focusY, double delta)
+    {
+        if (XAxes.Length == 0 || YAxes.Length == 0)
+        {
+            return;
+        }
+
+        // Capture the base (unzoomed) axis limits on the first zoom action.
+        if (!_baseLimitsCaptured)
+        {
+            CaptureBaseAxisLimits();
+        }
+
+        // Compute the new zoom level with a clamped range [1, 20].
+        const double zoomFactor = 0.15;
+        var multiplier = delta > 0 ? (1.0 - zoomFactor) : (1.0 + zoomFactor);
+        _zoomLevel = Math.Clamp(_zoomLevel / multiplier, 1.0, 20.0);
+
+        ApplyZoomAroundPoint(focusX, focusY);
+        OnPropertyChanged(nameof(ZoomLevel));
+        OnPropertyChanged(nameof(ZoomPercentage));
+        OnPropertyChanged(nameof(ZoomSliderValue));
+    }
+
+    /// <summary>
+    /// Resets the chart zoom to the full (unzoomed) view.
+    /// Can be triggered by the user via <c>=</c> key or middle-double-click.
+    /// </summary>
+    public void ResetZoom()
+    {
+        if (Math.Abs(_zoomLevel - 1.0) < 0.001)
+        {
+            return;
+        }
+
+        _zoomLevel = 1.0;
+        _baseLimitsCaptured = false;
+
+        if (XAxes.Length > 0)
+        {
+            XAxes[0].MinLimit = _baseXMin;
+            XAxes[0].MaxLimit = _baseXMax;
+        }
+
+        if (YAxes.Length > 0)
+        {
+            YAxes[0].MinLimit = _baseYMin;
+            YAxes[0].MaxLimit = _baseYMax;
+        }
+
+        OnPropertyChanged(nameof(ZoomLevel));
+        OnPropertyChanged(nameof(ZoomPercentage));
+        OnPropertyChanged(nameof(ZoomSliderValue));
+        OnPropertyChanged(nameof(XAxes));
+        OnPropertyChanged(nameof(YAxes));
+    }
+
+    /// <summary>
+    /// Pans the zoomed viewport by the given data-space deltas.
+    /// Only effective when zoomed in (ZoomLevel &gt; 1). The viewport
+    /// is clamped to the base axis limits.
+    /// </summary>
+    /// <param name="deltaX">Pan amount in data-space X units (positive = pan right).</param>
+    /// <param name="deltaY">Pan amount in data-space Y units (positive = pan up).</param>
+    public void PanBy(double deltaX, double deltaY)
+    {
+        if (Math.Abs(_zoomLevel - 1.0) < 0.001)
+        {
+            return;
+        }
+
+        if (XAxes.Length == 0 || YAxes.Length == 0)
+        {
+            return;
+        }
+
+        var curXMin = XAxes[0].MinLimit ?? _baseXMin;
+        var curXMax = XAxes[0].MaxLimit ?? _baseXMax;
+        var curYMin = YAxes[0].MinLimit ?? _baseYMin;
+        var curYMax = YAxes[0].MaxLimit ?? _baseYMax;
+
+        var newXMin = curXMin - deltaX;
+        var newXMax = curXMax - deltaX;
+        var newYMin = curYMin - deltaY;
+        var newYMax = curYMax - deltaY;
+
+        // Clamp to base limits.
+        if (newXMin < _baseXMin)
+        {
+            var shift = _baseXMin - newXMin;
+            newXMin += shift;
+            newXMax += shift;
+        }
+
+        if (newXMax > _baseXMax)
+        {
+            var shift = newXMax - _baseXMax;
+            newXMin -= shift;
+            newXMax -= shift;
+        }
+
+        if (newYMin < _baseYMin)
+        {
+            var shift = _baseYMin - newYMin;
+            newYMin += shift;
+            newYMax += shift;
+        }
+
+        if (newYMax > _baseYMax)
+        {
+            var shift = newYMax - _baseYMax;
+            newYMin -= shift;
+            newYMax -= shift;
+        }
+
+        XAxes[0].MinLimit = newXMin;
+        XAxes[0].MaxLimit = newXMax;
+        YAxes[0].MinLimit = newYMin;
+        YAxes[0].MaxLimit = newYMax;
+
+        OnPropertyChanged(nameof(XAxes));
+        OnPropertyChanged(nameof(YAxes));
+    }
+
+    /// <summary>
+    /// Captures the current axis limits as the baseline for zoom calculations.
+    /// </summary>
+    private void CaptureBaseAxisLimits()
+    {
+        if (XAxes.Length > 0)
+        {
+            _baseXMin = XAxes[0].MinLimit ?? 0;
+            _baseXMax = XAxes[0].MaxLimit ?? 6000;
+        }
+
+        if (YAxes.Length > 0)
+        {
+            _baseYMin = YAxes[0].MinLimit ?? 0;
+            _baseYMax = YAxes[0].MaxLimit ?? 100;
+        }
+
+        _baseLimitsCaptured = true;
+    }
+
+    /// <summary>
+    /// Recomputes the X and Y axis limits for the current zoom level
+    /// centred on the given data-space focus point.
+    /// </summary>
+    private void ApplyZoomAroundPoint(double focusX, double focusY)
+    {
+        var fullWidth = _baseXMax - _baseXMin;
+        var fullHeight = _baseYMax - _baseYMin;
+
+        var newWidth = fullWidth / _zoomLevel;
+        var newHeight = fullHeight / _zoomLevel;
+
+        // Fraction of the full range where the focus point sits.
+        var fx = fullWidth > 0 ? (focusX - _baseXMin) / fullWidth : 0.5;
+        var fy = fullHeight > 0 ? (focusY - _baseYMin) / fullHeight : 0.5;
+
+        fx = Math.Clamp(fx, 0, 1);
+        fy = Math.Clamp(fy, 0, 1);
+
+        var newXMin = focusX - fx * newWidth;
+        var newXMax = focusX + (1 - fx) * newWidth;
+        var newYMin = focusY - fy * newHeight;
+        var newYMax = focusY + (1 - fy) * newHeight;
+
+        // Clamp to base limits so the viewport never extends beyond
+        // the original data range.
+        if (newXMin < _baseXMin)
+        {
+            newXMin = _baseXMin;
+            newXMax = _baseXMin + newWidth;
+        }
+
+        if (newXMax > _baseXMax)
+        {
+            newXMax = _baseXMax;
+            newXMin = _baseXMax - newWidth;
+        }
+
+        if (newYMin < _baseYMin)
+        {
+            newYMin = _baseYMin;
+            newYMax = _baseYMin + newHeight;
+        }
+
+        if (newYMax > _baseYMax)
+        {
+            newYMax = _baseYMax;
+            newYMin = _baseYMax - newHeight;
+        }
+
+        if (XAxes.Length > 0)
+        {
+            XAxes[0].MinLimit = newXMin;
+            XAxes[0].MaxLimit = newXMax;
+        }
+
+        if (YAxes.Length > 0)
+        {
+            YAxes[0].MinLimit = newYMin;
+            YAxes[0].MaxLimit = newYMax;
+        }
+
+        // Notify so the chart and underlay update in sync.
+        OnPropertyChanged(nameof(XAxes));
+        OnPropertyChanged(nameof(YAxes));
     }
 }

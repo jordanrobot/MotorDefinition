@@ -996,4 +996,531 @@ public class ChartViewModelTests
         Assert.DoesNotContain(".", label100);
         Assert.DoesNotContain(".", label50);
     }
+
+    // --- Sketch-edit tests ---
+
+    [Fact]
+    public void SetSketchEditSeries_WithValidName_ActivatesSketchEdit()
+    {
+        var viewModel = new ChartViewModel();
+        viewModel.CurrentVoltage = CreateTestVoltage();
+
+        viewModel.SetSketchEditSeries("Peak");
+
+        Assert.True(viewModel.IsSketchEditActive);
+        Assert.Equal("Peak", viewModel.SketchEditSeriesName);
+    }
+
+    [Fact]
+    public void SetSketchEditSeries_WithInvalidName_DoesNotActivate()
+    {
+        var viewModel = new ChartViewModel();
+        viewModel.CurrentVoltage = CreateTestVoltage();
+
+        viewModel.SetSketchEditSeries("NonExistent");
+
+        Assert.False(viewModel.IsSketchEditActive);
+        Assert.Null(viewModel.SketchEditSeriesName);
+    }
+
+    [Fact]
+    public void SetSketchEditSeries_WithNullVoltage_DoesNotActivate()
+    {
+        var viewModel = new ChartViewModel();
+
+        viewModel.SetSketchEditSeries("Peak");
+
+        Assert.False(viewModel.IsSketchEditActive);
+    }
+
+    [Fact]
+    public void ClearSketchEditSeries_DeactivatesSketchEdit()
+    {
+        var viewModel = new ChartViewModel();
+        viewModel.CurrentVoltage = CreateTestVoltage();
+        viewModel.SetSketchEditSeries("Peak");
+
+        viewModel.ClearSketchEditSeries();
+
+        Assert.False(viewModel.IsSketchEditActive);
+        Assert.Null(viewModel.SketchEditSeriesName);
+    }
+
+    [Fact]
+    public void SetSketchEditSeries_ReplacesExisting()
+    {
+        var viewModel = new ChartViewModel();
+        viewModel.CurrentVoltage = CreateTestVoltage();
+        viewModel.SetSketchEditSeries("Peak");
+
+        viewModel.SetSketchEditSeries("Continuous");
+
+        Assert.Equal("Continuous", viewModel.SketchEditSeriesName);
+    }
+
+    [Theory]
+    [InlineData(10.0, 0.2, 10.0)]
+    [InlineData(10.09, 0.2, 10.0)]
+    [InlineData(10.15, 0.2, 10.2)]
+    [InlineData(10.3, 0.2, 10.4)]
+    [InlineData(10.5, 0.5, 10.5)]
+    [InlineData(10.6, 0.5, 10.5)]
+    [InlineData(10.75, 0.5, 11.0)]
+    [InlineData(10.0, 1.0, 10.0)]
+    [InlineData(10.4, 1.0, 10.0)]
+    [InlineData(10.5, 1.0, 11.0)]
+    public void SnapTorque_RoundsToNearestIncrement(double torque, double increment, double expected)
+    {
+        var result = ChartViewModel.SnapTorque((decimal)torque, (decimal)increment);
+
+        Assert.Equal((decimal)expected, result);
+    }
+
+    [Fact]
+    public void SnapTorque_WithZeroIncrement_ReturnsTorqueUnchanged()
+    {
+        var result = ChartViewModel.SnapTorque(10.3m, 0m);
+
+        Assert.Equal(10.3m, result);
+    }
+
+    [Fact]
+    public void FindNearestSpeedIndex_ReturnsClosestIndex()
+    {
+        var curve = new Curve("Test");
+        curve.InitializeData(1000, 50);
+        // Data points at 0%, 1%, 2%… of 1000 RPM → 0, 10, 20, 30…
+
+        var index = ChartViewModel.FindNearestSpeedIndex(curve, 25);
+
+        // Closest data point to 25 RPM is at index 3 (30 RPM) or index 2 (20 RPM).
+        // 25 is equidistant between 20 and 30, but the algorithm picks the first found with lower distance.
+        // At 20 RPM dist=5, at 30 RPM dist=5. Since loop iterates forward, the first match (index 2) stays.
+        Assert.Equal(2, index); // 20 RPM (closest or tied)
+    }
+
+    [Fact]
+    public void FindNearestSpeedIndex_WithEmptyCurve_ReturnsNegativeOne()
+    {
+        var curve = new Curve("Empty");
+
+        var index = ChartViewModel.FindNearestSpeedIndex(curve, 100);
+
+        Assert.Equal(-1, index);
+    }
+
+    [Fact]
+    public void ApplySketchPoint_WhenNotActive_ReturnsFalse()
+    {
+        var viewModel = new ChartViewModel();
+        viewModel.CurrentVoltage = CreateTestVoltage();
+
+        var result = viewModel.ApplySketchPoint(100, 50);
+
+        Assert.False(result);
+    }
+
+    [Fact]
+    public void ApplySketchPoint_WhenActive_UpdatesTorqueAndReturnsTrue()
+    {
+        var viewModel = new ChartViewModel();
+        var voltage = CreateTestVoltage();
+        viewModel.CurrentVoltage = voltage;
+        viewModel.SetSketchEditSeries("Peak");
+
+        // Pick an RPM that is close to a known data point.
+        var peakCurve = voltage.Curves.First(c => c.Name == "Peak");
+        var targetRpm = (double)peakCurve.Data[5].Rpm; // 5% of 5000 = 250 RPM
+        var newTorque = 42.3; // Should snap to 42.4 (nearest 0.2)
+
+        var result = viewModel.ApplySketchPoint(targetRpm, newTorque);
+
+        Assert.True(result);
+        Assert.Equal(42.4m, peakCurve.Data[5].Torque);
+    }
+
+    [Fact]
+    public void ApplySketchPoint_WithCustomSnapIncrement_SnapsCorrectly()
+    {
+        var viewModel = new ChartViewModel();
+        var voltage = CreateTestVoltage();
+        viewModel.CurrentVoltage = voltage;
+        viewModel.TorqueSnapIncrement = 0.5m;
+        viewModel.SetSketchEditSeries("Peak");
+
+        var peakCurve = voltage.Curves.First(c => c.Name == "Peak");
+        var targetRpm = (double)peakCurve.Data[10].Rpm;
+        var newTorque = 42.3;
+
+        viewModel.ApplySketchPoint(targetRpm, newTorque);
+
+        Assert.Equal(42.5m, peakCurve.Data[10].Torque);
+    }
+
+    [Fact]
+    public void ApplySketchPoint_RaisesDataChanged()
+    {
+        var viewModel = new ChartViewModel();
+        var voltage = CreateTestVoltage();
+        viewModel.CurrentVoltage = voltage;
+        viewModel.SetSketchEditSeries("Peak");
+        var eventRaised = false;
+        viewModel.DataChanged += (_, _) => eventRaised = true;
+
+        var peakCurve = voltage.Curves.First(c => c.Name == "Peak");
+        var targetRpm = (double)peakCurve.Data[5].Rpm;
+        viewModel.ApplySketchPoint(targetRpm, 42.3);
+
+        Assert.True(eventRaised);
+    }
+
+    [Fact]
+    public void ApplySketchPoint_WhenTorqueAlreadyAtSnappedValue_ReturnsFalse()
+    {
+        var viewModel = new ChartViewModel();
+        var voltage = CreateTestVoltage();
+        viewModel.CurrentVoltage = voltage;
+        viewModel.SetSketchEditSeries("Peak");
+
+        var peakCurve = voltage.Curves.First(c => c.Name == "Peak");
+        // Set the target torque to the current snapped value.
+        var currentTorque = peakCurve.Data[5].Torque;
+        var targetRpm = (double)peakCurve.Data[5].Rpm;
+
+        var result = viewModel.ApplySketchPoint(targetRpm, (double)currentTorque);
+
+        Assert.False(result);
+    }
+
+    [Fact]
+    public void TorqueSnapIncrement_DefaultsToPointTwo()
+    {
+        var viewModel = new ChartViewModel();
+
+        Assert.Equal(0.2m, viewModel.TorqueSnapIncrement);
+    }
+
+    [Fact]
+    public void TorqueSnapIncrement_RejectsZeroOrNegative()
+    {
+        var viewModel = new ChartViewModel();
+
+        viewModel.TorqueSnapIncrement = 0m;
+        Assert.Equal(0.2m, viewModel.TorqueSnapIncrement);
+
+        viewModel.TorqueSnapIncrement = -1m;
+        Assert.Equal(0.2m, viewModel.TorqueSnapIncrement);
+    }
+
+    [Fact]
+    public void SetSketchEditSeries_WithWhitespaceName_DoesNotActivate()
+    {
+        var viewModel = new ChartViewModel();
+        viewModel.CurrentVoltage = CreateTestVoltage();
+
+        viewModel.SetSketchEditSeries("  ");
+
+        Assert.False(viewModel.IsSketchEditActive);
+    }
+
+    // --- Tooltip toggle tests ---
+
+    [Fact]
+    public void ShowTooltips_DefaultsToTrue()
+    {
+        var viewModel = new ChartViewModel();
+
+        Assert.True(viewModel.ShowTooltips);
+    }
+
+    [Fact]
+    public void ChartTooltipPosition_ReturnsTopWhenEnabled()
+    {
+        var viewModel = new ChartViewModel();
+
+        Assert.Equal(LiveChartsCore.Measure.TooltipPosition.Top, viewModel.ChartTooltipPosition);
+    }
+
+    [Fact]
+    public void ChartTooltipPosition_ReturnsHiddenWhenDisabled()
+    {
+        var viewModel = new ChartViewModel();
+
+        viewModel.ShowTooltips = false;
+
+        Assert.Equal(LiveChartsCore.Measure.TooltipPosition.Hidden, viewModel.ChartTooltipPosition);
+    }
+
+    [Fact]
+    public void SetSketchEditSeries_HidesTooltipsAutomatically()
+    {
+        var viewModel = new ChartViewModel();
+        viewModel.CurrentVoltage = CreateTestVoltage();
+        Assert.True(viewModel.ShowTooltips);
+
+        viewModel.SetSketchEditSeries("Peak");
+
+        Assert.False(viewModel.ShowTooltips);
+    }
+
+    [Fact]
+    public void ClearSketchEditSeries_RestoresTooltipState()
+    {
+        var viewModel = new ChartViewModel();
+        viewModel.CurrentVoltage = CreateTestVoltage();
+        viewModel.SetSketchEditSeries("Peak");
+        Assert.False(viewModel.ShowTooltips);
+
+        viewModel.ClearSketchEditSeries();
+
+        Assert.True(viewModel.ShowTooltips);
+    }
+
+    [Fact]
+    public void ClearSketchEditSeries_RestoresTooltipToFalseIfWasDisabledBeforeSketch()
+    {
+        var viewModel = new ChartViewModel();
+        viewModel.CurrentVoltage = CreateTestVoltage();
+        viewModel.ShowTooltips = false;
+        viewModel.SetSketchEditSeries("Peak");
+
+        viewModel.ClearSketchEditSeries();
+
+        Assert.False(viewModel.ShowTooltips);
+    }
+
+    // --- Sketch zoom tests ---
+
+    [Fact]
+    public void ZoomLevel_DefaultsToOne()
+    {
+        var viewModel = new ChartViewModel();
+
+        Assert.Equal(1.0, viewModel.ZoomLevel);
+    }
+
+    [Fact]
+    public void ApplyZoom_WithoutSketchMode_StillZooms()
+    {
+        var viewModel = new ChartViewModel();
+        viewModel.CurrentVoltage = CreateTestVoltage();
+
+        viewModel.ApplyZoom(100, 50, 1.0);
+
+        Assert.True(viewModel.ZoomLevel > 1.0);
+    }
+
+    [Fact]
+    public void ApplyZoom_WhenActive_IncreasesZoomLevel()
+    {
+        var viewModel = new ChartViewModel();
+        viewModel.CurrentVoltage = CreateTestVoltage();
+        viewModel.SetSketchEditSeries("Peak");
+
+        viewModel.ApplyZoom(2500, 27, 1.0);
+
+        Assert.True(viewModel.ZoomLevel > 1.0);
+    }
+
+    [Fact]
+    public void ApplyZoom_ZoomOutDoesNotGoBelowOne()
+    {
+        var viewModel = new ChartViewModel();
+        viewModel.CurrentVoltage = CreateTestVoltage();
+
+        viewModel.ApplyZoom(2500, 27, -1.0);
+
+        Assert.Equal(1.0, viewModel.ZoomLevel);
+    }
+
+    [Fact]
+    public void ResetZoom_RestoresZoomLevelToOne()
+    {
+        var viewModel = new ChartViewModel();
+        viewModel.CurrentVoltage = CreateTestVoltage();
+        viewModel.ApplyZoom(2500, 27, 1.0);
+        Assert.True(viewModel.ZoomLevel > 1.0);
+
+        viewModel.ResetZoom();
+
+        Assert.Equal(1.0, viewModel.ZoomLevel);
+    }
+
+    [Fact]
+    public void ClearSketchEditSeries_PreservesZoom()
+    {
+        var viewModel = new ChartViewModel();
+        viewModel.CurrentVoltage = CreateTestVoltage();
+        viewModel.SetSketchEditSeries("Peak");
+        viewModel.ApplyZoom(2500, 27, 1.0);
+        Assert.True(viewModel.ZoomLevel > 1.0);
+
+        viewModel.ClearSketchEditSeries();
+
+        Assert.True(viewModel.ZoomLevel > 1.0);
+    }
+
+    [Fact]
+    public void ApplyZoom_NarrowsAxisLimits()
+    {
+        var viewModel = new ChartViewModel();
+        viewModel.CurrentVoltage = CreateTestVoltage();
+
+        var originalXMax = viewModel.XAxes[0].MaxLimit;
+        var originalYMax = viewModel.YAxes[0].MaxLimit;
+
+        viewModel.ApplyZoom(2500, 27, 1.0);
+
+        // After zooming in, the visible range should be narrower.
+        var newXRange = (viewModel.XAxes[0].MaxLimit ?? 0) - (viewModel.XAxes[0].MinLimit ?? 0);
+        var originalXRange = (originalXMax ?? 0) - 0;
+        Assert.True(newXRange < originalXRange);
+    }
+
+    [Fact]
+    public void SetSketchEditSeries_WithLockedCurve_DoesNotActivate()
+    {
+        var viewModel = new ChartViewModel();
+        var voltage = CreateTestVoltage();
+        var peak = voltage.Curves.First(c => c.Name == "Peak");
+        peak.Locked = true;
+        viewModel.CurrentVoltage = voltage;
+
+        viewModel.SetSketchEditSeries("Peak");
+
+        Assert.False(viewModel.IsSketchEditActive);
+        Assert.Null(viewModel.SketchEditSeriesName);
+    }
+
+    [Fact]
+    public void SetSketchEditSeries_WithUnlockedCurve_Activates()
+    {
+        var viewModel = new ChartViewModel();
+        var voltage = CreateTestVoltage();
+        viewModel.CurrentVoltage = voltage;
+
+        viewModel.SetSketchEditSeries("Peak");
+
+        Assert.True(viewModel.IsSketchEditActive);
+        Assert.Equal("Peak", viewModel.SketchEditSeriesName);
+    }
+
+    [Fact]
+    public void ZoomPercentage_DefaultsTo100()
+    {
+        var viewModel = new ChartViewModel();
+
+        Assert.Equal(100, viewModel.ZoomPercentage);
+    }
+
+    [Fact]
+    public void ZoomPercentage_IncreasesAfterZoomIn()
+    {
+        var viewModel = new ChartViewModel();
+        viewModel.CurrentVoltage = CreateTestVoltage();
+
+        viewModel.ApplyZoom(2500, 27, 1.0);
+
+        Assert.True(viewModel.ZoomPercentage > 100);
+    }
+
+    [Fact]
+    public void ZoomSliderValue_ControlsZoomLevel()
+    {
+        var viewModel = new ChartViewModel();
+        viewModel.CurrentVoltage = CreateTestVoltage();
+
+        viewModel.ZoomSliderValue = 5.0;
+
+        Assert.Equal(5.0, viewModel.ZoomLevel, 2);
+        Assert.Equal(500, viewModel.ZoomPercentage);
+    }
+
+    [Fact]
+    public void ZoomSliderValue_ClampedToRange()
+    {
+        var viewModel = new ChartViewModel();
+        viewModel.CurrentVoltage = CreateTestVoltage();
+
+        viewModel.ZoomSliderValue = 25.0;
+
+        Assert.Equal(20.0, viewModel.ZoomLevel, 2);
+    }
+
+    [Fact]
+    public void PanBy_WhenNotZoomed_DoesNothing()
+    {
+        var viewModel = new ChartViewModel();
+        viewModel.CurrentVoltage = CreateTestVoltage();
+        var originalXMin = viewModel.XAxes[0].MinLimit;
+
+        viewModel.PanBy(100, 100);
+
+        Assert.Equal(originalXMin, viewModel.XAxes[0].MinLimit);
+    }
+
+    [Fact]
+    public void PanBy_WhenZoomed_ShiftsAxisLimits()
+    {
+        var viewModel = new ChartViewModel();
+        viewModel.CurrentVoltage = CreateTestVoltage();
+        viewModel.ApplyZoom(2500, 27, 1.0);
+        var xMinBefore = viewModel.XAxes[0].MinLimit ?? 0;
+
+        viewModel.PanBy(100, 0);
+
+        var xMinAfter = viewModel.XAxes[0].MinLimit ?? 0;
+        Assert.True(xMinAfter < xMinBefore);
+    }
+
+    [Fact]
+    public void SetSketchEditSeries_WhileZoomed_DoesNotOverwriteBaseLimits()
+    {
+        var viewModel = new ChartViewModel();
+        viewModel.CurrentVoltage = CreateTestVoltage();
+        var originalXMax = viewModel.XAxes[0].MaxLimit;
+
+        // Zoom in first.
+        viewModel.ApplyZoom(2500, 27, 1.0);
+        Assert.True(viewModel.ZoomLevel > 1.0);
+
+        // Activate sketch mode while zoomed — should not corrupt base limits.
+        viewModel.SetSketchEditSeries("Peak");
+
+        // Should still be able to reset zoom to the original full view.
+        viewModel.ResetZoom();
+        Assert.Equal(1.0, viewModel.ZoomLevel);
+        Assert.Equal(originalXMax, viewModel.XAxes[0].MaxLimit);
+    }
+
+    [Fact]
+    public void BaseLimitsCaptured_FalseByDefault()
+    {
+        var viewModel = new ChartViewModel();
+
+        Assert.False(viewModel.BaseLimitsCaptured);
+    }
+
+    [Fact]
+    public void BaseLimitsCaptured_TrueAfterZoom()
+    {
+        var viewModel = new ChartViewModel();
+        viewModel.CurrentVoltage = CreateTestVoltage();
+
+        viewModel.ApplyZoom(2500, 27, 1.0);
+
+        Assert.True(viewModel.BaseLimitsCaptured);
+    }
+
+    [Fact]
+    public void BaseLimitsCaptured_FalseAfterReset()
+    {
+        var viewModel = new ChartViewModel();
+        viewModel.CurrentVoltage = CreateTestVoltage();
+        viewModel.ApplyZoom(2500, 27, 1.0);
+
+        viewModel.ResetZoom();
+
+        Assert.False(viewModel.BaseLimitsCaptured);
+    }
 }

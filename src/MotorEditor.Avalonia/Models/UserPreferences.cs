@@ -44,6 +44,13 @@ public sealed class UserPreferences
     public bool ShowVoltageMaxSpeedLine { get; set; } = true;
 
     /// <summary>
+    /// Torque snap increment used during sketch editing. The torque value
+    /// recorded when the user sketches on the chart is rounded to the
+    /// nearest multiple of this value. Defaults to 0.2.
+    /// </summary>
+    public decimal TorqueSnapIncrement { get; set; } = 0.2m;
+
+    /// <summary>
     /// Creates a copy of the current preferences.
     /// </summary>
     public UserPreferences Clone()
@@ -54,7 +61,8 @@ public sealed class UserPreferences
             Theme = Theme,
             CurveColors = new List<string>(CurveColors),
             ShowMotorRatedSpeedLine = ShowMotorRatedSpeedLine,
-            ShowVoltageMaxSpeedLine = ShowVoltageMaxSpeedLine
+            ShowVoltageMaxSpeedLine = ShowVoltageMaxSpeedLine,
+            TorqueSnapIncrement = TorqueSnapIncrement
         };
     }
 }

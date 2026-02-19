@@ -1056,6 +1056,82 @@ public partial class CurveDataPanel : UserControl
     }
 
     /// <summary>
+    /// Handles sketch edit toggle button click. Activates sketch-edit
+    /// mode for the clicked series, or deactivates it if it was already
+    /// the active sketch-edit series. Only one series can be in
+    /// sketch-edit mode at a time; toggling a different series switches
+    /// the active series.
+    /// </summary>
+    private void OnSketchEditToggleClick(object? sender, RoutedEventArgs e)
+    {
+        if (sender is not ToggleButton toggleButton || toggleButton.DataContext is not Curve series)
+        {
+            return;
+        }
+
+        if (DataContext is not MainWindowViewModel viewModel || viewModel.ChartViewModel is null)
+        {
+            return;
+        }
+
+        // Locked curves cannot be sketch-edited.
+        if (series.Locked)
+        {
+            toggleButton.IsChecked = false;
+            return;
+        }
+
+        var chart = viewModel.ChartViewModel;
+
+        if (string.Equals(chart.SketchEditSeriesName, series.Name, StringComparison.Ordinal))
+        {
+            // Already the active sketch series — deactivate.
+            chart.ClearSketchEditSeries();
+            toggleButton.IsChecked = false;
+        }
+        else
+        {
+            // Activate for this series (replaces any previous).
+            chart.SetSketchEditSeries(series.Name);
+            toggleButton.IsChecked = true;
+        }
+
+        // Uncheck sibling sketch-edit toggle buttons so only one is active.
+        RefreshSketchEditToggles(chart.SketchEditSeriesName);
+    }
+
+    /// <summary>
+    /// Walks the series header to ensure only the toggle button for
+    /// <paramref name="activeSeriesName"/> is checked.
+    /// </summary>
+    private void RefreshSketchEditToggles(string? activeSeriesName)
+    {
+        var headerScrollViewer = this.FindControl<ScrollViewer>("HeaderScrollViewer");
+        if (headerScrollViewer is null)
+        {
+            return;
+        }
+
+        foreach (var toggle in headerScrollViewer.GetVisualDescendants().OfType<ToggleButton>())
+        {
+            if (toggle.DataContext is not Curve curve)
+            {
+                continue;
+            }
+
+            // Identify sketch-edit toggles by tooltip text to avoid
+            // interfering with other toggle buttons in the template.
+            if (toggle.GetValue(ToolTip.TipProperty) is not string tip ||
+                !string.Equals(tip, "Toggle Sketch Edit", StringComparison.Ordinal))
+            {
+                continue;
+            }
+
+            toggle.IsChecked = string.Equals(curve.Name, activeSeriesName, StringComparison.Ordinal);
+        }
+    }
+
+    /// <summary>
     /// Handles delete series button click.
     /// </summary>
     private async void OnDeleteSeriesClick(object? sender, RoutedEventArgs e)
