@@ -435,9 +435,6 @@ public partial class ChartView : UserControl
     }
 
     /// <summary>
-    /// Handles mouse wheel scrolling to zoom the chart during sketch-edit mode.
-    /// </summary>
-    /// <summary>
     /// Handles Ctrl+mouse wheel / Ctrl+touchpad scroll to zoom the chart.
     /// Also handles Ctrl+touchpad pinch-to-zoom (reported as wheel events
     /// with Ctrl modifier on most platforms).

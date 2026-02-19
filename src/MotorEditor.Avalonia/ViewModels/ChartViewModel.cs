@@ -1948,7 +1948,7 @@ public partial class ChartViewModel : ViewModelBase
     }
 
     /// <summary>
-    /// Current zoom magnification level for sketch-mode zoom.
+    /// Current chart zoom magnification level.
     /// 1.0 means no zoom; values greater than 1.0 mean we are zoomed in.
     /// </summary>
     public double ZoomLevel => _zoomLevel;
