@@ -19,7 +19,10 @@ Implements sketch-style curve editing on the chart, allowing users to click and 
 ### Modified
 
 - src/MotorEditor.Avalonia/Models/UserPreferences.cs - Added `TorqueSnapIncrement` property (default 0.2) with clone support
+- src/MotorEditor.Avalonia/Views/ChartView.axaml - Added sketch-edit mode indicator overlay showing active series name
 - src/MotorEditor.Avalonia/Views/ChartView.axaml.cs - Extended pointer pressed/moved/released/capture-lost handlers to support sketch-edit drag interactions
+- src/MotorEditor.Avalonia/Views/CurveDataPanel.axaml - Added per-series ✏ sketch-edit toggle button in the column header
+- src/MotorEditor.Avalonia/Views/CurveDataPanel.axaml.cs - Added `OnSketchEditToggleClick` and `RefreshSketchEditToggles` handlers for sketch-edit toggle
 
 ### Removed
 
@@ -27,17 +30,20 @@ Implements sketch-style curve editing on the chart, allowing users to click and 
 
 ## Release Summary
 
-**Total Files Affected**: 4
+**Total Files Affected**: 6
 
 ### Files Created (0)
 
 (none)
 
-### Files Modified (4)
+### Files Modified (6)
 
 - src/MotorEditor.Avalonia/Models/UserPreferences.cs - Added TorqueSnapIncrement preference
 - src/MotorEditor.Avalonia/ViewModels/ChartViewModel.cs - Added sketch-edit state management and point application logic
+- src/MotorEditor.Avalonia/Views/ChartView.axaml - Added sketch-edit mode indicator overlay
 - src/MotorEditor.Avalonia/Views/ChartView.axaml.cs - Added sketch-edit mouse interaction handling
+- src/MotorEditor.Avalonia/Views/CurveDataPanel.axaml - Added per-series sketch-edit toggle button in column header
+- src/MotorEditor.Avalonia/Views/CurveDataPanel.axaml.cs - Added sketch-edit toggle click handler and sibling refresh logic
 - tests/CurveEditor.Tests/ViewModels/ChartViewModelTests.cs - Added 26 unit tests for sketch-edit functionality
 
 ### Files Removed (0)

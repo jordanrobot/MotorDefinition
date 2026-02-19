@@ -143,6 +143,13 @@
                                                     <TextBlock Text="🔓" FontSize="10" IsVisible="{Binding !Locked}"/>
                                                 </Panel>
                                             </ToggleButton>
+                                            <!-- Sketch edit toggle button -->
+                                            <ToggleButton Width="20" Height="20"
+                                                          Padding="0"
+                                                          ToolTip.Tip="Toggle Sketch Edit"
+                                                          Click="OnSketchEditToggleClick">
+                                                <TextBlock Text="✏" FontSize="10"/>
+                                            </ToggleButton>
                                             <!-- Trash button (in header) - disabled when locked -->
                                             <Button Width="20" Height="20"
                                                     Padding="0"
