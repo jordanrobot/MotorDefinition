@@ -93,6 +93,22 @@
                                            MinWidth="100"/>
                         </Grid>
 
+                        <!-- Drag Sketch Band Percent -->
+                        <Grid ColumnDefinitions="Auto,*" Margin="0,4">
+                            <TextBlock Grid.Column="0" 
+                                       Classes="Label"
+                                       Text="Sketch Drag Band (%):"
+                                       ToolTip.Tip="Pointer distance band used during click-hold-drag sketch editing. Single-click point edits are unaffected."/>
+                            <NumericUpDown Grid.Column="1"
+                                           Value="{Binding SketchDragBandPercent}"
+                                           Minimum="1"
+                                           Maximum="50"
+                                           Increment="0.5"
+                                           FormatString="0.#"
+                                           HorizontalAlignment="Left"
+                                           MinWidth="100"/>
+                        </Grid>
+
                         <!-- Theme -->
                         <Grid ColumnDefinitions="Auto,*" Margin="0,8,0,0">
                             <TextBlock Grid.Column="0" 

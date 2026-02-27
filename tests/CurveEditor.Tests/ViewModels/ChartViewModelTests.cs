@@ -1158,6 +1158,83 @@ public class ChartViewModelTests
     }
 
     [Fact]
+    public void ApplySketchPoint_WhenActiveSeriesLocked_ReturnsFalseAndClearsSketchMode()
+    {
+        var viewModel = new ChartViewModel();
+        var voltage = CreateTestVoltage();
+        viewModel.CurrentVoltage = voltage;
+        viewModel.SetSketchEditSeries("Peak");
+
+        var peakCurve = voltage.Curves.First(c => c.Name == "Peak");
+        peakCurve.Locked = true;
+
+        var result = viewModel.ApplySketchPoint((double)peakCurve.Data[5].Rpm, 42.3);
+
+        Assert.False(result);
+        Assert.False(viewModel.IsSketchEditActive);
+        Assert.Null(viewModel.SketchEditSeriesName);
+    }
+
+    [Fact]
+    public void ApplySketchPoint_DragStrokeOutsideNarrowBand_DoesNotUpdateTorque()
+    {
+        var viewModel = new ChartViewModel();
+        var voltage = CreateTestVoltage();
+        viewModel.CurrentVoltage = voltage;
+        viewModel.TorqueSnapIncrement = 0.1m;
+        viewModel.SetSketchEditSeries("Peak");
+
+        var peakCurve = voltage.Curves.First(c => c.Name == "Peak");
+        var index = 10;
+        var originalTorque = peakCurve.Data[index].Torque;
+        var outsideBandRpm = (double)peakCurve.Data[index].Rpm + 3d;
+
+        var result = viewModel.ApplySketchPoint(outsideBandRpm, 11.7, isDragStroke: true);
+
+        Assert.False(result);
+        Assert.Equal(originalTorque, peakCurve.Data[index].Torque);
+    }
+
+    [Fact]
+    public void ApplySketchPoint_DragStrokeInsideNarrowBand_UpdatesTorque()
+    {
+        var viewModel = new ChartViewModel();
+        var voltage = CreateTestVoltage();
+        viewModel.CurrentVoltage = voltage;
+        viewModel.TorqueSnapIncrement = 0.1m;
+        viewModel.SetSketchEditSeries("Peak");
+
+        var peakCurve = voltage.Curves.First(c => c.Name == "Peak");
+        var index = 10;
+        var insideBandRpm = (double)peakCurve.Data[index].Rpm + 2d;
+
+        var result = viewModel.ApplySketchPoint(insideBandRpm, 11.7, isDragStroke: true);
+
+        Assert.True(result);
+        Assert.Equal(11.7m, peakCurve.Data[index].Torque);
+    }
+
+    [Fact]
+    public void DragSketchBandFraction_DefaultsToFivePercent()
+    {
+        var viewModel = new ChartViewModel();
+
+        Assert.Equal(0.05, viewModel.DragSketchBandFraction, 3);
+    }
+
+    [Fact]
+    public void DragSketchBandFraction_RejectsInvalidValues()
+    {
+        var viewModel = new ChartViewModel();
+
+        viewModel.DragSketchBandFraction = 0;
+        Assert.Equal(0.05, viewModel.DragSketchBandFraction, 3);
+
+        viewModel.DragSketchBandFraction = 1.5;
+        Assert.Equal(0.05, viewModel.DragSketchBandFraction, 3);
+    }
+
+    [Fact]
     public void ApplySketchPoint_RaisesDataChanged()
     {
         var viewModel = new ChartViewModel();

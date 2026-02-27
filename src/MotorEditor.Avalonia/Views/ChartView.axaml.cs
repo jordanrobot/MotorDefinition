@@ -242,7 +242,7 @@ public partial class ChartView : UserControl
         // Continue sketch-edit drag: apply sketch point as the mouse moves.
         if (_isSketchDragging && _chartViewModel.IsSketchEditActive)
         {
-            TryApplySketchAtPixel(_chartViewModel, pixelPos);
+            TryApplySketchAtPixel(_chartViewModel, pixelPos, isDragStroke: true);
             e.Handled = true;
             return;
         }
@@ -371,7 +371,7 @@ public partial class ChartView : UserControl
     /// Converts a pixel position on the chart to data-space coordinates
     /// and forwards it to the view model's sketch-edit logic.
     /// </summary>
-    private bool TryApplySketchAtPixel(ChartViewModel vm, Point pixelPosition)
+    private bool TryApplySketchAtPixel(ChartViewModel vm, Point pixelPosition, bool isDragStroke = false)
     {
         var chart = TorqueChart.CoreChart;
         if (chart is null)
@@ -420,7 +420,7 @@ public partial class ChartView : UserControl
         var chartX = xMin + (pixelPosition.X - drawLocation.X) / drawSize.Width * (xMax - xMin);
         var chartY = yMax - (pixelPosition.Y - drawLocation.Y) / drawSize.Height * (yMax - yMin);
 
-        return vm.ApplySketchPoint(chartX, chartY);
+        return vm.ApplySketchPoint(chartX, chartY, isDragStroke);
     }
 
     /// <summary>

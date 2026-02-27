@@ -51,6 +51,13 @@ public sealed class UserPreferences
     public decimal TorqueSnapIncrement { get; set; } = 0.2m;
 
     /// <summary>
+    /// Drag sketch band width as a percent of nearest point spacing.
+    /// Lower values require the pointer to stay closer to each point while
+    /// click-hold-drag sketching. Defaults to 5%.
+    /// </summary>
+    public decimal SketchDragBandPercent { get; set; } = 5m;
+
+    /// <summary>
     /// Creates a copy of the current preferences.
     /// </summary>
     public UserPreferences Clone()
@@ -62,7 +69,8 @@ public sealed class UserPreferences
             CurveColors = new List<string>(CurveColors),
             ShowMotorRatedSpeedLine = ShowMotorRatedSpeedLine,
             ShowVoltageMaxSpeedLine = ShowVoltageMaxSpeedLine,
-            TorqueSnapIncrement = TorqueSnapIncrement
+            TorqueSnapIncrement = TorqueSnapIncrement,
+            SketchDragBandPercent = SketchDragBandPercent
         };
     }
 }

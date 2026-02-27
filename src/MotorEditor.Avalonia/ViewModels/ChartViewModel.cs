@@ -100,6 +100,7 @@ public partial class ChartViewModel : ViewModelBase
     private double _underlayAnchorY;
     private string? _sketchEditSeriesName;
     private decimal _torqueSnapIncrement = 0.2m;
+    private double _dragSketchBandFraction = 0.05;
     private bool _showTooltips = true;
     private bool _tooltipStateBeforeSketch = true;
     private double _zoomLevel = 1.0;
@@ -1789,6 +1790,31 @@ public partial class ChartViewModel : ViewModelBase
     }
 
     /// <summary>
+    /// Gets or sets the drag sketch activation band as a fraction of the
+    /// nearest point spacing. Used only during click-hold-drag sketching.
+    /// For example, 0.05 means 5% of spacing.
+    /// </summary>
+    public double DragSketchBandFraction
+    {
+        get => _dragSketchBandFraction;
+        set
+        {
+            if (value <= 0 || value > 1)
+            {
+                return;
+            }
+
+            if (Math.Abs(_dragSketchBandFraction - value) < 0.0001)
+            {
+                return;
+            }
+
+            _dragSketchBandFraction = value;
+            OnPropertyChanged();
+        }
+    }
+
+    /// <summary>
     /// Activates sketch-edit mode for the specified curve series.
     /// Any previously active sketch-edit series is deactivated first.
     /// </summary>
@@ -1863,6 +1889,24 @@ public partial class ChartViewModel : ViewModelBase
     /// <returns><c>true</c> if a data point was modified; otherwise <c>false</c>.</returns>
     public bool ApplySketchPoint(double chartX, double chartY)
     {
+        return ApplySketchPoint(chartX, chartY, isDragStroke: false);
+    }
+
+    /// <summary>
+    /// Applies a sketch point to the active sketch-edit curve series.
+    /// The <paramref name="chartX"/> value is snapped to the nearest
+    /// speed (RPM) data point in the series, and <paramref name="chartY"/>
+    /// is rounded to the nearest <see cref="TorqueSnapIncrement"/>.
+    /// When <paramref name="isDragStroke"/> is true, sketch edits use a
+    /// narrower horizontal activation band so freehand dragging traces
+    /// curves more smoothly instead of snapping across wide point regions.
+    /// </summary>
+    /// <param name="chartX">The X coordinate in chart data space (RPM).</param>
+    /// <param name="chartY">The Y coordinate in chart data space (torque).</param>
+    /// <param name="isDragStroke">True when the point is from a continuous drag operation.</param>
+    /// <returns><c>true</c> if a data point was modified; otherwise <c>false</c>.</returns>
+    public bool ApplySketchPoint(double chartX, double chartY, bool isDragStroke)
+    {
         if (!IsSketchEditActive || _currentVoltage is null)
         {
             return false;
@@ -1874,9 +1918,20 @@ public partial class ChartViewModel : ViewModelBase
             return false;
         }
 
+        if (curve.Locked)
+        {
+            ClearSketchEditSeries();
+            return false;
+        }
+
         // Snap X to the nearest speed data point.
         var nearestIndex = FindNearestSpeedIndex(curve, chartX);
         if (nearestIndex < 0)
+        {
+            return false;
+        }
+
+        if (isDragStroke && !IsWithinDragSketchBand(curve, nearestIndex, chartX, _dragSketchBandFraction))
         {
             return false;
         }
@@ -1912,6 +1967,50 @@ public partial class ChartViewModel : ViewModelBase
 
         DataChanged?.Invoke(this, EventArgs.Empty);
         return true;
+    }
+
+    internal static bool IsWithinDragSketchBand(Curve curve, int index, double rpm, double bandFraction)
+    {
+        if (index < 0 || index >= curve.Data.Count)
+        {
+            return false;
+        }
+
+        if (bandFraction <= 0)
+        {
+            return false;
+        }
+
+        var targetRpm = (double)curve.Data[index].Rpm;
+        var nearestNeighborSpacing = GetNearestNeighborSpacing(curve, index);
+        if (nearestNeighborSpacing <= 0)
+        {
+            return true;
+        }
+
+        var maxDistance = nearestNeighborSpacing * bandFraction;
+        return Math.Abs(rpm - targetRpm) <= maxDistance;
+    }
+
+    private static double GetNearestNeighborSpacing(Curve curve, int index)
+    {
+        var hasLeft = index > 0;
+        var hasRight = index < curve.Data.Count - 1;
+
+        if (!hasLeft && !hasRight)
+        {
+            return 0;
+        }
+
+        var leftSpacing = hasLeft
+            ? Math.Abs((double)(curve.Data[index].Rpm - curve.Data[index - 1].Rpm))
+            : double.MaxValue;
+        var rightSpacing = hasRight
+            ? Math.Abs((double)(curve.Data[index + 1].Rpm - curve.Data[index].Rpm))
+            : double.MaxValue;
+
+        var spacing = Math.Min(leftSpacing, rightSpacing);
+        return spacing == double.MaxValue ? 0 : spacing;
     }
 
     /// <summary>
