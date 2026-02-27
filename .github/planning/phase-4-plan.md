@@ -3,12 +3,12 @@
 ### 0. Sketch-Style Curve Editing
 - **Goal**: Enable simple, straightforward editing of a specified torque curve by clicking and dragging the mouse in the graph area.
 - **Steps**:
-  - [ ] Enable "Sketch edit" mode for a curve series. Only one curve series can be in sketch edit mode at a time.
-  - [ ] Implement a manner to track mouse position over the chart area in near-real time, in terms of x (speed), and y (torque).
-  - [ ] The speed component of the mouse position shall be rounded to the nearest speed data point in the chart field.
-  - [ ] The torque component of the mouse position shall be rounded to the nearest 0.2; this value shall be set-able in preferences.
-  - [ ] When the mouse is clicked while in the graph area, the curve with an active sketch-edit mode, will record the position of the mouse in the curve data, at the position of the x (speed) value in the dataset. E.g. if the mouse is nearest to 5% speed, and is nearest to 10.2 Nm and the user clicks, the curve series data should update such that at 5% speed that curve torque value is equal to 10.2 Nm.
-  - [ ] The user shall be able to click and drag the mouse over the graph, with the positions of the active sketch-edit curve being written to the curve data series as the mouse moves. Hence, the user could "sketch" over an image motor curve, cleaning up slight data errors very easily.  
+  - [X] Enable "Sketch edit" mode for a curve series. Only one curve series can be in sketch edit mode at a time.
+  - [X] Implement a manner to track mouse position over the chart area in near-real time, in terms of x (speed), and y (torque).
+  - [X] The speed component of the mouse position shall be rounded to the nearest speed data point in the chart field.
+  - [X] The torque component of the mouse position shall be rounded to the nearest 0.2; this value shall be set-able in preferences.
+  - [X] When the mouse is clicked while in the graph area, the curve with an active sketch-edit mode, will record the position of the mouse in the curve data, at the position of the x (speed) value in the dataset. E.g. if the mouse is nearest to 5% speed, and is nearest to 10.2 Nm and the user clicks, the curve series data should update such that at 5% speed that curve torque value is equal to 10.2 Nm.
+  - [X] The user shall be able to click and drag the mouse over the graph, with the positions of the active sketch-edit curve being written to the curve data series as the mouse moves. Hence, the user could "sketch" over an image motor curve, cleaning up slight data errors very easily.  
 
 ### 1. EQ-Style Curve Editing
 - **Goal**: Enable rich, EQ-style editing of torque curves directly on the chart while keeping the data grid and underlying models in sync.

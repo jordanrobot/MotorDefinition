@@ -51,11 +51,24 @@ public class PreferencesViewModelTests : IDisposable
         var viewModel = new PreferencesViewModel(_preferencesService);
         viewModel.DecimalPrecision = 4;
         viewModel.Theme = "Dark";
+        viewModel.SketchDragBandPercent = 7m;
 
         viewModel.SaveCommand.Execute(null);
 
         Assert.Equal(4, _preferencesService.Preferences.DecimalPrecision);
         Assert.Equal("Dark", _preferencesService.Preferences.Theme);
+        Assert.Equal(7m, _preferencesService.Preferences.SketchDragBandPercent);
+    }
+
+    [Fact]
+    public void Constructor_LoadsSketchDragBandPercent()
+    {
+        _preferencesService.Preferences.SketchDragBandPercent = 6.5m;
+        _preferencesService.SavePreferences();
+
+        var viewModel = new PreferencesViewModel(_preferencesService);
+
+        Assert.Equal(6.5m, viewModel.SketchDragBandPercent);
     }
 
     [Fact]

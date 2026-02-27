@@ -232,4 +232,57 @@ public class MainWindowViewModelUndoRedoIntegrationTests
 
         Assert.True(series.Locked);
     }
+
+    [Fact]
+    public void ToggleSeriesLock_WhenSketchEditActive_ClearsSketchEditMode()
+    {
+        var fileServiceMock = new Mock<IFileService>();
+        var curveGeneratorMock = new Mock<ICurveGeneratorService>();
+
+        fileServiceMock.SetupGet(f => f.IsDirty).Returns(false);
+
+        var vm = new MainWindowViewModel(fileServiceMock.Object, curveGeneratorMock.Object);
+
+        var motor = new ServoMotor
+        {
+            MotorName = "Test Motor",
+            Drives = new List<Drive>
+            {
+                new()
+                {
+                    Name = "Drive A",
+                    Voltages = new List<Voltage>
+                    {
+                        new()
+                        {
+                            Value = 208,
+                            Curves = new List<Curve>
+                            {
+                                new()
+                                {
+                                    Name = "Peak",
+                                    Locked = false
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        };
+
+        vm.CurrentMotor = motor;
+        vm.SelectedDrive = motor.Drives[0];
+        vm.SelectedVoltage = motor.Drives[0].Voltages[0];
+
+        var series = motor.Drives[0].Voltages[0].Curves[0];
+        vm.ChartViewModel.SetSketchEditSeries(series.Name);
+
+        Assert.True(vm.ChartViewModel.IsSketchEditActive);
+
+        vm.ToggleSeriesLockCommand.Execute(series);
+
+        Assert.True(series.Locked);
+        Assert.False(vm.ChartViewModel.IsSketchEditActive);
+        Assert.Null(vm.ChartViewModel.SketchEditSeriesName);
+    }
 }

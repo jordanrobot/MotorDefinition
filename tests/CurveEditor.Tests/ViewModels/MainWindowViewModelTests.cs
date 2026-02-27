@@ -1,7 +1,9 @@
 using CurveEditor.Services;
 using CurveEditor.ViewModels;
 using JordanRobot.MotorDefinition.Model;
+using MotorEditor.Avalonia.Models;
 using Moq;
+using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using Xunit;
@@ -128,6 +130,48 @@ public class MainWindowViewModelTests
 
         Assert.Null(vm.SelectedVoltage);
         Assert.Empty(vm.AvailableVoltages);
+    }
+
+    [Fact]
+    public void Constructor_WithPreferencesService_AppliesTorqueSnapIncrementToChart()
+    {
+        var preferences = new UserPreferences
+        {
+            TorqueSnapIncrement = 0.03m,
+            SketchDragBandPercent = 5m
+        };
+
+        var preferencesServiceMock = new Mock<IUserPreferencesService>();
+        preferencesServiceMock.SetupGet(s => s.Preferences).Returns(preferences);
+        preferencesServiceMock.SetupGet(s => s.State).Returns(new ApplicationState());
+
+        var vm = new MainWindowViewModel(preferencesServiceMock.Object);
+
+        Assert.Equal(0.03m, vm.ChartViewModel!.TorqueSnapIncrement);
+        Assert.Equal(0.05, vm.ChartViewModel.DragSketchBandFraction, 3);
+    }
+
+    [Fact]
+    public void PreferencesChanged_WhenTorqueSnapIncrementUpdated_PropagatesToChart()
+    {
+        var preferences = new UserPreferences
+        {
+            TorqueSnapIncrement = 0.03m,
+            SketchDragBandPercent = 5m
+        };
+
+        var preferencesServiceMock = new Mock<IUserPreferencesService>();
+        preferencesServiceMock.SetupGet(s => s.Preferences).Returns(preferences);
+        preferencesServiceMock.SetupGet(s => s.State).Returns(new ApplicationState());
+
+        var vm = new MainWindowViewModel(preferencesServiceMock.Object);
+
+        preferences.TorqueSnapIncrement = 0.07m;
+        preferences.SketchDragBandPercent = 8m;
+        preferencesServiceMock.Raise(s => s.PreferencesChanged += null, EventArgs.Empty);
+
+        Assert.Equal(0.07m, vm.ChartViewModel!.TorqueSnapIncrement);
+        Assert.Equal(0.08, vm.ChartViewModel.DragSketchBandFraction, 3);
     }
 
 }

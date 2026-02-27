@@ -153,7 +153,8 @@ public class UserPreferencesServiceTests : IDisposable
         {
             DecimalPrecision = 3,
             Theme = "Dark",
-            CurveColors = new List<string> { "#FF0000", "#00FF00" }
+            CurveColors = new List<string> { "#FF0000", "#00FF00" },
+            SketchDragBandPercent = 5m
         };
 
         var clone = original.Clone();
@@ -162,11 +163,13 @@ public class UserPreferencesServiceTests : IDisposable
         clone.DecimalPrecision = 5;
         clone.Theme = "Light";
         clone.CurveColors.Add("#0000FF");
+        clone.SketchDragBandPercent = 12m;
 
         // Original should remain unchanged
         Assert.Equal(3, original.DecimalPrecision);
         Assert.Equal("Dark", original.Theme);
         Assert.Equal(2, original.CurveColors.Count);
+        Assert.Equal(5m, original.SketchDragBandPercent);
     }
 
     [Fact]

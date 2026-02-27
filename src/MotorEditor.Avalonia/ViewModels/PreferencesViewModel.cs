@@ -26,6 +26,12 @@ public partial class PreferencesViewModel : ViewModelBase
     [ObservableProperty]
     private string? _selectedCurveColor;
 
+    [ObservableProperty]
+    private decimal _torqueSnapIncrement;
+
+    [ObservableProperty]
+    private decimal _sketchDragBandPercent;
+
     /// <summary>
     /// Creates a new PreferencesViewModel.
     /// </summary>
@@ -38,6 +44,8 @@ public partial class PreferencesViewModel : ViewModelBase
         _decimalPrecision = _preferencesService.Preferences.DecimalPrecision;
         _theme = _preferencesService.Preferences.Theme;
         _curveColors = new ObservableCollection<string>(_preferencesService.Preferences.CurveColors);
+        _torqueSnapIncrement = _preferencesService.Preferences.TorqueSnapIncrement;
+        _sketchDragBandPercent = _preferencesService.Preferences.SketchDragBandPercent;
     }
 
     /// <summary>
@@ -54,6 +62,8 @@ public partial class PreferencesViewModel : ViewModelBase
             _preferencesService.Preferences.CurveColors.Add(color);
         }
 
+        _preferencesService.Preferences.TorqueSnapIncrement = TorqueSnapIncrement;
+        _preferencesService.Preferences.SketchDragBandPercent = SketchDragBandPercent;
         _preferencesService.SavePreferences();
     }
 

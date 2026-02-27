@@ -957,9 +957,11 @@ public partial class MainWindowViewModel : ViewModelBase
         WireEditingCoordinator();
         WireUndoInfrastructure();
         WireDirectoryBrowserIntegration();
+        _userPreferencesService.PreferencesChanged += OnUserPreferencesChanged;
 
         // Load saved power curves preference
         chartViewModel.ShowPowerCurves = _settingsStore.LoadBool("ShowPowerCurves", false);
+        ApplyUserPreferencesToChart(chartViewModel);
     }
 
     /// <summary>
@@ -1010,9 +1012,11 @@ public partial class MainWindowViewModel : ViewModelBase
         WireEditingCoordinator();
         WireUndoInfrastructure();
         WireDirectoryBrowserIntegration();
+        _userPreferencesService.PreferencesChanged += OnUserPreferencesChanged;
 
         // Load saved power curves preference
         chartViewModel.ShowPowerCurves = _settingsStore.LoadBool("ShowPowerCurves", false);
+        ApplyUserPreferencesToChart(chartViewModel);
     }
 
     public MainWindowViewModel(IFileService fileService, ICurveGeneratorService curveGeneratorService)
@@ -1053,9 +1057,11 @@ public partial class MainWindowViewModel : ViewModelBase
         WireEditingCoordinator();
         WireUndoInfrastructure();
         WireDirectoryBrowserIntegration();
+        _userPreferencesService.PreferencesChanged += OnUserPreferencesChanged;
 
         // Load saved power curves preference
         chartViewModel.ShowPowerCurves = _settingsStore.LoadBool("ShowPowerCurves", false);
+        ApplyUserPreferencesToChart(chartViewModel);
     }
 
     /// <summary>
@@ -1107,11 +1113,13 @@ public partial class MainWindowViewModel : ViewModelBase
         WireEditingCoordinator();
         WireUndoInfrastructure();
         WireDirectoryBrowserIntegration();
+        _userPreferencesService.PreferencesChanged += OnUserPreferencesChanged;
 
         // Load saved preferences
         ChartViewModel!.ShowPowerCurves = _settingsStore.LoadBool("ShowPowerCurves", false);
         ChartViewModel!.ShowMotorRatedSpeedLine = _settingsStore.LoadBool("ShowMotorRatedSpeedLine", true);
         ChartViewModel!.ShowVoltageMaxSpeedLine = _settingsStore.LoadBool("ShowVoltageMaxSpeedLine", true);
+        ApplyUserPreferencesToChart(ChartViewModel);
     }
 
     private void WireDirectoryBrowserIntegration()
@@ -1172,6 +1180,7 @@ public partial class MainWindowViewModel : ViewModelBase
         tab.ChartViewModel.ShowPowerCurves = _settingsStore.LoadBool("ShowPowerCurves", false);
         tab.ChartViewModel.ShowMotorRatedSpeedLine = _settingsStore.LoadBool("ShowMotorRatedSpeedLine", true);
         tab.ChartViewModel.ShowVoltageMaxSpeedLine = _settingsStore.LoadBool("ShowVoltageMaxSpeedLine", true);
+        ApplyUserPreferencesToChart(tab.ChartViewModel);
 
         tab.ChartViewModel.DataChanged += (s, e) => tab.MarkDirty();
         tab.CurveDataTableViewModel.DataChanged += (s, e) =>
@@ -3903,6 +3912,13 @@ public partial class MainWindowViewModel : ViewModelBase
         ActiveTab?.UndoStack.PushAndExecute(command);
         UpdateDirtyFromUndoDepth();
 
+        if (newLocked &&
+            ChartViewModel is not null &&
+            string.Equals(ChartViewModel.SketchEditSeriesName, series.Name, StringComparison.Ordinal))
+        {
+            ChartViewModel.ClearSketchEditSeries();
+        }
+
         // Refresh the curve data table so that the DataGrid columns
         // are rebuilt with the correct read-only state for the
         // affected series. This keeps the editor behavior and
@@ -4006,6 +4022,37 @@ public partial class MainWindowViewModel : ViewModelBase
         {
             Log.Error(ex, "Failed to show preferences window");
             StatusMessage = "Failed to open preferences";
+        }
+    }
+
+    private void OnUserPreferencesChanged(object? sender, EventArgs e)
+    {
+        foreach (var tab in Tabs)
+        {
+            if (tab.ChartViewModel is not null)
+            {
+                ApplyUserPreferencesToChart(tab.ChartViewModel);
+            }
+        }
+    }
+
+    private void ApplyUserPreferencesToChart(ChartViewModel? chartViewModel)
+    {
+        if (chartViewModel is null)
+        {
+            return;
+        }
+
+        var snapIncrement = _userPreferencesService.Preferences.TorqueSnapIncrement;
+        if (snapIncrement > 0)
+        {
+            chartViewModel.TorqueSnapIncrement = snapIncrement;
+        }
+
+        var dragBandPercent = _userPreferencesService.Preferences.SketchDragBandPercent;
+        if (dragBandPercent > 0)
+        {
+            chartViewModel.DragSketchBandFraction = (double)(dragBandPercent / 100m);
         }
     }
 
